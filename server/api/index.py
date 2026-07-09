@@ -10,9 +10,10 @@ import draft_store
 
 app = Flask(__name__)
 
-# Allow the deployed Vercel frontend + local dev origins. Set CORS_ORIGINS on
-# Render to a comma-separated list (e.g. "https://modul-builder.vercel.app")
-# once the frontend is deployed; defaults to "*" so local dev keeps working.
+# Allow the deployed Vercel frontend + local dev origins. Set CORS_ORIGINS in
+# the Vercel project's env vars to a comma-separated list (e.g.
+# "https://template-modul-html.vercel.app") once the frontend is deployed;
+# defaults to "*" so local dev keeps working.
 _origins = os.environ.get('CORS_ORIGINS', '*')
 CORS(app, origins=_origins.split(',') if _origins != '*' else '*')
 
@@ -65,6 +66,6 @@ def api_health():
 
 
 if __name__ == '__main__':
-    # host=0.0.0.0 so it's reachable from outside this one machine (LAN or,
-    # on Render, from Render's own proxy). PORT is set by Render at runtime.
+    # Local dev only — on Vercel this file is imported as a WSGI app by
+    # their Python runtime, this block never runs there.
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5800)), debug=True)

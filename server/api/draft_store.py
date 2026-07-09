@@ -16,7 +16,7 @@ SUPABASE_URL = os.environ.get('SUPABASE_URL', '').rstrip('/')
 SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', '')
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOCAL_DRAFTS_DIR = os.path.join(BASE_DIR, '..', 'drafts')
+LOCAL_DRAFTS_DIR = os.path.join(BASE_DIR, '..', '..', 'drafts')
 
 USE_SUPABASE = bool(SUPABASE_URL and SUPABASE_ANON_KEY)
 

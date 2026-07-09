@@ -95,6 +95,9 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
     case 'card':
       return <>
         <EmojiPicker value={block.icon || ''} onChange={icon => onChange({ icon })} />
+        <p style={{ fontSize: 11, color: '#aaa', margin: '-2px 0 6px' }}>
+          Icon cuma tampil kalau "Judul kartu" di bawah ini diisi — nempel di sebelah judul, bukan berdiri sendiri.
+        </p>
         <input style={inp} placeholder="Judul kartu" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
         <textarea style={ta} placeholder="Isi (HTML/teks)" value={block.bodyHtml || ''} onChange={e => onChange({ bodyHtml: e.target.value })} />
       </>;
