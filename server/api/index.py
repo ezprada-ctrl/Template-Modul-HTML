@@ -1,5 +1,13 @@
 import os
+import sys
 import tempfile
+
+# Vercel's Python runtime imports this file dynamically (not via a normal
+# `python index.py` invocation), so this directory isn't automatically on
+# sys.path — without this, sibling imports below fail with
+# "ModuleNotFoundError: No module named 'generator'" in production even
+# though it works fine locally.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
