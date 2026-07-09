@@ -34,7 +34,16 @@ export default function QuizBuilder({ module, setModule }: Props) {
     setQuestions(next);
   }
   function autoDistribute() {
-    setQuestions(questions.map((q, i) => ({ ...q, correct: i % 4 })));
+    // Reposition the correct answer to a target slot (0,1,2,3 cycling) by
+    // swapping option TEXT with whatever currently sits in that slot — the
+    // answer content moves with it, only its letter position changes.
+    setQuestions(questions.map((q, i) => {
+      const target = i % 4;
+      if (target === q.correct) return q;
+      const opts = [...q.opts];
+      [opts[q.correct], opts[target]] = [opts[target], opts[q.correct]];
+      return { ...q, opts, correct: target };
+    }));
   }
 
   return (
@@ -48,7 +57,10 @@ export default function QuizBuilder({ module, setModule }: Props) {
           </button>
         ))}
       </div>
-      <button onClick={autoDistribute} style={{ marginBottom: 10 }}>Sebar jawaban benar merata A/B/C/D</button>
+      <button onClick={autoDistribute} style={{ marginBottom: 4 }}>Sebar jawaban benar merata A/B/C/D</button>
+      <p style={{ fontSize: 11, color: '#aaa', margin: '0 0 10px' }}>
+        Cuma pindahin POSISI jawaban benar (biar gak numpuk di huruf yang sama terus), isi/teks tiap opsi tetap sama persis — gak ngubah jawaban.
+      </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {questions.map((q, i) => (
           <div key={i} style={{ border: '1px solid #ddd', borderRadius: 8, padding: 10 }}>
