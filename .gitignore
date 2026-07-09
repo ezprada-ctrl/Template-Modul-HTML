@@ -1,0 +1,10 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+drafts/
+.env
+.env.local
+make_template_report.txt
+test_out.html
+

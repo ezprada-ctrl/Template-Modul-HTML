@@ -1,0 +1,33 @@
+:root {
+  color-scheme: light;
+  font: 15px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: #16213e;
+}
+
+#root {
+  min-height: 100vh;
+  text-align: left;
+}
+
+h1, h2 { font-weight: 700; }
+
+input, textarea, select {
+  font-family: inherit;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  font-family: inherit;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #f4f3ec;
+}
+button:hover { background: #ece9dc; }

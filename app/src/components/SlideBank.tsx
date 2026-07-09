@@ -1,0 +1,145 @@
+import { useState } from 'react';
+import type { DraftSlide, ModuleData } from '../types';
+import { extractPptx } from '../api';
+import { uid as makeId } from '../types';
+
+interface Props {
+  bank: DraftSlide[];
+  setBank: (b: DraftSlide[]) => void;
+  module: ModuleData;
+  setModule: (m: ModuleData) => void;
+}
+
+export default function SlideBank({ bank, setBank, module, setModule }: Props) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [toast, setToast] = useState<{ slideNo: number; message: string; ok: boolean } | null>(null);
+
+  function countAdded(slideNo: number) {
+    return module.slides.filter(sl => sl.sourceSlideNo === slideNo).length;
+  }
+
+  async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    setError('');
+    try {
+      const slides = await extractPptx(file);
+      setBank(slides);
+    } catch (err: any) {
+      setError(err.message || 'Gagal upload');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggleReviewed(slideNo: number) {
+    setBank(bank.map(s => s.slideNo === slideNo ? { ...s, reviewed: !s.reviewed } : s));
+  }
+
+  function addToCanvas(draft: DraftSlide) {
+    try {
+      if (module.sections.length === 0) {
+        throw new Error('Belum ada section. Buat section dulu di tab "Susun Modul".');
+      }
+      const nextNumber = module.slides.length
+        ? Math.max(...module.slides.map(s => s.number)) + 1
+        : 2;
+      const sectionId = module.sections[0].id;
+      const firstLine = draft.texts[0]?.split('\n')[0] || `Slide ${draft.slideNo}`;
+      const restText = draft.texts.join('\n\n');
+      const blocks = [];
+      if (restText) {
+        blocks.push({
+          id: makeId('block'),
+          type: 'card' as const,
+          bodyHtml: `<p>${restText.replace(/\n/g, '<br>')}</p>`,
+        });
+      }
+      draft.images.forEach(img => {
+        blocks.push({ id: makeId('block'), type: 'image' as const, src: img });
+      });
+      draft.tables.forEach(rows => {
+        blocks.push({
+          id: makeId('block'),
+          type: 'dtable' as const,
+          headers: rows[0] || [],
+          rows: rows.slice(1),
+        });
+      });
+      setModule({
+        ...module,
+        slides: [...module.slides, {
+          id: makeId('slide'),
+          number: nextNumber,
+          sectionId,
+          title: firstLine,
+          kickerLabel: '',
+          blocks,
+          sourceSlideNo: draft.slideNo,
+        }],
+      });
+      setToast({ slideNo: draft.slideNo, ok: true, message: `Berhasil ditambahkan sebagai slide #${nextNumber} ke section "${module.sections[0].short}".` });
+    } catch (err: any) {
+      setToast({ slideNo: draft.slideNo, ok: false, message: err.message || 'Gagal menambahkan slide ke canvas.' });
+    } finally {
+      setTimeout(() => setToast(t => (t && t.slideNo === draft.slideNo ? null : t)), 3500);
+    }
+  }
+
+  return (
+    <div>
+      <h2>Slide Bank</h2>
+      <p style={{ color: '#888', fontSize: 13 }}>
+        Upload file PPTX asli. Tiap slide otomatis diekstrak jadi draft (nomor slide asli dipertahankan
+        biar gampang dicocokkan manual ke file PPTX kamu). Centang "sudah dicek" setelah kamu bandingkan.
+      </p>
+      <input type="file" accept=".pptx" onChange={onUpload} />
+      {loading && <p>Mengekstrak PPTX...</p>}
+      {error && <p style={{ color: 'crimson' }}>{error}</p>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
+        {bank.map(s => (
+          <div key={s.slideNo} style={{ border: '1px solid #ddd', borderRadius: 8, padding: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <b>Slide asli #{s.slideNo}</b>
+              <label style={{ fontSize: 12 }}>
+                <input type="checkbox" checked={!!s.reviewed} onChange={() => toggleReviewed(s.slideNo)} /> sudah dicek
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
+              <div style={{ flex: 1, fontSize: 13, whiteSpace: 'pre-wrap' }}>
+                {s.texts.join('\n---\n') || <i>(tidak ada teks terdeteksi)</i>}
+              </div>
+              {s.images.length > 0 && (
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {s.images.map((img, i) => (
+                    <img key={i} src={img} style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 4 }} />
+                  ))}
+                </div>
+              )}
+            </div>
+            {s.tables.length > 0 && <div style={{ fontSize: 11, color: '#888' }}>{s.tables.length} tabel terdeteksi</div>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+              <button onClick={() => addToCanvas(s)}>+ Tambah ke Canvas</button>
+              {countAdded(s.slideNo) > 0 && (
+                <span style={{ fontSize: 11, color: '#2f9e6a', fontWeight: 600 }}>
+                  ✓ Sudah ditambahkan ({countAdded(s.slideNo)}×)
+                </span>
+              )}
+            </div>
+            {toast && toast.slideNo === s.slideNo && (
+              <div style={{
+                marginTop: 6, fontSize: 12, padding: '6px 10px', borderRadius: 6,
+                background: toast.ok ? '#e6f4ea' : '#fbe9e7',
+                color: toast.ok ? '#1e7e42' : '#c04a44',
+              }}>
+                {toast.ok ? '✓ ' : '✗ '}{toast.message}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
