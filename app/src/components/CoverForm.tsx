@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import type { ModuleData } from '../types';
-import { fileToDataUri } from '../api';
+import { compressImageToDataUri } from '../api';
 import SlidePreview from './SlidePreview';
 
 interface Props {
@@ -8,11 +9,22 @@ interface Props {
 }
 
 export default function CoverForm({ module, setModule }: Props) {
+  const [compressing, setCompressing] = useState(false);
+  const [error, setError] = useState('');
+
   async function onCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const dataUri = await fileToDataUri(file);
-    setModule({ ...module, coverImageDataUri: dataUri });
+    setCompressing(true);
+    setError('');
+    try {
+      const dataUri = await compressImageToDataUri(file);
+      setModule({ ...module, coverImageDataUri: dataUri });
+    } catch (err: any) {
+      setError(err.message || 'Gagal memproses gambar');
+    } finally {
+      setCompressing(false);
+    }
   }
 
   return (
@@ -51,9 +63,11 @@ export default function CoverForm({ module, setModule }: Props) {
               onChange={e => setModule({ ...module, sidebarTitle: e.target.value })} />
           </label>
           <label>
-            Gambar Sampul
+            Gambar Sampul <span style={{ fontSize: 11, color: '#aaa', fontWeight: 400 }}>(otomatis dikompres/diperkecil biar gak kena limit ukuran)</span>
             <input type="file" accept="image/*" onChange={onCoverUpload} />
           </label>
+          {compressing && <p style={{ fontSize: 12, color: '#888' }}>Mengompres gambar...</p>}
+          {error && <p style={{ fontSize: 12, color: 'crimson' }}>{error}</p>}
           {module.coverImageDataUri && (
             <img src={module.coverImageDataUri} style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 8 }} />
           )}

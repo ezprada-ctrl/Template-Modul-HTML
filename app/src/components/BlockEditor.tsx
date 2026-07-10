@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import type { Block, BlockType } from '../types';
 import { uid } from '../types';
 import EmojiPicker from './EmojiPicker';
+import { compressImageToDataUri } from '../api';
 
 const BLOCK_LABELS: Record<BlockType, string> = {
   card: 'Kartu (Card)',
@@ -225,16 +227,22 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
 }
 
 function ImageUploadField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [busy, setBusy] = useState(false);
   return (
     <div style={{ marginBottom: 6 }}>
       {value && <img src={value} style={{ width: 120, display: 'block', marginBottom: 4, borderRadius: 4 }} />}
-      <input type="file" accept="image/*" onChange={e => {
+      <input type="file" accept="image/*" onChange={async e => {
         const file = e.target.files?.[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => onChange(reader.result as string);
-        reader.readAsDataURL(file);
+        setBusy(true);
+        try {
+          const dataUri = await compressImageToDataUri(file, 1200);
+          onChange(dataUri);
+        } finally {
+          setBusy(false);
+        }
       }} />
+      {busy && <span style={{ fontSize: 11, color: '#888', marginLeft: 6 }}>mengompres...</span>}
     </div>
   );
 }
