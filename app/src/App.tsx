@@ -68,6 +68,10 @@ function App() {
       <p style={{ color: '#888', marginTop: 0, fontSize: 13 }}>
         Penyusun modul e-learning drag-and-drop — output identik dengan Modul 1 & Modul 2.
       </p>
+      <p style={{ color: '#c99a3d', marginTop: 0, marginBottom: 12, fontSize: 12, fontWeight: 700 }}>
+        Project: {module.slug} — {module.title}
+        <span style={{ color: '#aaa', fontWeight: 400 }}> (tiap orang otomatis dapet project sendiri; pakai "Muat Draft" di tab 5 kalau mau buka punya orang lain)</span>
+      </p>
       <nav style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid #ddd' }}>
         {TABS.map(t => (
           <button

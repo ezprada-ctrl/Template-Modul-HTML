@@ -96,9 +96,13 @@ export interface DraftSlide {
 }
 
 export function emptyModule(): ModuleData {
+  // Unique per call (not a fixed "modul-baru") so two people opening the
+  // app for the first time land on separate drafts instead of silently
+  // sharing/overwriting the same one.
+  const slug = uid('modul');
   return {
     title: 'Modul Baru',
-    slug: 'modul-baru',
+    slug,
     heroTitleHtml: 'Modul Baru',
     heroDesc: '',
     sidebarEyebrow: 'Open Access',
