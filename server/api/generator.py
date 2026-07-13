@@ -250,6 +250,9 @@ def generate_html(module):
     slug = module.get('slug') or slugify(module.get('title', 'modul'))
     out = out.replace('__STORAGE_KEY__', f'pilar-{slug}-progress-v1')
 
+    module_title_js = esc(module.get('sidebarTitle') or module.get('title', '')).replace("'", "\\'")
+    out = out.replace('__MODULE_TITLE__', module_title_js)
+
     sections = module.get('sections', [])
     out = out.replace('__SECTIONS_JS__', js_str(sections))
 
