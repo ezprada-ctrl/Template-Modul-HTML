@@ -162,6 +162,19 @@ def render_html(b):
     return b.get('raw', '')
 
 
+def render_modal(b):
+    modal_id = b.get('id', 'modal')
+    title = esc(b.get('heading', 'Info Tambahan'))
+    body = b.get('bodyHtml', '')
+    return (
+        f'<button class="modal-trigger" onclick="openModal(\'{modal_id}\')">'
+        f'<span class="ic">📌</span><span>{title}</span><span class="chevron">›</span></button>'
+        f'<div class="modal-overlay" id="{modal_id}" onclick="if(event.target===this) closeModal(\'{modal_id}\')">'
+        f'<div class="modal-box"><button class="modal-close" onclick="closeModal(\'{modal_id}\')">✕</button>'
+        f'<h3>{title}</h3>{body}</div></div>'
+    )
+
+
 BLOCK_RENDERERS = {
     'card': render_card,
     'callout': render_callout,
@@ -175,6 +188,7 @@ BLOCK_RENDERERS = {
     'flow': render_flow,
     'grid': render_grid,
     'image': render_image,
+    'modal': render_modal,
     'badgeref': render_badge_ref,
     'html': render_html,
 }

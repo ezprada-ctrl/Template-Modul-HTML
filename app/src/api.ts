@@ -47,6 +47,34 @@ export async function saveDraft(name: string, module: ModuleData): Promise<void>
   });
 }
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const IMAGE_BUCKET = 'modul-images';
+
+// Uploads the original file (no compression, no quality loss) straight to
+// Supabase Storage from the browser — never touches our Vercel function, so
+// it's not subject to the ~4.5MB request-body limit that broke base64-in-JSON
+// uploads. Returns a public URL that gets embedded directly in the module
+// JSON (tiny) and in the generated HTML's <img src="..."> / background-image.
+export async function uploadImageToStorage(file: File): Promise<string> {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Supabase Storage belum dikonfigurasi (VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY belum diset)');
+  }
+  const ext = file.name.includes('.') ? file.name.split('.').pop() : 'png';
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${IMAGE_BUCKET}/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': file.type || 'application/octet-stream',
+    },
+    body: file,
+  });
+  if (!res.ok) throw new Error(`Gagal upload gambar (${res.status})`);
+  return `${SUPABASE_URL}/storage/v1/object/public/${IMAGE_BUCKET}/${path}`;
+}
+
 export function fileToDataUri(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

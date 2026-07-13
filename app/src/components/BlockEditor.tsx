@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Block, BlockType } from '../types';
 import { uid } from '../types';
 import EmojiPicker from './EmojiPicker';
-import { compressImageToDataUri } from '../api';
+import { uploadImageToStorage } from '../api';
 
 const BLOCK_LABELS: Record<BlockType, string> = {
   card: 'Kartu (Card)',
@@ -19,6 +19,7 @@ const BLOCK_LABELS: Record<BlockType, string> = {
   image: 'Gambar',
   badgeref: 'Badge Referensi',
   html: 'HTML Bebas',
+  modal: 'Modal Popup (info tambahan)',
 };
 
 function newBlock(type: BlockType): Block {
@@ -37,6 +38,7 @@ function newBlock(type: BlockType): Block {
     case 'image': return { id, type, src: '', caption: '' };
     case 'badgeref': return { id, type, refText: '' };
     case 'html': return { id, type, raw: '' };
+    case 'modal': return { id, type, heading: 'Info Tambahan', bodyHtml: '' };
     default: return { id, type: 'card', heading: '', bodyHtml: '' };
   }
 }
@@ -221,6 +223,15 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       return <input style={inp} placeholder="Teks badge (mis. Pasal 4 · PMK 15/2025)" value={block.refText || ''} onChange={e => onChange({ refText: e.target.value })} />;
     case 'html':
       return <textarea style={ta} placeholder="HTML bebas" value={block.raw || ''} onChange={e => onChange({ raw: e.target.value })} />;
+    case 'modal':
+      return <>
+        <p style={{ fontSize: 11, color: '#aaa', margin: '-2px 0 6px' }}>
+          Cocok buat detail tambahan yang bikin slide penuh/ribet (mis. rincian formula) — muncul jadi tombol,
+          isinya baru kelihatan kalau tombolnya diklik (popup).
+        </p>
+        <input style={inp} placeholder="Judul tombol & popup (mis. Rincian Tambahan)" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
+        <textarea style={{ ...ta, minHeight: 120 }} placeholder="Isi popup (HTML/teks, boleh tabel dtable dll)" value={block.bodyHtml || ''} onChange={e => onChange({ bodyHtml: e.target.value })} />
+      </>;
     default:
       return null;
   }
@@ -236,8 +247,8 @@ function ImageUploadField({ value, onChange }: { value: string; onChange: (v: st
         if (!file) return;
         setBusy(true);
         try {
-          const dataUri = await compressImageToDataUri(file, 1200);
-          onChange(dataUri);
+          const url = await uploadImageToStorage(file);
+          onChange(url);
         } finally {
           setBusy(false);
         }

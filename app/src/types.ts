@@ -1,6 +1,6 @@
 export type BlockType =
   | 'card' | 'callout' | 'definition' | 'pullquote' | 'ticklist'
-  | 'accordion' | 'tabs' | 'timeline' | 'dtable' | 'flow' | 'grid' | 'image' | 'badgeref' | 'html';
+  | 'accordion' | 'tabs' | 'timeline' | 'dtable' | 'flow' | 'grid' | 'image' | 'badgeref' | 'html' | 'modal';
 
 export interface Block {
   id: string;
