@@ -38,7 +38,7 @@ function newBlock(type: BlockType): Block {
     case 'image': return { id, type, src: '', caption: '' };
     case 'badgeref': return { id, type, refText: '' };
     case 'html': return { id, type, raw: '' };
-    case 'modal': return { id, type, heading: 'Info Tambahan', bodyHtml: '' };
+    case 'modal': return { id, type, heading: 'Info Tambahan', bodyHtml: '', icon: '📝' };
     default: return { id, type: 'card', heading: '', bodyHtml: '' };
   }
 }
@@ -229,6 +229,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
           Cocok buat detail tambahan yang bikin slide penuh/ribet (mis. rincian formula) — muncul jadi tombol,
           isinya baru kelihatan kalau tombolnya diklik (popup).
         </p>
+        <EmojiPicker value={block.icon || '📝'} onChange={icon => onChange({ icon })} />
         <input style={inp} placeholder="Judul tombol & popup (mis. Rincian Tambahan)" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
         <textarea style={{ ...ta, minHeight: 120 }} placeholder="Isi popup (HTML/teks, boleh tabel dtable dll)" value={block.bodyHtml || ''} onChange={e => onChange({ bodyHtml: e.target.value })} />
       </>;

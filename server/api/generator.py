@@ -166,9 +166,10 @@ def render_modal(b):
     modal_id = b.get('id', 'modal')
     title = esc(b.get('heading', 'Info Tambahan'))
     body = b.get('bodyHtml', '')
+    icon = b.get('icon') or '📝'
     return (
         f'<button class="modal-trigger" onclick="openModal(\'{modal_id}\')">'
-        f'<span class="ic">📌</span><span>{title}</span><span class="chevron">›</span></button>'
+        f'<span class="ic">{icon}</span><span>{title}</span><span class="chevron">›</span></button>'
         f'<div class="modal-overlay" id="{modal_id}" onclick="if(event.target===this) closeModal(\'{modal_id}\')">'
         f'<div class="modal-box"><button class="modal-close" onclick="closeModal(\'{modal_id}\')">✕</button>'
         f'<h3>{title}</h3>{body}</div></div>'
