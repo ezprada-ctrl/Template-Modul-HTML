@@ -1094,11 +1094,13 @@ function renderBottomNav(){
   const item = NAV[currentIdx];
   document.getElementById('btn-prev').disabled = currentIdx===0;
   const btnNext = document.getElementById('btn-next');
-  if(currentIdx===NAV.length-1){
+  if(currentIdx===NAV.length-1 || item.kind==='hero'){
+    // Hero screen already has its own big "Mulai Belajar" button inline —
+    // showing the small bottom-nav button too duplicates it on-screen.
     btnNext.style.visibility='hidden';
   } else {
     btnNext.style.visibility='visible';
-    btnNext.textContent = item.kind==='quiz' ? 'Lewati →' : (item.kind==='hero' ? 'Mulai Belajar →' : 'Selanjutnya →');
+    btnNext.textContent = item.kind==='quiz' ? 'Lewati →' : 'Selanjutnya →';
   }
 
   const dots = document.getElementById('dots');
