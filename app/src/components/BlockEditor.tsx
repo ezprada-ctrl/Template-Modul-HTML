@@ -2,25 +2,8 @@ import { useState } from 'react';
 import type { Block, BlockType } from '../types';
 import { uid } from '../types';
 import EmojiPicker from './EmojiPicker';
+import BlockAddMenu, { BLOCK_LABELS } from './BlockAddMenu';
 import { uploadImageToStorage } from '../api';
-
-const BLOCK_LABELS: Record<BlockType, string> = {
-  card: 'Kartu (Card)',
-  callout: 'Catatan (Callout)',
-  definition: 'Definisi',
-  pullquote: 'Kutipan Angka (Pull-quote)',
-  ticklist: 'Daftar Bercentang',
-  accordion: 'Accordion',
-  tabs: 'Tabs',
-  timeline: 'Timeline',
-  dtable: 'Tabel Data',
-  flow: 'Diagram Alur',
-  grid: 'Grid (2/3 kolom)',
-  image: 'Gambar',
-  badgeref: 'Badge Referensi',
-  html: 'HTML Bebas',
-  modal: 'Modal Popup (info tambahan)',
-};
 
 function newBlock(type: BlockType): Block {
   const id = uid('block');
@@ -83,10 +66,7 @@ export default function BlockEditor({ blocks, onChange }: Props) {
           <BlockFields block={b} onChange={patch => update(i, patch)} />
         </div>
       ))}
-      <select onChange={e => { if (e.target.value) { add(e.target.value as BlockType); e.target.value = ''; } }} defaultValue="">
-        <option value="" disabled>+ Tambah blok...</option>
-        {Object.entries(BLOCK_LABELS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-      </select>
+      <BlockAddMenu onAdd={add} />
     </div>
   );
 }
