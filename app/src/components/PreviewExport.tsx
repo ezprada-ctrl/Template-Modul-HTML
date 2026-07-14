@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ModuleData } from '../types';
+import { normalizeModule } from '../types';
 import { generateHtml, listDrafts, loadDraft, saveDraft } from '../api';
 
 interface Props {
@@ -51,7 +52,7 @@ export default function PreviewExport({ module, setModule }: Props) {
 
   async function doLoad(name: string) {
     const data = await loadDraft(name);
-    setModule(data);
+    setModule(normalizeModule(data));
     setStatus(`Draft "${name}" dimuat`);
   }
 

@@ -18,6 +18,19 @@ with open(SHELL_PATH, encoding='utf-8') as f:
     SHELL = f.read()
 
 
+def hex_to_rgba(hex_color, alpha):
+    hex_color = hex_color.lstrip('#')
+    r, g, b = (int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
+    return f'rgba({r},{g},{b},{alpha})'
+
+
+def lighten_hex(hex_color, amount=18):
+    hex_color = hex_color.lstrip('#')
+    r, g, b = (int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
+    r, g, b = (min(255, c + amount) for c in (r, g, b))
+    return f'#{r:02x}{g:02x}{b:02x}'
+
+
 def js_str(value):
     """Encode a Python value as a JSON literal safe to embed inside a <script> tag."""
     raw = json.dumps(value, ensure_ascii=False)
@@ -249,6 +262,18 @@ def generate_html(module):
     out = SHELL
 
     out = out.replace('__TITLE__', esc(module.get('title', 'Modul E-Learning')))
+
+    theme = module.get('theme') or {}
+    theme_accent = theme.get('accent', '#c99a3d')
+    theme_navy = theme.get('navy', '#1b2a4a')
+    out = out.replace('__THEME_ACCENT_2__', theme.get('accent2', '#b3822a'))
+    out = out.replace('__THEME_ON_ACCENT__', theme.get('onAccent', '#2a1c04'))
+    out = out.replace('__THEME_ACCENT_SOFT__', hex_to_rgba(theme_accent, '.14'))
+    out = out.replace('__THEME_ACCENT_GLOW__', hex_to_rgba(theme_accent, '.45'))
+    out = out.replace('__THEME_NAVY_SOFT__', hex_to_rgba(theme_navy, '.16'))
+    out = out.replace('__THEME_NAVY_2__', lighten_hex(theme_navy))
+    out = out.replace('__THEME_ACCENT__', theme_accent)
+    out = out.replace('__THEME_NAVY__', theme_navy)
 
     cover = module.get('coverImageDataUri', '')
     out = out.replace('__COVER_IMAGE__', cover)

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ModuleData } from '../types';
 import { uploadImageToStorage } from '../api';
+import { THEME_PRESETS, findThemePresetId } from '../themes';
 import SlidePreview from './SlidePreview';
 
 interface Props {
@@ -36,6 +37,36 @@ export default function CoverForm({ module, setModule }: Props) {
             Nama Tab Browser <span style={{ fontSize: 11, fontWeight: 400 }}>(opsional, gak kepakai kalau modul dijalankan lewat Web Object Storyline)</span>
             <input style={{ width: '100%' }} value={module.title} onChange={e => setModule({ ...module, title: e.target.value })} />
           </label>
+          <label>
+            Tema Warna Modul <span style={{ fontSize: 11, color: '#aaa', fontWeight: 400 }}>(cuma ganti 2 warna brand - emas/aksen &amp; navy; warna benar/salah/info tetap sama)</span>
+          </label>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: -4 }}>
+            {THEME_PRESETS.map(preset => {
+              const selected = findThemePresetId(module.theme) === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => setModule({ ...module, theme: { accent: preset.accent, accent2: preset.accent2, onAccent: preset.onAccent, navy: preset.navy } })}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
+                    border: selected ? `2px solid ${preset.accent}` : '2px solid transparent',
+                    background: selected ? '#f6f7fa' : 'transparent',
+                  }}
+                >
+                  <span style={{
+                    display: 'flex', width: 34, height: 20, borderRadius: 6, overflow: 'hidden',
+                    boxShadow: '0 0 0 1px rgba(0,0,0,.08)',
+                  }}>
+                    <span style={{ flex: 1, background: preset.accent }} />
+                    <span style={{ flex: 1, background: preset.navy }} />
+                  </span>
+                  <span style={{ fontSize: 11, color: selected ? '#16213e' : '#888', fontWeight: selected ? 700 : 400 }}>{preset.label}</span>
+                </button>
+              );
+            })}
+          </div>
           <label>
             Judul besar di layar sampul (boleh HTML sederhana, mis. pakai <code>&lt;br&gt;</code> untuk ganti baris
             atau <code>&lt;span&gt;...&lt;/span&gt;</code> untuk bagian yang diwarnai emas)

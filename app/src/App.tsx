@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ModuleData, DraftSlide } from './types';
-import { emptyModule } from './types';
+import { emptyModule, normalizeModule } from './types';
 import { loadDraft, saveDraft } from './api';
 import SlideBank from './components/SlideBank';
 import Canvas from './components/Canvas';
@@ -36,7 +36,7 @@ function App() {
       return;
     }
     loadDraft(lastSlug)
-      .then(data => setModule(data))
+      .then(data => setModule(normalizeModule(data)))
       .catch(() => { /* no matching draft on server, start fresh */ })
       .finally(() => setHydrated(true));
   }, []);

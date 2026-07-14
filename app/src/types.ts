@@ -1,3 +1,5 @@
+import { DEFAULT_THEME } from './themes';
+
 export type BlockType =
   | 'card' | 'callout' | 'definition' | 'pullquote' | 'ticklist'
   | 'accordion' | 'tabs' | 'timeline' | 'dtable' | 'flow' | 'grid' | 'image' | 'badgeref' | 'html' | 'modal';
@@ -81,6 +83,7 @@ export interface ModuleData {
   sidebarEyebrow: string;
   sidebarTitle: string;
   coverImageDataUri: string;
+  theme: { accent: string; accent2: string; onAccent: string; navy: string };
   sections: Section[];
   slides: Slide[];
   quizzes: Record<string, QuizQuestion[]>;
@@ -109,11 +112,18 @@ export function emptyModule(): ModuleData {
     sidebarEyebrow: 'Open Access',
     sidebarTitle: 'Modul Baru',
     coverImageDataUri: '',
+    theme: { ...DEFAULT_THEME },
     sections: [{ id: 'a', title: 'A. Bagian Satu', short: 'Bagian Satu', icon: 'A', color: '#c99a3d' }],
     slides: [],
     quizzes: {},
     multiGroups: {},
   };
+}
+
+// Merges a loaded draft with current defaults so fields added after the
+// draft was saved (e.g. `theme`) don't come back as `undefined`.
+export function normalizeModule(data: Partial<ModuleData>): ModuleData {
+  return { ...emptyModule(), ...data, theme: { ...DEFAULT_THEME, ...data.theme } };
 }
 
 let idCounter = 0;
