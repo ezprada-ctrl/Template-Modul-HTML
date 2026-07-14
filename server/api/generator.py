@@ -219,6 +219,7 @@ def slugify(text):
 
 def build_nav(module):
     sections = module.get('sections', [])
+    quizzes = module.get('quizzes', {})
     slides_by_section = {}
     for s in module.get('slides', []):
         slides_by_section.setdefault(s['sectionId'], []).append(s)
@@ -231,7 +232,12 @@ def build_nav(module):
     for sec in sections:
         for s in slides_by_section.get(sec['id'], []):
             nav.append({'kind': 'slide', 'section': sec['id'], 'num': s['number']})
-        nav.append({'kind': 'quiz', 'section': sec['id']})
+        # Skip the quiz checkpoint entirely for sections with no authored
+        # questions - a section with nothing to quiz on shouldn't gate
+        # navigation, and the client renderer crashes trying to render a
+        # quiz with an undefined question list.
+        if quizzes.get(sec['id']):
+            nav.append({'kind': 'quiz', 'section': sec['id']})
     last_section_id = sections[-1]['id'] if sections else None
     nav.append({'kind': 'summary', 'section': last_section_id})
     return nav

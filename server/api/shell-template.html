@@ -862,7 +862,9 @@ function quizScore(sectionId){
   return qs.filter((q,qi)=>ans[qi]===q.correct).length;
 }
 function isQuizPassed(sectionId){
-  return !!state.quizSubmitted[sectionId] && quizScore(sectionId) === QUIZZES[sectionId].length;
+  const qs = QUIZZES[sectionId];
+  if(!qs || !qs.length) return true; // no quiz authored for this section - nothing to pass, don't gate on it
+  return !!state.quizSubmitted[sectionId] && quizScore(sectionId) === qs.length;
 }
 function isQuizAccessible(sectionId){
   if(devMode) return true;
