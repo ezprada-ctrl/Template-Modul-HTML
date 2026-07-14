@@ -107,7 +107,14 @@ export default function Canvas({ module, setModule }: Props) {
       {module.sections.map(sec => (
         <div key={sec.id} style={{ border: '1px solid #ddd', borderRadius: 8, padding: 12, marginBottom: 16 }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-            <input value={sec.title} onChange={e => updateSection(sec.id, { title: e.target.value })} style={{ flex: 1, fontWeight: 700 }} />
+            <input value={sec.title} onChange={e => {
+              const title = e.target.value;
+              // Keep the compact label (used in the Kuis tab + sidebar nav) in
+              // sync with the full title, stripping a leading "A. " prefix so
+              // it doesn't duplicate the section-letter badge shown next to it.
+              const short = title.replace(/^[A-Za-z0-9]+\.\s*/, '') || title;
+              updateSection(sec.id, { title, short });
+            }} style={{ flex: 1, fontWeight: 700 }} />
             <input value={sec.icon} onChange={e => updateSection(sec.id, { icon: e.target.value })} style={{ width: 40 }} />
             <input type="color" value={sec.color} onChange={e => updateSection(sec.id, { color: e.target.value })} />
             <button onClick={() => removeSection(sec.id)} style={{ color: 'crimson' }}>Hapus section</button>
