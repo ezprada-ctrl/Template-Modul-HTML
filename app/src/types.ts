@@ -98,8 +98,9 @@ export interface DraftSlide {
 export function emptyModule(): ModuleData {
   // Unique per call (not a fixed "modul-baru") so two people opening the
   // app for the first time land on separate drafts instead of silently
-  // sharing/overwriting the same one.
-  const slug = uid('modul');
+  // sharing/overwriting the same one. Base prefix is standardized across
+  // the whole team ("Modul HTML") instead of per-person slug editing.
+  const slug = uid('modul-html');
   return {
     title: 'Modul Baru',
     slug,

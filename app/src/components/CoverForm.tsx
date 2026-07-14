@@ -37,11 +37,6 @@ export default function CoverForm({ module, setModule }: Props) {
             <input style={{ width: '100%' }} value={module.title} onChange={e => setModule({ ...module, title: e.target.value })} />
           </label>
           <label>
-            Slug (untuk nama file & penyimpanan progres, huruf kecil - tanpa spasi)
-            <input style={{ width: '100%' }} value={module.slug}
-              onChange={e => setModule({ ...module, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-') })} />
-          </label>
-          <label>
             Judul besar di layar sampul (boleh HTML sederhana, mis. pakai <code>&lt;br&gt;</code> untuk ganti baris
             atau <code>&lt;span&gt;...&lt;/span&gt;</code> untuk bagian yang diwarnai emas)
             <textarea style={{ width: '100%', minHeight: 60 }} value={module.heroTitleHtml}
