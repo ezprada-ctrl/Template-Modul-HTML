@@ -209,6 +209,9 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
         <span {...attributes} {...listeners} style={{ cursor: 'grab' }}>⠿</span>
         <span style={{ fontSize: 11, color: '#999' }}>#{slide.number}{slide.sourceSlideNo ? ` (PPTX #${slide.sourceSlideNo})` : ''}</span>
         <input value={slide.title} onChange={e => onUpdate({ title: e.target.value })} style={{ flex: 1 }} />
+        <select value={slide.sectionId} onChange={e => onUpdate({ sectionId: e.target.value })} title="Pindah ke section lain">
+          {module.sections.map(sec => <option key={sec.id} value={sec.id}>{sec.icon}. {sec.short}</option>)}
+        </select>
         <button onClick={onToggle}>{open ? 'Tutup' : 'Edit blok'}</button>
         <button onClick={onRemove} style={{ color: 'crimson' }}>Hapus</button>
       </div>
