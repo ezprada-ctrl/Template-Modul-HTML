@@ -116,7 +116,6 @@ export default function Canvas({ module, setModule }: Props) {
               updateSection(sec.id, { title, short });
             }} style={{ flex: 1, fontWeight: 700 }} />
             <input value={sec.icon} onChange={e => updateSection(sec.id, { icon: e.target.value })} style={{ width: 40 }} />
-            <input type="color" value={sec.color} onChange={e => updateSection(sec.id, { color: e.target.value })} />
             <button onClick={() => removeSection(sec.id)} style={{ color: 'crimson' }}>Hapus section</button>
           </div>
 
