@@ -32,8 +32,8 @@ export default function CoverForm({ module, setModule }: Props) {
       <h2>Sampul & Pengaturan Modul</h2>
       <div style={{ display: 'flex', gap: 16 }}>
         <div style={{ flex: '1 1 50%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <label>
-            Judul Modul
+          <label style={{ opacity: 0.6 }}>
+            Nama Tab Browser <span style={{ fontSize: 11, fontWeight: 400 }}>(opsional, gak kepakai kalau modul dijalankan lewat Web Object Storyline)</span>
             <input style={{ width: '100%' }} value={module.title} onChange={e => setModule({ ...module, title: e.target.value })} />
           </label>
           <label>
