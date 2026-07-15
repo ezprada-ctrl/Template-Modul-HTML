@@ -305,14 +305,19 @@ function AccordionDemo() {
   return (
     <div className="pbp-scope">
       {[0, 1].map(i => (
-        <div className={`acc-item${open === i ? ' open' : ''}`} key={i} style={{ position: 'relative' }}>
-          <button className="acc-head" type="button">
-            <span className="acc-n">{String.fromCharCode(97 + i)}</span>
-            <span>{i === 0 ? 'Lorem ipsum dolor' : 'Consectetur adipiscing'}</span>
-            <span className="acc-chevron">⌄</span>
-          </button>
+        // acc-item itself needs overflow:hidden for the collapse animation,
+        // which would clip the cursor if it lived inside — so the cursor is
+        // anchored to this outer (overflow-visible) wrapper instead.
+        <div key={i} style={{ position: 'relative' }}>
+          <div className={`acc-item${open === i ? ' open' : ''}`}>
+            <button className="acc-head" type="button">
+              <span className="acc-n">{String.fromCharCode(97 + i)}</span>
+              <span>{i === 0 ? 'Lorem ipsum dolor' : 'Consectetur adipiscing'}</span>
+              <span className="acc-chevron">⌄</span>
+            </button>
+            <div className="acc-body"><div className="acc-body-inner">{LOREM[i]}</div></div>
+          </div>
           <ClickCursor show={clicking && nextOpen === i} />
-          <div className="acc-body"><div className="acc-body-inner">{LOREM[i]}</div></div>
         </div>
       ))}
     </div>
