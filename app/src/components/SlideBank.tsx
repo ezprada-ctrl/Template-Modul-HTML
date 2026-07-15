@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import type { DraftSlide, ModuleData } from '../types';
+import type { DraftSlide, ModuleData, Slide } from '../types';
 import { extractPptx } from '../api';
-import { uid as makeId } from '../types';
+import { uid as makeId, renumberModule } from '../types';
 
 interface Props {
   bank: DraftSlide[];
@@ -43,9 +43,6 @@ export default function SlideBank({ bank, setBank, module, setModule }: Props) {
       if (module.sections.length === 0) {
         throw new Error('Belum ada section. Buat section dulu di tab "Susun Modul".');
       }
-      const nextNumber = module.slides.length
-        ? Math.max(...module.slides.map(s => s.number)) + 1
-        : 2;
       const sectionId = module.sections[0].id;
       const firstLine = draft.texts[0]?.split('\n')[0] || `Slide ${draft.slideNo}`;
       const restText = draft.texts.join('\n\n');
@@ -68,19 +65,19 @@ export default function SlideBank({ bank, setBank, module, setModule }: Props) {
           rows: rows.slice(1),
         });
       });
-      setModule({
-        ...module,
-        slides: [...module.slides, {
-          id: makeId('slide'),
-          number: nextNumber,
-          sectionId,
-          title: firstLine,
-          kickerLabel: '',
-          blocks,
-          sourceSlideNo: draft.slideNo,
-        }],
-      });
-      setToast({ slideNo: draft.slideNo, ok: true, message: `Berhasil ditambahkan sebagai slide #${nextNumber} ke section "${module.sections[0].short}".` });
+      const newSlide: Slide = {
+        id: makeId('slide'),
+        number: 0,
+        sectionId,
+        title: firstLine,
+        kickerLabel: '',
+        blocks,
+        sourceSlideNo: draft.slideNo,
+      };
+      const nextModule = renumberModule({ ...module, slides: [...module.slides, newSlide] });
+      setModule(nextModule);
+      const assignedNumber = nextModule.slides.find(s => s.id === newSlide.id)!.number;
+      setToast({ slideNo: draft.slideNo, ok: true, message: `Berhasil ditambahkan sebagai slide #${assignedNumber} ke section "${module.sections[0].short}".` });
     } catch (err: any) {
       setToast({ slideNo: draft.slideNo, ok: false, message: err.message || 'Gagal menambahkan slide ke canvas.' });
     } finally {

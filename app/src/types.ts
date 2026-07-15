@@ -147,6 +147,54 @@ export function normalizeModule(data: Partial<ModuleData>): ModuleData {
   return { ...emptyModule(), ...data, theme: { ...DEFAULT_THEME, ...data.theme } };
 }
 
+// Recomputes every slide's `number` from scratch, purely from (a) the order
+// of `sections` and (b) each slide's relative position within its own
+// section (as reflected by `slides` array order). This is the single source
+// of truth for numbering — call it after ANY operation that could change
+// order (reorder within a section, move a slide to another section, add,
+// remove) instead of hand-rolling incremental math at each call site, which
+// is what let numbers drift/collide previously (e.g. reordering a
+// non-last section pushed its numbers past later sections' numbers, and
+// moving a slide to another section didn't renumber it at all).
+//
+// Bundles (`multiGroups`) reference slides by NUMBER, not id, so any
+// renumber has to remap them too or a bundle silently starts pointing at
+// the wrong slide.
+export function renumberModule(module: ModuleData): ModuleData {
+  const bySection = new Map<string, Slide[]>(module.sections.map(sec => [sec.id, []]));
+  const orphans: Slide[] = [];
+  for (const s of module.slides) {
+    const bucket = bySection.get(s.sectionId);
+    if (bucket) bucket.push(s); else orphans.push(s);
+  }
+
+  const oldToNew = new Map<number, number>();
+  let n = 1;
+  const slides: Slide[] = [];
+  for (const sec of module.sections) {
+    for (const s of bySection.get(sec.id)!) {
+      oldToNew.set(s.number, n);
+      slides.push({ ...s, number: n });
+      n++;
+    }
+  }
+  for (const s of orphans) {
+    oldToNew.set(s.number, n);
+    slides.push({ ...s, number: n });
+    n++;
+  }
+
+  const multiGroups: ModuleData['multiGroups'] = {};
+  for (const [sectionId, bundles] of Object.entries(module.multiGroups)) {
+    multiGroups[sectionId] = bundles.map(b => ({
+      ...b,
+      slides: b.slides.map(num => oldToNew.get(num)).filter((num): num is number => num !== undefined),
+    }));
+  }
+
+  return { ...module, slides, multiGroups };
+}
+
 let idCounter = 0;
 export function uid(prefix = 'id') {
   idCounter += 1;

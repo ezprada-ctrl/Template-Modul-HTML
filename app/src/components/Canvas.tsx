@@ -7,7 +7,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { ModuleData, Slide, Section } from '../types';
-import { uid } from '../types';
+import { uid, renumberModule } from '../types';
 import BlockEditor from './BlockEditor';
 import SlidePreview from './SlidePreview';
 
@@ -45,17 +45,24 @@ export default function Canvas({ module, setModule }: Props) {
   }
 
   function updateSlide(id: string, patch: Partial<Slide>) {
+    if (patch.sectionId !== undefined) {
+      // Moving to a different section: drop it to the end of the flat
+      // slide list (so it lands after that section's existing slides),
+      // then renumber everything so numbering follows section order again.
+      const moved = module.slides.find(s => s.id === id);
+      if (!moved) return;
+      const rest = module.slides.filter(s => s.id !== id);
+      setModule(renumberModule({ ...module, slides: [...rest, { ...moved, ...patch }] }));
+      return;
+    }
     setModule({ ...module, slides: module.slides.map(s => s.id === id ? { ...s, ...patch } : s) });
   }
   function removeSlide(id: string) {
-    setModule({ ...module, slides: module.slides.filter(s => s.id !== id) });
+    setModule(renumberModule({ ...module, slides: module.slides.filter(s => s.id !== id) }));
   }
   function addBlankSlide(sectionId: string) {
-    const nextNumber = module.slides.length ? Math.max(...module.slides.map(s => s.number)) + 1 : 2;
-    setModule({
-      ...module,
-      slides: [...module.slides, { id: uid('slide'), number: nextNumber, sectionId, title: 'Slide Baru', kickerLabel: '', blocks: [] }],
-    });
+    const newSlide: Slide = { id: uid('slide'), number: 0, sectionId, title: 'Slide Baru', kickerLabel: '', blocks: [] };
+    setModule(renumberModule({ ...module, slides: [...module.slides, newSlide] }));
   }
 
   function bundlesFor(sectionId: string) {
@@ -89,12 +96,8 @@ export default function Canvas({ module, setModule }: Props) {
       const oldIndex = list.findIndex(s => s.id === active.id);
       const newIndex = list.findIndex(s => s.id === over.id);
       const reordered = arrayMove(list, oldIndex, newIndex);
-      // renumber this section's slides sequentially based on new order, keep other sections' numbers
       const others = module.slides.filter(s => s.sectionId !== sectionId);
-      const maxOther = others.length ? Math.max(...others.map(s => s.number), 1) : 1;
-      let n = maxOther + 1;
-      const renumbered = reordered.map(s => ({ ...s, number: n++ }));
-      setModule({ ...module, slides: [...others, ...renumbered] });
+      setModule(renumberModule({ ...module, slides: [...others, ...reordered] }));
     };
   }
 
