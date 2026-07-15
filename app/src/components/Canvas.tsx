@@ -100,13 +100,13 @@ export default function Canvas({ module, setModule }: Props) {
 
   return (
     <div>
-      <h2>Susun Modul</h2>
-      <p style={{ color: '#888', fontSize: 13 }}>
-        Drag slide untuk atur urutan dalam satu section. Klik judul slide untuk buka editor blok kontennya.
+      <h2 style={{ margin: '0 0 4px' }}>Susun Modul</h2>
+      <p className="hint" style={{ marginTop: 0, marginBottom: 18 }}>
+        Drag slide untuk atur urutan dalam satu section. Klik “Edit blok” untuk buka editor konten slide-nya.
       </p>
       {module.sections.map(sec => (
-        <div key={sec.id} style={{ border: '1px solid #ddd', borderRadius: 8, padding: 12, marginBottom: 16 }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+        <div className="panel" key={sec.id} style={{ padding: 14, marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
             <input value={sec.title} onChange={e => {
               const title = e.target.value;
               // Keep the compact label (used in the Kuis tab + sidebar nav) in
@@ -115,8 +115,8 @@ export default function Canvas({ module, setModule }: Props) {
               const short = title.replace(/^[A-Za-z0-9]+\.\s*/, '') || title;
               updateSection(sec.id, { title, short });
             }} style={{ flex: 1, fontWeight: 700 }} />
-            <input value={sec.icon} onChange={e => updateSection(sec.id, { icon: e.target.value })} style={{ width: 40 }} />
-            <button onClick={() => removeSection(sec.id)} style={{ color: 'crimson' }}>Hapus section</button>
+            <input value={sec.icon} onChange={e => updateSection(sec.id, { icon: e.target.value })} style={{ width: 44, textAlign: 'center' }} />
+            <button className="btn-danger btn-sm" onClick={() => removeSection(sec.id)}>Hapus section</button>
           </div>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd(sec.id)}>
@@ -136,7 +136,7 @@ export default function Canvas({ module, setModule }: Props) {
               </div>
             </SortableContext>
           </DndContext>
-          <button style={{ marginTop: 8 }} onClick={() => addBlankSlide(sec.id)}>+ Slide kosong</button>
+          <button className="btn-sm" style={{ marginTop: 10 }} onClick={() => addBlankSlide(sec.id)}>+ Slide kosong</button>
 
           <BundlePanel
             slides={slidesFor(sec.id)}
@@ -149,7 +149,7 @@ export default function Canvas({ module, setModule }: Props) {
           />
         </div>
       ))}
-      <button onClick={addSection}>+ Tambah section</button>
+      <button className="btn-primary" onClick={addSection}>+ Tambah section</button>
     </div>
   );
 }
@@ -164,33 +164,33 @@ function BundlePanel({ slides, bundles, theme, onAdd, onUpdateLabel, onToggleSli
   onRemove: (idx: number) => void;
 }) {
   return (
-    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px dashed #ccc' }}>
+    <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px dashed var(--border-strong)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <b style={{ fontSize: 13 }}>Bundle sidebar (opsional)</b>
-        <button onClick={onAdd}>+ Bundle</button>
+        <b style={{ fontSize: 13 }}>Bundle sidebar <span style={{ fontWeight: 400, color: 'var(--text-faint)' }}>(opsional)</span></b>
+        <button className="btn-sm" onClick={onAdd}>+ Bundle</button>
       </div>
-      <p style={{ color: '#888', fontSize: 12, margin: '4px 0 8px' }}>
+      <p className="hint" style={{ margin: '6px 0 10px' }}>
         Gabungkan beberapa slide berurutan jadi 1 poin expandable di sidebar (mis. "Kriteria Pemeriksaan" untuk slide 7-8),
         alih-alih tiap slide berdiri sendiri.
       </p>
-      {bundles.length === 0 && <p style={{ fontSize: 12, color: '#aaa' }}>Belum ada bundle di section ini.</p>}
+      {bundles.length === 0 && <p className="hint" style={{ margin: 0 }}>Belum ada bundle di section ini.</p>}
       {bundles.map((b, idx) => (
-        <div key={idx} style={{ border: '1px solid #eee', borderRadius: 6, padding: 8, marginBottom: 8 }}>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+        <div key={idx} style={{ border: '1px solid var(--border)', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', padding: 10, marginBottom: 8 }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
             <input placeholder="Label bundle (mis. Kriteria Pemeriksaan)" value={b.label}
               onChange={e => onUpdateLabel(idx, e.target.value)} style={{ flex: 1 }} />
-            <button onClick={() => onRemove(idx)} style={{ color: 'crimson' }}>Hapus bundle</button>
+            <button className="btn-danger btn-sm" onClick={() => onRemove(idx)}>Hapus bundle</button>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             {slides.map(s => (
-              <label key={s.id} style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <label key={s.id} style={{ fontSize: 12.5, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
                 <input type="checkbox" checked={b.slides.includes(s.number)} onChange={() => onToggleSlide(idx, s.number)} />
                 #{s.number} {s.title}
               </label>
             ))}
           </div>
           {b.slides.length > 0 && b.slides.length < 2 && (
-            <p style={{ fontSize: 11, color: '#c04a44', margin: '4px 0 0' }}>Pilih minimal 2 slide biar jadi bundle expandable.</p>
+            <p style={{ fontSize: 11.5, color: 'var(--danger)', margin: '6px 0 0' }}>Pilih minimal 2 slide biar jadi bundle expandable.</p>
           )}
           {b.slides.length >= 2 && (
             <BundleAnimatedDemo
@@ -232,7 +232,7 @@ function BundleAnimatedDemo({ label, slideTitles, theme }: {
 
   return (
     <div style={{ marginTop: 10 }}>
-      <p style={{ fontSize: 11, color: '#aaa', margin: '0 0 4px' }}>Contoh tampilan di sidebar peserta:</p>
+      <p className="hint" style={{ margin: '0 0 5px' }}>Contoh tampilan di sidebar peserta:</p>
       <div style={{
         maxWidth: 280, border: '1px solid #e3e6ee', borderRadius: 10, background: '#fff',
         padding: 6, fontFamily: 'system-ui, sans-serif',
@@ -282,19 +282,19 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
-    <div ref={setNodeRef} style={{ ...style, border: '1px solid #eee', borderRadius: 6, background: '#fff' }}>
+    <div ref={setNodeRef} style={{ ...style, border: `1px solid ${open ? 'var(--border-strong)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', boxShadow: open ? 'var(--shadow-sm)' : 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8 }}>
-        <span {...attributes} {...listeners} style={{ cursor: 'grab' }}>⠿</span>
-        <span style={{ fontSize: 11, color: '#999' }}>#{slide.number}{slide.sourceSlideNo ? ` (PPTX #${slide.sourceSlideNo})` : ''}</span>
+        <span {...attributes} {...listeners} style={{ cursor: 'grab', color: 'var(--text-faint)', fontSize: 15, padding: '0 2px' }} title="Geser untuk atur urutan">⠿</span>
+        <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, whiteSpace: 'nowrap' }}>#{slide.number}{slide.sourceSlideNo ? ` · PPTX ${slide.sourceSlideNo}` : ''}</span>
         <input value={slide.title} onChange={e => onUpdate({ title: e.target.value })} style={{ flex: 1 }} />
         <select value={slide.sectionId} onChange={e => onUpdate({ sectionId: e.target.value })} title="Pindah ke section lain">
           {module.sections.map(sec => <option key={sec.id} value={sec.id}>{sec.icon}. {sec.short}</option>)}
         </select>
-        <button onClick={onToggle}>{open ? 'Tutup' : 'Edit blok'}</button>
-        <button onClick={onRemove} style={{ color: 'crimson' }}>Hapus</button>
+        <button className={open ? 'btn-primary btn-sm' : 'btn-sm'} onClick={onToggle}>{open ? 'Tutup' : 'Edit blok'}</button>
+        <button className="btn-danger btn-sm" onClick={onRemove}>Hapus</button>
       </div>
       {open && (
-        <div style={{ padding: 12, borderTop: '1px solid #eee', display: 'flex', gap: 28 }}>
+        <div style={{ padding: 14, borderTop: '1px solid var(--border)', display: 'flex', gap: 28 }}>
           <div style={{ flex: '1 1 50%', minWidth: 0 }}>
             <input placeholder="Kicker label (mis. A.1 JUDUL)" value={slide.kickerLabel}
               onChange={e => onUpdate({ kickerLabel: e.target.value })} style={{ width: '100%', marginBottom: 4 }} />

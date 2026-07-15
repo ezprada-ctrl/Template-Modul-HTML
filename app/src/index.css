@@ -1,33 +1,212 @@
+/* ============================================================================
+   Design tokens — monochrome neutral builder UI, light + dark.
+   The builder chrome is intentionally grayscale with a single "ink" accent
+   (near-black in light, near-white in dark — no hue). Semantic hues appear
+   ONLY where they carry meaning: danger (destructive) and success. The
+   generated module OUTPUT keeps its own amber/navy brand and is unaffected.
+   Theme is switched by data-theme on <html>; tokens cascade to everything.
+   ============================================================================ */
 :root {
   color-scheme: light;
-  font: 15px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  --bg:            #ffffff;
+  --bg-2:          #f6f6f7;   /* page canvas behind panels */
+  --surface:       #ffffff;   /* raised panels/cards */
+  --surface-2:     #f3f3f5;   /* inset fields, subtle fills */
+  --surface-3:     #e9e9ec;   /* hover fill */
+  --border:        #e4e4e7;
+  --border-strong: #d1d1d6;
+
+  --text:          #18181b;   /* primary ink */
+  --text-dim:      #565660;   /* secondary */
+  --text-faint:    #9a9aa4;   /* tertiary / placeholders */
+
+  --ink:           #18181b;   /* the accent = ink itself */
+  --ink-hover:     #000000;
+  --on-ink:        #ffffff;
+  --ring:          rgba(24, 24, 27, 0.14);
+  --ink-soft:      rgba(24, 24, 27, 0.06);
+
+  --danger:        #c0392c;
+  --danger-hover:  #a52f24;
+  --danger-soft:   rgba(192, 57, 44, 0.09);
+  --success:       #2f8f57;
+  --success-soft:  rgba(47, 143, 87, 0.12);
+
+  --radius-sm: 7px;
+  --radius:    10px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.05);
+  --shadow:    0 4px 16px -6px rgba(24, 24, 27, 0.14);
+  --shadow-lg: 0 12px 34px -12px rgba(24, 24, 27, 0.24);
+
+  --ease: 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+
+  font: 15px/1.55 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg:            #0d0d0f;
+  --bg-2:          #0d0d0f;
+  --surface:       #161619;
+  --surface-2:     #1d1d21;
+  --surface-3:     #27272c;
+  --border:        #2a2a30;
+  --border-strong: #3a3a42;
+
+  --text:          #f3f3f5;
+  --text-dim:      #a6a6b0;
+  --text-faint:    #6c6c78;
+
+  --ink:           #f4f4f5;
+  --ink-hover:     #ffffff;
+  --on-ink:        #161619;
+  --ring:          rgba(244, 244, 245, 0.16);
+  --ink-soft:      rgba(244, 244, 245, 0.08);
+
+  --danger:        #ec6a5e;
+  --danger-hover:  #f2837a;
+  --danger-soft:   rgba(236, 106, 94, 0.14);
+  --success:       #4cbd7d;
+  --success-soft:  rgba(76, 189, 125, 0.16);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow:    0 4px 18px -6px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 14px 38px -12px rgba(0, 0, 0, 0.7);
+}
+
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: #fff;
-  color: #16213e;
+  background: var(--bg-2);
+  color: var(--text);
+  transition: background var(--ease), color var(--ease);
 }
 
-#root {
-  min-height: 100vh;
-  text-align: left;
-}
+#root { min-height: 100vh; text-align: left; }
 
-h1, h2 { font-weight: 700; }
+h1, h2, h3 { font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+h1 { font-size: 24px; }
+h2 { font-size: 19px; }
 
+a { color: var(--text); }
+
+/* ---- Form controls: themed by default so bare elements adapt automatically ---- */
 input, textarea, select {
   font-family: inherit;
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  font-size: 13.5px;
+  color: var(--text);
+  background: var(--surface);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--ease), box-shadow var(--ease), background var(--ease);
+}
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+input:hover, textarea:hover, select:hover { border-color: var(--border-strong); }
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+textarea { resize: vertical; }
+select { cursor: pointer; }
+input[type="checkbox"], input[type="radio"] {
+  accent-color: var(--ink);
+  cursor: pointer;
+  width: 15px; height: 15px;
+  padding: 0;
+}
+input[type="file"] {
+  padding: 6px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  cursor: pointer;
 }
 
+/* ---- Buttons: default is a quiet surface chip; interactive glow on hover ---- */
 button {
   font-family: inherit;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #f4f3ec;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface);
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--ease), border-color var(--ease),
+              box-shadow var(--ease), color var(--ease), transform var(--ease);
 }
-button:hover { background: #ece9dc; }
+button:hover {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+}
+button:active { transform: translateY(0.5px); }
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+button:disabled {
+  color: var(--text-faint);
+  background: var(--surface-2);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+button:disabled:hover { background: var(--surface-2); border-color: var(--border); }
+
+/* ---- Reusable button intents (opt-in via className) ---- */
+.btn-primary {
+  background: var(--ink);
+  color: var(--on-ink);
+  border-color: var(--ink);
+  font-weight: 600;
+}
+.btn-primary:hover {
+  background: var(--ink-hover);
+  border-color: var(--ink-hover);
+  box-shadow: 0 4px 14px -4px var(--ring);
+}
+.btn-primary:disabled { background: var(--surface-3); border-color: var(--border); color: var(--text-faint); }
+
+.btn-danger { color: var(--danger); }
+.btn-danger:hover { background: var(--danger-soft); border-color: var(--danger); color: var(--danger-hover); }
+
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-dim); }
+.btn-ghost:hover { background: var(--surface-3); border-color: transparent; color: var(--text); }
+
+.btn-sm { padding: 4px 9px; font-size: 12px; }
+.btn-icon { padding: 5px 9px; line-height: 1; color: var(--text-dim); }
+
+/* ---- Structural helpers ---- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.hint { color: var(--text-faint); font-size: 12.5px; line-height: 1.5; }
+
+label { font-size: 13.5px; }
+code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.86em;
+  background: var(--surface-3);
+  color: var(--text-dim);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+::selection { background: var(--ink-soft); }
+
+/* thin, theme-aware scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 20px; border: 3px solid var(--bg-2); }
+*::-webkit-scrollbar-track { background: transparent; }

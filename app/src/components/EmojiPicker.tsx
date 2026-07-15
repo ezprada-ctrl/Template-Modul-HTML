@@ -53,13 +53,13 @@ export default function EmojiPicker({ value, onChange, placeholder }: Props) {
       </div>
       {open && (
         <div style={{
-          position: 'absolute', zIndex: 50, top: 40, left: 0, width: 340,
-          background: '#fff', border: '1px solid #ccc', borderRadius: 8,
-          boxShadow: '0 8px 24px rgba(0,0,0,.15)', padding: 8,
+          position: 'absolute', zIndex: 50, top: 42, left: 0, width: 340,
+          background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+          boxShadow: 'var(--shadow-lg)', padding: 8,
         }}>
           <input
             autoFocus
-            placeholder="Cari kategori (mis. panah, bintang, dokumen)..."
+            placeholder="Cari kategori (mis. panah, bintang, dokumen)…"
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{ width: '100%', marginBottom: 8 }}
@@ -70,12 +70,9 @@ export default function EmojiPicker({ value, onChange, placeholder }: Props) {
                 <button
                   key={c.label}
                   type="button"
+                  className={activeCategory === i ? 'btn-primary btn-sm' : 'btn-sm'}
                   onClick={() => setActiveCategory(i)}
-                  style={{
-                    fontSize: 11, padding: '4px 8px',
-                    fontWeight: activeCategory === i ? 700 : 400,
-                    background: activeCategory === i ? '#f0e4c8' : '#f4f3ec',
-                  }}
+                  style={{ fontSize: 11 }}
                 >
                   {c.label}
                 </button>
@@ -89,14 +86,14 @@ export default function EmojiPicker({ value, onChange, placeholder }: Props) {
                   key={e + i}
                   type="button"
                   onClick={() => pick(e)}
-                  style={{ fontSize: 20, width: 34, height: 34, padding: 0, border: 'none', background: 'transparent' }}
+                  style={{ fontSize: 20, width: 34, height: 34, padding: 0, border: 'none', background: 'transparent', borderRadius: 6 }}
                 >
                   {e}
                 </button>
               ))}
           </div>
           {value && (
-            <button type="button" style={{ marginTop: 6, fontSize: 11, color: 'crimson' }} onClick={() => pick('')}>
+            <button type="button" className="btn-danger btn-sm" style={{ marginTop: 8, fontSize: 11 }} onClick={() => pick('')}>
               Hapus icon
             </button>
           )}

@@ -159,15 +159,21 @@ function useBlinkWithClick(onMs: number, offMs: number) {
 }
 
 // Small hand-cursor glyph that "clicks" the element it's anchored to. The
-// parent must be `position:relative`; this renders absolutely in its
-// top-right corner, hidden until `show` flips true right before the state
-// change it's pointing at.
+// parent must be `position:relative` and should tightly wrap just the
+// clickable target (button/step), not a taller container — this glyph
+// vertically centers on its parent's own box (top:50% + translateY(-50%))
+// and only ever fades/scales in place, never traveling outside that box.
+// That matters because several targets (e.g. the accordion header) sit
+// inside an ancestor with `overflow:hidden` for its collapse animation;
+// an earlier version that slid the cursor in from above (`top: -20px`)
+// got silently clipped there, showing only a sliver.
 function ClickCursor({ show }: { show: boolean }) {
   return (
     <span style={{
-      position: 'absolute', top: show ? -6 : -20, right: -4, fontSize: 15,
-      transition: 'top .25s ease, transform .25s ease, opacity .25s ease',
-      transform: show ? 'scale(0.85)' : 'scale(1)', opacity: show ? 1 : 0,
+      position: 'absolute', top: '50%', right: -2, fontSize: 15,
+      transform: `translateY(-50%) scale(${show ? 0.8 : 0.4})`,
+      opacity: show ? 1 : 0,
+      transition: 'opacity .2s ease, transform .2s ease',
       pointerEvents: 'none', zIndex: 5,
     }}>
       👆
@@ -305,19 +311,20 @@ function AccordionDemo() {
   return (
     <div className="pbp-scope">
       {[0, 1].map(i => (
-        // acc-item itself needs overflow:hidden for the collapse animation,
-        // which would clip the cursor if it lived inside — so the cursor is
-        // anchored to this outer (overflow-visible) wrapper instead.
-        <div key={i} style={{ position: 'relative' }}>
-          <div className={`acc-item${open === i ? ' open' : ''}`}>
+        // acc-item has overflow:hidden (needed for the collapse animation),
+        // which clips anything positioned outside its own box — so the
+        // cursor wraps *just* the acc-head button (a fixed-height row that's
+        // always fully visible) rather than the whole card.
+        <div className={`acc-item${open === i ? ' open' : ''}`} key={i}>
+          <div style={{ position: 'relative' }}>
             <button className="acc-head" type="button">
               <span className="acc-n">{String.fromCharCode(97 + i)}</span>
               <span>{i === 0 ? 'Lorem ipsum dolor' : 'Consectetur adipiscing'}</span>
               <span className="acc-chevron">⌄</span>
             </button>
-            <div className="acc-body"><div className="acc-body-inner">{LOREM[i]}</div></div>
+            <ClickCursor show={clicking && nextOpen === i} />
           </div>
-          <ClickCursor show={clicking && nextOpen === i} />
+          <div className="acc-body"><div className="acc-body-inner">{LOREM[i]}</div></div>
         </div>
       ))}
     </div>

@@ -90,49 +90,49 @@ export default function SlideBank({ bank, setBank, module, setModule }: Props) {
 
   return (
     <div>
-      <h2>Slide Bank</h2>
-      <p style={{ color: '#888', fontSize: 13 }}>
+      <h2 style={{ margin: '0 0 4px' }}>Import PPTX</h2>
+      <p className="hint" style={{ marginTop: 0, marginBottom: 16 }}>
         Upload file PPTX asli. Tiap slide otomatis diekstrak jadi draft (nomor slide asli dipertahankan
         biar gampang dicocokkan manual ke file PPTX kamu). Centang "sudah dicek" setelah kamu bandingkan.
       </p>
       <input type="file" accept=".pptx" onChange={onUpload} />
-      {loading && <p>Mengekstrak PPTX...</p>}
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
+      {loading && <p className="hint" style={{ marginTop: 10 }}>Mengekstrak PPTX…</p>}
+      {error && <p style={{ color: 'var(--danger)', marginTop: 10 }}>{error}</p>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18 }}>
         {bank.map(s => (
-          <div key={s.slideNo} style={{ border: '1px solid #ddd', borderRadius: 8, padding: 12 }}>
+          <div className="panel" key={s.slideNo} style={{ padding: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <b>Slide asli #{s.slideNo}</b>
-              <label style={{ fontSize: 12 }}>
+              <b style={{ fontSize: 13.5 }}>Slide asli #{s.slideNo}</b>
+              <label style={{ fontSize: 12, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
                 <input type="checkbox" checked={!!s.reviewed} onChange={() => toggleReviewed(s.slideNo)} /> sudah dicek
               </label>
             </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
-              <div style={{ flex: 1, fontSize: 13, whiteSpace: 'pre-wrap' }}>
-                {s.texts.join('\n---\n') || <i>(tidak ada teks terdeteksi)</i>}
+            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+              <div style={{ flex: 1, fontSize: 13, color: 'var(--text-dim)', whiteSpace: 'pre-wrap' }}>
+                {s.texts.join('\n---\n') || <i style={{ color: 'var(--text-faint)' }}>(tidak ada teks terdeteksi)</i>}
               </div>
               {s.images.length > 0 && (
                 <div style={{ display: 'flex', gap: 6 }}>
                   {s.images.map((img, i) => (
-                    <img key={i} src={img} style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 4 }} />
+                    <img key={i} src={img} style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
                   ))}
                 </div>
               )}
             </div>
-            {s.tables.length > 0 && <div style={{ fontSize: 11, color: '#888' }}>{s.tables.length} tabel terdeteksi</div>}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
-              <button onClick={() => addToCanvas(s)}>+ Tambah ke Canvas</button>
+            {s.tables.length > 0 && <div className="hint" style={{ marginTop: 6 }}>{s.tables.length} tabel terdeteksi</div>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+              <button className="btn-sm" onClick={() => addToCanvas(s)}>+ Tambah ke Canvas</button>
               {countAdded(s.slideNo) > 0 && (
-                <span style={{ fontSize: 11, color: '#2f9e6a', fontWeight: 600 }}>
+                <span style={{ fontSize: 11.5, color: 'var(--success)', fontWeight: 600 }}>
                   ✓ Sudah ditambahkan ({countAdded(s.slideNo)}×)
                 </span>
               )}
             </div>
             {toast && toast.slideNo === s.slideNo && (
               <div style={{
-                marginTop: 6, fontSize: 12, padding: '6px 10px', borderRadius: 6,
-                background: toast.ok ? '#e6f4ea' : '#fbe9e7',
-                color: toast.ok ? '#1e7e42' : '#c04a44',
+                marginTop: 8, fontSize: 12, padding: '7px 11px', borderRadius: 'var(--radius-sm)',
+                background: toast.ok ? 'var(--success-soft)' : 'var(--danger-soft)',
+                color: toast.ok ? 'var(--success)' : 'var(--danger)', fontWeight: 500,
               }}>
                 {toast.ok ? '✓ ' : '✗ '}{toast.message}
               </div>

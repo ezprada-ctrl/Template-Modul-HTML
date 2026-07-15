@@ -57,12 +57,12 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
   }
 
   return (
-    <div style={{ border: '1px solid #ddd', borderRadius: 8, overflow: 'hidden', height: '100%', minHeight: 420, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '6px 10px', background: '#f4f3ec', fontSize: 11, color: '#888', display: 'flex', justifyContent: 'space-between' }}>
+    <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', height: '100%', minHeight: 420, display: 'flex', flexDirection: 'column', background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
+      <div style={{ padding: '8px 12px', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--text-faint)', display: 'flex', justifyContent: 'space-between' }}>
         <span>{label || (target === 'hero' ? 'Preview langsung — sampul' : `Preview langsung — slide #${slideNumber}`)}</span>
-        {loading && <span>memperbarui...</span>}
+        {loading && <span>memperbarui…</span>}
       </div>
-      {error && <p style={{ color: 'crimson', fontSize: 12, padding: 8 }}>{error}</p>}
+      {error && <p style={{ color: 'var(--danger)', fontSize: 12, padding: 10 }}>{error}</p>}
       {html && (
         <iframe
           ref={iframeRef}

@@ -104,17 +104,17 @@ export default function BlockAddMenu({ onAdd }: Props) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        style={{ width: '100%', textAlign: 'left', padding: '8px 10px' }}
+        style={{ width: '100%', textAlign: 'left', padding: '9px 12px', fontWeight: 600, color: 'var(--text-dim)' }}
       >
-        + Tambah blok...
+        + Tambah blok…
       </button>
       {open && (
         <div
           ref={listRef}
           style={{
-            position: 'absolute', zIndex: 50, top: '100%', left: 0, marginTop: 4, width: 240,
-            background: '#fff', border: '1px solid #ccc', borderRadius: 8,
-            boxShadow: '0 8px 24px rgba(0,0,0,.15)', padding: 4, maxHeight: 320, overflowY: 'auto',
+            position: 'absolute', zIndex: 50, top: '100%', left: 0, marginTop: 6, width: 240,
+            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+            boxShadow: 'var(--shadow-lg)', padding: 5, maxHeight: 320, overflowY: 'auto',
           }}
         >
           {BLOCK_TYPES.map(type => (
@@ -125,8 +125,11 @@ export default function BlockAddMenu({ onAdd }: Props) {
               onMouseEnter={e => scheduleHover(type, e.currentTarget)}
               onMouseLeave={cancelHover}
               style={{
-                display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px',
-                fontSize: 13, background: hovered === type ? '#f1f3f7' : 'transparent', border: 'none',
+                display: 'block', width: '100%', textAlign: 'left', padding: '8px 10px',
+                fontSize: 13, borderRadius: 'var(--radius-sm)',
+                color: hovered === type ? 'var(--text)' : 'var(--text-dim)',
+                fontWeight: hovered === type ? 600 : 500,
+                background: hovered === type ? 'var(--surface-3)' : 'transparent', border: 'none',
               }}
             >
               {BLOCK_LABELS[type]}
@@ -138,9 +141,9 @@ export default function BlockAddMenu({ onAdd }: Props) {
         <div
           ref={tooltipRef}
           style={{
-            position: 'absolute', zIndex: 60, left: 244, top: tooltipTop,
-            background: '#fff', border: '1px solid #ccc', borderRadius: 10,
-            boxShadow: '0 12px 30px rgba(0,0,0,.18)', padding: 4,
+            position: 'absolute', zIndex: 60, left: 248, top: tooltipTop,
+            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+            boxShadow: 'var(--shadow-lg)', padding: 5,
           }}
         >
           <BlockPreviewCard type={hovered} />

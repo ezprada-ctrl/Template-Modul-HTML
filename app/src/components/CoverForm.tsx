@@ -30,17 +30,17 @@ export default function CoverForm({ module, setModule }: Props) {
 
   return (
     <div>
-      <h2>Sampul & Pengaturan Modul</h2>
-      <div style={{ display: 'flex', gap: 16 }}>
-        <div style={{ flex: '1 1 50%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <label style={{ opacity: 0.6 }}>
-            Nama Tab Browser <span style={{ fontSize: 11, fontWeight: 400 }}>(opsional, gak kepakai kalau modul dijalankan lewat Web Object Storyline)</span>
-            <input style={{ width: '100%' }} value={module.title} onChange={e => setModule({ ...module, title: e.target.value })} />
+      <h2 style={{ margin: '0 0 16px' }}>Sampul &amp; Pengaturan Modul</h2>
+      <div style={{ display: 'flex', gap: 28 }}>
+        <div style={{ flex: '1 1 50%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <label style={{ color: 'var(--text-dim)' }}>
+            Nama Tab Browser <span className="hint" style={{ fontSize: 11 }}>(opsional, gak kepakai kalau modul dijalankan lewat Web Object Storyline)</span>
+            <input style={{ width: '100%', marginTop: 5 }} value={module.title} onChange={e => setModule({ ...module, title: e.target.value })} />
           </label>
-          <label>
-            Tema Warna Modul <span style={{ fontSize: 11, color: '#aaa', fontWeight: 400 }}>(cuma ganti 2 warna brand - emas/aksen &amp; navy; warna benar/salah/info tetap sama)</span>
+          <label style={{ color: 'var(--text-dim)' }}>
+            Tema Warna Modul <span className="hint" style={{ fontSize: 11 }}>(cuma ganti 2 warna brand - emas/aksen &amp; navy; warna benar/salah/info tetap sama)</span>
           </label>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: -4 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: -6 }}>
             {THEME_PRESETS.map(preset => {
               const selected = findThemePresetId(module.theme) === preset.id;
               return (
@@ -49,53 +49,54 @@ export default function CoverForm({ module, setModule }: Props) {
                   type="button"
                   onClick={() => setModule({ ...module, theme: { accent: preset.accent, accent2: preset.accent2, onAccent: preset.onAccent, navy: preset.navy } })}
                   style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                    padding: '8px 10px', borderRadius: 10, cursor: 'pointer',
-                    border: selected ? `2px solid ${preset.accent}` : '2px solid transparent',
-                    background: selected ? '#f6f7fa' : 'transparent',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                    padding: '8px 10px', borderRadius: 'var(--radius)', cursor: 'pointer',
+                    border: selected ? '1px solid var(--ink)' : '1px solid var(--border)',
+                    background: selected ? 'var(--surface-2)' : 'var(--surface)',
+                    boxShadow: selected ? '0 0 0 3px var(--ring)' : 'none',
                   }}
                 >
                   <span style={{
                     display: 'flex', width: 34, height: 20, borderRadius: 6, overflow: 'hidden',
-                    boxShadow: '0 0 0 1px rgba(0,0,0,.08)',
+                    boxShadow: '0 0 0 1px rgba(0,0,0,.12)',
                   }}>
                     <span style={{ flex: 1, background: preset.accent }} />
                     <span style={{ flex: 1, background: preset.navy }} />
                   </span>
-                  <span style={{ fontSize: 11, color: selected ? '#16213e' : '#888', fontWeight: selected ? 700 : 400 }}>{preset.label}</span>
+                  <span style={{ fontSize: 11, color: selected ? 'var(--text)' : 'var(--text-faint)', fontWeight: selected ? 700 : 500 }}>{preset.label}</span>
                 </button>
               );
             })}
           </div>
-          <label>
+          <label style={{ color: 'var(--text-dim)' }}>
             Judul besar di layar sampul (boleh HTML sederhana, mis. pakai <code>&lt;br&gt;</code> untuk ganti baris
             atau <code>&lt;span&gt;...&lt;/span&gt;</code> untuk bagian yang diwarnai emas)
-            <textarea style={{ width: '100%', minHeight: 60 }} value={module.heroTitleHtml}
+            <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.heroTitleHtml}
               onChange={e => setModule({ ...module, heroTitleHtml: e.target.value })} />
           </label>
-          <label>
+          <label style={{ color: 'var(--text-dim)' }}>
             Deskripsi singkat di bawah judul sampul
-            <textarea style={{ width: '100%', minHeight: 50 }} value={module.heroDesc}
+            <textarea style={{ width: '100%', minHeight: 50, marginTop: 5 }} value={module.heroDesc}
               onChange={e => setModule({ ...module, heroDesc: e.target.value })} />
           </label>
-          <label>
+          <label style={{ color: 'var(--text-dim)' }}>
             Label kecil di atas nama modul pada sidebar (mis. "Open Access")
-            <input style={{ width: '100%' }} value={module.sidebarEyebrow}
+            <input style={{ width: '100%', marginTop: 5 }} value={module.sidebarEyebrow}
               onChange={e => setModule({ ...module, sidebarEyebrow: e.target.value })} />
           </label>
-          <label>
+          <label style={{ color: 'var(--text-dim)' }}>
             Nama modul yang tampil di sidebar (biasanya versi singkat dari judul)
-            <input style={{ width: '100%' }} value={module.sidebarTitle}
+            <input style={{ width: '100%', marginTop: 5 }} value={module.sidebarTitle}
               onChange={e => setModule({ ...module, sidebarTitle: e.target.value })} />
           </label>
-          <label>
-            Gambar Sampul <span style={{ fontSize: 11, color: '#aaa', fontWeight: 400 }}>(disimpan di Supabase Storage, kualitas asli)</span>
-            <input type="file" accept="image/*" onChange={onCoverUpload} />
+          <label style={{ color: 'var(--text-dim)' }}>
+            Gambar Sampul <span className="hint" style={{ fontSize: 11 }}>(disimpan di Supabase Storage, kualitas asli)</span>
+            <input type="file" accept="image/*" onChange={onCoverUpload} style={{ marginTop: 5, display: 'block' }} />
           </label>
-          {uploading && <p style={{ fontSize: 12, color: '#888' }}>Mengunggah gambar...</p>}
-          {error && <p style={{ fontSize: 12, color: 'crimson' }}>{error}</p>}
+          {uploading && <p style={{ fontSize: 12, color: 'var(--text-faint)' }}>Mengunggah gambar…</p>}
+          {error && <p style={{ fontSize: 12, color: 'var(--danger)' }}>{error}</p>}
           {module.coverImageDataUri && (
-            <img src={module.coverImageDataUri} style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 8 }} />
+            <img src={module.coverImageDataUri} style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }} />
           )}
         </div>
         <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>

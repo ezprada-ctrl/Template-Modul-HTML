@@ -37,10 +37,10 @@ interface Props {
 // it obvious which one you're in. Pure CSS (:focus-within), no JS state
 // needed: it tracks focus automatically as the user tabs/clicks around.
 const BLOCK_CARD_STYLES = `
-.block-card{position:relative;transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;}
-.block-card:focus-within{border-color:#c99a3d;background:#fffaf0;box-shadow:0 0 0 3px rgba(201,154,61,.15);}
-.block-card:focus-within::before{content:'';position:absolute;left:-1px;top:-1px;bottom:-1px;width:4px;border-radius:8px 0 0 8px;background:#c99a3d;}
-.block-card:focus-within .block-card-label{color:#a5760f;}
+.block-card{position:relative;transition:border-color var(--ease), background var(--ease), box-shadow var(--ease);}
+.block-card:focus-within{border-color:var(--ink);background:var(--surface);box-shadow:0 0 0 3px var(--ring);}
+.block-card:focus-within::before{content:'';position:absolute;left:-1px;top:-1px;bottom:-1px;width:3px;border-radius:8px 0 0 8px;background:var(--ink);}
+.block-card:focus-within .block-card-label{color:var(--text);}
 `;
 
 export default function BlockEditor({ blocks, onChange }: Props) {
@@ -67,13 +67,13 @@ export default function BlockEditor({ blocks, onChange }: Props) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <style>{BLOCK_CARD_STYLES}</style>
       {blocks.map((b, i) => (
-        <div key={b.id} className="block-card" style={{ border: '1px solid #ccc', borderRadius: 8, padding: 10, background: '#fafafa' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <b className="block-card-label" style={{ fontSize: 12 }}>{BLOCK_LABELS[b.type]}</b>
+        <div key={b.id} className="block-card" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 11, background: 'var(--surface-2)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <b className="block-card-label" style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>{BLOCK_LABELS[b.type]}</b>
             <div style={{ display: 'flex', gap: 4 }}>
-              <button onClick={() => move(i, -1)}>↑</button>
-              <button onClick={() => move(i, 1)}>↓</button>
-              <button onClick={() => remove(i)} style={{ color: 'crimson' }}>Hapus</button>
+              <button className="btn-icon btn-sm" title="Naik" onClick={() => move(i, -1)}>↑</button>
+              <button className="btn-icon btn-sm" title="Turun" onClick={() => move(i, 1)}>↓</button>
+              <button className="btn-danger btn-sm" onClick={() => remove(i)}>Hapus</button>
             </div>
           </div>
           <BlockFields block={b} onChange={patch => update(i, patch)} />
@@ -92,7 +92,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
     case 'card':
       return <>
         <EmojiPicker value={block.icon || ''} onChange={icon => onChange({ icon })} />
-        <p style={{ fontSize: 11, color: '#aaa', margin: '-2px 0 6px' }}>
+        <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
           Icon cuma tampil kalau "Judul kartu" di bawah ini diisi — nempel di sebelah judul, bukan berdiri sendiri.
         </p>
         <input style={inp} placeholder="Judul kartu" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
@@ -133,7 +133,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
     case 'accordion':
       return <>
         {(block.accItems || []).map((it, i) => (
-          <div key={i} style={{ border: '1px dashed #ccc', padding: 6, marginBottom: 4 }}>
+          <div key={i} style={{ border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 8, marginBottom: 6 }}>
             <input style={inp} placeholder="a. Judul" value={it.h} onChange={e => {
               const accItems = [...(block.accItems || [])]; accItems[i] = { ...it, h: e.target.value }; onChange({ accItems });
             }} />
@@ -148,7 +148,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
     case 'tabs':
       return <>
         {(block.tabItems || []).map((it, i) => (
-          <div key={i} style={{ border: '1px dashed #ccc', padding: 6, marginBottom: 4 }}>
+          <div key={i} style={{ border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 8, marginBottom: 6 }}>
             <input style={inp} placeholder="Label tab" value={it.label} onChange={e => {
               const tabItems = [...(block.tabItems || [])]; tabItems[i] = { ...it, label: e.target.value }; onChange({ tabItems });
             }} />
@@ -195,7 +195,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
     case 'flow':
       return <>
         {(block.steps || []).map((s, i) => (
-          <div key={i} style={{ border: '1px dashed #ccc', padding: 6, marginBottom: 4 }}>
+          <div key={i} style={{ border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 8, marginBottom: 6 }}>
             <input style={inp} placeholder="Judul langkah" value={s.title} onChange={e => {
               const steps = [...(block.steps || [])]; steps[i] = { ...s, title: e.target.value }; onChange({ steps });
             }} />
@@ -218,7 +218,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       return <textarea style={ta} placeholder="HTML bebas" value={block.raw || ''} onChange={e => onChange({ raw: e.target.value })} />;
     case 'modal':
       return <>
-        <p style={{ fontSize: 11, color: '#aaa', margin: '-2px 0 6px' }}>
+        <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
           Cocok buat detail tambahan yang bikin slide penuh/ribet (mis. rincian formula) — muncul jadi tombol,
           isinya baru kelihatan kalau tombolnya diklik (popup).
         </p>
@@ -247,7 +247,7 @@ function ImageUploadField({ value, onChange }: { value: string; onChange: (v: st
           setBusy(false);
         }
       }} />
-      {busy && <span style={{ fontSize: 11, color: '#888', marginLeft: 6 }}>mengompres...</span>}
+      {busy && <span style={{ fontSize: 11, color: 'var(--text-faint)', marginLeft: 6 }}>mengunggah…</span>}
     </div>
   );
 }
