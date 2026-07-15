@@ -203,6 +203,15 @@ a{color:inherit;}
 }
 #reset-btn.dev-visible{display:block;}
 #reset-btn:hover{border-color:var(--rose);color:var(--rose);}
+#hideprogress-btn{
+  display:none;
+  margin-top:8px;width:100%;padding:10px;border-radius:var(--radius-md);
+  background:transparent;border:1px solid var(--border);color:var(--text-faint);
+  font-size:12px;font-weight:600;cursor:pointer;transition:.18s;
+}
+#hideprogress-btn.dev-visible{display:block;}
+#hideprogress-btn:hover{border-color:var(--accent);color:var(--accent-2);}
+#hideprogress-btn.active{border-color:var(--accent);color:var(--accent-2);background:var(--accent-soft);}
 #devmode-btn{
   margin-top:8px;width:100%;padding:7px;border-radius:var(--radius-md);
   background:transparent;border:none;color:var(--text-faint);
@@ -632,6 +641,7 @@ ul.tick li b, ol.tick li b{color:var(--text);}
     <nav id="nav-sections"></nav>
 
     <button id="reset-btn" onclick="resetProgress()">↺ Reset Progres</button>
+    <button id="hideprogress-btn" onclick="toggleHideProgressPreview()">Sembunyikan Progress (preview)</button>
     <button id="devmode-btn" onclick="toggleDevMode()">Dev Mode</button>
   </aside>
 
@@ -851,6 +861,25 @@ function saveState(){
 
 /* Build linear navigation */
 const NAV = __NAV_JS__;
+// Baked in at export time from the "Sembunyikan progress belajar" checkbox
+// (Sampul tab) - true for modules that are just one part of a larger
+// series, where showing "100%" on this module alone would be misleading.
+const HIDE_PROGRESS = __HIDE_PROGRESS_JS__;
+// Dev-mode-only local override so an author can preview what
+// HIDE_PROGRESS=true would look like without re-exporting - never persisted,
+// resets when Dev Mode is turned off.
+let devHideProgressPreview = false;
+function applyProgressVisibility(){
+  const el = document.querySelector('.progress-block');
+  if(el) el.style.display = (HIDE_PROGRESS || devHideProgressPreview) ? 'none' : '';
+}
+function toggleHideProgressPreview(){
+  devHideProgressPreview = !devHideProgressPreview;
+  const btn = document.getElementById('hideprogress-btn');
+  btn.classList.toggle('active', devHideProgressPreview);
+  btn.textContent = devHideProgressPreview ? '● Progress disembunyikan (preview)' : 'Sembunyikan Progress (preview)';
+  applyProgressVisibility();
+}
 
 let currentIdx = 0;
 
@@ -887,6 +916,13 @@ function toggleDevMode(){
     document.getElementById('devmode-btn').classList.remove('active');
     document.getElementById('devmode-btn').textContent = 'Dev Mode';
     document.getElementById('reset-btn').classList.remove('dev-visible');
+    document.getElementById('hideprogress-btn').classList.remove('dev-visible');
+    // Leaving Dev Mode also drops the local preview override - it was only
+    // ever a "what would this look like" convenience, never a real setting.
+    devHideProgressPreview = false;
+    document.getElementById('hideprogress-btn').classList.remove('active');
+    document.getElementById('hideprogress-btn').textContent = 'Sembunyikan Progress (preview)';
+    applyProgressVisibility();
     return;
   }
   openDevModeModal();
@@ -910,6 +946,7 @@ function submitDevModePassword(){
     document.getElementById('devmode-btn').classList.add('active');
     document.getElementById('devmode-btn').textContent = '● Dev Mode aktif';
     document.getElementById('reset-btn').classList.add('dev-visible');
+    document.getElementById('hideprogress-btn').classList.add('dev-visible');
     closeDevModeModal();
   } else {
     document.getElementById('devmode-modal-error').classList.add('show');
@@ -1323,6 +1360,7 @@ document.addEventListener('keydown', e=>{
 
 /* ============================= INIT ============================= */
 loadState();
+applyProgressVisibility();
 render();
 </script>
 </body>

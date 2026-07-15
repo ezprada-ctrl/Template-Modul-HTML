@@ -83,6 +83,10 @@ export interface ModuleData {
   sidebarEyebrow: string;
   sidebarTitle: string;
   coverImageDataUri: string;
+  // When true, the "Progres Belajar" card (percentage + bar) never shows to
+  // learners in the exported HTML — for modules that are just one part of a
+  // larger series, where "100%" on this module alone would be misleading.
+  hideProgress?: boolean;
   theme: { accent: string; accent2: string; onAccent: string; navy: string };
   sections: Section[];
   slides: Slide[];
@@ -133,6 +137,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     sidebarEyebrow: 'Open Access',
     sidebarTitle: 'Modul Baru',
     coverImageDataUri: '',
+    hideProgress: false,
     theme: { ...DEFAULT_THEME },
     sections: [{ id: 'a', title: 'A. Bagian Satu', short: 'Bagian Satu', icon: 'A', color: '#c99a3d' }],
     slides: [],

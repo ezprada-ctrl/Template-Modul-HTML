@@ -312,6 +312,8 @@ def generate_html(module):
     nav = build_nav(module)
     out = out.replace('__NAV_JS__', js_str(nav))
 
+    out = out.replace('__HIDE_PROGRESS_JS__', js_str(bool(module.get('hideProgress', False))))
+
     hero_title_html = module.get('heroTitleHtml') or esc(module.get('title', ''))
     out = out.replace('__HERO_TITLE_HTML__', hero_title_html)
 
