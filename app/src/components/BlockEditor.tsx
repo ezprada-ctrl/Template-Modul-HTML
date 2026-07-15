@@ -31,6 +31,18 @@ interface Props {
   onChange: (blocks: Block[]) => void;
 }
 
+// Highlights whichever block card currently has focus (a field inside it is
+// being typed in), so editing a slide with many blocks doesn't feel like
+// "everything looks the same" — a left accent bar + tinted background makes
+// it obvious which one you're in. Pure CSS (:focus-within), no JS state
+// needed: it tracks focus automatically as the user tabs/clicks around.
+const BLOCK_CARD_STYLES = `
+.block-card{position:relative;transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;}
+.block-card:focus-within{border-color:#c99a3d;background:#fffaf0;box-shadow:0 0 0 3px rgba(201,154,61,.15);}
+.block-card:focus-within::before{content:'';position:absolute;left:-1px;top:-1px;bottom:-1px;width:4px;border-radius:8px 0 0 8px;background:#c99a3d;}
+.block-card:focus-within .block-card-label{color:#a5760f;}
+`;
+
 export default function BlockEditor({ blocks, onChange }: Props) {
   function update(i: number, patch: Partial<Block>) {
     const next = [...blocks];
@@ -53,10 +65,11 @@ export default function BlockEditor({ blocks, onChange }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <style>{BLOCK_CARD_STYLES}</style>
       {blocks.map((b, i) => (
-        <div key={b.id} style={{ border: '1px solid #ccc', borderRadius: 8, padding: 10, background: '#fafafa' }}>
+        <div key={b.id} className="block-card" style={{ border: '1px solid #ccc', borderRadius: 8, padding: 10, background: '#fafafa' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <b style={{ fontSize: 12 }}>{BLOCK_LABELS[b.type]}</b>
+            <b className="block-card-label" style={{ fontSize: 12 }}>{BLOCK_LABELS[b.type]}</b>
             <div style={{ display: 'flex', gap: 4 }}>
               <button onClick={() => move(i, -1)}>↑</button>
               <button onClick={() => move(i, 1)}>↓</button>
@@ -72,7 +85,7 @@ export default function BlockEditor({ blocks, onChange }: Props) {
 }
 
 function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<Block>) => void }) {
-  const ta = { width: '100%', minHeight: 60, fontFamily: 'inherit', fontSize: 13 };
+  const ta = { width: '100%', minHeight: 60, fontFamily: 'inherit', fontSize: 13, resize: 'vertical' as const };
   const inp = { width: '100%', fontSize: 13, marginBottom: 4 };
 
   switch (block.type) {

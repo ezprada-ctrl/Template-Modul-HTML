@@ -294,12 +294,13 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
         <button onClick={onRemove} style={{ color: 'crimson' }}>Hapus</button>
       </div>
       {open && (
-        <div style={{ padding: 12, borderTop: '1px solid #eee', display: 'flex', gap: 12 }}>
+        <div style={{ padding: 12, borderTop: '1px solid #eee', display: 'flex', gap: 28 }}>
           <div style={{ flex: '1 1 50%', minWidth: 0 }}>
             <input placeholder="Kicker label (mis. A.1 JUDUL)" value={slide.kickerLabel}
               onChange={e => onUpdate({ kickerLabel: e.target.value })} style={{ width: '100%', marginBottom: 4 }} />
             <textarea placeholder="Subjudul (opsional)" value={slide.subtitle || ''}
-              onChange={e => onUpdate({ subtitle: e.target.value })} style={{ width: '100%', marginBottom: 8, minHeight: 40 }} />
+              onChange={e => onUpdate({ subtitle: e.target.value })}
+              style={{ width: '100%', marginBottom: 8, minHeight: 40, resize: 'vertical' }} />
             <BlockEditor blocks={slide.blocks} onChange={blocks => onUpdate({ blocks })} />
           </div>
           <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
