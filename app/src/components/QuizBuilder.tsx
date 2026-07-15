@@ -46,9 +46,26 @@ export default function QuizBuilder({ module, setModule }: Props) {
     }));
   }
 
+  const sectionsWithoutQuiz = module.sections.filter(sec => !(module.quizzes[sec.id]?.length));
+  const showMissingQuizWarning = !module.hideProgress && sectionsWithoutQuiz.length > 0;
+
   return (
     <div>
       <h2 style={{ margin: '0 0 12px' }}>Kuis per Section</h2>
+      {showMissingQuizWarning && (
+        <div style={{
+          display: 'flex', gap: 8, alignItems: 'flex-start', padding: '10px 12px', marginBottom: 16,
+          borderRadius: 'var(--radius)', border: '1px solid var(--danger)', background: 'var(--danger-soft)',
+        }}>
+          <span style={{ fontSize: 14, lineHeight: 1.4 }}>⚠</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.5, color: 'var(--text-dim)' }}>
+            Progress belajar aktif (gak dicentang "Sembunyikan progress belajar" di tab Sampul), tapi{' '}
+            <b style={{ color: 'var(--text)' }}>{sectionsWithoutQuiz.map(s => s.short).join(', ')}</b>{' '}
+            belum ada kuisnya. Section tanpa kuis otomatis dianggap "lulus", jadi persentase progress bisa
+            kelihatan lebih tinggi dari yang sebenarnya udah dipelajari peserta.
+          </span>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
         {module.sections.map(sec => {
           const active = activeSection === sec.id;
