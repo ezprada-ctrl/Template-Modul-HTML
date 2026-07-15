@@ -68,17 +68,10 @@ export default function CoverForm({ module, setModule }: Props) {
               );
             })}
           </div>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={!!module.hideProgress} style={{ marginTop: 3 }}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={!!module.hideProgress}
               onChange={e => setModule({ ...module, hideProgress: e.target.checked })} />
-            <span>
-              Sembunyikan progress belajar
-              <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
-                Buat modul yang jadi bagian dari rangkaian modul lain — biar gak lucu nampilin "100%" padahal
-                masih ada modul lain yang harus dikerjain peserta. Kartu progress di sidebar gak akan pernah
-                muncul ke peserta manapun begitu modul ini di-export.
-              </span>
-            </span>
+            <span>Sembunyikan progress belajar</span>
           </label>
           <label style={{ color: 'var(--text-dim)' }}>
             Judul besar di layar sampul (boleh HTML sederhana, mis. pakai <code>&lt;br&gt;</code> untuk ganti baris
