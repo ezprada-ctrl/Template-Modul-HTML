@@ -85,7 +85,7 @@ def render_ticklist(b):
 
 def render_accordion(b):
     prefix = b.get('id', 'acc')
-    items = b.get('items', [])
+    items = b.get('accItems', [])
     out = ''
     for i, it in enumerate(items):
         m = re.match(r'^([a-z](?:-[a-z])?)\.\s*(.*)$', it.get('h', ''), re.I)
@@ -101,7 +101,7 @@ def render_accordion(b):
 
 def render_tabs(b):
     prefix = b.get('id', 'tabs')
-    tabs = b.get('tabs', [])
+    tabs = b.get('tabItems', [])
     head = f'<div class="tabs" id="{prefix}-tabs">'
     body = ''
     for i, t in enumerate(tabs):
@@ -113,7 +113,7 @@ def render_tabs(b):
 
 
 def render_timeline(b):
-    items = b.get('items', [])
+    items = b.get('tlItems', [])
     out = '<div class="timeline">'
     for it in items:
         out += (f'<div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot"></div>'
@@ -168,7 +168,7 @@ def render_image(b):
 
 
 def render_badge_ref(b):
-    return f'<span class="badge-ref">{esc(b.get("text",""))}</span>'
+    return f'<span class="badge-ref">{esc(b.get("refText",""))}</span>'
 
 
 def render_html(b):
