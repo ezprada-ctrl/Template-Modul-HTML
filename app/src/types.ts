@@ -98,12 +98,33 @@ export interface DraftSlide {
   reviewed?: boolean;
 }
 
-export function emptyModule(): ModuleData {
+// Turns free-text (person name, project name) into a URL/filename-safe
+// fragment: lowercase, non-alphanumerics collapsed to single dashes.
+export function slugify(s: string): string {
+  return s
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Combines person name + project name into a slug prefix, e.g.
+// "Budi Santoso" + "Modul Etika" -> "budi-santoso_modul-etika". The random
+// suffix from `uid()` still gets appended after this, so two people (or
+// the same person starting a second project) never collide.
+export function buildProjectSlugPrefix(nama: string, namaProject: string): string {
+  const namaPart = slugify(nama) || 'anon';
+  const projPart = slugify(namaProject);
+  return projPart ? `${namaPart}_${projPart}` : namaPart;
+}
+
+export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
   // Unique per call (not a fixed "modul-baru") so two people opening the
   // app for the first time land on separate drafts instead of silently
-  // sharing/overwriting the same one. Base prefix is standardized across
-  // the whole team ("Modul HTML") instead of per-person slug editing.
-  const slug = uid('modul-html');
+  // sharing/overwriting the same one. Caller can pass a prefix built from
+  // the user's name + project name (see buildProjectSlugPrefix) so the
+  // slug stays identifiable even after localStorage is cleared.
+  const slug = uid(slugPrefix);
   return {
     title: 'Modul Baru',
     slug,
