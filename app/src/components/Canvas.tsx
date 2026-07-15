@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
 } from '@dnd-kit/core';
@@ -141,6 +141,7 @@ export default function Canvas({ module, setModule }: Props) {
           <BundlePanel
             slides={slidesFor(sec.id)}
             bundles={bundlesFor(sec.id)}
+            theme={module.theme}
             onAdd={() => addBundle(sec.id)}
             onUpdateLabel={(idx, label) => updateBundle(sec.id, idx, { label })}
             onToggleSlide={(idx, n) => toggleBundleSlide(sec.id, idx, n)}
@@ -153,9 +154,10 @@ export default function Canvas({ module, setModule }: Props) {
   );
 }
 
-function BundlePanel({ slides, bundles, onAdd, onUpdateLabel, onToggleSlide, onRemove }: {
+function BundlePanel({ slides, bundles, theme, onAdd, onUpdateLabel, onToggleSlide, onRemove }: {
   slides: Slide[];
   bundles: { label: string; slides: number[] }[];
+  theme: { accent: string; navy: string };
   onAdd: () => void;
   onUpdateLabel: (idx: number, label: string) => void;
   onToggleSlide: (idx: number, slideNumber: number) => void;
@@ -190,8 +192,84 @@ function BundlePanel({ slides, bundles, onAdd, onUpdateLabel, onToggleSlide, onR
           {b.slides.length > 0 && b.slides.length < 2 && (
             <p style={{ fontSize: 11, color: '#c04a44', margin: '4px 0 0' }}>Pilih minimal 2 slide biar jadi bundle expandable.</p>
           )}
+          {b.slides.length >= 2 && (
+            <BundleAnimatedDemo
+              label={b.label || 'Nama bundle'}
+              slideTitles={b.slides.map(n => slides.find(s => s.number === n)?.title || `Slide #${n}`)}
+              theme={theme}
+            />
+          )}
         </div>
       ))}
+    </div>
+  );
+}
+
+// Auto-looping mini mockup of the sidebar bundle behaviour (collapsed -> a
+// fake cursor "clicks" the chevron -> expands to reveal the grouped slides ->
+// collapses again), so users can see what "bundle" means without hopping to
+// the Preview tab. Mirrors the real sidebar bundle markup/classes in
+// shell-template.html (nav-bundle-head / bundle-chevron / nav-bundle-body).
+function BundleAnimatedDemo({ label, slideTitles, theme }: {
+  label: string;
+  slideTitles: string[];
+  theme: { accent: string; navy: string };
+}) {
+  const [open, setOpen] = useState(false);
+  const [clicking, setClicking] = useState(false);
+
+  useEffect(() => {
+    const cycle = () => {
+      setClicking(true);
+      setTimeout(() => {
+        setOpen(o => !o);
+        setClicking(false);
+      }, 260);
+    };
+    const id = setInterval(cycle, 2400);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <p style={{ fontSize: 11, color: '#aaa', margin: '0 0 4px' }}>Contoh tampilan di sidebar peserta:</p>
+      <div style={{
+        maxWidth: 280, border: '1px solid #e3e6ee', borderRadius: 10, background: '#fff',
+        padding: 6, fontFamily: 'system-ui, sans-serif',
+      }}>
+        <div style={{
+          position: 'relative', display: 'flex', alignItems: 'center', gap: 8,
+          padding: '7px 10px', borderRadius: 8, background: open ? '#f1f3f7' : 'transparent',
+          transition: 'background .2s ease',
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: theme.accent, flexShrink: 0 }} />
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: theme.navy }}>{label}</span>
+          <span style={{
+            marginLeft: 'auto', fontSize: 10, color: '#8891a8',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform .3s ease',
+          }}>
+            ⌄
+          </span>
+          <span style={{
+            position: 'absolute', right: 6, top: clicking ? 6 : -18,
+            transition: 'top .25s ease, transform .25s ease',
+            transform: clicking ? 'scale(0.85)' : 'scale(1)',
+            fontSize: 15, pointerEvents: 'none',
+          }}>
+            👆
+          </span>
+        </div>
+        <div style={{ maxHeight: open ? 200 : 0, overflow: 'hidden', transition: 'max-height .35s ease' }}>
+          <div style={{ padding: '4px 10px 6px 26px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {slideTitles.map((t, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: '#5b6478' }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#c7cbd2', flexShrink: 0 }} />
+                {t}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
