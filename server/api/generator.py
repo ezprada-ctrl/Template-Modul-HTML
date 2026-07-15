@@ -96,7 +96,7 @@ def render_accordion(b):
                 f'<span class="acc-n">{esc(badge)}</span><span>{esc(label)}</span>'
                 f'<span class="acc-chevron">⌄</span></button>'
                 f'<div class="acc-body"><div class="acc-body-inner">{it.get("b","")}</div></div></div>')
-    return out
+    return f'<div class="acc-group">{out}</div>'
 
 
 def render_tabs(b):
@@ -109,7 +109,7 @@ def render_tabs(b):
         head += f'<button class="tab-btn{active}" onclick="switchTab(\'{prefix}\',{i})">{esc(t.get("label",""))}</button>'
         body += f'<div class="tab-panel{active}" id="{prefix}-panel-{i}">{t.get("content","")}</div>'
     head += '</div>'
-    return f'<div id="{prefix}-wrap">{head}{body}</div>'
+    return f'<div class="tabs-wrap" id="{prefix}-wrap">{head}{body}</div>'
 
 
 def render_timeline(b):
