@@ -119,23 +119,60 @@ const LOREM = [
   'Duis aute irure dolor in reprehenderit in voluptate velit esse.',
 ];
 
-function useCycle(length: number, intervalMs: number) {
+// Same auto-cycling as before, but pauses ~260ms before each step change so a
+// fake cursor (see ClickCursor) can "click" the upcoming item first — makes
+// it visually obvious these previews are showing a click-to-reveal
+// interaction, not just an unprompted slideshow.
+const CLICK_PAUSE_MS = 260;
+
+function useCycleWithClick(length: number, intervalMs: number) {
   const [i, setI] = useState(0);
+  const [clicking, setClicking] = useState(false);
   useEffect(() => {
     if (length <= 1) return;
-    const id = setInterval(() => setI(v => (v + 1) % length), intervalMs);
+    const id = setInterval(() => {
+      setClicking(true);
+      setTimeout(() => {
+        setI(v => (v + 1) % length);
+        setClicking(false);
+      }, CLICK_PAUSE_MS);
+    }, intervalMs);
     return () => clearInterval(id);
   }, [length, intervalMs]);
-  return i;
+  return { index: i, clicking };
 }
 
-function useBlink(onMs: number, offMs: number) {
+function useBlinkWithClick(onMs: number, offMs: number) {
   const [on, setOn] = useState(false);
+  const [clicking, setClicking] = useState(false);
   useEffect(() => {
-    const id = setTimeout(() => setOn(v => !v), on ? onMs : offMs);
+    const id = setTimeout(() => {
+      setClicking(true);
+      setTimeout(() => {
+        setOn(v => !v);
+        setClicking(false);
+      }, CLICK_PAUSE_MS);
+    }, on ? onMs : offMs);
     return () => clearTimeout(id);
   }, [on, onMs, offMs]);
-  return on;
+  return { on, clicking };
+}
+
+// Small hand-cursor glyph that "clicks" the element it's anchored to. The
+// parent must be `position:relative`; this renders absolutely in its
+// top-right corner, hidden until `show` flips true right before the state
+// change it's pointing at.
+function ClickCursor({ show }: { show: boolean }) {
+  return (
+    <span style={{
+      position: 'absolute', top: show ? -6 : -20, right: -4, fontSize: 15,
+      transition: 'top .25s ease, transform .25s ease, opacity .25s ease',
+      transform: show ? 'scale(0.85)' : 'scale(1)', opacity: show ? 1 : 0,
+      pointerEvents: 'none', zIndex: 5,
+    }}>
+      👆
+    </span>
+  );
 }
 
 export default function BlockPreviewCard({ type }: { type: BlockType }) {
@@ -263,16 +300,18 @@ export default function BlockPreviewCard({ type }: { type: BlockType }) {
 }
 
 function AccordionDemo() {
-  const open = useCycle(2, 1400);
+  const { index: open, clicking } = useCycleWithClick(2, 1400);
+  const nextOpen = (open + 1) % 2;
   return (
     <div className="pbp-scope">
       {[0, 1].map(i => (
-        <div className={`acc-item${open === i ? ' open' : ''}`} key={i}>
+        <div className={`acc-item${open === i ? ' open' : ''}`} key={i} style={{ position: 'relative' }}>
           <button className="acc-head" type="button">
             <span className="acc-n">{String.fromCharCode(97 + i)}</span>
             <span>{i === 0 ? 'Lorem ipsum dolor' : 'Consectetur adipiscing'}</span>
             <span className="acc-chevron">⌄</span>
           </button>
+          <ClickCursor show={clicking && nextOpen === i} />
           <div className="acc-body"><div className="acc-body-inner">{LOREM[i]}</div></div>
         </div>
       ))}
@@ -281,13 +320,17 @@ function AccordionDemo() {
 }
 
 function TabsDemo() {
-  const active = useCycle(3, 1200);
+  const { index: active, clicking } = useCycleWithClick(3, 1200);
+  const nextActive = (active + 1) % 3;
   const labels = ['Tab Satu', 'Tab Dua', 'Tab Tiga'];
   return (
     <div className="pbp-scope">
       <div className="tabs">
         {labels.map((l, i) => (
-          <button className={`tab-btn${active === i ? ' active' : ''}`} type="button" key={l}>{l}</button>
+          <span key={l} style={{ position: 'relative', display: 'inline-block' }}>
+            <button className={`tab-btn${active === i ? ' active' : ''}`} type="button">{l}</button>
+            <ClickCursor show={clicking && nextActive === i} />
+          </span>
         ))}
       </div>
       {labels.map((l, i) => (
@@ -298,7 +341,8 @@ function TabsDemo() {
 }
 
 function FlowDemo() {
-  const active = useCycle(3, 1300);
+  const { index: active, clicking } = useCycleWithClick(3, 1300);
+  const nextActive = (active + 1) % 3;
   const steps = [
     { n: 1, title: 'Lorem ipsum' },
     { n: 2, title: 'Tempor incididunt' },
@@ -310,9 +354,10 @@ function FlowDemo() {
         <div className="flow">
           {steps.map((s, i) => (
             <Fragment key={s.n}>
-              <div className={`flow-step${active === i ? ' active' : ''}`}>
+              <div className={`flow-step${active === i ? ' active' : ''}`} style={{ position: 'relative' }}>
                 <div className="fs-num">{s.n}</div>
                 <div className="fs-title">{s.title}</div>
+                <ClickCursor show={clicking && nextActive === i} />
               </div>
               {i < steps.length - 1 && <div className="flow-arrow">›</div>}
             </Fragment>
@@ -325,13 +370,16 @@ function FlowDemo() {
 }
 
 function ModalDemo() {
-  const open = useBlink(1300, 900);
+  const { on: open, clicking } = useBlinkWithClick(1300, 900);
   return (
     <div className="pbp-scope">
       <div className="modal-demo">
-        <button className="modal-trigger" type="button">
-          <span className="ic">📝</span><span>Info Tambahan</span><span className="chevron">›</span>
-        </button>
+        <span style={{ position: 'relative', display: 'inline-block' }}>
+          <button className="modal-trigger" type="button">
+            <span className="ic">📝</span><span>Info Tambahan</span><span className="chevron">›</span>
+          </button>
+          <ClickCursor show={clicking} />
+        </span>
         <div className={`modal-overlay${open ? ' open' : ''}`}>
           <div className="modal-box">
             <h3>Info Tambahan</h3>
