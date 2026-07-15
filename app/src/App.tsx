@@ -76,20 +76,30 @@ function App() {
         <h1 style={{ marginBottom: 4 }}>Template Modul Ikram</h1>
         <AutosaveIndicator status={autosaveStatus} />
       </div>
-      <p style={{ color: '#888', marginTop: 0, fontSize: 13 }}>
+      <p style={{ color: '#888', marginTop: 0, marginBottom: 12, fontSize: 13 }}>
         Penyusun modul e-learning drag-and-drop — output identik dengan Modul 1 & Modul 2.
       </p>
-      <p style={{ color: '#c99a3d', marginTop: 0, marginBottom: 12, fontSize: 12, fontWeight: 700 }}>
-        Project: {module.slug} — {module.title}
-        <span style={{ color: '#aaa', fontWeight: 400 }}> (tiap orang otomatis dapet project sendiri; pakai "Muat Draft" di tab 5 kalau mau buka punya orang lain)</span>
-        {' '}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
+        background: '#fdf6e8', border: '1px solid #eadcb3', borderRadius: 6,
+        padding: '8px 12px', marginBottom: 16,
+      }}>
+        <div style={{ fontSize: 12, lineHeight: 1.5 }}>
+          <span style={{ color: '#c99a3d', fontWeight: 700 }}>Project: {module.slug} — {module.title}</span>
+          <br />
+          <span style={{ color: '#aaa' }}>Tiap orang otomatis dapet project sendiri; pakai "Muat Draft" di tab 5 kalau mau buka punya orang lain.</span>
+        </div>
         <button
           onClick={() => setShowNewProjectModal(true)}
-          style={{ cursor: 'pointer', fontSize: 11, fontWeight: 600, color: '#c99a3d', background: 'transparent', border: '1px solid #c99a3d', borderRadius: 4, padding: '2px 8px' }}
+          style={{
+            cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#fff',
+            background: '#c99a3d', border: 'none', borderRadius: 4, padding: '6px 12px',
+            whiteSpace: 'nowrap', flexShrink: 0,
+          }}
         >
           + Mulai Project Baru
         </button>
-      </p>
+      </div>
       {showNewProjectModal && (
         <NewProjectModal
           onCreate={handleCreateProject}
