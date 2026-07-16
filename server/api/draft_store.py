@@ -33,6 +33,31 @@ def _safe_name(name):
     return ''.join(c for c in name if c.isalnum() or c in ('-', '_')) or 'draft'
 
 
+def ping():
+    """One cheap read against the database, purely to register activity.
+
+    Supabase's free tier pauses a project after ~7 days with no database
+    activity, which takes every saved draft offline until someone manually
+    resumes it from the Supabase dashboard — there is no API to un-pause,
+    so preventing the pause is the only option that doesn't need a human.
+    Called daily by the keep-alive cron (see server/vercel.json).
+
+    Deliberately read-only and capped at 1 row: it only needs to *be* a
+    query, not return anything useful, and it must stay cheap since it runs
+    unattended forever.
+    """
+    if not USE_SUPABASE:
+        return {'ok': True, 'storage': 'local-file', 'pinged': False}
+    res = requests.get(
+        f'{SUPABASE_URL}/rest/v1/modul_drafts',
+        params={'select': 'slug', 'limit': 1},
+        headers=_headers(),
+        timeout=10,
+    )
+    res.raise_for_status()
+    return {'ok': True, 'storage': 'supabase', 'pinged': True}
+
+
 def list_drafts():
     if USE_SUPABASE:
         res = requests.get(

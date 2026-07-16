@@ -4,6 +4,9 @@
       "includeFiles": "api/shell-template.html"
     }
   },
+  "crons": [
+    { "path": "/api/keepalive", "schedule": "0 6 * * *" }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index" }
   ]
