@@ -257,7 +257,7 @@ export function extractBlockText(block: Block): string {
     case 'dtable':
       return (block.rows || []).map(r => r.join(' | ')).filter(Boolean).join('\n');
     case 'grid':
-      return '';
+      return (block.blocks || []).map(extractBlockText).filter(Boolean).join('\n');
     default:
       return '';
   }
@@ -271,8 +271,7 @@ export function isBlockEmpty(block: Block): boolean {
 }
 
 // Drops the extracted text into whichever field is the new type's natural
-// "main content" slot. Structural types (dtable/grid) have no reasonable
-// auto-mapping and are left at their fresh default instead of guessing.
+// "main content" slot.
 function applyBlockText(block: Block, text: string): Block {
   if (!text) return block;
   switch (block.type) {
@@ -296,6 +295,19 @@ function applyBlockText(block: Block, text: string): Block {
       return { ...block, tlItems: [{ time: '', title: '', desc: text }] };
     case 'flow':
       return { ...block, steps: [{ n: 1, title: '', detail: text }] };
+    case 'dtable': {
+      // Each line becomes its own row in a single column - nothing gets
+      // crammed into one <input> (dtable cells are single-line fields, not
+      // textareas), and it's a reasonable starting point to split into
+      // real columns manually afterward.
+      const lines = text.split('\n').filter(Boolean);
+      return { ...block, headers: ['Kolom 1'], rows: (lines.length ? lines : ['']).map(l => [l]) };
+    }
+    case 'grid':
+      // Grid holds nested blocks, not text - wrap the migrated text in a
+      // plain Card sub-block so it isn't silently dropped; the grid still
+      // starts otherwise empty for the user to add a second column to.
+      return { ...block, blocks: [{ id: uid('block'), type: 'card', heading: '', bodyHtml: text }] };
     default:
       return block;
   }
