@@ -51,7 +51,11 @@ export default function SlideBank({ bank, setBank, module, setModule }: Props) {
         blocks.push({
           id: makeId('block'),
           type: 'card' as const,
-          bodyHtml: `<p>${restText.replace(/\n/g, '<br>')}</p>`,
+          // Plain text with real newlines - generator.py's nl2br() turns
+          // these into <br> at generate/preview time (same as manually
+          // typed content), so the block editor shows clean readable text
+          // instead of raw <p>/<br> markup the user has to look past.
+          bodyHtml: restText,
         });
       }
       draft.images.forEach(img => {
