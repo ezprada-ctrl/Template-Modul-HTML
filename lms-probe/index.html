@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uji Koneksi Modul → LMS & Supabase</title>
+<!--
+  ALAT UJI SEKALI PAKAI — bukan bagian dari modul yang dipublikasikan.
+
+  Tujuannya menjawab 2 pertanyaan yang TIDAK BISA dijawab dari kode, cuma
+  dari LMS beneran:
+
+    1. Apakah modul di dalam Web Object Storyline bisa menjangkau API SCORM
+       LMS? (kalau ya → kita bisa dapat nama & ID peserta)
+    2. Apakah modul boleh menembak internet keluar ke Supabase dari dalam
+       LMS? (kalau diblokir CSP/firewall → seluruh rencana rekam aktivitas
+       harus dirancang ulang)
+
+  Sengaja TANPA library/CDN apa pun: kalau LMS memblokir CDN, tes ini harus
+  tetap jalan supaya kegagalannya tidak salah didiagnosis. Semua pakai
+  fetch() polos ke PostgREST.
+
+  Hasilnya ditampilkan BESAR di layar, karena di dalam LMS kamu tidak bisa
+  buka DevTools dengan mudah.
+-->
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#fff; --ink:#16202e; --dim:#5b6577; --line:#e2e5ea;
+    --ok:#1a7f47; --ok-bg:#e8f5ee; --bad:#b3261e; --bad-bg:#fdeceb;
+    --warn:#8a5a00; --warn-bg:#fdf3e0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:18px; background:var(--bg); color:var(--ink);
+    font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  h1{font-size:17px; margin:0 0 3px;}
+  .sub{color:var(--dim); font-size:12.5px; margin:0 0 16px;}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:14px 16px; margin-bottom:12px;
+  }
+  .card h2{font-size:13px; margin:0 0 10px; letter-spacing:.02em;}
+  .verdict{
+    display:flex; align-items:center; gap:9px; padding:11px 13px;
+    border-radius:8px; font-weight:700; font-size:14px; margin-bottom:10px;
+  }
+  .verdict .ic{font-size:17px; line-height:1;}
+  .pending{background:#eef1f5; color:var(--dim);}
+  .ok{background:var(--ok-bg); color:var(--ok);}
+  .bad{background:var(--bad-bg); color:var(--bad);}
+  .warn{background:var(--warn-bg); color:var(--warn);}
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  td{padding:5px 0; vertical-align:top; border-top:1px solid var(--line);}
+  td:first-child{color:var(--dim); width:38%; padding-right:10px;}
+  td:last-child{font-family:ui-monospace,Consolas,monospace; word-break:break-word;}
+  tr:first-child td{border-top:none;}
+  pre{
+    background:#101623; color:#dfe6f2; padding:10px 12px; border-radius:7px;
+    font:11.5px/1.5 ui-monospace,Consolas,monospace; overflow-x:auto;
+    white-space:pre-wrap; word-break:break-word; margin:8px 0 0;
+  }
+  button{
+    font:inherit; font-weight:600; padding:9px 15px; border-radius:7px;
+    border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
+  }
+  button:hover{border-color:#b9c0cc;}
+  .hint{font-size:11.5px; color:var(--dim); margin:9px 0 0;}
+  code{background:#eef1f5; padding:1px 5px; border-radius:4px; font-size:11.5px;}
+</style>
+</head>
+<body>
+
+<h1>Uji Koneksi Modul</h1>
+<p class="sub">Buka halaman ini dari dalam LMS (lewat Storyline Web Object) untuk menguji apakah rekam aktivitas bisa jalan.</p>
+
+<div class="card">
+  <h2>1 · API SCORM (buat ambil identitas peserta dari LMS)</h2>
+  <div id="scorm-verdict" class="verdict pending"><span class="ic">⏳</span><span>Mengecek…</span></div>
+  <table id="scorm-detail"></table>
+</div>
+
+<div class="card">
+  <h2>2 · Koneksi ke Supabase (buat nyimpen rekaman aktivitas)</h2>
+  <div id="net-verdict" class="verdict pending"><span class="ic">⏳</span><span>Mengecek…</span></div>
+  <table id="net-detail"></table>
+  <pre id="net-error" style="display:none"></pre>
+  <p style="margin:12px 0 0"><button id="retry">Kirim ulang</button></p>
+  <p class="hint">Kalau gagal, tolong <b>screenshot seluruh halaman ini</b> — teks error di kotak hitam itu yang menentukan penyebabnya (diblokir firewall / CORS / salah izin database).</p>
+</div>
+
+<div class="card">
+  <h2>3 · Lingkungan</h2>
+  <table id="env-detail"></table>
+</div>
+
+<script>
+/* ---------- konfigurasi ---------- */
+var SUPABASE_URL = 'https://fhlivnsasjgedeltaopv.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZobGl2bnNhc2pnZWRlbHRhb3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NzQyNDksImV4cCI6MjA5OTE1MDI0OX0.mrrWrvTvtUdStWOVqlqP1dHu14GZZQkHDS-dx6Fj-e4';
+var PROBE_SLUG = 'lms-probe';
+
+/* ---------- util tampilan ---------- */
+function setVerdict(id, cls, icon, text){
+  var el = document.getElementById(id);
+  el.className = 'verdict ' + cls;
+  el.innerHTML = '<span class="ic"></span><span></span>';
+  el.querySelector('.ic').textContent = icon;
+  el.querySelectorAll('span')[1].textContent = text;
+}
+function rows(id, pairs){
+  document.getElementById(id).innerHTML = pairs.map(function(p){
+    var td = document.createElement('td');
+    td.textContent = p[1] === null || p[1] === undefined || p[1] === '' ? '—' : String(p[1]);
+    var th = document.createElement('td');
+    th.textContent = p[0];
+    return '<tr>' + th.outerHTML + td.outerHTML + '</tr>';
+  }).join('');
+}
+
+/* ---------- 1. deteksi SCORM ---------- */
+/* Logika penelusuran sama dengan yang dipakai modul asli (shell-template.html):
+   naik lewat window.parent sampai ketemu API, lalu coba window.opener.
+   Bedanya di sini kegagalannya dibedakan secara eksplisit — "gak ketemu"
+   dan "diblokir cross-origin" itu dua masalah yang beda obatnya. */
+var scorm = { api:null, version:null, blocked:false, depth:0 };
+
+function findAPI(win){
+  var n = 0;
+  while (win && n < 500){
+    try {
+      if (win.API) return { api:win.API, version:'1.2', depth:n };
+      if (win.API_1484_11) return { api:win.API_1484_11, version:'2004', depth:n };
+    } catch (e) {
+      // Akses ke parent lintas-origin dilempar SecurityError. Ini penting
+      // dibedakan: artinya API mungkin ADA tapi kehalang, bukan gak ada.
+      scorm.blocked = true;
+      return null;
+    }
+    try {
+      if (win.parent && win.parent !== win) { win = win.parent; n++; } else break;
+    } catch (e) { scorm.blocked = true; return null; }
+  }
+  return null;
+}
+
+function checkScorm(){
+  var found = findAPI(window);
+  if (!found && window.opener && window.opener !== window) {
+    try { found = findAPI(window.opener); } catch (e) { scorm.blocked = true; }
+  }
+
+  if (!found){
+    if (scorm.blocked){
+      setVerdict('scorm-verdict','bad','✕','API SCORM kehalang (cross-origin) — identitas peserta tidak bisa diambil');
+    } else {
+      setVerdict('scorm-verdict','warn','!','API SCORM tidak ditemukan — normal kalau halaman ini dibuka di luar LMS');
+    }
+    rows('scorm-detail', [
+      ['Status', scorm.blocked ? 'diblokir cross-origin' : 'tidak ketemu'],
+      ['Di dalam iframe?', window.parent !== window ? 'ya' : 'tidak'],
+    ]);
+    return;
+  }
+
+  scorm.api = found.api; scorm.version = found.version; scorm.depth = found.depth;
+
+  var name = '', id = '', initOk = false;
+  try {
+    var ok = found.version === '1.2' ? found.api.LMSInitialize('') : found.api.Initialize('');
+    initOk = (ok === 'true' || ok === true);
+    if (found.version === '1.2'){
+      name = found.api.LMSGetValue('cmi.core.student_name');
+      id   = found.api.LMSGetValue('cmi.core.student_id');
+    } else {
+      name = found.api.GetValue('cmi.learner_name');
+      id   = found.api.GetValue('cmi.learner_id');
+    }
+  } catch (e) {
+    name = '(error: ' + e.message + ')';
+  }
+
+  scorm.name = name; scorm.id = id;
+
+  if (name || id){
+    setVerdict('scorm-verdict','ok','✓','API SCORM ketemu — identitas peserta BISA diambil');
+  } else {
+    setVerdict('scorm-verdict','warn','!','API SCORM ketemu, tapi LMS tidak memberi nama/ID peserta');
+  }
+  rows('scorm-detail', [
+    ['Versi SCORM', found.version],
+    ['Initialize berhasil?', initOk ? 'ya' : 'tidak'],
+    ['Nama peserta', name],
+    ['ID peserta', id],
+    ['Jarak frame ke API', found.depth + ' tingkat ke atas'],
+  ]);
+}
+
+/* ---------- 2. uji kirim ke Supabase ---------- */
+function sessionId(){
+  return 'probe-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
+}
+
+function checkNetwork(){
+  setVerdict('net-verdict','pending','⏳','Mengirim data uji…');
+  document.getElementById('net-error').style.display = 'none';
+
+  var t0 = Date.now();
+  var body = {
+    module_slug: PROBE_SLUG,
+    session_id: sessionId(),
+    learner_id: scorm.id || null,
+    learner_name: scorm.name || null,
+    event_type: 'probe',
+    payload: {
+      catatan: 'uji koneksi dari LMS',
+      scorm_ketemu: !!scorm.api,
+      scorm_versi: scorm.version || null,
+      url: location.href,
+      ua: navigator.userAgent
+    },
+    client_ts: new Date().toISOString()
+  };
+
+  fetch(SUPABASE_URL + '/rest/v1/modul_activity', {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+      // WAJIB: anon cuma punya izin INSERT, nol SELECT. Minta data balik
+      // bikin PostgREST nolak walau insert-nya sendiri sukses.
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(body)
+  }).then(function(res){
+    var ms = Date.now() - t0;
+    if (res.ok){
+      setVerdict('net-verdict','ok','✓','BERHASIL — modul bisa nyimpen aktivitas dari dalam LMS');
+      rows('net-detail', [['Status HTTP', res.status], ['Waktu respons', ms + ' ms'], ['Tujuan', SUPABASE_URL]]);
+      return;
+    }
+    return res.text().then(function(txt){
+      setVerdict('net-verdict','bad','✕','GAGAL — server menolak (HTTP ' + res.status + ')');
+      rows('net-detail', [['Status HTTP', res.status], ['Waktu respons', ms + ' ms'], ['Tujuan', SUPABASE_URL]]);
+      showError('Balasan server:\n' + txt +
+        '\n\nArtinya: jaringan TEMBUS (bisa nyampe Supabase), tapi permintaannya ditolak.' +
+        '\nBiasanya: SQL setup belum dijalankan, atau policy RLS-nya salah.');
+    });
+  }).catch(function(err){
+    var ms = Date.now() - t0;
+    setVerdict('net-verdict','bad','✕','GAGAL — tidak bisa menjangkau Supabase sama sekali');
+    rows('net-detail', [['Status HTTP', 'tidak ada balasan'], ['Menyerah setelah', ms + ' ms'], ['Tujuan', SUPABASE_URL]]);
+    showError('Error: ' + err.message +
+      '\n\nArtinya: permintaan gak pernah nyampe / gak boleh nyampe. Kemungkinan:' +
+      '\n  • Firewall atau proxy kantor blokir domain supabase.co' +
+      '\n  • LMS pasang CSP yang larang koneksi ke domain luar' +
+      '\n  • Project Supabase lagi paused (cek dashboard)' +
+      '\n  • Perangkat lagi offline');
+  });
+}
+
+function showError(text){
+  var el = document.getElementById('net-error');
+  el.style.display = 'block';
+  el.textContent = text;
+}
+
+/* ---------- 3. lingkungan ---------- */
+function showEnv(){
+  rows('env-detail', [
+    ['Alamat halaman', location.href],
+    ['Di dalam iframe?', window.parent !== window ? 'ya' : 'tidak'],
+    ['Ukuran layar', window.innerWidth + ' × ' + window.innerHeight],
+    ['Online?', navigator.onLine ? 'ya' : 'tidak'],
+    ['Waktu perangkat', new Date().toString()],
+  ]);
+}
+
+/* ---------- jalan ---------- */
+document.getElementById('retry').addEventListener('click', checkNetwork);
+checkScorm();
+showEnv();
+checkNetwork();
+</script>
+</body>
+</html>
