@@ -99,7 +99,7 @@ export default function BlockAddMenu({ onAdd }: Props) {
   }
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative' }} onKeyDown={onKeyDown}>
+    <div ref={wrapRef} className="slide-add-block" style={{ position: 'relative' }} onKeyDown={onKeyDown}>
       <style>{BLOCK_PREVIEW_STYLES}</style>
       <button
         type="button"

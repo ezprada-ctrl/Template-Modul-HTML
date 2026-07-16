@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
 } from '@dnd-kit/core';
@@ -283,6 +283,32 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: slide.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+  const workspaceRef = useRef<HTMLDivElement>(null);
+
+  // "Focus mode": toggles a class on the workspace container whenever focus
+  // moves in/out of a block-card, so unrelated fields (kicker/subjudul,
+  // other blocks, the live preview) visibly recede via CSS - makes it
+  // unmistakable which block-shaped area is actually being edited. Plain
+  // focusin/focusout listeners instead of a CSS :has() selector because
+  // :has()-based style invalidation turned out to be unreliable here (the
+  // selector matched via querySelector but computed style didn't update).
+  useEffect(() => {
+    if (!open) return;
+    const el = workspaceRef.current;
+    if (!el) return;
+    function updateFocusState() {
+      const focused = document.activeElement;
+      const withinBlock = !!(focused && el!.contains(focused) && focused.closest('.block-card'));
+      el!.classList.toggle('has-focused-block', withinBlock);
+    }
+    function onFocusOut() { setTimeout(updateFocusState, 0); }
+    el.addEventListener('focusin', updateFocusState);
+    el.addEventListener('focusout', onFocusOut);
+    return () => {
+      el.removeEventListener('focusin', updateFocusState);
+      el.removeEventListener('focusout', onFocusOut);
+    };
+  }, [open]);
 
   return (
     <div ref={setNodeRef} style={{ ...style, border: `1px solid ${open ? 'var(--border-strong)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', boxShadow: open ? 'var(--shadow-sm)' : 'none' }}>
@@ -297,16 +323,18 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
         <button className="btn-danger btn-sm" onClick={onRemove}>Hapus</button>
       </div>
       {open && (
-        <div style={{ padding: 14, borderTop: '1px solid var(--border)', display: 'flex', gap: 28 }}>
+        <div className="slide-workspace" ref={workspaceRef} style={{ padding: 14, borderTop: '1px solid var(--border)', display: 'flex', gap: 28 }}>
           <div style={{ flex: '1 1 50%', minWidth: 0 }}>
-            <input placeholder="Kicker label (mis. A.1 JUDUL)" value={slide.kickerLabel}
-              onChange={e => onUpdate({ kickerLabel: e.target.value })} style={{ width: '100%', marginBottom: 4 }} />
-            <textarea placeholder="Subjudul (opsional)" value={slide.subtitle || ''}
-              onChange={e => onUpdate({ subtitle: e.target.value })}
-              style={{ width: '100%', marginBottom: 8, minHeight: 40, resize: 'vertical' }} />
+            <div className="slide-meta">
+              <input placeholder="Kicker label (mis. A.1 JUDUL)" value={slide.kickerLabel}
+                onChange={e => onUpdate({ kickerLabel: e.target.value })} style={{ width: '100%', marginBottom: 4 }} />
+              <textarea placeholder="Subjudul (opsional)" value={slide.subtitle || ''}
+                onChange={e => onUpdate({ subtitle: e.target.value })}
+                style={{ width: '100%', marginBottom: 8, minHeight: 40, resize: 'vertical' }} />
+            </div>
             <BlockEditor blocks={slide.blocks} onChange={blocks => onUpdate({ blocks })} />
           </div>
-          <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
+          <div className="slide-preview-col" style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
             <SlidePreview module={module} slideNumber={slide.number} />
           </div>
         </div>
