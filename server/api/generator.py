@@ -41,6 +41,15 @@ def esc(s):
     return html_lib.escape(s or '', quote=False)
 
 
+def nl2br(text):
+    """Every newline the author actually typed (pressing Enter in the
+    textarea) becomes one <br> - so plain Enter presses produce spacing in
+    the output instead of requiring hand-typed <br> tags. Old content that
+    already has literal <br> text (no real newline characters) is untouched
+    by this - there's nothing here for it to convert."""
+    return (text or '').replace('\r\n', '\n').replace('\r', '\n').replace('\n', '<br>')
+
+
 # ---------------------------------------------------------------- block renderers
 
 def render_card(b):
@@ -50,7 +59,7 @@ def render_card(b):
         color = b.get('iconColor', 'var(--accent-2)')
         icon_html = f'<span class="ic" style="background:{bg};color:{color};">{b["icon"]}</span>'
     heading = f'<h3>{icon_html}{esc(b.get("heading",""))}</h3>' if b.get('heading') else ''
-    return f'<div class="card">{heading}{b.get("bodyHtml","")}</div>'
+    return f'<div class="card">{heading}{nl2br(b.get("bodyHtml",""))}</div>'
 
 
 def render_callout(b):
@@ -62,13 +71,13 @@ def render_callout(b):
         inner += f'<span class="ic-pill">{esc(b["pill"])}</span>'
     elif b.get('icon'):
         inner += f'<span class="ic">{b["icon"]}</span>'
-    inner += f'<div>{b.get("bodyHtml","")}</div>'
+    inner += f'<div>{nl2br(b.get("bodyHtml",""))}</div>'
     return f'<div class="callout {variant}">{inner}</div>'
 
 
 def render_definition(b):
     tag = f'<span class="tag">{esc(b.get("tag","DEFINISI"))}</span>'
-    return f'<div class="definition">{tag}{b.get("bodyHtml","")}</div>'
+    return f'<div class="definition">{tag}{nl2br(b.get("bodyHtml",""))}</div>'
 
 
 def render_pullquote(b):
@@ -95,7 +104,7 @@ def render_accordion(b):
                 f'<button class="acc-head" onclick="toggleAcc(\'{prefix}-{i}\')">'
                 f'<span class="acc-n">{esc(badge)}</span><span>{esc(label)}</span>'
                 f'<span class="acc-chevron">⌄</span></button>'
-                f'<div class="acc-body"><div class="acc-body-inner">{it.get("b","")}</div></div></div>')
+                f'<div class="acc-body"><div class="acc-body-inner">{nl2br(it.get("b",""))}</div></div></div>')
     return f'<div class="acc-group">{out}</div>'
 
 
@@ -107,7 +116,7 @@ def render_tabs(b):
     for i, t in enumerate(tabs):
         active = ' active' if i == 0 else ''
         head += f'<button class="tab-btn{active}" onclick="switchTab(\'{prefix}\',{i})">{esc(t.get("label",""))}</button>'
-        body += f'<div class="tab-panel{active}" id="{prefix}-panel-{i}">{t.get("content","")}</div>'
+        body += f'<div class="tab-panel{active}" id="{prefix}-panel-{i}">{nl2br(t.get("content",""))}</div>'
     head += '</div>'
     return f'<div class="tabs-wrap" id="{prefix}-wrap">{head}{body}</div>'
 
@@ -120,7 +129,7 @@ def render_timeline(b):
                 f'<div class="tl-item-line"></div></div><div class="tl-content">'
                 f'<div class="tl-time">{esc(it.get("time",""))}</div>'
                 f'<div class="tl-title">{esc(it.get("title",""))}</div>'
-                f'<div class="tl-desc">{it.get("desc","")}</div></div></div>')
+                f'<div class="tl-desc">{nl2br(it.get("desc",""))}</div></div></div>')
     out += '</div>'
     return out
 
@@ -138,7 +147,11 @@ FLOW_DATA = {}  # collected across the whole generation pass, flushed after SLID
 
 def render_flow(b):
     container_id = b.get('id', 'flow')
-    steps = b.get('steps', [])
+    # detail is pre-processed here (not left raw) because it's also stored
+    # into FLOW_DATA below, which the client JS later injects via
+    # `.innerHTML = steps[idx].detail` (see toggleFlow in shell-template.html)
+    # - it needs to already be <br>-ified by the time it lands there.
+    steps = [{**s, 'detail': nl2br(s.get('detail', ''))} for s in b.get('steps', [])]
     FLOW_DATA[container_id] = steps
     out = f'<div class="card"><div id="{container_id}-wrap"><div class="flow">'
     for i, s in enumerate(steps):
@@ -178,7 +191,7 @@ def render_html(b):
 def render_modal(b):
     modal_id = b.get('id', 'modal')
     title = esc(b.get('heading', 'Info Tambahan'))
-    body = b.get('bodyHtml', '')
+    body = nl2br(b.get('bodyHtml', ''))
     icon = b.get('icon') or '📝'
     return (
         f'<button class="modal-trigger" onclick="openModal(\'{modal_id}\')">'
