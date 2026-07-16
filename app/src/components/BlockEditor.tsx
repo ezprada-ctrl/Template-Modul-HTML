@@ -10,16 +10,8 @@ interface Props {
   onChange: (blocks: Block[]) => void;
 }
 
-// Highlights whichever block card currently has focus (a field inside it is
-// being typed in), so editing a slide with many blocks doesn't feel like
-// "everything looks the same" — a left accent bar + tinted background makes
-// it obvious which one you're in. Pure CSS (:focus-within), no JS state
-// needed: it tracks focus automatically as the user tabs/clicks around.
 const BLOCK_CARD_STYLES = `
-.block-card{position:relative;transition:border-color var(--ease), background var(--ease), box-shadow var(--ease);}
-.block-card:focus-within{border-color:var(--ink);background:var(--surface);box-shadow:0 0 0 3px var(--ring);}
-.block-card:focus-within::before{content:'';position:absolute;left:-1px;top:-1px;bottom:-1px;width:3px;border-radius:8px 0 0 8px;background:var(--ink);}
-.block-card:focus-within .block-card-label{color:var(--text);}
+.block-card{position:relative;}
 
 /* Whenever a field ANYWHERE in the currently-open slide is focused (kicker,
    subjudul, or any block - including ones added after this ran, since
