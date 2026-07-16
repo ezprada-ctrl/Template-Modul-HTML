@@ -1,30 +1,9 @@
 import { useState } from 'react';
 import type { Block, BlockType } from '../types';
-import { uid } from '../types';
+import { newBlock, changeBlockType, isBlockEmpty } from '../types';
 import EmojiPicker from './EmojiPicker';
 import BlockAddMenu, { BLOCK_LABELS } from './BlockAddMenu';
 import { uploadImageToStorage } from '../api';
-
-function newBlock(type: BlockType): Block {
-  const id = uid('block');
-  switch (type) {
-    case 'ticklist': return { id, type, ordered: false, items: [''] };
-    case 'accordion': return { id, type, accItems: [{ h: 'a. Judul', b: 'Isi' }] };
-    case 'tabs': return { id, type, tabItems: [{ label: 'Tab 1', content: 'Isi tab' }] };
-    case 'timeline': return { id, type, tlItems: [{ time: '', title: '', desc: '' }] };
-    case 'dtable': return { id, type, headers: ['Kolom 1', 'Kolom 2'], rows: [['', '']] };
-    case 'flow': return { id, type, steps: [{ n: 1, title: '', detail: '' }] };
-    case 'grid': return { id, type, columns: 2, blocks: [] };
-    case 'callout': return { id, type, variant: 'amber', bodyHtml: '' };
-    case 'definition': return { id, type, tag: 'DEFINISI', bodyHtml: '' };
-    case 'pullquote': return { id, type, num: '', text: '' };
-    case 'image': return { id, type, src: '', caption: '' };
-    case 'badgeref': return { id, type, refText: '' };
-    case 'html': return { id, type, raw: '' };
-    case 'modal': return { id, type, heading: 'Info Tambahan', bodyHtml: '', icon: '📝' };
-    default: return { id, type: 'card', heading: '', bodyHtml: '' };
-  }
-}
 
 interface Props {
   blocks: Block[];
@@ -50,7 +29,13 @@ export default function BlockEditor({ blocks, onChange }: Props) {
     onChange(next);
   }
   function remove(i: number) {
+    if (!isBlockEmpty(blocks[i]) && !confirm('Blok ini masih ada isinya, yakin mau dihapus?')) return;
     onChange(blocks.filter((_, idx) => idx !== i));
+  }
+  function changeType(i: number, newType: BlockType) {
+    const next = [...blocks];
+    next[i] = changeBlockType(next[i], newType);
+    onChange(next);
   }
   function move(i: number, dir: -1 | 1) {
     const j = i + dir;
@@ -69,7 +54,20 @@ export default function BlockEditor({ blocks, onChange }: Props) {
       {blocks.map((b, i) => (
         <div key={b.id} className="block-card" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 11, background: 'var(--surface-2)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <b className="block-card-label" style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>{BLOCK_LABELS[b.type]}</b>
+            <select
+              className="block-card-label"
+              value={b.type}
+              onChange={e => changeType(i, e.target.value as BlockType)}
+              title="Ganti tipe blok ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang"
+              style={{
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
+                color: 'var(--text-faint)', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer',
+              }}
+            >
+              {Object.entries(BLOCK_LABELS).map(([type, label]) => (
+                <option key={type} value={type}>{label}</option>
+              ))}
+            </select>
             <div style={{ display: 'flex', gap: 4 }}>
               <button className="btn-icon btn-sm" title="Naik" onClick={() => move(i, -1)}>↑</button>
               <button className="btn-icon btn-sm" title="Turun" onClick={() => move(i, 1)}>↓</button>

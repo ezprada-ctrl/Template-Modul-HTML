@@ -205,3 +205,110 @@ export function uid(prefix = 'id') {
   idCounter += 1;
   return `${prefix}-${Date.now().toString(36)}-${idCounter}`;
 }
+
+// Fresh default content for a given block type - single source of truth so
+// both "+ Tambah blok" and "ganti tipe blok" build the same shape.
+export function newBlock(type: BlockType): Block {
+  const id = uid('block');
+  switch (type) {
+    case 'ticklist': return { id, type, ordered: false, items: [''] };
+    case 'accordion': return { id, type, accItems: [{ h: 'a. Judul', b: 'Isi' }] };
+    case 'tabs': return { id, type, tabItems: [{ label: 'Tab 1', content: 'Isi tab' }] };
+    case 'timeline': return { id, type, tlItems: [{ time: '', title: '', desc: '' }] };
+    case 'dtable': return { id, type, headers: ['Kolom 1', 'Kolom 2'], rows: [['', '']] };
+    case 'flow': return { id, type, steps: [{ n: 1, title: '', detail: '' }] };
+    case 'grid': return { id, type, columns: 2, blocks: [] };
+    case 'callout': return { id, type, variant: 'amber', bodyHtml: '' };
+    case 'definition': return { id, type, tag: 'DEFINISI', bodyHtml: '' };
+    case 'pullquote': return { id, type, num: '', text: '' };
+    case 'image': return { id, type, src: '', caption: '' };
+    case 'badgeref': return { id, type, refText: '' };
+    case 'html': return { id, type, raw: '' };
+    case 'modal': return { id, type, heading: 'Info Tambahan', bodyHtml: '', icon: '📝' };
+    default: return { id, type: 'card', heading: '', bodyHtml: '' };
+  }
+}
+
+// Pulls whatever counts as "the substance" out of a block, as plain text -
+// used both to decide if a block is empty (safe to delete without asking)
+// and to carry content across a type change instead of losing it.
+export function extractBlockText(block: Block): string {
+  switch (block.type) {
+    case 'card': case 'callout': case 'definition': case 'modal':
+      return block.bodyHtml || '';
+    case 'pullquote':
+      return block.text || '';
+    case 'html':
+      return block.raw || '';
+    case 'badgeref':
+      return block.refText || '';
+    case 'image':
+      return block.caption || '';
+    case 'ticklist':
+      return (block.items || []).filter(Boolean).join('\n');
+    case 'accordion':
+      return (block.accItems || []).map(it => [it.h, it.b].filter(Boolean).join(': ')).filter(Boolean).join('\n');
+    case 'tabs':
+      return (block.tabItems || []).map(it => [it.label, it.content].filter(Boolean).join(': ')).filter(Boolean).join('\n');
+    case 'timeline':
+      return (block.tlItems || []).map(it => [it.title, it.desc].filter(Boolean).join(': ')).filter(Boolean).join('\n');
+    case 'flow':
+      return (block.steps || []).map(s => [s.title, s.detail].filter(Boolean).join(': ')).filter(Boolean).join('\n');
+    case 'dtable':
+      return (block.rows || []).map(r => r.join(' | ')).filter(Boolean).join('\n');
+    case 'grid':
+      return '';
+    default:
+      return '';
+  }
+}
+
+// A block with no meaningful content in it - safe to delete without asking.
+export function isBlockEmpty(block: Block): boolean {
+  if (block.type === 'image') return !block.src;
+  if (block.type === 'grid') return !(block.blocks && block.blocks.length);
+  return !extractBlockText(block).trim();
+}
+
+// Drops the extracted text into whichever field is the new type's natural
+// "main content" slot. Structural types (dtable/grid) have no reasonable
+// auto-mapping and are left at their fresh default instead of guessing.
+function applyBlockText(block: Block, text: string): Block {
+  if (!text) return block;
+  switch (block.type) {
+    case 'card': case 'callout': case 'definition': case 'modal':
+      return { ...block, bodyHtml: text };
+    case 'pullquote':
+      return { ...block, text };
+    case 'html':
+      return { ...block, raw: text };
+    case 'badgeref':
+      return { ...block, refText: text.split('\n')[0] };
+    case 'image':
+      return { ...block, caption: text };
+    case 'ticklist':
+      return { ...block, items: text.split('\n').filter(Boolean) };
+    case 'accordion':
+      return { ...block, accItems: [{ h: 'a. Judul', b: text }] };
+    case 'tabs':
+      return { ...block, tabItems: [{ label: 'Tab 1', content: text }] };
+    case 'timeline':
+      return { ...block, tlItems: [{ time: '', title: '', desc: text }] };
+    case 'flow':
+      return { ...block, steps: [{ n: 1, title: '', detail: text }] };
+    default:
+      return block;
+  }
+}
+
+// Switches a block's type IN PLACE (same id, same position) instead of the
+// old "delete the old one, add an empty new one" workflow that silently
+// threw away raw PPTX substance the user still needed to edit. Whatever
+// text content the old block had gets carried into the new type's main
+// content field via applyBlockText.
+export function changeBlockType(block: Block, newType: BlockType): Block {
+  if (block.type === newType) return block;
+  const text = extractBlockText(block);
+  const fresh = applyBlockText(newBlock(newType), text);
+  return { ...fresh, id: block.id };
+}
