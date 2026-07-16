@@ -15,6 +15,7 @@ from flask_cors import CORS
 import generator
 import pptx_extract
 import draft_store
+import activity_store
 
 app = Flask(__name__)
 
@@ -71,6 +72,73 @@ def api_save_draft(name):
 @app.get('/api/health')
 def api_health():
     return jsonify({'ok': True, 'storage': 'supabase' if draft_store.USE_SUPABASE else 'local-file'})
+
+
+# --------------------------------------------------------------- Command Center
+# Isi endpoint di bawah ini = DATA PRIBADI (nama + NIP + rekam jejak belajar),
+# sementara builder app-nya sendiri gak punya login dan URL-nya publik. Jadi
+# password DIVALIDASI DI SINI, bukan di frontend: kalau cuma dicek di browser,
+# siapa pun tinggal manggil endpoint-nya langsung dan pengecekannya terlewat.
+#
+# Password dikirim lewat body JSON (POST), bukan query string, supaya gak
+# nyangkut di log server / riwayat browser.
+
+def _check_cc_password(data):
+    """None kalau boleh lanjut, atau (response, status) kalau ditolak."""
+    expected = os.environ.get('COMMAND_CENTER_PASSWORD', '')
+    if not expected:
+        # Fail-safe: belum dikonfigurasi = TUTUP, bukan terbuka. Data pribadi
+        # gak boleh kebuka cuma gara-gara env var kelupaan diset.
+        return jsonify({
+            'error': 'COMMAND_CENTER_PASSWORD belum diset di project backend Vercel. '
+                     'Command Center sengaja ditutup sampai password-nya dipasang.'
+        }), 503
+    if (data or {}).get('password') != expected:
+        return jsonify({'error': 'Password salah.'}), 401
+    return None
+
+
+@app.post('/api/activity/modules')
+def api_activity_modules():
+    data = request.get_json(silent=True) or {}
+    denied = _check_cc_password(data)
+    if denied:
+        return denied
+    try:
+        return jsonify({'modules': activity_store.list_modules()})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
+@app.post('/api/activity/sessions')
+def api_activity_sessions():
+    data = request.get_json(silent=True) or {}
+    denied = _check_cc_password(data)
+    if denied:
+        return denied
+    slug = data.get('module_slug')
+    if not slug:
+        return jsonify({'error': 'module_slug wajib diisi'}), 400
+    try:
+        return jsonify({'sessions': activity_store.summarize_sessions(slug)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
+@app.post('/api/activity/rows')
+def api_activity_rows():
+    """Semua event mentah satu modul — buat ekspor CSV yang lossless."""
+    data = request.get_json(silent=True) or {}
+    denied = _check_cc_password(data)
+    if denied:
+        return denied
+    slug = data.get('module_slug')
+    if not slug:
+        return jsonify({'error': 'module_slug wajib diisi'}), 400
+    try:
+        return jsonify({'rows': activity_store.fetch_rows(module_slug=slug)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
 
 
 @app.get('/api/keepalive')

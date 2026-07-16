@@ -47,6 +47,62 @@ export async function saveDraft(name: string, module: ModuleData): Promise<void>
   });
 }
 
+// ---------------------------------------------------------- Command Center
+// Semua panggilan di bawah lewat BACKEND, bukan langsung ke Supabase: data
+// aktivitas cuma bisa dibaca pakai service_role key, dan key itu wajib tetap
+// di server (kalau dibawa ke browser, siapa pun bisa baca/hapus seluruh DB).
+// Password ikut di body tiap panggilan — backend yang mutusin, bukan sini.
+
+export interface ActivityModule {
+  module_slug: string;
+  rows: number;
+  sessions: number;
+  learners: number;
+  first_seen: string;
+  last_seen: string;
+}
+
+export interface ActivitySession {
+  session_id: string;
+  module_slug: string;
+  learner_name: string | null;
+  learner_id: string | null;
+  identity_source: string | null;
+  mulai: string;
+  selesai: string;
+  durasi_total_ms: number;
+  durasi_menit: number;
+  jumlah_slide_dilihat: number;
+  jumlah_interaksi: number;
+  kuis_dijawab: number;
+  kuis_benar: number;
+  kuis_diulang: number;
+  perangkat: string | null;
+}
+
+async function ccPost(path: string, body: Record<string, unknown>) {
+  const res = await fetch(`${BASE}/api/activity/${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Gagal memuat data (${res.status})`);
+  return data;
+}
+
+export async function ccListModules(password: string): Promise<ActivityModule[]> {
+  return (await ccPost('modules', { password })).modules;
+}
+
+export async function ccListSessions(password: string, moduleSlug: string): Promise<ActivitySession[]> {
+  return (await ccPost('sessions', { password, module_slug: moduleSlug })).sessions;
+}
+
+export async function ccRawRows(password: string, moduleSlug: string): Promise<any[]> {
+  return (await ccPost('rows', { password, module_slug: moduleSlug })).rows;
+}
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const IMAGE_BUCKET = 'modul-images';

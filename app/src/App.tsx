@@ -7,8 +7,9 @@ import Canvas from './components/Canvas';
 import CoverForm from './components/CoverForm';
 import QuizBuilder from './components/QuizBuilder';
 import PreviewExport from './components/PreviewExport';
+import CommandCenter from './components/CommandCenter';
 
-type Tab = 'bank' | 'canvas' | 'cover' | 'quiz' | 'preview';
+type Tab = 'bank' | 'canvas' | 'cover' | 'quiz' | 'preview' | 'command';
 
 const TABS: { id: Tab; label: string; hint: string }[] = [
   { id: 'bank', label: 'Import PPTX', hint: 'Ekstrak slide dari file PPTX' },
@@ -16,6 +17,7 @@ const TABS: { id: Tab; label: string; hint: string }[] = [
   { id: 'cover', label: 'Sampul', hint: 'Judul, tema, gambar sampul' },
   { id: 'quiz', label: 'Kuis', hint: 'Soal per section' },
   { id: 'preview', label: 'Preview & Export', hint: 'Lihat hasil & unduh HTML' },
+  { id: 'command', label: 'Command Center', hint: 'Rekaman aktivitas peserta (butuh password)' },
 ];
 
 const LAST_SLUG_KEY = 'modul-builder-last-slug';
@@ -147,6 +149,7 @@ function App() {
       {tab === 'cover' && <CoverForm module={module} setModule={setModule} />}
       {tab === 'quiz' && <QuizBuilder module={module} setModule={setModule} />}
       {tab === 'preview' && <PreviewExport module={module} setModule={setModule} />}
+      {tab === 'command' && <CommandCenter />}
     </div>
   );
 }
