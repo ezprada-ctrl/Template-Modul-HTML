@@ -285,21 +285,22 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
   const style = { transform: CSS.Transform.toString(transform), transition };
   const workspaceRef = useRef<HTMLDivElement>(null);
 
-  // "Focus mode": toggles a class on the workspace container whenever focus
-  // moves in/out of a block-card, so unrelated fields (kicker/subjudul,
-  // other blocks, the live preview) visibly recede via CSS - makes it
-  // unmistakable which block-shaped area is actually being edited. Plain
-  // focusin/focusout listeners instead of a CSS :has() selector because
-  // :has()-based style invalidation turned out to be unreliable here (the
-  // selector matched via querySelector but computed style didn't update).
+  // Toggles a class on the whole workspace container whenever focus is
+  // anywhere inside it (kicker, subjudul, or any block - including ones
+  // added later, since they're all inside this same container) - the
+  // entire slide being edited gets framed as one unit, not just whichever
+  // single field currently has the cursor. Plain focusin/focusout listeners
+  // instead of a CSS :has() selector because :has()-based style invalidation
+  // turned out to be unreliable here (the selector matched via querySelector
+  // but computed style didn't update).
   useEffect(() => {
     if (!open) return;
     const el = workspaceRef.current;
     if (!el) return;
     function updateFocusState() {
       const focused = document.activeElement;
-      const withinBlock = !!(focused && el!.contains(focused) && focused.closest('.block-card'));
-      el!.classList.toggle('has-focused-block', withinBlock);
+      const within = !!(focused && el!.contains(focused));
+      el!.classList.toggle('has-focused-block', within);
     }
     function onFocusOut() { setTimeout(updateFocusState, 0); }
     el.addEventListener('focusin', updateFocusState);
@@ -325,7 +326,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
       {open && (
         <div className="slide-workspace" ref={workspaceRef} style={{ padding: 14, borderTop: '1px solid var(--border)', display: 'flex', gap: 28 }}>
           <div style={{ flex: '1 1 50%', minWidth: 0 }}>
-            <div className="slide-meta">
+            <div>
               <input placeholder="Kicker label (mis. A.1 JUDUL)" value={slide.kickerLabel}
                 onChange={e => onUpdate({ kickerLabel: e.target.value })} style={{ width: '100%', marginBottom: 4 }} />
               <textarea placeholder="Subjudul (opsional)" value={slide.subtitle || ''}
@@ -334,7 +335,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
             </div>
             <BlockEditor blocks={slide.blocks} onChange={blocks => onUpdate({ blocks })} />
           </div>
-          <div className="slide-preview-col" style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
+          <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
             <SlidePreview module={module} slideNumber={slide.number} />
           </div>
         </div>

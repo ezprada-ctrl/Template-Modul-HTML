@@ -16,23 +16,20 @@ interface Props {
 // it obvious which one you're in. Pure CSS (:focus-within), no JS state
 // needed: it tracks focus automatically as the user tabs/clicks around.
 const BLOCK_CARD_STYLES = `
-.block-card{position:relative;transition:border-color var(--ease), background var(--ease), box-shadow var(--ease), opacity var(--ease), filter var(--ease);}
+.block-card{position:relative;transition:border-color var(--ease), background var(--ease), box-shadow var(--ease);}
 .block-card:focus-within{border-color:var(--ink);background:var(--surface);box-shadow:0 0 0 3px var(--ring);}
 .block-card:focus-within::before{content:'';position:absolute;left:-1px;top:-1px;bottom:-1px;width:3px;border-radius:8px 0 0 8px;background:var(--ink);}
 .block-card:focus-within .block-card-label{color:var(--text);}
 
-/* Focus mode: once you click into a field inside ANY block, everything else
-   in the slide's workspace (other blocks, kicker/subjudul, "+ Tambah blok",
-   the live preview column) visibly recedes - so it's unmistakable which
-   block-shaped area is the one you're actually working in, versus fields
-   that just happen to sit nearby but belong to the slide, not the block. */
-.slide-meta, .slide-preview-col, .slide-add-block{transition:opacity var(--ease), filter var(--ease);}
-.slide-workspace.has-focused-block .slide-meta,
-.slide-workspace.has-focused-block .slide-preview-col,
-.slide-workspace.has-focused-block .slide-add-block,
-.slide-workspace.has-focused-block .block-card:not(:focus-within){
-  opacity:.4;filter:saturate(.6);
-}
+/* Whenever a field ANYWHERE in the currently-open slide is focused (kicker,
+   subjudul, or any block - including ones added after this ran, since
+   they're all inside the same container), the WHOLE workspace gets framed
+   as one unit. This is the whole point: every block in this slide is
+   something the user will look at and edit while working on it, not just
+   whichever single field happens to have the cursor right now - so the
+   entire area is what should read as "active", not just one block. */
+.slide-workspace{transition: box-shadow var(--ease), background var(--ease); border-radius: var(--radius-sm);}
+.slide-workspace.has-focused-block{box-shadow: 0 0 0 2px var(--ink); background: var(--surface-2);}
 `;
 
 export default function BlockEditor({ blocks, onChange }: Props) {
