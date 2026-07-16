@@ -327,10 +327,10 @@ def generate_html(module):
 
     out = out.replace('__HIDE_PROGRESS_JS__', js_str(bool(module.get('hideProgress', False))))
 
-    hero_title_html = module.get('heroTitleHtml') or esc(module.get('title', ''))
+    hero_title_html = nl2br(module.get('heroTitleHtml') or esc(module.get('title', '')))
     out = out.replace('__HERO_TITLE_HTML__', hero_title_html)
 
-    hero_desc = module.get('heroDesc', '')
+    hero_desc = nl2br(module.get('heroDesc', ''))
     out = out.replace('__HERO_DESC__', hero_desc)
 
     sidebar_eyebrow = esc(module.get('sidebarEyebrow') or 'Open Access')
