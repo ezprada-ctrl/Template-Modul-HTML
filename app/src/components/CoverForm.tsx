@@ -73,6 +73,17 @@ export default function CoverForm({ module, setModule }: Props) {
               onChange={e => setModule({ ...module, hideProgress: e.target.checked })} />
             <span>Sembunyikan progress belajar</span>
           </label>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={!!module.trackActivity} style={{ marginTop: 3 }}
+              onChange={e => setModule({ ...module, trackActivity: e.target.checked })} />
+            <span>
+              Rekam aktivitas peserta
+              <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
+                Peserta diminta isi Nama &amp; NIP di awal, lalu durasi per slide, kuis, dan interaksinya
+                direkam buat bahan riset. Modul tanpa centang ini gak ngirim data apa pun.
+              </span>
+            </span>
+          </label>
           <label style={{ color: 'var(--text-dim)' }}>
             Judul besar di layar sampul (boleh HTML sederhana, mis. pakai <code>&lt;br&gt;</code> untuk ganti baris
             atau <code>&lt;span&gt;...&lt;/span&gt;</code> untuk bagian yang diwarnai emas)

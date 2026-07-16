@@ -525,6 +525,35 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 #devmode-modal-error.show{display:block;}
 #devmode-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;}
 
+/* Gerbang identitas — cuma muncul di modul yang "Rekam aktivitas peserta"-nya
+   dicentang DAN identitasnya belum kedapetan dari LMS. z-index di atas
+   devmode modal karena ini gerbang: modul gak boleh dimulai sebelum diisi. */
+#identity-overlay{
+  display:none;position:fixed;inset:0;background:rgba(22,33,62,.62);backdrop-filter:blur(3px);
+  z-index:90;align-items:center;justify-content:center;padding:20px;
+}
+#identity-overlay.show{display:flex;}
+#identity-box{
+  background:var(--surface);border-radius:var(--radius-lg);padding:30px 32px;
+  width:400px;max-width:92vw;box-shadow:var(--shadow-lg);
+  animation:riseIn .35s cubic-bezier(.16,1,.3,1);
+}
+#identity-box .idn-icon{
+  width:46px;height:46px;border-radius:14px;background:var(--accent-soft);color:var(--accent-2);
+  display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;
+}
+#identity-box h3{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:7px;font-family:'Plus Jakarta Sans',sans-serif;}
+#identity-box p{font-size:12.5px;color:var(--text-dim);line-height:1.6;margin-bottom:18px;}
+#identity-box label{display:block;font-size:11.5px;font-weight:700;color:var(--text-dim);margin-bottom:5px;letter-spacing:.02em;}
+#identity-box input{
+  width:100%;padding:11px 14px;border-radius:var(--radius-md);border:1px solid var(--border);
+  background:var(--surface-2);color:var(--text);font-size:14px;font-family:inherit;margin-bottom:13px;
+}
+#identity-box input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+#identity-error{display:none;color:var(--rose);font-size:12px;font-weight:600;margin-bottom:11px;}
+#identity-error.show{display:block;}
+#identity-box .idn-note{font-size:11px;color:var(--text-faint);line-height:1.5;margin:14px 0 0;}
+
 .nav-section.locked .nav-section-head{color:var(--text-faint);cursor:pointer;}
 .nav-section.locked .nsh-icon{background:var(--surface-2);color:var(--text-faint);}
 .nav-section.locked .nsh-title{opacity:.65;}
@@ -607,6 +636,23 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 <div id="app">
   <div id="overlay" onclick="closeSidebar()"></div>
   <div id="lock-toast"></div>
+
+  <div id="identity-overlay">
+    <div id="identity-box">
+      <div class="idn-icon">👋</div>
+      <h3>Sebelum mulai</h3>
+      <p>Isi data kamu dulu ya. Ini dipakai buat mencatat aktivitas belajar sebagai bahan evaluasi pembelajaran.</p>
+      <label for="idn-nama">Nama Lengkap <span style="font-weight:400;color:var(--text-faint)">(sesuai HRIS)</span></label>
+      <input type="text" id="idn-nama" autocomplete="name" placeholder="mis. Budi Santoso"
+             onkeydown="if(event.key==='Enter') document.getElementById('idn-nip').focus()">
+      <label for="idn-nip">NIP</label>
+      <input type="text" id="idn-nip" inputmode="numeric" autocomplete="off" placeholder="18 digit angka"
+             onkeydown="if(event.key==='Enter') submitIdentity()">
+      <div id="identity-error"></div>
+      <button class="nav-btn primary" style="width:100%" onclick="submitIdentity()">Mulai Belajar →</button>
+      <p class="idn-note">Data ini cuma dipakai untuk keperluan evaluasi dan pengembangan pembelajaran.</p>
+    </div>
+  </div>
 
   <div id="devmode-modal-overlay" onclick="if(event.target===this) closeDevModeModal()">
     <div id="devmode-modal">
@@ -724,6 +770,7 @@ function toggleFlow(id, idx){
     el.classList.toggle('active', i===idx);
   });
   document.getElementById(id+'-detail').innerHTML = steps[idx].detail;
+  actInteraksi('flow', id, idx);
 }
 
 function accordion(items, prefix){
@@ -741,10 +788,18 @@ function accordion(items, prefix){
   });
   return html;
 }
-function toggleAcc(id){ document.getElementById(id).classList.toggle('open'); }
+/* Interaksi click-to-reveal dicatat cuma waktu DIBUKA (bukan ditutup) —
+   yang menarik buat riset itu "peserta gali konten tambahan atau enggak",
+   bukan berapa kali dia buka-tutup. */
+function toggleAcc(id){
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+  if(el.classList.contains('open')) actInteraksi('accordion', id);
+}
 function openModal(id){
   document.getElementById(id).classList.add('open');
   document.body.style.overflow='hidden';
+  actInteraksi('modal', id);
 }
 function closeModal(id){
   document.getElementById(id).classList.remove('open');
@@ -765,6 +820,7 @@ function switchTab(prefix, idx){
   const wrap = document.getElementById(prefix+'-wrap');
   wrap.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', i===idx));
   wrap.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active', i===idx));
+  actInteraksi('tabs', prefix, idx);
 }
 
 /* ---------------- Slide content: SECTION A — GAMBARAN UMUM ---------------- */
@@ -879,6 +935,244 @@ function toggleHideProgressPreview(){
   btn.classList.toggle('active', devHideProgressPreview);
   btn.textContent = devHideProgressPreview ? '● Progress disembunyikan (preview)' : 'Sembunyikan Progress (preview)';
   applyProgressVisibility();
+}
+
+/* ==================== REKAM AKTIVITAS PESERTA (opsional) ====================
+   Aktif cuma kalau "Rekam aktivitas peserta" dicentang di tab Sampul waktu
+   modul ini di-generate. Kalau mati, TIDAK ADA satu byte pun yang dikirim
+   keluar — semua kode di bawah jadi no-op.
+
+   Kenapa nulis langsung ke Supabase, bukan lewat SCORM: `cmi.suspend_data`
+   SCORM 1.2 dibatasi ~4096 karakter. Durasi per-slide buat puluhan slide
+   bakal jebol dan LMS motong datanya diam-diam. SCORM tetap dipakai buat
+   progres + identitas.
+
+   Anon key di bawah ini memang keliatan siapa pun yang buka source. Itu AMAN
+   karena RLS di Supabase cuma ngasih anon izin INSERT, nol SELECT — jadi key
+   ini gak bisa dipakai baca data peserta lain. Lihat
+   server/supabase_activity_setup.sql. */
+const TRACK_ACTIVITY = __TRACK_ACTIVITY_JS__;
+const SUPA_URL = __SUPABASE_URL_JS__;
+const SUPA_KEY = __SUPABASE_ANON_KEY_JS__;
+const MODULE_SLUG = __MODULE_SLUG_JS__;
+const TRACK_READY = !!(TRACK_ACTIVITY && SUPA_URL && SUPA_KEY);
+
+let actSessionId = null;
+let actBuffer = [];
+let actFlushTimer = null;
+let actSlideMark = null;
+let actSessionT0 = 0;
+
+/* ---------- identitas ---------- */
+/* SCORM biasanya nulis nama "Santoso, Budi" — dibalik biar kebaca wajar di
+   Command Center dan konsisten sama yang diketik manual peserta. */
+function scormNameToNatural(raw){
+  const s = (raw || '').trim();
+  if(s.indexOf(',') === -1) return s;
+  const p = s.split(',');
+  return ((p[1]||'').trim() + ' ' + (p[0]||'').trim()).trim();
+}
+
+/* Jalur SCORM ini SUDAH terpasang penuh walau LMS sekarang (mode preview
+   admin) belum ngasih API-nya. Begitu modul dibuka peserta asli dan LMS
+   nyediain cmi.core.student_name/student_id, form manual di bawah otomatis
+   berhenti muncul — tanpa perlu ubah kode ini sama sekali.
+
+   PENTING buat analisis: student_id dari LMS BELUM TENTU NIP (bisa ID
+   internal LMS). Makanya tiap sesi nyimpen `identity_source` — biar pas
+   ngolah data ketahuan mana NIP asli (manual) dan mana ID dari LMS. */
+function identityFromScorm(){
+  if(!scorm.inited) return null;
+  let name = '', id = '';
+  try{
+    if(scorm.version === '1.2'){
+      name = scormGetValue('cmi.core.student_name');
+      id   = scormGetValue('cmi.core.student_id');
+    } else {
+      name = scormGetValue('cmi.learner_name');
+      id   = scormGetValue('cmi.learner_id');
+    }
+  }catch(e){ return null; }
+  name = scormNameToNatural(name);
+  id = (id || '').trim();
+  if(!name && !id) return null;
+  return { nama: name, nip: id, source: 'scorm' };
+}
+
+/* Urutan: yang sudah tersimpan → SCORM → form manual (null = perlu nanya). */
+function resolveIdentity(){
+  if(state.identity && state.identity.nip) return state.identity;
+  const fromScorm = identityFromScorm();
+  if(fromScorm && (fromScorm.nip || fromScorm.nama)){
+    state.identity = fromScorm;
+    saveState();
+    return fromScorm;
+  }
+  return null;
+}
+
+function showIdentityError(msg){
+  const el = document.getElementById('identity-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function openIdentityGate(){
+  document.getElementById('identity-overlay').classList.add('show');
+  setTimeout(function(){ const el = document.getElementById('idn-nama'); if(el) el.focus(); }, 60);
+}
+function submitIdentity(){
+  const nama = (document.getElementById('idn-nama').value || '').trim();
+  /* NIP dinormalkan ke angka saja: orang ngetik pakai spasi/titik/strip, dan
+     "19850101 200101 1 001" vs "198501012001011001" harus jadi satu orang yang
+     sama waktu dianalisis, bukan dua. */
+  const nip = (document.getElementById('idn-nip').value || '').replace(/[^0-9]/g, '');
+  if(nama.length < 3){ showIdentityError('Nama belum diisi lengkap.'); return; }
+  if(nip.length < 8){ showIdentityError('NIP harus angka (NIP PNS 18 digit).'); return; }
+  state.identity = { nama: nama, nip: nip, source: 'manual' };
+  saveState();
+  document.getElementById('identity-overlay').classList.remove('show');
+  actStart();
+}
+
+/* ---------- pengiriman ---------- */
+function actNewSessionId(){
+  return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
+
+function actEvent(type, payload){
+  if(!TRACK_READY || !actSessionId) return;
+  const id = state.identity || {};
+  actBuffer.push({
+    module_slug: MODULE_SLUG,
+    session_id: actSessionId,
+    learner_id: id.nip || null,
+    learner_name: id.nama || null,
+    event_type: type,
+    payload: payload || {},
+    client_ts: new Date().toISOString()
+  });
+  if(actBuffer.length >= 20) actFlush();
+}
+
+/* Nyatet klik konten yang harus dibuka sendiri (accordion/tabs/modal/diagram
+   alur). Nomor slide ikut dicatat supaya ketahuan blok mana persisnya yang
+   digali peserta, bukan cuma "ada yang diklik". */
+function actInteraksi(jenis, id, idx){
+  if(!TRACK_READY || !actSessionId) return;
+  const item = NAV[currentIdx];
+  actEvent('interaction', {
+    jenis: jenis,
+    id: id,
+    idx: (idx === undefined ? null : idx),
+    slide: (item && item.num) || null
+  });
+}
+
+/* Dikirim berkelompok, bukan per-event, biar gak nembak jaringan LMS
+   ratusan kali per sesi. `keepalive` dipakai buat kiriman terakhir supaya
+   tetap terkirim walau halaman lagi ditutup (sendBeacon gak bisa dipakai:
+   dia gak bisa nyetel header apikey/Authorization yang diwajibkan Supabase). */
+function actFlush(useKeepalive){
+  if(!TRACK_READY || !actBuffer.length) return;
+  const batch = actBuffer.slice();
+  actBuffer = [];
+  try{
+    fetch(SUPA_URL + '/rest/v1/modul_activity', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        /* anon punya INSERT tapi NOL SELECT — minta baris balik bikin
+           PostgREST nolak seluruh request walau insert-nya sendiri boleh. */
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(batch),
+      keepalive: !!useKeepalive
+    }).catch(function(){
+      /* Sengaja diam. Rekam aktivitas TIDAK BOLEH ganggu orang belajar:
+         kalau jaringan mati, batch-nya dibuang, bukan diulang terus sampai
+         numpuk. Kehilangan baris riset itu wajar; bikin pelatihan seseorang
+         macet itu tidak. */
+    });
+  }catch(e){}
+}
+
+/* ---------- siklus sesi ---------- */
+function actStart(){
+  if(!TRACK_READY || actSessionId) return;
+  actSessionId = actNewSessionId();
+  actSessionT0 = Date.now();
+  const id = state.identity || {};
+  actEvent('session_start', {
+    identity_source: id.source || 'unknown',
+    module_title: MODULE_TITLE,
+    scorm_version: scorm.inited ? scorm.version : null,
+    screen: window.innerWidth + 'x' + window.innerHeight,
+    touch: ('ontouchstart' in window),
+    tz_offset_min: new Date().getTimezoneOffset(),
+    ua: navigator.userAgent
+  });
+  actFlush();
+  actFlushTimer = setInterval(function(){ actFlush(); }, 15000);
+  actMarkSlide();
+}
+
+/* Durasi diukur di sini, BUKAN dari selisih created_at di database — baris
+   dikirim berkelompok, jadi jam server cuma tau kapan datanya diunggah,
+   bukan berapa lama peserta beneran natap slide itu. */
+function actMarkSlide(){
+  if(!TRACK_READY || !actSessionId) return;
+  const item = NAV[currentIdx];
+  if(!item) return;
+  const key = itemKey(item);
+  if(actSlideMark && actSlideMark.key === key) return;
+  actCloseSlide();
+  const label = item.kind === 'quiz' ? ('Kuis: ' + item.section)
+              : item.kind === 'hero' ? 'Sampul'
+              : item.kind === 'summary' ? 'Ringkasan'
+              : (SLIDE_TITLES[item.num] || ('Slide ' + item.num));
+  actSlideMark = {
+    key: key, label: label, kind: item.kind,
+    num: item.num || null, section: item.section || null, t0: Date.now()
+  };
+}
+
+function actCloseSlide(){
+  if(!actSlideMark) return;
+  const ms = Date.now() - actSlideMark.t0;
+  const m = actSlideMark;
+  actSlideMark = null;
+  /* Render kilat (<400ms) diabaikan: klik cepat lewat sidebar bikin slide
+     ke-render tanpa pernah dibaca manusia — kalau ikut dicatat, rata-rata
+     durasinya jadi kotor. */
+  if(ms < 400) return;
+  actEvent('slide_view', {
+    key: m.key, label: m.label, kind: m.kind,
+    num: m.num, section: m.section, ms: ms
+  });
+}
+
+function actEnd(reason){
+  if(!TRACK_READY || !actSessionId) return;
+  actCloseSlide();
+  actEvent('session_end', { total_ms: Date.now() - actSessionT0, reason: reason || 'unload' });
+  actFlush(true);
+}
+
+/* visibilitychange + pagehide lebih bisa diandalkan daripada beforeunload
+   (terutama di HP, di mana tab sering dibunuh tanpa beforeunload). */
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'hidden'){ actCloseSlide(); actFlush(true); }
+  else if(actSessionId){ actMarkSlide(); }
+});
+window.addEventListener('pagehide', function(){ actEnd('pagehide'); });
+
+/* Dipanggil sekali di INIT. Kalau identitas sudah ada / bisa diambil dari
+   SCORM, langsung mulai; kalau belum, tampilkan form dulu. */
+function actBoot(){
+  if(!TRACK_READY) return;
+  if(resolveIdentity()) actStart(); else openIdentityGate();
 }
 
 let currentIdx = 0;
@@ -1205,6 +1499,7 @@ function render(opts){
   renderSidebar();
   updateProgress();
   renderBottomNav();
+  actMarkSlide();
 }
 
 function renderBottomNav(){
@@ -1319,12 +1614,20 @@ function answerQuiz(section, qi, oi){
   if(state.quizAnswers[section][qi]!==undefined) return;
   state.quizAnswers[section][qi]=oi;
   saveState();
-  if(oi===QUIZZES[section][qi].correct) playCorrectSound(); else playWrongSound();
+  const benar = (oi===QUIZZES[section][qi].correct);
+  actEvent('quiz_answer', { section:section, soal:qi+1, dipilih:oi, benar:benar });
+  if(benar) playCorrectSound(); else playWrongSound();
   render({preserveScroll:true});
 }
 function submitQuiz(section){
   state.quizSubmitted[section]=true;
   saveState();
+  actEvent('quiz_submit', {
+    section: section,
+    skor: quizScore(section),
+    total: (QUIZZES[section]||[]).length,
+    lulus: isQuizPassed(section)
+  });
   if(isQuizPassed(section)) playQuizPassSound(); else playQuizFailSound();
   render({preserveScroll:true});
   setTimeout(()=>{
@@ -1333,6 +1636,7 @@ function submitQuiz(section){
   },100);
 }
 function retryQuiz(section){
+  actEvent('quiz_retry', { section: section });
   state.quizAnswers[section] = {};
   state.quizSubmitted[section] = false;
   saveState();
@@ -1342,7 +1646,12 @@ function retryQuiz(section){
 /* ---------------- Reset ---------------- */
 function resetProgress(){
   if(!confirm('Reset seluruh progres belajar dan skor kuis?')) return;
+  /* Identitas SENGAJA dipertahankan: ini tombol reset PROGRES, bukan reset
+     orang. Kalau ikut dihapus, sesi rekam yang lagi jalan bakal lanjut tanpa
+     identitas diam-diam (gerbangnya cuma muncul sekali di INIT). */
+  const identity = state.identity;
   state = {visited:{}, quizAnswers:{}, quizSubmitted:{}};
+  if(identity) state.identity = identity;
   saveState();
   currentIdx = 0;
   render();
@@ -1362,6 +1671,9 @@ document.addEventListener('keydown', e=>{
 loadState();
 applyProgressVisibility();
 render();
+/* Setelah render: kalau modul ini ngerekam aktivitas, mulai sesinya (atau
+   tampilkan gerbang identitas dulu kalau identitasnya belum ketahuan). */
+actBoot();
 </script>
 </body>
 </html>

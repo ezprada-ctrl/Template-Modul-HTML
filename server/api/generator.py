@@ -293,6 +293,8 @@ def generate_html(module):
 
     slug = module.get('slug') or slugify(module.get('title', 'modul'))
     out = out.replace('__STORAGE_KEY__', f'pilar-{slug}-progress-v1')
+    # Tags every activity row so the Command Center can tell modules apart.
+    out = out.replace('__MODULE_SLUG_JS__', js_str(slug))
 
     module_title_js = esc(module.get('sidebarTitle') or module.get('title', '')).replace("'", "\\'")
     out = out.replace('__MODULE_TITLE__', module_title_js)
@@ -326,6 +328,20 @@ def generate_html(module):
     out = out.replace('__NAV_JS__', js_str(nav))
 
     out = out.replace('__HIDE_PROGRESS_JS__', js_str(bool(module.get('hideProgress', False))))
+
+    # Activity recording (opt-in per module via the Sampul tab). The anon key
+    # is deliberately baked into the exported HTML: the module is a static
+    # file running inside an LMS with no backend of its own, so it writes to
+    # Supabase directly. That's safe *only* because RLS grants anon
+    # INSERT-only with zero SELECT on modul_activity — see
+    # server/supabase_activity_setup.sql. Never swap this for a service_role
+    # key: it would be readable by every learner who views source.
+    # Kredensial cuma ditanam kalau modulnya memang merekam. Modul biasa
+    # jangan sampai bawa-bawa key yang gak dia pakai.
+    track = bool(module.get('trackActivity', False))
+    out = out.replace('__TRACK_ACTIVITY_JS__', js_str(track))
+    out = out.replace('__SUPABASE_URL_JS__', js_str(os.environ.get('SUPABASE_URL', '').rstrip('/') if track else ''))
+    out = out.replace('__SUPABASE_ANON_KEY_JS__', js_str(os.environ.get('SUPABASE_ANON_KEY', '') if track else ''))
 
     hero_title_html = nl2br(module.get('heroTitleHtml') or esc(module.get('title', '')))
     out = out.replace('__HERO_TITLE_HTML__', hero_title_html)

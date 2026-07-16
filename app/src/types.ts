@@ -87,6 +87,11 @@ export interface ModuleData {
   // learners in the exported HTML — for modules that are just one part of a
   // larger series, where "100%" on this module alone would be misleading.
   hideProgress?: boolean;
+  // When true, the exported module records learner activity (slide durations,
+  // quiz attempts, interactions) to Supabase for study-habit research, and
+  // asks the learner for Nama + NIP up front. Opt-in per module so ordinary
+  // modules don't send anything at all.
+  trackActivity?: boolean;
   theme: { accent: string; accent2: string; onAccent: string; navy: string };
   sections: Section[];
   slides: Slide[];
@@ -138,6 +143,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     sidebarTitle: 'Modul Baru',
     coverImageDataUri: '',
     hideProgress: false,
+    trackActivity: false,
     theme: { ...DEFAULT_THEME },
     sections: [{ id: 'a', title: 'A. Bagian Satu', short: 'Bagian Satu', icon: 'A', color: '#c99a3d' }],
     slides: [],
