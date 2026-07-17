@@ -575,6 +575,8 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 #identity-error{display:none;color:var(--rose);font-size:12px;font-weight:600;margin-bottom:11px;}
 #identity-error.show{display:block;}
 .idn-panel .idn-note{font-size:11px;color:var(--text-faint);line-height:1.5;margin:14px 0 0;}
+#idn-prefill-note{display:none;font-size:11px;font-weight:600;color:var(--accent-2);margin:-6px 0 11px;}
+#idn-prefill-note.show{display:block;}
 /* Panel konfirmasi: data dibalikin gede-gede biar beneran kebaca, bukan
    diklik buru-buru. NIP pakai font mono + spasi per kelompok supaya digit
    ketuker/kelewat gampang keliatan mata. */
@@ -686,6 +688,7 @@ ul.tick li b, ol.tick li b{color:var(--text);}
       <label for="idn-nama">Nama Lengkap <span style="font-weight:400;color:var(--text-faint)">(sesuai HRIS)</span></label>
       <input type="text" id="idn-nama" autocomplete="name" placeholder="mis. Budi Santoso"
              onkeydown="if(event.key==='Enter') document.getElementById('idn-nip').focus()">
+      <div id="idn-prefill-note"></div>
       <label for="idn-nip">NIP</label>
       <input type="text" id="idn-nip" inputmode="numeric" autocomplete="off" placeholder="18 digit angka"
              oninput="formatNipInput(this)"
@@ -1091,21 +1094,42 @@ function saveSharedIdentity(identity){
   try{ localStorage.setItem(SHARED_IDENTITY_KEY, JSON.stringify(identity)); }catch(e){}
 }
 
-/* Urutan: yang sudah tersimpan di modul ini → SCORM → cache lintas-modul →
-   form manual (null = perlu nanya). */
+/* Nama dari SCORM yang dipakai buat ngisi otomatis form identitas waktu LMS
+   ngasih nama TAPI gak ngasih NIP (lihat resolveIdentity poin 4). */
+let scormNamePrefill = '';
+
+/* Urutan: yang sudah tersimpan di modul ini → SCORM lengkap → cache
+   lintas-modul → form manual (null = perlu nanya).
+
+   KUNCI: NIP itu satu-satunya pengunci identitas peserta lintas modul. Tanpa
+   NIP, semua sesi jatuh ke keranjang "(tanpa identitas)" di Command Center =
+   banyak orang KEGABUNG jadi satu baris. Makanya identitas cuma diterima
+   OTOMATIS kalau NIP-nya ada — nama doang gak pernah cukup. */
 function resolveIdentity(){
   if(state.identity && state.identity.nip) return state.identity;
+
   const fromScorm = identityFromScorm();
-  if(fromScorm && (fromScorm.nip || fromScorm.nama)){
+  // SCORM kasih identitas LENGKAP (ada NIP) → paling otoritatif, langsung pakai.
+  if(fromScorm && fromScorm.nip){
     state.identity = fromScorm;
     saveState();
     return fromScorm;
   }
+
+  // Cache lintas-modul: peserta udah ngetik NIP di modul sebelumnya di
+  // komputer yang sama. Dipakai sebelum jatuh ke form karena NIP-nya udah pasti.
   const shared = loadSharedIdentity();
   if(shared && shared.nip){
     state.identity = shared;
     saveState();
     return shared;
+  }
+
+  // SCORM cuma kasih NAMA tanpa NIP → JANGAN diterima sebagai identitas (nanti
+  // semua peserta nyampur). Tapi namanya kepakai buat ngisi otomatis form,
+  // jadi peserta cukup ngetik NIP-nya doang, gak usah ngetik nama lagi.
+  if(fromScorm && fromScorm.nama){
+    scormNamePrefill = fromScorm.nama;
   }
   return null;
 }
@@ -1118,8 +1142,23 @@ function showIdentityError(msg){
 function openIdentityGate(){
   document.getElementById('identity-box').hidden = false;
   document.getElementById('identity-confirm').hidden = true;
+  // Kalau LMS ngasih nama tapi gak ngasih NIP, isi otomatis kolom nama supaya
+  // peserta cukup ngetik NIP. Diberi tahu sumbernya biar gak bingung kenapa
+  // udah keisi.
+  const namaEl = document.getElementById('idn-nama');
+  const noteEl = document.getElementById('idn-prefill-note');
+  if(scormNamePrefill && namaEl && !namaEl.value){
+    namaEl.value = scormNamePrefill;
+    if(noteEl){ noteEl.textContent = 'Nama diambil dari LMS. Tinggal isi NIP kamu ya.'; noteEl.classList.add('show'); }
+  } else if(noteEl){
+    noteEl.classList.remove('show');
+  }
   document.getElementById('identity-overlay').classList.add('show');
-  setTimeout(function(){ const el = document.getElementById('idn-nama'); if(el) el.focus(); }, 60);
+  // Fokus ke NIP kalau nama udah keisi otomatis, ke nama kalau belum.
+  setTimeout(function(){
+    const el = document.getElementById(scormNamePrefill ? 'idn-nip' : 'idn-nama');
+    if(el) el.focus();
+  }, 60);
 }
 /* NIP dinormalkan ke angka saja: orang ngetik pakai spasi/titik/strip, dan
    "19850101 200101 1 001" vs "198501012001011001" harus jadi satu orang yang
