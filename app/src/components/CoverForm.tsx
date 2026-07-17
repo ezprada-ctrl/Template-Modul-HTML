@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ModuleData } from '../types';
-import { uploadImageToStorage } from '../api';
+import { uploadImageToStorage, checkTrackingConfig } from '../api';
 import { THEME_PRESETS, findThemePresetId } from '../themes';
 import SlidePreview from './SlidePreview';
 
@@ -12,6 +12,22 @@ interface Props {
 export default function CoverForm({ module, setModule }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  // Status kredensial rekam-aktivitas di backend. Dicek otomatis begitu
+  // "Rekam aktivitas" nyala, biar penyusun tau SEBELUM export kalau modulnya
+  // bakal bisu gara-gara env var backend kosong. null = belum/masih dicek.
+  const [trackReady, setTrackReady] = useState<boolean | null>(null);
+  const [trackCheckErr, setTrackCheckErr] = useState(false);
+
+  useEffect(() => {
+    if (!module.trackActivity) { setTrackReady(null); setTrackCheckErr(false); return; }
+    let alive = true;
+    setTrackReady(null);
+    setTrackCheckErr(false);
+    checkTrackingConfig()
+      .then(ok => { if (alive) setTrackReady(ok); })
+      .catch(() => { if (alive) setTrackCheckErr(true); });
+    return () => { alive = false; };
+  }, [module.trackActivity]);
 
   async function onCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -84,6 +100,33 @@ export default function CoverForm({ module, setModule }: Props) {
               </span>
             </span>
           </label>
+          {/* Status kredensial backend — dicek otomatis saat tracking nyala.
+              Menangkap kegagalan senyap "env var backend kosong" yang bikin
+              modul bisu walau checkbox dicentang, SEBELUM modul di-export. */}
+          {module.trackActivity && trackReady === null && !trackCheckErr && (
+            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px' }}>Mengecek koneksi rekam…</p>
+          )}
+          {module.trackActivity && trackReady === true && (
+            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', color: 'var(--success)' }}>
+              ✓ Backend siap merekam. <span style={{ color: 'var(--text-faint)' }}>
+                (Ini cuma memastikan kredensial ada — buat bukti jaringan LMS beneran tembus,
+                pakai tombol “Cek Rekam Aktivitas” di Dev Mode setelah modul diupload.)
+              </span>
+            </p>
+          )}
+          {module.trackActivity && trackReady === false && (
+            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', color: 'var(--danger)', lineHeight: 1.5 }}>
+              ⚠ Backend belum punya kredensial rekam-aktivitas (SUPABASE_URL / SUPABASE_ANON_KEY kosong).
+              Modul yang di-export sekarang <b>gak akan merekam apa pun</b> walau centang ini nyala.
+              Hubungi pengelola buat set env var-nya di Vercel dulu.
+            </p>
+          )}
+          {module.trackActivity && trackCheckErr && (
+            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', color: 'var(--text-faint)' }}>
+              (Gak bisa cek status koneksi rekam — backend mungkin lagi tidur. Pastikan lewat tombol
+              “Cek Rekam Aktivitas” di Dev Mode setelah modul diupload.)
+            </p>
+          )}
           {/* Peringatan bentrok slug: data aktivitas ditandai pakai slug
               project ini. Kalau project didaur ulang jadi modul lain, dua
               modul bakal berbagi slug dan datanya nyampur di Command Center.

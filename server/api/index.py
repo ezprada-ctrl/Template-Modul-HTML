@@ -34,6 +34,25 @@ def api_generate():
     return Response(html, mimetype='text/html')
 
 
+@app.get('/api/tracking-config')
+def api_tracking_config():
+    """Apakah kredensial rekam-aktivitas terpasang di backend?
+
+    Builder gak punya cara lain buat tau ini: kredensial disuntikkan
+    server-side saat generate (dari os.environ), jadi kalau env var-nya kosong,
+    modul yang di-export bakal BISU total tanpa gejala walau checkbox "Rekam
+    aktivitas" dicentang. Endpoint ini bikin kegagalan senyap itu keliatan di
+    builder SEBELUM modul di-export.
+
+    Cuma balikin boolean — gak pernah bocorin nilai key-nya. Ngecek env var
+    yang PERSIS sama dengan yang disuntikkan generator (SUPABASE_URL +
+    SUPABASE_ANON_KEY), bukan service_role. CATATAN: ini bukti kredensial
+    ADA, bukan bukti jaringan dari LMS tembus — buat itu pakai tombol "Cek
+    Rekam Aktivitas" di Dev Mode modul, dijalankan dari dalam LMS."""
+    configured = bool(os.environ.get('SUPABASE_URL') and os.environ.get('SUPABASE_ANON_KEY'))
+    return jsonify({'configured': configured})
+
+
 @app.post('/api/extract-pptx')
 def api_extract_pptx():
     file = request.files.get('file')

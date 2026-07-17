@@ -17,6 +17,17 @@ export async function extractPptx(file: File): Promise<DraftSlide[]> {
   return data.slides.map((s: any) => ({ ...s, reviewed: false }));
 }
 
+// Apakah backend punya kredensial rekam-aktivitas (SUPABASE_URL + ANON_KEY)?
+// Cuma balikin boolean, gak pernah bawa nilai key-nya. Dipakai buat
+// memperingatkan di builder kalau modul yang dicentang "Rekam aktivitas"
+// bakal bisu gara-gara env var backend kosong.
+export async function checkTrackingConfig(): Promise<boolean> {
+  const res = await fetch(`${BASE}/api/tracking-config`);
+  if (!res.ok) throw new Error(`Gagal cek konfigurasi (${res.status})`);
+  const data = await res.json();
+  return !!data.configured;
+}
+
 export async function generateHtml(module: ModuleData): Promise<string> {
   const res = await fetch(`${BASE}/api/generate`, {
     method: 'POST',
