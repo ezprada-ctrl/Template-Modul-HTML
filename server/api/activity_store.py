@@ -74,9 +74,21 @@ def fetch_rows(module_slug=None, columns='*'):
     return out
 
 
+# Baris uji dari tombol "Cek Rekam Aktivitas" di Dev Mode modul. Berguna buat
+# ekspor mentah (bukti modul pernah diverifikasi & kapan), tapi HARUS disaring
+# dari semua rekap: itu penyusun modul yang lagi ngetes, bukan peserta belajar.
+# Kalau ikut keitung, tiap modul dapat "sesi" palsu berdurasi nol.
+PREFLIGHT_EVENT = 'preflight'
+
+
+def _tanpa_preflight(rows):
+    return [r for r in rows if r.get('event_type') != PREFLIGHT_EVENT]
+
+
 def list_modules():
     """Ringkasan per modul buat layar utama Command Center."""
-    rows = fetch_rows(columns='module_slug,session_id,learner_id,created_at')
+    rows = _tanpa_preflight(
+        fetch_rows(columns='module_slug,session_id,learner_id,created_at,event_type'))
     by_slug = {}
     for r in rows:
         slug = r['module_slug']
@@ -111,7 +123,7 @@ def list_modules():
 def summarize_sessions(module_slug):
     """Satu baris per sesi belajar — bentuk yang paling langsung kepakai buat
     analisis habit (siapa, berapa lama, sejauh mana, skor berapa)."""
-    rows = fetch_rows(module_slug=module_slug)
+    rows = _tanpa_preflight(fetch_rows(module_slug=module_slug))
     sessions = {}
     for r in rows:
         s = sessions.setdefault(r['session_id'], {
@@ -180,7 +192,7 @@ def summarize_learners():
     beda-beda jauh, itu keliatan (bisa jadi tanda NIP-nya salah ketik / dipakai
     berdua), bukan disembunyiin.
     """
-    rows = fetch_rows()
+    rows = _tanpa_preflight(fetch_rows())
     by_session = {}
     for r in rows:
         by_session.setdefault(r['session_id'], []).append(r)

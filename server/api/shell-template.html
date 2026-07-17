@@ -212,6 +212,26 @@ a{color:inherit;}
 #hideprogress-btn.dev-visible{display:block;}
 #hideprogress-btn:hover{border-color:var(--accent);color:var(--accent-2);}
 #hideprogress-btn.active{border-color:var(--accent);color:var(--accent-2);background:var(--accent-soft);}
+#trackcheck-btn{
+  display:none;
+  margin-top:8px;width:100%;padding:10px;border-radius:var(--radius-md);
+  background:transparent;border:1px solid var(--border);color:var(--text-faint);
+  font-size:12px;font-weight:600;cursor:pointer;transition:.18s;
+}
+#trackcheck-btn.dev-visible{display:block;}
+#trackcheck-btn:hover{border-color:var(--accent);color:var(--accent-2);}
+#trackcheck-btn:disabled{opacity:.6;cursor:default;}
+#trackcheck-status{
+  display:none;margin-top:8px;padding:9px 11px;border-radius:var(--radius-md);
+  border:1px solid var(--border);background:var(--surface-2);
+  font-size:11px;line-height:1.65;
+}
+#trackcheck-status.dev-visible{display:block;}
+#trackcheck-status .tc-row{display:flex;justify-content:space-between;gap:8px;}
+#trackcheck-status .tc-k{color:var(--text-faint);}
+#trackcheck-status .tc-v{font-weight:700;text-align:right;}
+#trackcheck-status .tc-ok{color:var(--emerald,#059669);}
+#trackcheck-status .tc-bad{color:var(--rose);}
 #devmode-btn{
   margin-top:8px;width:100%;padding:7px;border-radius:var(--radius-md);
   background:transparent;border:none;color:var(--text-faint);
@@ -734,6 +754,13 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 
     <button id="reset-btn" onclick="resetProgress()">↺ Reset Progres</button>
     <button id="hideprogress-btn" onclick="toggleHideProgressPreview()">Sembunyikan Progress (preview)</button>
+    <!-- Pemeriksaan pra-upload. Satu pelatihan cuma sekali jalan: kalau modul
+         ternyata gak ngerekam, ketahuannya pas peserta udah bubar dan gak ada
+         kesempatan mengulang. Tombol ini nembak Supabase BENERAN dari tempat
+         modul ini dibuka (di dalam LMS), jadi yang dibuktikan bukan cuma
+         "kredensialnya ada" tapi "jaringan di sini beneran tembus". -->
+    <button id="trackcheck-btn" onclick="runTrackCheck()">🔎 Cek Rekam Aktivitas</button>
+    <div id="trackcheck-status"></div>
     <button id="devmode-btn" onclick="toggleDevMode()">Dev Mode</button>
   </aside>
 
@@ -1191,34 +1218,107 @@ function actInteraksi(jenis, id, idx){
   });
 }
 
+/* ---------- outbox: batch gagal disimpan, bukan dibuang ----------
+   Satu pelatihan cuma sekali jalan: peserta yang udah kelar gak akan buka
+   modulnya lagi, jadi baris yang hilang gak ada kesempatan kedua. Wifi kedip
+   sebentar di tengah sesi itu kejadian normal, dan sebelumnya batch-nya
+   langsung dibuang begitu aja.
+
+   Ditaruh di localStorage (bukan di memori) karena kegagalan yang paling
+   sering justru berujung tab ditutup — isi memori ikut mati. Dan karena semua
+   modul se-origin (terbukti di KLC), batch yang gagal di modul 1 bisa nyusul
+   kekirim sendiri waktu peserta buka modul 2.
+
+   Prinsip yang TIDAK berubah: rekam aktivitas gak boleh ganggu orang belajar.
+   Gak ada percobaan ulang yang muter-muter, gak ada yang bikin UI nunggu —
+   cuma nitip ke kiriman berikutnya. */
+const OUTBOX_KEY = 'modul_ikram_outbox_v1';
+const OUTBOX_MAX = 2000;
+
+function loadOutbox(){
+  try{
+    const raw = localStorage.getItem(OUTBOX_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+
+/* Ambil sekaligus kosongin. Yang manggil wajib mastiin isinya dibalikin lewat
+   outboxPush kalau kirimannya gagal. */
+function takeOutbox(){
+  const rows = loadOutbox();
+  if(rows.length){ try{ localStorage.removeItem(OUTBOX_KEY); }catch(e){} }
+  return rows;
+}
+
+function outboxPush(rows){
+  if(!rows || !rows.length) return;
+  let all = loadOutbox().concat(rows);
+  /* Pagar biar localStorage gak jebol kalau jaringan mati lama. Yang paling
+     lama dibuang duluan (antrean biasa) — lebih baik kehilangan awal sesi
+     daripada gagal nyimpen sama sekali. */
+  if(all.length > OUTBOX_MAX) all = all.slice(all.length - OUTBOX_MAX);
+  try{
+    localStorage.setItem(OUTBOX_KEY, JSON.stringify(all));
+  }catch(e){
+    /* Kuota penuh: pangkas separuh lalu coba sekali lagi. Kalau tetap gagal,
+       ya sudah — jangan sampai nyimpen data riset bikin modulnya error. */
+    try{
+      localStorage.setItem(OUTBOX_KEY, JSON.stringify(all.slice(Math.floor(all.length / 2))));
+    }catch(e2){}
+  }
+}
+
+function actSend(rows, useKeepalive){
+  return fetch(SUPA_URL + '/rest/v1/modul_activity', {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      /* anon punya INSERT tapi NOL SELECT — minta baris balik bikin
+         PostgREST nolak seluruh request walau insert-nya sendiri boleh. */
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(rows),
+    keepalive: !!useKeepalive
+  }).then(function(res){
+    if(res.ok) return true;
+    /* Dulu status HTTP gak pernah dicek: `.catch` cuma kena error jaringan,
+       jadi penolakan 4xx (skema/RLS salah) diam-diam dianggap sukses dan
+       batch-nya ikut dibuang. Sekarang dibedakan:
+       4xx = salahnya permanen, diulang berapa kali pun tetap ditolak -> buang.
+       429/5xx = masalah sementara di server -> layak dicoba lagi nanti. */
+    if(res.status === 429 || res.status >= 500) outboxPush(rows);
+    return false;
+  }).catch(function(){
+    outboxPush(rows);   /* jaringan mati/kedip */
+    return false;
+  });
+}
+
 /* Dikirim berkelompok, bukan per-event, biar gak nembak jaringan LMS
    ratusan kali per sesi. `keepalive` dipakai buat kiriman terakhir supaya
    tetap terkirim walau halaman lagi ditutup (sendBeacon gak bisa dipakai:
    dia gak bisa nyetel header apikey/Authorization yang diwajibkan Supabase). */
 function actFlush(useKeepalive){
-  if(!TRACK_READY || !actBuffer.length) return;
-  const batch = actBuffer.slice();
+  if(!TRACK_READY) return;
+  let batch = actBuffer;
   actBuffer = [];
+  /* Outbox cuma ikut dikirim di flush biasa. Pas halaman lagi ditutup,
+     handler .then/.catch gak bakal kebagian jalan — kalau outbox diambil di
+     situ terus kirimannya gagal, isinya lenyap tanpa ada yang mungutin lagi.
+     Biarin nunggu sesi berikutnya, itu justru lebih aman. */
+  if(!useKeepalive){
+    const carry = takeOutbox();
+    if(carry.length) batch = carry.concat(batch);
+  }
+  if(!batch.length) return;
   try{
-    fetch(SUPA_URL + '/rest/v1/modul_activity', {
-      method: 'POST',
-      headers: {
-        'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
-        'Content-Type': 'application/json',
-        /* anon punya INSERT tapi NOL SELECT — minta baris balik bikin
-           PostgREST nolak seluruh request walau insert-nya sendiri boleh. */
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(batch),
-      keepalive: !!useKeepalive
-    }).catch(function(){
-      /* Sengaja diam. Rekam aktivitas TIDAK BOLEH ganggu orang belajar:
-         kalau jaringan mati, batch-nya dibuang, bukan diulang terus sampai
-         numpuk. Kehilangan baris riset itu wajar; bikin pelatihan seseorang
-         macet itu tidak. */
-    });
-  }catch(e){}
+    actSend(batch, useKeepalive);
+  }catch(e){
+    outboxPush(batch);
+  }
 }
 
 /* ---------- siklus sesi ---------- */
@@ -1295,6 +1395,12 @@ window.addEventListener('pagehide', function(){ actEnd('pagehide'); });
    SCORM, langsung mulai; kalau belum, tampilkan form dulu. */
 function actBoot(){
   if(!TRACK_READY) return;
+  /* Susulin dulu batch yang gagal kekirim dari sesi/modul sebelumnya. Baris
+     di outbox itu udah lengkap (identitasnya ikut kesimpan waktu dibuat),
+     jadi gak perlu nunggu peserta ngisi form dulu — kalau nunggu, batch yang
+     nyangkut bisa gak kekirim sama sekali cuma gara-gara orangnya keburu
+     nutup form identitas. */
+  actFlush();
   if(resolveIdentity()) actStart(); else openIdentityGate();
 }
 
@@ -1326,6 +1432,92 @@ function isSectionUnlocked(sectionIdx){
   if(sectionIdx<=0) return true;
   return isQuizPassed(SECTIONS[sectionIdx-1].id);
 }
+/* Pemeriksaan pra-upload — jawab satu pertanyaan: "kalau ratusan peserta buka
+   modul ini SEKARANG, datanya kerekam gak?"
+
+   Sengaja nembak Supabase BENERAN dari tempat modul ini dibuka, bukan sekadar
+   ngecek variabel: yang bisa bikin gagal itu bukan cuma kredensial kosong,
+   tapi juga jaringan/CSP tempat modul dijalanin. Cuma dites dari dalam LMS
+   yang jawabannya bisa dipercaya.
+
+   Barisnya dikirim sebagai event_type 'preflight' dan disaring dari semua
+   rekap di Command Center (lihat activity_store.py) supaya gak keitung
+   sebagai aktivitas peserta.
+
+   Kirimannya TIDAK lewat actSend: kalau gagal, jangan nyangkut di outbox dan
+   ikut kekirim ulang bareng data peserta beneran. */
+function tcRow(k, v, cls){
+  return '<div class="tc-row"><span class="tc-k">' + k + '</span>' +
+         '<span class="tc-v ' + (cls || '') + '">' + v + '</span></div>';
+}
+
+function runTrackCheck(){
+  const box = document.getElementById('trackcheck-status');
+  const btn = document.getElementById('trackcheck-btn');
+  const punyaKredensial = !!(SUPA_URL && SUPA_KEY);
+
+  let html = tcRow('Rekam aktivitas', TRACK_ACTIVITY ? 'AKTIF' : 'MATI',
+                   TRACK_ACTIVITY ? 'tc-ok' : 'tc-bad');
+  html += tcRow('Kredensial', punyaKredensial ? 'ada' : 'KOSONG',
+                punyaKredensial ? 'tc-ok' : 'tc-bad');
+
+  if(!TRACK_ACTIVITY){
+    box.innerHTML = html + tcRow('Kesimpulan', 'TIDAK MEREKAM', 'tc-bad') +
+      '<div style="margin-top:6px;color:var(--rose)">Centang “Rekam aktivitas peserta” di tab Sampul, lalu export ulang.</div>';
+    return;
+  }
+  if(!punyaKredensial){
+    box.innerHTML = html + tcRow('Kesimpulan', 'TIDAK MEREKAM', 'tc-bad') +
+      '<div style="margin-top:6px;color:var(--rose)">Modul di-export waktu server belum punya SUPABASE_URL/ANON_KEY. Export ulang.</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Mengirim uji…';
+  box.innerHTML = html + tcRow('Kiriman uji', 'menunggu…');
+
+  const t0 = Date.now();
+  fetch(SUPA_URL + '/rest/v1/modul_activity', {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify([{
+      module_slug: MODULE_SLUG,
+      session_id: 'preflight-' + actNewSessionId(),
+      learner_id: null,
+      learner_name: null,
+      event_type: 'preflight',
+      payload: { module_title: MODULE_TITLE, ua: navigator.userAgent,
+                 di_iframe: window.parent !== window, href: location.href },
+      client_ts: new Date().toISOString()
+    }])
+  }).then(function(res){
+    const ms = Date.now() - t0;
+    if(res.ok){
+      box.innerHTML = html +
+        tcRow('Kiriman uji', '✓ ' + res.status + ' · ' + ms + 'ms', 'tc-ok') +
+        tcRow('Antre belum terkirim', loadOutbox().length + ' baris') +
+        '<div style="margin-top:6px" class="tc-ok">Aman — modul ini merekam dari sini.</div>';
+    } else {
+      box.innerHTML = html +
+        tcRow('Kiriman uji', '✕ ditolak ' + res.status, 'tc-bad') +
+        '<div style="margin-top:6px;color:var(--rose)">Nyampe ke server tapi ditolak. Cek tabel/RLS modul_activity di Supabase.</div>';
+    }
+  }).catch(function(){
+    box.innerHTML = html +
+      tcRow('Kiriman uji', '✕ gak nyampe', 'tc-bad') +
+      '<div style="margin-top:6px;color:var(--rose)">Gak nyampe ke server sama sekali — jaringan/firewall/CSP di sini blokir ' +
+      'domain Supabase. Data peserta TIDAK akan terekam dari tempat ini.</div>';
+  }).then(function(){
+    btn.disabled = false;
+    btn.textContent = '🔎 Cek Rekam Aktivitas';
+  });
+}
+
 function toggleDevMode(){
   if(devMode){
     devMode = false;
@@ -1334,6 +1526,9 @@ function toggleDevMode(){
     document.getElementById('devmode-btn').textContent = 'Dev Mode';
     document.getElementById('reset-btn').classList.remove('dev-visible');
     document.getElementById('hideprogress-btn').classList.remove('dev-visible');
+    document.getElementById('trackcheck-btn').classList.remove('dev-visible');
+    document.getElementById('trackcheck-status').classList.remove('dev-visible');
+    document.getElementById('trackcheck-status').innerHTML = '';
     // Leaving Dev Mode also drops the local preview override - it was only
     // ever a "what would this look like" convenience, never a real setting.
     devHideProgressPreview = false;
@@ -1364,6 +1559,12 @@ function submitDevModePassword(){
     document.getElementById('devmode-btn').textContent = '● Dev Mode aktif';
     document.getElementById('reset-btn').classList.add('dev-visible');
     document.getElementById('hideprogress-btn').classList.add('dev-visible');
+    document.getElementById('trackcheck-btn').classList.add('dev-visible');
+    document.getElementById('trackcheck-status').classList.add('dev-visible');
+    /* Status awal ditampilkan tanpa nunggu diklik: kalau modulnya ternyata
+       gak bakal ngerekam, itu harus langsung keliatan, bukan cuma kalau
+       orangnya kebetulan iseng ngeklik. */
+    runTrackCheck();
     closeDevModeModal();
   } else {
     document.getElementById('devmode-modal-error').classList.add('show');
