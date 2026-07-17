@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { ActivityModule, ActivitySession } from '../api';
-import { ccListModules, ccListSessions, ccRawRows } from '../api';
+import type { ActivityModule, ActivitySession, ActivityLearner } from '../api';
+import { ccListModules, ccListSessions, ccListLearners, ccRawRows } from '../api';
 
 /**
  * Command Center — baca & unduh rekaman aktivitas peserta.
@@ -19,6 +19,8 @@ export default function CommandCenter() {
   const [unlocked, setUnlocked] = useState(false);
   const [modules, setModules] = useState<ActivityModule[]>([]);
   const [sessions, setSessions] = useState<ActivitySession[]>([]);
+  const [learners, setLearners] = useState<ActivityLearner[]>([]);
+  const [view, setView] = useState<'modul' | 'peserta'>('modul');
   const [activeSlug, setActiveSlug] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -42,6 +44,19 @@ export default function CommandCenter() {
     setActiveSlug(slug);
     try {
       setSessions(await ccListSessions(password, slug));
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function openPeserta() {
+    setView('peserta');
+    setBusy(true);
+    setError('');
+    try {
+      setLearners(await ccListLearners(password));
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -79,6 +94,36 @@ export default function CommandCenter() {
   async function unduhRingkasan() {
     if (!sessions.length) return;
     download(`aktivitas-${activeSlug}-ringkasan.csv`, toCsv(sessions as unknown as Record<string, unknown>[]));
+  }
+
+  // Kolom modul diratakan jadi satu kolom teks + satu kolom menit per modul,
+  // biar hasilnya kebaca langsung di Excel tanpa perlu buka JSON.
+  async function unduhPeserta() {
+    if (!learners.length) return;
+    const semuaSlug = Array.from(new Set(learners.flatMap(l => l.modul_slugs))).sort();
+    const rows = learners.map(l => {
+      const r: Record<string, unknown> = {
+        nip: l.learner_id,
+        nama: l.nama || '',
+        nama_varian: l.nama_varian.join(' | '),
+        nama_bervariasi: l.nama_bervariasi ? 'YA' : '',
+        sumber_identitas: l.identity_sources.join(' | '),
+        jumlah_modul: l.jumlah_modul,
+        jumlah_sesi: l.jumlah_sesi,
+        durasi_menit: l.durasi_menit,
+        slide_dilihat: l.jumlah_slide_dilihat,
+        interaksi: l.jumlah_interaksi,
+        kuis_benar: l.kuis_benar,
+        kuis_dijawab: l.kuis_dijawab,
+        pertama: l.pertama,
+        terakhir: l.terakhir,
+      };
+      for (const slug of semuaSlug) {
+        r[`menit_${slug}`] = l.modul[slug] ? Math.round(l.modul[slug].durasi_ms / 6000) / 10 : '';
+      }
+      return r;
+    });
+    download('aktivitas-per-peserta.csv', toCsv(rows));
   }
 
   async function unduhMentah() {
@@ -136,6 +181,25 @@ export default function CommandCenter() {
         <p className="hint">Belum ada data aktivitas sama sekali.</p>
       )}
 
+      {/* Dua cara baca data yang sama: per modul (satu modul, semua peserta)
+          atau per peserta (satu orang, semua modul yang dia buka). Yang kedua
+          perlu karena satu pelatihan sering dipecah jadi beberapa SCORM. */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+        <button
+          className={view === 'modul' ? 'btn-primary btn-sm' : 'btn-sm'}
+          onClick={() => setView('modul')}
+        >
+          Per Modul
+        </button>
+        <button
+          className={view === 'peserta' ? 'btn-primary btn-sm' : 'btn-sm'}
+          onClick={openPeserta}
+        >
+          Per Peserta
+        </button>
+      </div>
+
+      {view === 'modul' && (
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18 }}>
         {modules.map(m => (
           <button
@@ -148,8 +212,71 @@ export default function CommandCenter() {
           </button>
         ))}
       </div>
+      )}
 
-      {activeSlug && (
+      {view === 'peserta' && (
+        <>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+            <button className="btn-sm" onClick={unduhPeserta} disabled={!learners.length}>
+              ⬇ CSV rekap per peserta
+            </button>
+          </div>
+
+          {busy && <p className="hint">Memuat…</p>}
+          {!busy && learners.length === 0 && <p className="hint">Belum ada peserta terekam.</p>}
+
+          {learners.length > 0 && (
+            <>
+              <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--surface-2)' }}>
+                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Total Durasi', 'Slide', 'Interaksi', 'Kuis', 'Modul yang dibuka'].map(h => (
+                        <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {learners.map(l => (
+                      <tr key={l.learner_id} style={{ borderTop: '1px solid var(--border)' }}>
+                        <td style={{ padding: '8px 11px' }}>
+                          {l.nama || <span style={{ color: 'var(--text-faint)' }}>—</span>}
+                          {/* Satu NIP dengan beberapa varian nama = tanda NIP
+                              salah ketik / dipakai berdua. Ditandai, bukan
+                              didiamkan — kalau disembunyiin, analisisnya keliru
+                              tanpa ada yang sadar. */}
+                          {l.nama_bervariasi && (
+                            <span title={`Nama bervariasi untuk NIP ini: ${l.nama_varian.join(' / ')}`}
+                                  style={{ marginLeft: 6, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.learner_id}</td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_modul}</td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_sesi}</td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.durasi_menit} m</td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_slide_dilihat}</td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_interaksi}</td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
+                          {l.kuis_dijawab ? `${l.kuis_benar}/${l.kuis_dijawab}` : '—'}
+                        </td>
+                        <td style={{ padding: '8px 11px', color: 'var(--text-faint)' }}>{l.modul_slugs.join(', ')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {learners.some(l => l.nama_bervariasi) && (
+                <p className="hint" style={{ marginTop: 10 }}>
+                  ⚠ = satu NIP tercatat dengan beberapa nama berbeda. Biasanya cuma beda cara ngetik,
+                  tapi bisa juga tanda NIP salah ketik atau dipakai dua orang — cek dulu sebelum dipakai analisis.
+                </p>
+              )}
+            </>
+          )}
+        </>
+      )}
+
+      {view === 'modul' && activeSlug && (
         <>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
             <button className="btn-sm" onClick={unduhRingkasan} disabled={!sessions.length}>

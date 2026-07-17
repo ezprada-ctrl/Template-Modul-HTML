@@ -80,6 +80,29 @@ export interface ActivitySession {
   perangkat: string | null;
 }
 
+// Rekap lintas modul. Digabung pakai NIP (learner_id), bukan nama — satu
+// pelatihan biasanya dipecah jadi beberapa modul/SCORM terpisah, dan tanpa
+// ini rekapnya harus dijoin manual di Excel.
+export interface ActivityLearner {
+  learner_id: string;
+  nama: string | null;
+  nama_varian: string[];
+  nama_bervariasi: boolean;
+  identity_sources: string[];
+  modul: Record<string, { sesi: number; durasi_ms: number }>;
+  modul_slugs: string[];
+  jumlah_modul: number;
+  jumlah_sesi: number;
+  durasi_total_ms: number;
+  durasi_menit: number;
+  jumlah_slide_dilihat: number;
+  jumlah_interaksi: number;
+  kuis_dijawab: number;
+  kuis_benar: number;
+  pertama: string;
+  terakhir: string;
+}
+
 async function ccPost(path: string, body: Record<string, unknown>) {
   const res = await fetch(`${BASE}/api/activity/${path}`, {
     method: 'POST',
@@ -97,6 +120,10 @@ export async function ccListModules(password: string): Promise<ActivityModule[]>
 
 export async function ccListSessions(password: string, moduleSlug: string): Promise<ActivitySession[]> {
   return (await ccPost('sessions', { password, module_slug: moduleSlug })).sessions;
+}
+
+export async function ccListLearners(password: string): Promise<ActivityLearner[]> {
+  return (await ccPost('learners', { password })).learners;
 }
 
 export async function ccRawRows(password: string, moduleSlug: string): Promise<any[]> {

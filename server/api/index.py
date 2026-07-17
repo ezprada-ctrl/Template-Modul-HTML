@@ -125,6 +125,20 @@ def api_activity_sessions():
         return jsonify({'error': str(e)}), 503
 
 
+@app.post('/api/activity/learners')
+def api_activity_learners():
+    """Rekap per peserta lintas semua modul — buat pelatihan yang dipecah
+    jadi beberapa SCORM/modul terpisah."""
+    data = request.get_json(silent=True) or {}
+    denied = _check_cc_password(data)
+    if denied:
+        return denied
+    try:
+        return jsonify({'learners': activity_store.summarize_learners()})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
 @app.post('/api/activity/rows')
 def api_activity_rows():
     """Semua event mentah satu modul — buat ekspor CSV yang lossless."""

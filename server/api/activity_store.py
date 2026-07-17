@@ -163,3 +163,113 @@ def summarize_sessions(module_slug):
         s['durasi_menit'] = round(s['durasi_total_ms'] / 60000, 1)
     out.sort(key=lambda s: s['mulai'], reverse=True)
     return out
+
+
+def summarize_learners():
+    """Satu baris per PESERTA, lintas semua modul.
+
+    Kenapa ini ada: satu pelatihan biasanya dipecah jadi beberapa modul =
+    beberapa SCORM terpisah = beberapa module_slug. Tampilan per-modul gak
+    bisa jawab "si A ini udah nyelesain modul apa aja, total berapa lama" —
+    tanpa view ini orang harus unduh tiap CSV dan nge-join sendiri di Excel.
+
+    Digabung pakai learner_id (NIP), BUKAN nama: nama yang diketik manual
+    bervariasi ("Budi Santoso" / "budi santoso" / "Budi S.") dan bakal mecah
+    satu orang jadi beberapa baris. Varian nama yang pernah dipakai tetap
+    dikumpulin di `nama_varian` supaya kalau satu NIP muncul dengan nama yang
+    beda-beda jauh, itu keliatan (bisa jadi tanda NIP-nya salah ketik / dipakai
+    berdua), bukan disembunyiin.
+    """
+    rows = fetch_rows()
+    by_session = {}
+    for r in rows:
+        by_session.setdefault(r['session_id'], []).append(r)
+
+    learners = {}
+    for sess_rows in by_session.values():
+        nip = None
+        nama = None
+        slug = sess_rows[0]['module_slug']
+        source = None
+        mulai = sess_rows[0]['created_at']
+        total_ms = 0
+        terekam_ms = 0
+        slide = 0
+        inter = 0
+        kuis_dijawab = 0
+        kuis_benar = 0
+        for r in sess_rows:
+            if r.get('learner_id'):
+                nip = r['learner_id']
+            if r.get('learner_name'):
+                nama = r['learner_name']
+            if r['created_at'] < mulai:
+                mulai = r['created_at']
+            p = r.get('payload') or {}
+            t = r['event_type']
+            if t == 'session_start':
+                source = p.get('identity_source')
+            elif t == 'session_end':
+                total_ms = max(total_ms, p.get('total_ms') or 0)
+            elif t == 'slide_view':
+                slide += 1
+                terekam_ms += p.get('ms') or 0
+            elif t == 'interaction':
+                inter += 1
+            elif t == 'quiz_answer':
+                kuis_dijawab += 1
+                if p.get('benar'):
+                    kuis_benar += 1
+        if not total_ms:
+            total_ms = terekam_ms
+
+        # Sesi tanpa identitas sama sekali (mis. baris probe lama) gak punya
+        # kunci gabung — dikelompokkan terpisah, jangan dicampur ke peserta
+        # manapun.
+        key = nip or '(tanpa identitas)'
+        L = learners.setdefault(key, {
+            'learner_id': key,
+            'nama_varian': [],
+            'identity_sources': [],
+            'modul': {},
+            'jumlah_modul': 0,
+            'jumlah_sesi': 0,
+            'durasi_total_ms': 0,
+            'jumlah_slide_dilihat': 0,
+            'jumlah_interaksi': 0,
+            'kuis_dijawab': 0,
+            'kuis_benar': 0,
+            'pertama': mulai,
+            'terakhir': mulai,
+        })
+        if nama and nama not in L['nama_varian']:
+            L['nama_varian'].append(nama)
+        if source and source not in L['identity_sources']:
+            L['identity_sources'].append(source)
+        m = L['modul'].setdefault(slug, {'sesi': 0, 'durasi_ms': 0})
+        m['sesi'] += 1
+        m['durasi_ms'] += total_ms
+        L['jumlah_sesi'] += 1
+        L['durasi_total_ms'] += total_ms
+        L['jumlah_slide_dilihat'] += slide
+        L['jumlah_interaksi'] += inter
+        L['kuis_dijawab'] += kuis_dijawab
+        L['kuis_benar'] += kuis_benar
+        if mulai < L['pertama']:
+            L['pertama'] = mulai
+        if mulai > L['terakhir']:
+            L['terakhir'] = mulai
+
+    out = []
+    for L in learners.values():
+        L['jumlah_modul'] = len(L['modul'])
+        L['modul_slugs'] = sorted(L['modul'].keys())
+        L['durasi_menit'] = round(L['durasi_total_ms'] / 60000, 1)
+        L['nama'] = L['nama_varian'][0] if L['nama_varian'] else None
+        # Ditandai supaya penganalisis curiga duluan, bukan ketipu diam-diam:
+        # satu NIP dengan nama yang beda jauh biasanya berarti NIP salah ketik
+        # atau dipakai dua orang.
+        L['nama_bervariasi'] = len(L['nama_varian']) > 1
+        out.append(L)
+    out.sort(key=lambda x: (-x['jumlah_modul'], -x['durasi_total_ms']))
+    return out

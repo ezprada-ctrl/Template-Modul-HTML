@@ -533,26 +533,47 @@ ul.tick li b, ol.tick li b{color:var(--text);}
   z-index:90;align-items:center;justify-content:center;padding:20px;
 }
 #identity-overlay.show{display:flex;}
-#identity-box{
+.idn-panel{
   background:var(--surface);border-radius:var(--radius-lg);padding:30px 32px;
   width:400px;max-width:92vw;box-shadow:var(--shadow-lg);
   animation:riseIn .35s cubic-bezier(.16,1,.3,1);
 }
-#identity-box .idn-icon{
+/* Form dan panel konfirmasi gantian tampil di overlay yang sama. */
+.idn-panel[hidden]{display:none;}
+.idn-panel .idn-icon{
   width:46px;height:46px;border-radius:14px;background:var(--accent-soft);color:var(--accent-2);
   display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;
 }
-#identity-box h3{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:7px;font-family:'Plus Jakarta Sans',sans-serif;}
-#identity-box p{font-size:12.5px;color:var(--text-dim);line-height:1.6;margin-bottom:18px;}
-#identity-box label{display:block;font-size:11.5px;font-weight:700;color:var(--text-dim);margin-bottom:5px;letter-spacing:.02em;}
-#identity-box input{
+.idn-panel h3{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:7px;font-family:'Plus Jakarta Sans',sans-serif;}
+.idn-panel p{font-size:12.5px;color:var(--text-dim);line-height:1.6;margin-bottom:18px;}
+.idn-panel label{display:block;font-size:11.5px;font-weight:700;color:var(--text-dim);margin-bottom:5px;letter-spacing:.02em;}
+.idn-panel input{
   width:100%;padding:11px 14px;border-radius:var(--radius-md);border:1px solid var(--border);
   background:var(--surface-2);color:var(--text);font-size:14px;font-family:inherit;margin-bottom:13px;
 }
-#identity-box input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.idn-panel input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
 #identity-error{display:none;color:var(--rose);font-size:12px;font-weight:600;margin-bottom:11px;}
 #identity-error.show{display:block;}
-#identity-box .idn-note{font-size:11px;color:var(--text-faint);line-height:1.5;margin:14px 0 0;}
+.idn-panel .idn-note{font-size:11px;color:var(--text-faint);line-height:1.5;margin:14px 0 0;}
+/* Panel konfirmasi: data dibalikin gede-gede biar beneran kebaca, bukan
+   diklik buru-buru. NIP pakai font mono + spasi per kelompok supaya digit
+   ketuker/kelewat gampang keliatan mata. */
+.idn-review{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:14px 16px;margin-bottom:14px;
+}
+.idn-review-row{display:flex;flex-direction:column;gap:3px;}
+.idn-review-row + .idn-review-row{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.idn-review-label{font-size:10.5px;font-weight:700;color:var(--text-faint);letter-spacing:.06em;text-transform:uppercase;}
+.idn-review strong{font-size:15px;color:var(--navy);font-weight:700;word-break:break-word;}
+.idn-review-nip{
+  font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  font-size:16px !important;letter-spacing:.04em;font-variant-numeric:tabular-nums;
+}
+#idn-confirm-warn{display:none;font-size:11.5px;line-height:1.55;font-weight:600;
+  color:var(--rose);background:rgba(225,29,72,.08);border:1px solid rgba(225,29,72,.25);
+  border-radius:var(--radius-md);padding:9px 11px;margin-bottom:13px;}
+#idn-confirm-warn.show{display:block;}
 
 .nav-section.locked .nav-section-head{color:var(--text-faint);cursor:pointer;}
 .nav-section.locked .nsh-icon{background:var(--surface-2);color:var(--text-faint);}
@@ -638,7 +659,7 @@ ul.tick li b, ol.tick li b{color:var(--text);}
   <div id="lock-toast"></div>
 
   <div id="identity-overlay">
-    <div id="identity-box">
+    <div id="identity-box" class="idn-panel">
       <div class="idn-icon">👋</div>
       <h3>Sebelum mulai</h3>
       <p>Isi data kamu dulu ya. Ini dipakai buat mencatat aktivitas belajar sebagai bahan evaluasi pembelajaran.</p>
@@ -647,10 +668,35 @@ ul.tick li b, ol.tick li b{color:var(--text);}
              onkeydown="if(event.key==='Enter') document.getElementById('idn-nip').focus()">
       <label for="idn-nip">NIP</label>
       <input type="text" id="idn-nip" inputmode="numeric" autocomplete="off" placeholder="18 digit angka"
+             oninput="formatNipInput(this)"
              onkeydown="if(event.key==='Enter') submitIdentity()">
       <div id="identity-error"></div>
-      <button class="nav-btn primary" style="width:100%" onclick="submitIdentity()">Mulai Belajar →</button>
+      <button class="nav-btn primary" style="width:100%" onclick="submitIdentity()">Lanjut →</button>
       <p class="idn-note">Data ini cuma dipakai untuk keperluan evaluasi dan pengembangan pembelajaran.</p>
+    </div>
+
+    <!-- Panel konfirmasi: NIP jadi kunci penggabung data lintas modul, jadi
+         satu digit salah ketik bikin rekaman orang itu pecah jadi dua "orang"
+         tanpa ada yang sadar. Cek panjang digit gak cukup — digit ketuker
+         (1001 -> 1010) tetap lolos. Makanya datanya dibalikin buat dibaca
+         ulang sebelum dipakai. -->
+    <div id="identity-confirm" class="idn-panel" hidden>
+      <div class="idn-icon">🔎</div>
+      <h3>Sudah benar?</h3>
+      <p>Cek sekali lagi ya. Kalau NIP-nya keliru, aktivitas belajar kamu bisa tercatat atas nama orang lain.</p>
+      <div class="idn-review">
+        <div class="idn-review-row">
+          <span class="idn-review-label">Nama</span>
+          <strong id="idn-confirm-nama"></strong>
+        </div>
+        <div class="idn-review-row">
+          <span class="idn-review-label">NIP</span>
+          <strong id="idn-confirm-nip" class="idn-review-nip"></strong>
+        </div>
+      </div>
+      <div id="idn-confirm-warn"></div>
+      <button class="nav-btn primary" style="width:100%" onclick="confirmIdentity()">Ya, sudah benar →</button>
+      <button class="nav-btn" style="width:100%;margin-top:8px" onclick="backToIdentityForm()">← Betulkan</button>
     </div>
   </div>
 
@@ -999,7 +1045,27 @@ function identityFromScorm(){
   return { nama: name, nip: id, source: 'scorm' };
 }
 
-/* Urutan: yang sudah tersimpan → SCORM → form manual (null = perlu nanya). */
+/* Cache identitas manual LINTAS MODUL (key TIDAK di-template per modul,
+   beda dari STORAGE_KEY) - supaya kalau 1 training pakai beberapa modul,
+   peserta cuma ngetik Nama+NIP sekali di modul pertama, modul berikutnya di
+   browser/komputer yang sama otomatis kepake. Asumsi: 1 komputer = 1 orang
+   selama training berlangsung (kalau komputer dipakai gantian, pengetik
+   berikutnya perlu buka Dev Mode buat reset, atau isi manual lewat mode
+   incognito). Cuma dipakai sebagai fallback TERAKHIR, di bawah SCORM. */
+const SHARED_IDENTITY_KEY = 'modul_ikram_identity_shared_v1';
+function loadSharedIdentity(){
+  try{
+    const raw = localStorage.getItem(SHARED_IDENTITY_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return null;
+}
+function saveSharedIdentity(identity){
+  try{ localStorage.setItem(SHARED_IDENTITY_KEY, JSON.stringify(identity)); }catch(e){}
+}
+
+/* Urutan: yang sudah tersimpan di modul ini → SCORM → cache lintas-modul →
+   form manual (null = perlu nanya). */
 function resolveIdentity(){
   if(state.identity && state.identity.nip) return state.identity;
   const fromScorm = identityFromScorm();
@@ -1007,6 +1073,12 @@ function resolveIdentity(){
     state.identity = fromScorm;
     saveState();
     return fromScorm;
+  }
+  const shared = loadSharedIdentity();
+  if(shared && shared.nip){
+    state.identity = shared;
+    saveState();
+    return shared;
   }
   return null;
 }
@@ -1017,19 +1089,70 @@ function showIdentityError(msg){
   el.classList.add('show');
 }
 function openIdentityGate(){
+  document.getElementById('identity-box').hidden = false;
+  document.getElementById('identity-confirm').hidden = true;
   document.getElementById('identity-overlay').classList.add('show');
   setTimeout(function(){ const el = document.getElementById('idn-nama'); if(el) el.focus(); }, 60);
 }
+/* NIP dinormalkan ke angka saja: orang ngetik pakai spasi/titik/strip, dan
+   "19850101 200101 1 001" vs "198501012001011001" harus jadi satu orang yang
+   sama waktu dianalisis, bukan dua. */
+function nipDigits(raw){
+  return (raw || '').replace(/[^0-9]/g, '');
+}
+
+/* Dikelompokkan sesuai struktur NIP PNS (lahir 8 - TMT 6 - kelamin 1 - urut 3)
+   supaya digit kelewat/ketuker keliatan mata waktu diketik & dikonfirmasi. */
+function formatNip(digits){
+  const d = nipDigits(digits).slice(0, 18);
+  const g = [d.slice(0,8), d.slice(8,14), d.slice(14,15), d.slice(15,18)].filter(Boolean);
+  return g.join(' ');
+}
+
+function formatNipInput(el){
+  const before = el.value;
+  const posFromEnd = before.length - (el.selectionStart || before.length);
+  el.value = formatNip(before);
+  const pos = Math.max(0, el.value.length - posFromEnd);
+  try{ el.setSelectionRange(pos, pos); }catch(e){}
+}
+
+let pendingIdentity = null;
+
 function submitIdentity(){
   const nama = (document.getElementById('idn-nama').value || '').trim();
-  /* NIP dinormalkan ke angka saja: orang ngetik pakai spasi/titik/strip, dan
-     "19850101 200101 1 001" vs "198501012001011001" harus jadi satu orang yang
-     sama waktu dianalisis, bukan dua. */
-  const nip = (document.getElementById('idn-nip').value || '').replace(/[^0-9]/g, '');
+  const nip = nipDigits(document.getElementById('idn-nip').value);
   if(nama.length < 3){ showIdentityError('Nama belum diisi lengkap.'); return; }
   if(nip.length < 8){ showIdentityError('NIP harus angka (NIP PNS 18 digit).'); return; }
-  state.identity = { nama: nama, nip: nip, source: 'manual' };
+  pendingIdentity = { nama: nama, nip: nip, source: 'manual' };
+
+  document.getElementById('idn-confirm-nama').textContent = nama;
+  document.getElementById('idn-confirm-nip').textContent = formatNip(nip);
+  /* Panjang non-18 gak diblokir keras (PPPK/format lain bisa beda), tapi
+     WAJIB keliatan — ini penangkap paling sering buat digit kelewat/kedobel. */
+  const warn = document.getElementById('idn-confirm-warn');
+  if(nip.length !== 18){
+    warn.textContent = 'NIP PNS biasanya 18 digit, punya kamu ' + nip.length + ' digit. Cek lagi kalau bukan disengaja.';
+    warn.classList.add('show');
+  } else {
+    warn.classList.remove('show');
+  }
+  document.getElementById('identity-box').hidden = true;
+  document.getElementById('identity-confirm').hidden = false;
+}
+
+function backToIdentityForm(){
+  document.getElementById('identity-confirm').hidden = true;
+  document.getElementById('identity-box').hidden = false;
+  const el = document.getElementById('idn-nip');
+  if(el) el.focus();
+}
+
+function confirmIdentity(){
+  if(!pendingIdentity) return;
+  state.identity = pendingIdentity;
   saveState();
+  saveSharedIdentity(state.identity);
   document.getElementById('identity-overlay').classList.remove('show');
   actStart();
 }
