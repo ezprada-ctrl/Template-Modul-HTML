@@ -60,6 +60,11 @@ export interface ActivityModule {
   learners: number;
   first_seen: string;
   last_seen: string;
+  // Daftar judul modul yang pernah muncul di bawah slug ini. Normalnya 1.
+  judul_modul: string[];
+  // true kalau >1 judul modul berbagi slug ini = project didaur ulang,
+  // datanya nyampur. Perlu dipisah per judul modul saat analisis.
+  kemungkinan_bentrok: boolean;
 }
 
 export interface ActivitySession {
@@ -68,6 +73,9 @@ export interface ActivitySession {
   learner_name: string | null;
   learner_id: string | null;
   identity_source: string | null;
+  // Judul modul saat sesi ini direkam. Dipakai buat misahin sesi kalau satu
+  // slug ternyata berisi beberapa modul (project didaur ulang).
+  module_title: string | null;
   mulai: string;
   selesai: string;
   durasi_total_ms: number;

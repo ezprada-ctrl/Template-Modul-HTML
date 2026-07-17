@@ -34,7 +34,7 @@ def _headers():
     }
 
 
-def fetch_rows(module_slug=None, columns='*'):
+def fetch_rows(module_slug=None, columns='*', event_type=None):
     """Ambil semua baris, dipaginasi.
 
     Loop-nya sengaja maju sebanyak baris yang BENERAN diterima dan berhenti
@@ -42,6 +42,11 @@ def fetch_rows(module_slug=None, columns='*'):
     `db-max-rows` Supabase bisa mangkas balasan jadi lebih kecil dari yang
     diminta; cara yang naif bikin ekspor kepotong diam-diam (pelajaran dari
     project survei-pasca-pembelajaran).
+
+    `event_type` (opsional) nyaring di sisi server (PostgREST) — dipakai buat
+    ambil cuma baris session_start yang jumlahnya = jumlah sesi (jauh lebih
+    sedikit dari total baris), jadi bisa narik payload jsonb-nya tanpa nyeret
+    semua event.
     """
     if not READY:
         raise RuntimeError(
@@ -59,6 +64,8 @@ def fetch_rows(module_slug=None, columns='*'):
         }
         if module_slug:
             params['module_slug'] = f'eq.{module_slug}'
+        if event_type:
+            params['event_type'] = f'eq.{event_type}'
         res = requests.get(
             f'{SUPABASE_URL}/rest/v1/modul_activity',
             params=params, headers=_headers(), timeout=30,
@@ -85,10 +92,32 @@ def _tanpa_preflight(rows):
     return [r for r in rows if r.get('event_type') != PREFLIGHT_EVENT]
 
 
+def _judul_per_slug():
+    """Peta module_slug -> daftar judul modul (module_title) yang pernah muncul.
+
+    Kenapa penting: `slug` itu identitas PROJECT di builder, bukan identitas
+    modul. Kalau satu project didaur ulang (diedit jadi modul beda lalu
+    di-export lagi), dua file modul yang beda hidup di LMS dengan slug SAMA →
+    datanya nyampur di bawah satu slug. Satu slug dengan >1 judul modul =
+    tanda bentrok itu. Diambil dari payload session_start (1 baris per sesi,
+    jauh lebih sedikit dari total event) biar gak berat.
+    """
+    rows = _tanpa_preflight(
+        fetch_rows(columns='module_slug,payload', event_type='session_start'))
+    judul = {}
+    for r in rows:
+        p = r.get('payload') or {}
+        t = (p.get('module_title') or '').strip()
+        if t:
+            judul.setdefault(r['module_slug'], set()).add(t)
+    return {slug: sorted(s) for slug, s in judul.items()}
+
+
 def list_modules():
     """Ringkasan per modul buat layar utama Command Center."""
     rows = _tanpa_preflight(
         fetch_rows(columns='module_slug,session_id,learner_id,created_at,event_type'))
+    judul_map = _judul_per_slug()
     by_slug = {}
     for r in rows:
         slug = r['module_slug']
@@ -108,6 +137,7 @@ def list_modules():
 
     out = []
     for m in by_slug.values():
+        judul = judul_map.get(m['module_slug'], [])
         out.append({
             'module_slug': m['module_slug'],
             'rows': m['rows'],
@@ -115,6 +145,11 @@ def list_modules():
             'learners': len(m['_learners']),
             'first_seen': m['first_seen'],
             'last_seen': m['last_seen'],
+            'judul_modul': judul,
+            # >1 judul di bawah satu slug = project didaur ulang, datanya
+            # nyampur. Ditandai keras biar penganalisis tau harus misahin per
+            # judul (tiap sesi bawa module_title-nya, lihat summarize_sessions).
+            'kemungkinan_bentrok': len(judul) > 1,
         })
     out.sort(key=lambda m: m['last_seen'], reverse=True)
     return out
@@ -131,6 +166,7 @@ def summarize_sessions(module_slug):
             'module_slug': r['module_slug'],
             'learner_name': None, 'learner_id': None,
             'identity_source': None,
+            'module_title': None,
             'mulai': r['created_at'], 'selesai': r['created_at'],
             'durasi_total_ms': 0, 'durasi_terekam_ms': 0,
             'jumlah_slide_dilihat': 0, 'jumlah_interaksi': 0,
@@ -152,6 +188,10 @@ def summarize_sessions(module_slug):
         if t == 'session_start':
             s['identity_source'] = p.get('identity_source')
             s['perangkat'] = p.get('screen')
+            # Judul modul saat sesi ini direkam. Kalau satu slug ternyata
+            # berisi beberapa judul (project didaur ulang), kolom inilah yang
+            # dipakai buat misahin sesi milik modul yang mana.
+            s['module_title'] = p.get('module_title')
         elif t == 'session_end':
             s['durasi_total_ms'] = max(s['durasi_total_ms'], p.get('total_ms') or 0)
             s['_ada_session_end'] = True

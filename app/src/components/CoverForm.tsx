@@ -84,6 +84,17 @@ export default function CoverForm({ module, setModule }: Props) {
               </span>
             </span>
           </label>
+          {/* Peringatan bentrok slug: data aktivitas ditandai pakai slug
+              project ini. Kalau project didaur ulang jadi modul lain, dua
+              modul bakal berbagi slug dan datanya nyampur di Command Center.
+              Cuma relevan kalau tracking nyala. */}
+          {module.trackActivity && (
+            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', color: 'var(--danger)', lineHeight: 1.5 }}>
+              ⚠ Data direkam pakai slug <code>{module.slug}</code>. Buat <b>tiap modul baru</b>, mulai dari
+              tombol “+ Mulai Project Baru” di header — jangan daur ulang project ini jadi modul lain,
+              nanti datanya nyampur di Command Center.
+            </p>
+          )}
           <label style={{ color: 'var(--text-dim)' }}>
             Judul besar di layar sampul (boleh HTML sederhana, mis. pakai <code>&lt;br&gt;</code> untuk ganti baris
             atau <code>&lt;span&gt;...&lt;/span&gt;</code> untuk bagian yang diwarnai emas)

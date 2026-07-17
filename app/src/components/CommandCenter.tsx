@@ -203,18 +203,32 @@ export default function CommandCenter() {
       </div>
 
       {view === 'modul' && (
+      <>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18 }}>
         {modules.map(m => (
           <button
             key={m.module_slug}
             className={activeSlug === m.module_slug ? 'btn-primary btn-sm' : 'btn-sm'}
             onClick={() => openModule(m.module_slug)}
-            title={`${m.rows} baris · ${m.sessions} sesi · ${m.learners} peserta`}
+            title={m.kemungkinan_bentrok
+              ? `⚠ ${m.judul_modul.length} modul berbeda berbagi slug ini: ${m.judul_modul.join(' / ')}`
+              : `${m.rows} baris · ${m.sessions} sesi · ${m.learners} peserta`}
           >
             {m.module_slug} <span style={{ opacity: 0.7 }}>({m.sessions})</span>
+            {m.kemungkinan_bentrok && <span style={{ marginLeft: 5, color: 'var(--danger)' }}>⚠</span>}
           </button>
         ))}
       </div>
+      {/* Peringatan bentrok slug: satu slug isinya beberapa judul modul =
+          project didaur ulang, data dua modul nyampur. Masih bisa dipisah
+          lewat kolom "Modul" di tabel per sesi (tiap sesi bawa judulnya). */}
+      {modules.some(m => m.kemungkinan_bentrok) && (
+        <p className="hint" style={{ marginTop: -8, marginBottom: 16, color: 'var(--danger)' }}>
+          ⚠ Ada slug yang dipakai beberapa modul berbeda (project didaur ulang). Datanya nyampur di bawah satu slug —
+          pisahkan lewat kolom “Modul” di tabel sesi. Ke depan: bikin tiap modul lewat “+ Mulai Project Baru”.
+        </p>
+      )}
+      </>
       )}
 
       {view === 'peserta' && (
@@ -316,12 +330,20 @@ export default function CommandCenter() {
 
           {!busy && sessions.length === 0 && <p className="hint">Belum ada sesi terekam di modul ini.</p>}
 
-          {sessions.length > 0 && (
+          {sessions.length > 0 && (() => {
+            // Kolom "Modul" cuma muncul kalau slug ini kecampuran beberapa
+            // judul modul (project didaur ulang) - buat kasus normal, kolom
+            // ini cuma nambah kebisingan.
+            const bentrok = !!modules.find(m => m.module_slug === activeSlug)?.kemungkinan_bentrok;
+            const kolom = bentrok
+              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis']
+              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis'];
+            return (
             <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ background: 'var(--surface-2)' }}>
-                    {['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis'].map(h => (
+                    {kolom.map(h => (
                       <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
                     ))}
                   </tr>
@@ -331,6 +353,7 @@ export default function CommandCenter() {
                     <tr key={s.session_id} style={{ borderTop: '1px solid var(--border)' }}>
                       <td style={{ padding: '8px 11px' }}>{s.learner_name || <span style={{ color: 'var(--text-faint)' }}>—</span>}</td>
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.learner_id || '—'}</td>
+                      {bentrok && <td style={{ padding: '8px 11px' }}>{s.module_title || <span style={{ color: 'var(--text-faint)' }}>—</span>}</td>}
                       <td style={{ padding: '8px 11px' }}>
                         {/* Penting buat analisis: 'scorm' artinya ID-nya dari LMS
                             dan BELUM TENTU NIP; 'manual' artinya NIP diketik peserta. */}
@@ -370,7 +393,8 @@ export default function CommandCenter() {
                 </tbody>
               </table>
             </div>
-          )}
+            );
+          })()}
         </>
       )}
     </div>
