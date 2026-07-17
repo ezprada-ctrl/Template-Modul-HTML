@@ -102,6 +102,15 @@ export interface ActivityLearner {
   jumlah_sesi: number;
   durasi_total_ms: number;
   durasi_menit: number;
+  // Sama seperti ActivitySession: tatap layar dipakai sebagai durasi utama
+  // (bukan durasi_menit total, yang bisa digelembungkan tab yang dibiarkan
+  // kebuka sambil ditinggal).
+  durasi_tatap_layar_menit: number;
+  // null = SEMUA sesi peserta ini gak pernah kirim session_end (gak ada
+  // angka yang bisa dipercaya). Kalau cuma sebagian, tetap terisi tapi
+  // sesi_tanpa_end > 0 menandakan datanya parsial.
+  durasi_ditinggal_menit: number | null;
+  sesi_tanpa_end: number;
   jumlah_slide_dilihat: number;
   jumlah_interaksi: number;
   kuis_dijawab: number;

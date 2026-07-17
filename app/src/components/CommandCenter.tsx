@@ -111,6 +111,9 @@ export default function CommandCenter() {
         jumlah_modul: l.jumlah_modul,
         jumlah_sesi: l.jumlah_sesi,
         durasi_menit: l.durasi_menit,
+        durasi_tatap_layar_menit: l.durasi_tatap_layar_menit,
+        durasi_ditinggal_menit: l.durasi_ditinggal_menit,
+        sesi_tanpa_end: l.sesi_tanpa_end,
         slide_dilihat: l.jumlah_slide_dilihat,
         interaksi: l.jumlah_interaksi,
         kuis_benar: l.kuis_benar,
@@ -231,7 +234,7 @@ export default function CommandCenter() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
-                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Total Durasi', 'Slide', 'Interaksi', 'Kuis', 'Modul yang dibuka'].map(h => (
+                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Modul yang dibuka'].map(h => (
                         <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
                       ))}
                     </tr>
@@ -253,7 +256,24 @@ export default function CommandCenter() {
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.learner_id}</td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_modul}</td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_sesi}</td>
-                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.durasi_menit} m</td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.durasi_tatap_layar_menit} m</td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
+                          {l.durasi_ditinggal_menit === null ? (
+                            <span style={{ color: 'var(--text-faint)' }} title="Gak ada sesi yang session_end-nya kekirim — selisihnya gak bisa dihitung">—</span>
+                          ) : (
+                            <>
+                              {l.durasi_ditinggal_menit} m
+                              {l.durasi_ditinggal_menit > 10 && (
+                                <span title="Total waktu tab dibiarkan kebuka tanpa ditatap, dijumlah lintas semua modul peserta ini"
+                                      style={{ marginLeft: 5, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                              )}
+                              {l.sesi_tanpa_end > 0 && (
+                                <span title={`${l.sesi_tanpa_end} dari ${l.jumlah_sesi} sesi gak kehitung di sini (tab ditutup paksa) — angka ini kemungkinan kurang dari yang sebenarnya`}
+                                      style={{ marginLeft: 4, color: 'var(--text-faint)', cursor: 'help' }}>*</span>
+                              )}
+                            </>
+                          )}
+                        </td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_slide_dilihat}</td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_interaksi}</td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
@@ -267,8 +287,13 @@ export default function CommandCenter() {
               </div>
               {learners.some(l => l.nama_bervariasi) && (
                 <p className="hint" style={{ marginTop: 10 }}>
-                  ⚠ = satu NIP tercatat dengan beberapa nama berbeda. Biasanya cuma beda cara ngetik,
+                  ⚠ (Peserta) = satu NIP tercatat dengan beberapa nama berbeda. Biasanya cuma beda cara ngetik,
                   tapi bisa juga tanda NIP salah ketik atau dipakai dua orang — cek dulu sebelum dipakai analisis.
+                </p>
+              )}
+              {learners.some(l => l.sesi_tanpa_end > 0) && (
+                <p className="hint" style={{ marginTop: 4 }}>
+                  * (Ditinggal) = sebagian sesi peserta ini gak ikut kehitung (tab ditutup paksa, session_end gak sempat kekirim) — angkanya kemungkinan kurang dari yang sebenarnya.
                 </p>
               )}
             </>

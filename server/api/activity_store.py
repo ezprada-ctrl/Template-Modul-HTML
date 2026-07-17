@@ -227,6 +227,7 @@ def summarize_learners():
         mulai = sess_rows[0]['created_at']
         total_ms = 0
         terekam_ms = 0
+        ada_end = False
         slide = 0
         inter = 0
         kuis_dijawab = 0
@@ -244,6 +245,7 @@ def summarize_learners():
                 source = p.get('identity_source')
             elif t == 'session_end':
                 total_ms = max(total_ms, p.get('total_ms') or 0)
+                ada_end = True
             elif t == 'slide_view':
                 slide += 1
                 terekam_ms += p.get('ms') or 0
@@ -268,6 +270,9 @@ def summarize_learners():
             'jumlah_modul': 0,
             'jumlah_sesi': 0,
             'durasi_total_ms': 0,
+            'durasi_terekam_ms': 0,
+            'durasi_ditinggal_ms': 0,
+            'sesi_tanpa_end': 0,
             'jumlah_slide_dilihat': 0,
             'jumlah_interaksi': 0,
             'kuis_dijawab': 0,
@@ -284,6 +289,15 @@ def summarize_learners():
         m['durasi_ms'] += total_ms
         L['jumlah_sesi'] += 1
         L['durasi_total_ms'] += total_ms
+        L['durasi_terekam_ms'] += terekam_ms
+        # Ditinggal cuma bisa dijumlah dari sesi yang session_end-nya beneran
+        # kekirim (sama seperti summarize_sessions) - kalau enggak,
+        # total_ms sesi itu dipinjam dari terekam_ms, jadi selisihnya 0
+        # palsu kalau ikut dijumlah.
+        if ada_end:
+            L['durasi_ditinggal_ms'] += max(0, total_ms - terekam_ms)
+        else:
+            L['sesi_tanpa_end'] += 1
         L['jumlah_slide_dilihat'] += slide
         L['jumlah_interaksi'] += inter
         L['kuis_dijawab'] += kuis_dijawab
@@ -298,6 +312,17 @@ def summarize_learners():
         L['jumlah_modul'] = len(L['modul'])
         L['modul_slugs'] = sorted(L['modul'].keys())
         L['durasi_menit'] = round(L['durasi_total_ms'] / 60000, 1)
+        L['durasi_tatap_layar_menit'] = round(L['durasi_terekam_ms'] / 60000, 1)
+        # None kalau SEMUA sesi peserta ini gak pernah ngirim session_end -
+        # gak ada satu pun angka ditinggal yang bisa dipercaya buat
+        # dijumlah. Kalau cuma SEBAGIAN, tetap ditampilkan (parsial lebih
+        # berguna daripada disembunyikan) tapi ditandai lewat
+        # sesi_tanpa_end > 0 biar Command Center bisa kasih tau "sebagian
+        # sesi gak keitung" alih-alih diam-diam kurang lengkap.
+        sesi_lengkap = L['jumlah_sesi'] - L['sesi_tanpa_end']
+        L['durasi_ditinggal_menit'] = (
+            round(L['durasi_ditinggal_ms'] / 60000, 1) if sesi_lengkap > 0 else None
+        )
         L['nama'] = L['nama_varian'][0] if L['nama_varian'] else None
         # Ditandai supaya penganalisis curiga duluan, bukan ketipu diam-diam:
         # satu NIP dengan nama yang beda jauh biasanya berarti NIP salah ketik
