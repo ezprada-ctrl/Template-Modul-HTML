@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/index.py": {
-      "includeFiles": "api/shell-template.html"
+      "includeFiles": "api/shell-template.html",
+      "maxDuration": 60
     }
   },
   "crons": [

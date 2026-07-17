@@ -24,12 +24,16 @@ export default function CommandCenter() {
   const [activeSlug, setActiveSlug] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // true kalau backend motong hasil di MAX_ROWS — rekap cuma sebagian.
+  const [terpotong, setTerpotong] = useState(false);
 
   async function unlock() {
     setBusy(true);
     setError('');
     try {
-      setModules(await ccListModules(password));
+      const r = await ccListModules(password);
+      setModules(r.items);
+      setTerpotong(r.terpotong);
       setUnlocked(true);
     } catch (e: any) {
       setError(e.message);
@@ -43,7 +47,9 @@ export default function CommandCenter() {
     setError('');
     setActiveSlug(slug);
     try {
-      setSessions(await ccListSessions(password, slug));
+      const r = await ccListSessions(password, slug);
+      setSessions(r.items);
+      setTerpotong(r.terpotong);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -56,7 +62,9 @@ export default function CommandCenter() {
     setBusy(true);
     setError('');
     try {
-      setLearners(await ccListLearners(password));
+      const r = await ccListLearners(password);
+      setLearners(r.items);
+      setTerpotong(r.terpotong);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -179,6 +187,17 @@ export default function CommandCenter() {
       </p>
 
       {error && <p style={{ color: 'var(--danger)', fontSize: 12.5 }}>{error}</p>}
+
+      {/* Data kena batas MAX_ROWS: rekap yang ditampilkan cuma sebagian.
+          Ditandai keras biar gak dibaca sebagai angka lengkap. */}
+      {terpotong && (
+        <p style={{ color: 'var(--danger)', fontSize: 12.5, fontWeight: 600, border: '1px solid var(--danger)',
+                    borderRadius: 'var(--radius-sm)', padding: '9px 12px', margin: '0 0 14px' }}>
+          ⚠ Data terlalu banyak dan kepotong di batas aman server — rekap di bawah <b>cuma sebagian</b>,
+          bukan keseluruhan. Data lama numpuk lintas pelatihan; pertimbangkan arsipkan/hapus data pelatihan
+          yang sudah selesai di Supabase.
+        </p>
+      )}
 
       {modules.length === 0 && !busy && (
         <p className="hint">Belum ada data aktivitas sama sekali.</p>

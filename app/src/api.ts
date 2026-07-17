@@ -149,16 +149,21 @@ async function ccPost(path: string, body: Record<string, unknown>) {
   return data;
 }
 
-export async function ccListModules(password: string): Promise<ActivityModule[]> {
-  return (await ccPost('modules', { password })).modules;
+// terpotong=true artinya data kena batas MAX_ROWS di backend, jadi rekap yang
+// ditampilkan CUMA SEBAGIAN. Disurface biar gak dibaca sebagai data lengkap.
+export async function ccListModules(password: string): Promise<{ items: ActivityModule[]; terpotong: boolean }> {
+  const d = await ccPost('modules', { password });
+  return { items: d.modules, terpotong: !!d.terpotong };
 }
 
-export async function ccListSessions(password: string, moduleSlug: string): Promise<ActivitySession[]> {
-  return (await ccPost('sessions', { password, module_slug: moduleSlug })).sessions;
+export async function ccListSessions(password: string, moduleSlug: string): Promise<{ items: ActivitySession[]; terpotong: boolean }> {
+  const d = await ccPost('sessions', { password, module_slug: moduleSlug });
+  return { items: d.sessions, terpotong: !!d.terpotong };
 }
 
-export async function ccListLearners(password: string): Promise<ActivityLearner[]> {
-  return (await ccPost('learners', { password })).learners;
+export async function ccListLearners(password: string): Promise<{ items: ActivityLearner[]; terpotong: boolean }> {
+  const d = await ccPost('learners', { password });
+  return { items: d.learners, terpotong: !!d.terpotong };
 }
 
 export async function ccRawRows(password: string, moduleSlug: string): Promise<any[]> {

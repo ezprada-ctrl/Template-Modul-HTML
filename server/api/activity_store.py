@@ -22,8 +22,26 @@ READY = bool(SUPABASE_URL and SERVICE_KEY)
 
 PAGE_SIZE = 1000
 # Katup pengaman biar satu permintaan gak narik jutaan baris ke memori
-# fungsi serverless (yang jatah memorinya terbatas).
-MAX_ROWS = 200000
+# fungsi serverless (yang jatah memorinya terbatas). Dinaikin dari 200rb:
+# 500rb baris ~150MB di memori (masih di bawah jatah fungsi Vercel), dan
+# ngasih ruang jauh lebih lega karena data MENUMPUK lintas pelatihan (gak ada
+# retensi). Kalau tembus ini, hasilnya DIPOTONG — tapi sekarang potongannya
+# KELIATAN (lihat _TRUNCATED), gak lagi diam-diam.
+MAX_ROWS = 500000
+
+# Ditandai true kalau fetch terakhir kepotong di MAX_ROWS. Dipakai biar
+# Command Center bisa ngasih tau "data cuma sebagian" alih-alih diam-diam
+# nampilin rekap yang kurang. Di-reset di awal tiap operasi baca top-level.
+_TRUNCATED = False
+
+
+def reset_truncation():
+    global _TRUNCATED
+    _TRUNCATED = False
+
+
+def was_truncated():
+    return _TRUNCATED
 
 
 def _headers():
@@ -77,6 +95,8 @@ def fetch_rows(module_slug=None, columns='*', event_type=None):
         out.extend(rows)
         offset += len(rows)
         if len(out) >= MAX_ROWS:
+            global _TRUNCATED
+            _TRUNCATED = True
             break
     return out
 

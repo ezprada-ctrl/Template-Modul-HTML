@@ -124,7 +124,9 @@ def api_activity_modules():
     if denied:
         return denied
     try:
-        return jsonify({'modules': activity_store.list_modules()})
+        activity_store.reset_truncation()
+        modules = activity_store.list_modules()
+        return jsonify({'modules': modules, 'terpotong': activity_store.was_truncated()})
     except Exception as e:
         return jsonify({'error': str(e)}), 503
 
@@ -139,7 +141,9 @@ def api_activity_sessions():
     if not slug:
         return jsonify({'error': 'module_slug wajib diisi'}), 400
     try:
-        return jsonify({'sessions': activity_store.summarize_sessions(slug)})
+        activity_store.reset_truncation()
+        sessions = activity_store.summarize_sessions(slug)
+        return jsonify({'sessions': sessions, 'terpotong': activity_store.was_truncated()})
     except Exception as e:
         return jsonify({'error': str(e)}), 503
 
@@ -153,7 +157,9 @@ def api_activity_learners():
     if denied:
         return denied
     try:
-        return jsonify({'learners': activity_store.summarize_learners()})
+        activity_store.reset_truncation()
+        learners = activity_store.summarize_learners()
+        return jsonify({'learners': learners, 'terpotong': activity_store.was_truncated()})
     except Exception as e:
         return jsonify({'error': str(e)}), 503
 
