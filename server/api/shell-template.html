@@ -1039,6 +1039,24 @@ let actFlushTimer = null;
 let actSlideMark = null;
 let actSessionT0 = 0;
 
+/* ---------- deteksi idle (peserta ditinggal walau tab masih kebuka) ----------
+   "Tatap layar" dari visibilitychange doang cuma nangkep pindah-tab/minimize.
+   Peserta yang DUDUK DIAM ninggalin modul kebuka di layar (makan siang dll)
+   lolos. Idle timer nutup celah ini: kalau gak ada mousemove/keydown/scroll/
+   touch selama > ACT_IDLE_MS, waktu tatap slide berhenti dihitung.
+
+   Ambang 4 menit — SENGAJA longgar. Riset (Chartbeat 5 detik utk situs berita
+   yg scroll terus; alat produktivitas Hubstaff dkk 3-5 menit; studi baca:
+   mouse sering DIAM saat baca fokus, 10 menit baca = 20-30 detik interaksi
+   doang) sepakat gak ada angka pasti & bergantung konteks. Buat BACA STATIS
+   (natap 1 slide), ambang detik-an bakal salah nge-flag pembaca serius. 4
+   menit = tengah rentang alat produktivitas → aman dari false-flag. Ini
+   ESTIMASI "ditinggal", bukan ukuran mutlak (presisi sejati mustahil tanpa
+   eye-tracking). Lihat memory project_idle_threshold_riset buat sumbernya. */
+const ACT_IDLE_MS = 4 * 60 * 1000;
+let actLastActivity = 0;
+let actIdlePaused = false;
+
 /* ---------- identitas ---------- */
 /* SCORM biasanya nulis nama "Santoso, Budi" — dibalik biar kebaca wajar di
    Command Center dan konsisten sama yang diketik manual peserta. */
@@ -1376,8 +1394,49 @@ function actStart(){
     ua: navigator.userAgent
   });
   actFlush();
-  actFlushTimer = setInterval(function(){ actFlush(); }, 15000);
+  /* Timer yang sama sekalian ngecek idle — gak perlu interval kedua. 15 detik
+     cukup rapat: presisi deteksi idle ±15 detik, gak masalah buat ambang 4
+     menit. */
+  actFlushTimer = setInterval(function(){ actCheckIdle(); actFlush(); }, 15000);
+  actBindActivity();
   actMarkSlide();
+}
+
+/* Dipasang sekali. Tiap sinyal ini = peserta masih di depan layar → reset jam
+   idle. mousemove nembak sering, tapi handler-nya cuma assignment + satu
+   cabang yang biasanya false, jadi murah. passive:true biar scroll/touch gak
+   ketahan. */
+let actActivityBound = false;
+function actBindActivity(){
+  if(actActivityBound) return;
+  actActivityBound = true;
+  actLastActivity = Date.now();
+  const ev = ['mousemove','mousedown','keydown','scroll','touchstart','wheel'];
+  ev.forEach(function(name){
+    window.addEventListener(name, actOnActivity, { passive: true });
+  });
+}
+function actOnActivity(){
+  actLastActivity = Date.now();
+  if(actIdlePaused){
+    /* Balik dari idle: mulai segmen aktif baru dari sekarang. Waktu yang
+       kelewat selama idle (di atas ambang) gak dihitung. */
+    actIdlePaused = false;
+    if(actSlideMark) actSlideMark.t0 = Date.now();
+  }
+}
+
+/* Dipanggil berkala dari timer. Kalau udah lewat ambang tanpa aktivitas,
+   bekukan segmen aktif slide sekarang (dihitung cuma sampai aktivitas terakhir
+   + ambang — idle di atas itu dibuang) lalu tandai paused. */
+function actCheckIdle(){
+  if(!TRACK_READY || !actSlideMark || actIdlePaused) return;
+  const now = Date.now();
+  if(now - actLastActivity > ACT_IDLE_MS){
+    const segEnd = Math.min(now, actLastActivity + ACT_IDLE_MS);
+    actSlideMark.activeMs += Math.max(0, segEnd - actSlideMark.t0);
+    actIdlePaused = true;
+  }
 }
 
 /* Durasi diukur di sini, BUKAN dari selisih created_at di database — baris
@@ -1394,17 +1453,29 @@ function actMarkSlide(){
               : item.kind === 'hero' ? 'Sampul'
               : item.kind === 'summary' ? 'Ringkasan'
               : (SLIDE_TITLES[item.num] || ('Slide ' + item.num));
+  // Pindah slide = aktivitas. Reset jam idle + mulai segmen baru dari nol.
+  actLastActivity = Date.now();
+  actIdlePaused = false;
   actSlideMark = {
     key: key, label: label, kind: item.kind,
-    num: item.num || null, section: item.section || null, t0: Date.now()
+    num: item.num || null, section: item.section || null,
+    t0: Date.now(), activeMs: 0
   };
 }
 
 function actCloseSlide(){
   if(!actSlideMark) return;
-  const ms = Date.now() - actSlideMark.t0;
   const m = actSlideMark;
   actSlideMark = null;
+  let ms = m.activeMs;
+  if(!actIdlePaused){
+    /* Segmen aktif masih jalan. Tambahin sampai sekarang, TAPI trailing idle
+       dibatasi di ambang — kalau nutup slide (mis. tab disembunyiin) pas udah
+       lama gak ada aktivitas, jangan hitung waktu ditinggalnya. */
+    const now = Date.now();
+    const segEnd = Math.min(now, actLastActivity + ACT_IDLE_MS);
+    ms += Math.max(0, segEnd - m.t0);
+  }
   /* Render kilat (<400ms) diabaikan: klik cepat lewat sidebar bikin slide
      ke-render tanpa pernah dibaca manusia — kalau ikut dicatat, rata-rata
      durasinya jadi kotor. */
