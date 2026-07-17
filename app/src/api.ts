@@ -72,6 +72,13 @@ export interface ActivitySession {
   selesai: string;
   durasi_total_ms: number;
   durasi_menit: number;
+  // Waktu tab beneran kelihatan aktif (berhenti dihitung saat peserta
+  // pindah tab/minimize). Lebih jujur dipakai sebagai durasi utama
+  // ketimbang durasi_menit total.
+  durasi_tatap_layar_menit: number;
+  // Selisih total - tatap layar. null = session_end gak pernah kekirim,
+  // jadi selisihnya gak bisa dihitung (BUKAN berarti "gak pernah ditinggal").
+  durasi_ditinggal_menit: number | null;
   jumlah_slide_dilihat: number;
   jumlah_interaksi: number;
   kuis_dijawab: number;

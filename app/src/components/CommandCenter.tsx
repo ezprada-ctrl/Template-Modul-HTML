@@ -296,7 +296,7 @@ export default function CommandCenter() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ background: 'var(--surface-2)' }}>
-                    {['Peserta', 'NIP', 'Sumber', 'Mulai', 'Durasi', 'Slide', 'Interaksi', 'Kuis'].map(h => (
+                    {['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis'].map(h => (
                       <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
                     ))}
                   </tr>
@@ -314,7 +314,26 @@ export default function CommandCenter() {
                         </span>
                       </td>
                       <td style={{ padding: '8px 11px' }}>{new Date(s.mulai).toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.durasi_menit} m</td>
+                      {/* Tatap layar (durasi_tatap_layar_menit) dipakai sebagai
+                          durasi utama, BUKAN durasi_menit total: peserta yang
+                          tab-nya dibiarkan kebuka sambil ditinggal lama akan
+                          keliatan durasi total-nya besar padahal gak natap
+                          sama sekali - itu bikin dia keliatan paling rajin
+                          padahal sebaliknya. */}
+                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.durasi_tatap_layar_menit} m</td>
+                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
+                        {s.durasi_ditinggal_menit === null ? (
+                          <span style={{ color: 'var(--text-faint)' }} title="session_end gak pernah kekirim (tab ditutup paksa) — selisihnya gak bisa dihitung, BUKAN berarti gak pernah ditinggal">—</span>
+                        ) : (
+                          <>
+                            {s.durasi_ditinggal_menit} m
+                            {s.durasi_ditinggal_menit > 10 && (
+                              <span title="Tab ini dibiarkan kebuka lama tanpa ditatap — kemungkinan peserta pergi sambil modulnya nyala"
+                                    style={{ marginLeft: 5, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                            )}
+                          </>
+                        )}
+                      </td>
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.jumlah_slide_dilihat}</td>
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.jumlah_interaksi}</td>
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>

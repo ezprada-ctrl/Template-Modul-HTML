@@ -136,6 +136,7 @@ def summarize_sessions(module_slug):
             'jumlah_slide_dilihat': 0, 'jumlah_interaksi': 0,
             'kuis_dijawab': 0, 'kuis_benar': 0, 'kuis_diulang': 0,
             'perangkat': None,
+            '_ada_session_end': False,
         })
         if r.get('learner_name'):
             s['learner_name'] = r['learner_name']
@@ -153,6 +154,7 @@ def summarize_sessions(module_slug):
             s['perangkat'] = p.get('screen')
         elif t == 'session_end':
             s['durasi_total_ms'] = max(s['durasi_total_ms'], p.get('total_ms') or 0)
+            s['_ada_session_end'] = True
         elif t == 'slide_view':
             s['jumlah_slide_dilihat'] += 1
             s['durasi_terekam_ms'] += p.get('ms') or 0
@@ -167,12 +169,31 @@ def summarize_sessions(module_slug):
 
     out = list(sessions.values())
     for s in out:
+        ada_end = s.pop('_ada_session_end')
         # Kalau sesi ditutup paksa (tab dibunuh HP), session_end gak pernah
         # terkirim -> total_ms 0. Pakai jumlah durasi slide sebagai gantinya
         # biar barisnya tetap kepakai, bukan kebuang.
         if not s['durasi_total_ms']:
             s['durasi_total_ms'] = s['durasi_terekam_ms']
         s['durasi_menit'] = round(s['durasi_total_ms'] / 60000, 1)
+        # "Tatap layar" = waktu tab ini beneran KELIHATAN aktif (dari
+        # slide_view, yang berhenti dihitung begitu visibilitychange jadi
+        # 'hidden'). Lebih jujur buat ditampilkan sebagai durasi utama
+        # daripada durasi_menit total: peserta yang tab-nya dibiarkan
+        # kebuka sambil ditinggal lama akan keliatan durasi TOTAL-nya
+        # besar padahal dia gak natap sama sekali.
+        s['durasi_tatap_layar_menit'] = round(s['durasi_terekam_ms'] / 60000, 1)
+        # "Ditinggal" = selisihnya. Cuma bermakna kalau session_end beneran
+        # kekirim (barulah durasi_total_ms itu independen dari
+        # durasi_terekam_ms) - kalau enggak, durasi_total sengaja DIPINJEM
+        # dari durasi_terekam di atas, jadi selisihnya bakal 0 palsu, bukan
+        # "gak pernah ditinggal". None di sini artinya "gak bisa dihitung",
+        # bukan "nol menit".
+        if ada_end:
+            s['durasi_ditinggal_menit'] = round(
+                max(0, s['durasi_total_ms'] - s['durasi_terekam_ms']) / 60000, 1)
+        else:
+            s['durasi_ditinggal_menit'] = None
     out.sort(key=lambda s: s['mulai'], reverse=True)
     return out
 
