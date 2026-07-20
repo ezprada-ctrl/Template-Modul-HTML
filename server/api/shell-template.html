@@ -1578,8 +1578,18 @@ function actBoot(){
 
 let currentIdx = 0;
 
+/* Sampul (hero) SELALU dapet num:1 (hardcode di build_nav generator.py), dan
+   penomoran slide SELALU mulai dari 1 (renumberModule, types.ts) - tanpa
+   cabang 'hero' eksplisit di sini, kunci Sampul dan kunci slide KONTEN
+   pertama tiap section pertama JADI SAMA PERSIS ('slide-1' buat dua-duanya).
+   Akibatnya: buka Sampul (otomatis kejadian begitu modul dibuka) langsung
+   nge-mark slide pertama sebagai "sudah dibaca" tanpa peserta beneran buka
+   materinya - lolos dari gerbang isQuizAccessible tanpa terdeteksi. */
 function itemKey(item){
-  return item.kind==='quiz' ? 'quiz-'+item.section : item.kind==='summary' ? 'summary' : 'slide-'+item.num;
+  return item.kind==='quiz' ? 'quiz-'+item.section
+       : item.kind==='summary' ? 'summary'
+       : item.kind==='hero' ? 'hero'
+       : 'slide-'+item.num;
 }
 
 /* ---------------- Linear section gating ---------------- */
