@@ -236,6 +236,31 @@ def render_slide_html(slide):
     return kicker + title + sub + body
 
 
+# Kecepatan baca diam rata-rata orang dewasa: 238 kata/menit (Brysbaert 2019,
+# meta-analisis 190 studi/18.573 partisipan - lihat memory
+# project_reading_speed_brysbaert). BUKAN 250-300 yang sering dikutip - itu
+# angka lama yang ikut menghitung skimming sebagai "membaca".
+BRYSBAERT_WPM = 238
+
+
+def count_words(html_fragment):
+    """Perkiraan jumlah kata dari HTML yang sudah dirender: buang semua tag,
+    hitung token yang dipisah spasi. Kasar buat blok non-prosa (Tabel Data,
+    Diagram Alur) - dihitung dari teks yang ada apa adanya, gak sempurna tapi
+    cukup adil buat semua jenis blok tanpa perlu logika beda-beda per tipe."""
+    text = re.sub(r'<[^>]+>', ' ', html_fragment)
+    text = html_lib.unescape(text)
+    return len(text.split())
+
+
+def slide_min_read_ms(word_count):
+    """Waktu minimum buat SECARA MASUK AKAL membaca slide ini, berdasar
+    kecepatan baca rata-rata. Dipakai Command Center/modul buat bedain
+    "dibaca" dari "numpang klik lewat" - bukan estimasi "dibaca sampai
+    tuntas", cuma batas bawah paling longgar."""
+    return round(word_count / BRYSBAERT_WPM * 60000)
+
+
 # ---------------------------------------------------------------- main generator
 
 def slugify(text):
@@ -305,10 +330,12 @@ def generate_html(module):
     slides = sorted(module.get('slides', []), key=lambda s: s['number'])
     consts = []
     titles = {}
+    min_ms_per_slide = {}
     for s in slides:
         html_body = render_slide_html(s)
         consts.append(f'const SLIDE_{s["number"]} = {js_str(html_body)};')
         titles[str(s['number'])] = s.get('title', '')
+        min_ms_per_slide[str(s['number'])] = slide_min_read_ms(count_words(html_body))
     slides_map = 'const SLIDES = {' + ','.join(f'{s["number"]}:SLIDE_{s["number"]}' for s in slides) + '};'
     flow_flush = ''.join(
         f"window._flowData['{cid}'] = {js_str(steps)};\n" for cid, steps in FLOW_DATA.items()
@@ -323,6 +350,11 @@ def generate_html(module):
     # kunjungan udah lebih dari totalnya (tanda ada pengulangan) atau malah
     # ada slide yang gak pernah kesentuh sama sekali.
     out = out.replace('__TOTAL_SLIDES_JS__', js_str(len(slides)))
+    # Waktu baca minimum per slide (ms), dari jumlah kata / 238 wpm (Brysbaert
+    # 2019). Dipakai modul buat deteksi slide yang di-klik-lewat terlalu
+    # cepat sebelum kuis bagian itu - lihat resolveReadingWarning() di
+    # shell-template.html.
+    out = out.replace('__SLIDE_MIN_MS_JS__', js_str(min_ms_per_slide))
 
     quizzes = module.get('quizzes', {})
     out = out.replace('__QUIZZES_JS__', js_str(quizzes))

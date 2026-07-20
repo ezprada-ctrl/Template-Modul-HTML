@@ -268,7 +268,7 @@ export default function CommandCenter() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
-                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Modul yang dibuka'].map(h => (
+                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Peringatan', 'Modul yang dibuka'].map(h => (
                         <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
                       ))}
                     </tr>
@@ -332,6 +332,17 @@ export default function CommandCenter() {
                             title="Jumlah submit kuis yang gagal, dijumlah dari semua modul yang peserta ini kerjakan">
                           {l.kuis_gagal > 0 ? `${l.kuis_gagal}×` : '—'}
                         </td>
+                        {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
+                            sebelum kuis, dijumlah lintas semua modul. ⚠ = ada yang tetap
+                            "Yakin, lanjut ke kuis" walau udah diperingatkan. */}
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                            title="Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat sebelum kuis (dari semua modulnya)">
+                          {l.peringatan_baca_cepat > 0 ? `${l.peringatan_baca_cepat}×` : '—'}
+                          {l.peringatan_diabaikan > 0 && (
+                            <span title={`${l.peringatan_diabaikan}× tetap pilih lanjut ke kuis meski diperingatkan`}
+                                  style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                          )}
+                        </td>
                         <td style={{ padding: '8px 11px', color: 'var(--text-faint)' }}>{l.modul_slugs.join(', ')}</td>
                       </tr>
                     ))}
@@ -375,8 +386,8 @@ export default function CommandCenter() {
             // ini cuma nambah kebisingan.
             const bentrok = !!modules.find(m => m.module_slug === activeSlug)?.kemungkinan_bentrok;
             const kolom = bentrok
-              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis']
-              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis'];
+              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Peringatan']
+              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Peringatan'];
             return (
             <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
@@ -446,6 +457,18 @@ export default function CommandCenter() {
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                           title="Jumlah submit kuis yang gagal di modul ini">
                         {s.kuis_gagal > 0 ? `${s.kuis_gagal}×` : '—'}
+                      </td>
+                      {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
+                          (< 50% waktu baca minimum Brysbaert) sebelum percobaan kuis
+                          pertama bagian itu. ⚠ = tetap pilih "Yakin, lanjut ke kuis"
+                          meski udah diperingatkan (bukan "Kembali, pelajari lagi"). */}
+                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                          title="Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat sebelum kuis, di modul ini">
+                        {s.peringatan_baca_cepat > 0 ? `${s.peringatan_baca_cepat}×` : '—'}
+                        {s.peringatan_diabaikan > 0 && (
+                          <span title={`${s.peringatan_diabaikan}× tetap pilih lanjut ke kuis meski diperingatkan`}
+                                style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                        )}
                       </td>
                     </tr>
                   ))}

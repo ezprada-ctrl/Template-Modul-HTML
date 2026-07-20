@@ -577,6 +577,15 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .idn-panel .idn-note{font-size:11px;color:var(--text-faint);line-height:1.5;margin:14px 0 0;}
 #idn-prefill-note{display:none;font-size:11px;font-weight:600;color:var(--accent-2);margin:-6px 0 11px;}
 #idn-prefill-note.show{display:block;}
+
+/* Gerbang peringatan kecepatan baca — muncul sekali per section sebelum
+   percobaan kuis pertama, cuma kalau ada slide yang keklik-lewat terlalu
+   cepat. Pola overlay sama persis kayak #identity-overlay. */
+#reading-warning-overlay{
+  display:none;position:fixed;inset:0;background:rgba(22,33,62,.62);backdrop-filter:blur(3px);
+  z-index:85;align-items:center;justify-content:center;padding:20px;
+}
+#reading-warning-overlay.show{display:flex;}
 /* Panel konfirmasi: data dibalikin gede-gede biar beneran kebaca, bukan
    diklik buru-buru. NIP pakai font mono + spasi per kelompok supaya digit
    ketuker/kelewat gampang keliatan mata. */
@@ -733,6 +742,16 @@ ul.tick li b, ol.tick li b{color:var(--text);}
         <button class="nav-btn" onclick="closeDevModeModal()">Batal</button>
         <button class="nav-btn primary" onclick="submitDevModePassword()">Masuk</button>
       </div>
+    </div>
+  </div>
+
+  <div id="reading-warning-overlay">
+    <div class="idn-panel">
+      <div class="idn-icon">👀</div>
+      <h3>Sebentar dulu</h3>
+      <p>Kami lihat beberapa halaman terbuka cukup cepat. Kamu yakin mau langsung masuk kuis atau pelajari kembali?</p>
+      <button class="nav-btn primary" style="width:100%" onclick="chooseReadingWarningYakin()">Yakin, lanjut ke kuis →</button>
+      <button class="nav-btn" style="width:100%;margin-top:8px" onclick="chooseReadingWarningKembali()">← Pelajari lagi</button>
     </div>
   </div>
 
@@ -909,6 +928,10 @@ const SLIDE_TITLES = __SLIDE_TITLES_JS__;
 // kunjungan udah lebih dari totalnya (ada pengulangan) atau ada slide
 // yang gak pernah kesentuh sama sekali.
 const TOTAL_SLIDES = __TOTAL_SLIDES_JS__;
+// Waktu baca minimum per nomor slide (ms), dari jumlah kata slide itu dibagi
+// 238 kata/menit (Brysbaert 2019). Dipakai buat deteksi slide yang di-klik-
+// lewat terlalu cepat sebelum kuis - lihat resolveReadingWarning() di bawah.
+const SLIDE_MIN_MS = __SLIDE_MIN_MS_JS__;
 
 /* ---------------- Quiz data ---------------- */
 const QUIZZES = __QUIZZES_JS__;
@@ -970,7 +993,11 @@ window.addEventListener('beforeunload', ()=>{ scormCommit(); scormFinish(); });
 /* ============================= STATE ============================= */
 const STORAGE_KEY = '__STORAGE_KEY__';
 const MODULE_TITLE = '__MODULE_TITLE__';
-let state = {visited:{}, quizAnswers:{}, quizSubmitted:{}};
+/* slideRushed & quizWarnShown baru dipakai kalau TRACK_ACTIVITY nyala (lihat
+   resolveReadingWarning) - tetap disimpen di state biasa (bukan cuma
+   activity buffer) karena harus tahan lintas sesi/reload, gak cuma
+   sekali jalan. */
+let state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, slideRushed:{}, quizWarnShown:{}};
 
 function loadState(){
   scormInit();
@@ -987,6 +1014,11 @@ function loadState(){
       if(raw) state = JSON.parse(raw);
     }catch(e){}
   }
+  // Draft lama (sebelum fitur peringatan kecepatan baca ada) gak punya dua
+  // field ini - tanpa ini, kode di bawah yang akses state.slideRushed[key]
+  // bakal crash pas modul lama dibuka lagi.
+  if(!state.slideRushed) state.slideRushed = {};
+  if(!state.quizWarnShown) state.quizWarnShown = {};
 }
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
@@ -1469,6 +1501,25 @@ function actMarkSlide(){
   };
 }
 
+/* Nandain slide sebagai "diklik-lewat kecepatan" kalau waktu tatapnya di
+   bawah 50% dari minimum baca Brysbaert (SLIDE_MIN_MS). Selalu ngitung
+   ULANG tiap slide ditutup, bukan cuma sekali - jadi kalau peserta balik
+   lagi ke slide yang ditandai lalu beneran baca kali ini, tandanya otomatis
+   hilang sendiri (state.slideRushed cuma nyerminin kunjungan TERAKHIR).
+   Cuma berlaku buat slide konten - hero/quiz/summary gak punya SLIDE_MIN_MS
+   sama sekali (gak perlu "dibaca"), otomatis dilewatin lewat cek di bawah. */
+function updateSlideRushed(m, ms){
+  if(m.kind !== 'slide' || m.num == null) return;
+  const minMs = SLIDE_MIN_MS[m.num];
+  if(minMs == null) return;
+  if(ms < minMs * 0.5){
+    state.slideRushed[m.key] = true;
+  } else {
+    delete state.slideRushed[m.key];
+  }
+  saveState();
+}
+
 function actCloseSlide(){
   if(!actSlideMark) return;
   const m = actSlideMark;
@@ -1482,6 +1533,11 @@ function actCloseSlide(){
     const segEnd = Math.min(now, actLastActivity + ACT_IDLE_MS);
     ms += Math.max(0, segEnd - m.t0);
   }
+  // Ditandai SEBELUM filter render-kilat di bawah - justru klik cepat
+  // berulang buat ngelewatin slide (skenario paling penting buat ditangkap)
+  // seringnya di bawah 400ms, jadi kalau ditandai SESUDAH filter, kasus
+  // paling penting itu malah kelewat gak kedeteksi.
+  updateSlideRushed(m, ms);
   /* Render kilat (<400ms) diabaikan: klik cepat lewat sidebar bikin slide
      ke-render tanpa pernah dibaca manusia — kalau ikut dicatat, rata-rata
      durasinya jadi kotor. */
@@ -1987,6 +2043,17 @@ function goTo(idx){
       notifyQuizNotReady(target.section);
       return;
     }
+    /* Gerbang peringatan kecepatan baca - cuma nyala kalau TRACK_ACTIVITY
+       nyala (slideRushed cuma keisi lewat actCloseSlide yang no-op total
+       kalau tracking mati, jadi gak perlu cek TRACK_READY eksplisit di
+       sini). devMode dilewatin, sama kayak gerbang lain di atas. */
+    if(target.kind==='quiz' && !devMode){
+      const rushed = rushedSlidesInSection(target.section);
+      if(rushed.length && !state.quizWarnShown[target.section]){
+        openReadingWarning(target.section, rushed);
+        return;
+      }
+    }
   }
   currentIdx = idx;
   render();
@@ -1994,6 +2061,58 @@ function goTo(idx){
 }
 function goNext(){ if(currentIdx<NAV.length-1) goTo(currentIdx+1); }
 function goPrev(){ if(currentIdx>0) goTo(currentIdx-1); }
+
+/* ---------------- Peringatan kecepatan baca ----------------
+   Muncul sekali (SEKALI TAMPIL, bukan sekali "peserta pilih Yakin") sebelum
+   percobaan kuis pertama tiap section, kalau ada slide yang keklik-lewat
+   terlalu cepat (< 50% waktu baca minimum Brysbaert). "Kembali" nge-unmark
+   slide yang dilanggar dari state.visited - itu otomatis NGUNCI LAGI kuisnya
+   lewat isQuizAccessible (butuh SEMUA slide di section itu visited=true),
+   jadi gak perlu bikin mekanisme kunci terpisah. */
+function rushedSlidesInSection(sectionId){
+  return NAV.filter(it => it.kind==='slide' && it.section===sectionId && state.slideRushed[itemKey(it)]);
+}
+
+let readingWarningPending = null;
+
+function openReadingWarning(section, rushedItems){
+  readingWarningPending = { section: section, rushedItems: rushedItems };
+  // Ditandai LANGSUNG begitu ditampilkan, apa pun pilihan peserta nanti -
+  // "sekali" artinya sekali TAMPIL, bukan sekali peserta pilih "Yakin".
+  state.quizWarnShown[section] = true;
+  saveState();
+  document.getElementById('reading-warning-overlay').classList.add('show');
+}
+
+function chooseReadingWarningYakin(){
+  const pending = readingWarningPending;
+  readingWarningPending = null;
+  document.getElementById('reading-warning-overlay').classList.remove('show');
+  if(!pending) return;
+  actEvent('reading_warning', {
+    section: pending.section, choice: 'yakin',
+    slides: pending.rushedItems.map(it => it.num)
+  });
+  const idx = NAV.findIndex(it => it.kind==='quiz' && it.section===pending.section);
+  if(idx>=0) goTo(idx);
+}
+
+function chooseReadingWarningKembali(){
+  const pending = readingWarningPending;
+  readingWarningPending = null;
+  document.getElementById('reading-warning-overlay').classList.remove('show');
+  if(!pending) return;
+  pending.rushedItems.forEach(function(it){ delete state.visited[itemKey(it)]; });
+  saveState();
+  actEvent('reading_warning', {
+    section: pending.section, choice: 'kembali',
+    slides: pending.rushedItems.map(it => it.num)
+  });
+  // NAV.filter tadi balikin REFERENSI elemen NAV asli, jadi === aman dipakai
+  // buat nyari balik indexnya - bukan copy/objek baru.
+  const firstIdx = NAV.findIndex(it => it === pending.rushedItems[0]);
+  if(firstIdx>=0) goTo(firstIdx);
+}
 
 /* ---------------- Quiz sound effects ---------------- */
 let _audioCtx = null;

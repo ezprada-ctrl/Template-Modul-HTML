@@ -115,6 +115,12 @@ export interface ActivitySession {
   // modul ini. Sumbernya BUKAN kuis_diulang (klik tombol Ulangi) — itu
   // kelewat peserta yang gagal lalu nyerah tanpa pernah klik ulangi.
   kuis_gagal: number;
+  // Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat (< 50%
+  // waktu baca minimum Brysbaert) sebelum percobaan kuis pertama sebuah
+  // bagian, dan berapa dari situ yang dia pilih "Yakin, lanjut ke kuis"
+  // (mengabaikan peringatan) alih-alih "Kembali, pelajari lagi".
+  peringatan_baca_cepat: number;
+  peringatan_diabaikan: number;
   perangkat: string | null;
 }
 
@@ -154,6 +160,9 @@ export interface ActivityLearner {
   kuis_benar: number;
   // Total gagal kuis, dijumlah lintas SEMUA modul yang peserta ini kerjakan.
   kuis_gagal: number;
+  // Sama seperti ActivitySession, dijumlah lintas semua modul.
+  peringatan_baca_cepat: number;
+  peringatan_diabaikan: number;
   pertama: string;
   terakhir: string;
 }
