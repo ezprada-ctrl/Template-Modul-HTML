@@ -103,6 +103,10 @@ export interface ActivitySession {
   kuis_dijawab: number;
   kuis_benar: number;
   kuis_diulang: number;
+  // Jumlah submit kuis yang GAGAL (lulus:false), dijumlah semua bagian di
+  // modul ini. Sumbernya BUKAN kuis_diulang (klik tombol Ulangi) — itu
+  // kelewat peserta yang gagal lalu nyerah tanpa pernah klik ulangi.
+  kuis_gagal: number;
   perangkat: string | null;
 }
 
@@ -134,6 +138,8 @@ export interface ActivityLearner {
   jumlah_interaksi: number;
   kuis_dijawab: number;
   kuis_benar: number;
+  // Total gagal kuis, dijumlah lintas SEMUA modul yang peserta ini kerjakan.
+  kuis_gagal: number;
   pertama: string;
   terakhir: string;
 }

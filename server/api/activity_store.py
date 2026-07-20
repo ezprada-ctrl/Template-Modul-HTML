@@ -191,6 +191,7 @@ def summarize_sessions(module_slug):
             'durasi_total_ms': 0, 'durasi_terekam_ms': 0,
             'jumlah_slide_dilihat': 0, 'jumlah_interaksi': 0,
             'kuis_dijawab': 0, 'kuis_benar': 0, 'kuis_diulang': 0,
+            'kuis_gagal': 0,
             'perangkat': None,
             '_ada_session_end': False,
         })
@@ -226,6 +227,16 @@ def summarize_sessions(module_slug):
                 s['kuis_benar'] += 1
         elif t == 'quiz_retry':
             s['kuis_diulang'] += 1
+        elif t == 'quiz_submit':
+            # Sumber yang lebih tepat buat "berapa kali gagal" dibanding
+            # kuis_diulang (klik tombol Ulangi): tombol Ulangi cuma muncul
+            # kalau gagal (lihat shell-template.html), TAPI peserta yang gagal
+            # lalu langsung nutup modul tanpa pernah klik Ulangi bakal kehitung
+            # 0 kali gagal kalau sumbernya klik tombol - padahal dia beneran
+            # gagal 1x. quiz_submit tercatat setiap kali submit ditekan,
+            # terlepas peserta lanjut ngulang atau nyerah di situ.
+            if p.get('lulus') is False:
+                s['kuis_gagal'] += 1
 
     out = list(sessions.values())
     for s in out:
@@ -292,6 +303,7 @@ def summarize_learners():
         inter = 0
         kuis_dijawab = 0
         kuis_benar = 0
+        kuis_gagal = 0
         for r in sess_rows:
             if r.get('learner_id'):
                 nip = r['learner_id']
@@ -315,6 +327,9 @@ def summarize_learners():
                 kuis_dijawab += 1
                 if p.get('benar'):
                     kuis_benar += 1
+            elif t == 'quiz_submit':
+                if p.get('lulus') is False:
+                    kuis_gagal += 1
         if not total_ms:
             total_ms = terekam_ms
 
@@ -337,6 +352,7 @@ def summarize_learners():
             'jumlah_interaksi': 0,
             'kuis_dijawab': 0,
             'kuis_benar': 0,
+            'kuis_gagal': 0,
             'pertama': mulai,
             'terakhir': mulai,
         })
@@ -362,6 +378,7 @@ def summarize_learners():
         L['jumlah_interaksi'] += inter
         L['kuis_dijawab'] += kuis_dijawab
         L['kuis_benar'] += kuis_benar
+        L['kuis_gagal'] += kuis_gagal
         if mulai < L['pertama']:
             L['pertama'] = mulai
         if mulai > L['terakhir']:

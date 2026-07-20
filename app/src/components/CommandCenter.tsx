@@ -126,6 +126,7 @@ export default function CommandCenter() {
         interaksi: l.jumlah_interaksi,
         kuis_benar: l.kuis_benar,
         kuis_dijawab: l.kuis_dijawab,
+        kuis_gagal: l.kuis_gagal,
         pertama: l.pertama,
         terakhir: l.terakhir,
       };
@@ -309,8 +310,13 @@ export default function CommandCenter() {
                         </td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_slide_dilihat}</td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_interaksi}</td>
-                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
-                          {l.kuis_dijawab ? `${l.kuis_benar}/${l.kuis_dijawab}` : '—'}
+                        {/* Berapa kali submit kuis GAGAL, dijumlah lintas semua modul peserta
+                            ini. Bukan skor terakhir/skor gabungan (itu ambigu, gak jelas
+                            gagal-lalu-lulus atau masih gagal) - dianalisis SETELAH pelatihan
+                            selesai, jadi status lulus/belum sengaja gak ditampilkan. */}
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                            title="Jumlah submit kuis yang gagal, dijumlah dari semua modul yang peserta ini kerjakan">
+                          {l.kuis_gagal > 0 ? `${l.kuis_gagal}×` : '—'}
                         </td>
                         <td style={{ padding: '8px 11px', color: 'var(--text-faint)' }}>{l.modul_slugs.join(', ')}</td>
                       </tr>
@@ -403,9 +409,15 @@ export default function CommandCenter() {
                       </td>
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.jumlah_slide_dilihat}</td>
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.jumlah_interaksi}</td>
-                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
-                        {s.kuis_dijawab ? `${s.kuis_benar}/${s.kuis_dijawab}` : '—'}
-                        {s.kuis_diulang > 0 && <span style={{ color: 'var(--text-faint)' }}> · ulang {s.kuis_diulang}×</span>}
+                      {/* Berapa kali submit kuis GAGAL (lulus:false) di modul ini - BUKAN
+                          skor gabungan semua percobaan (mis. "7/10" dari 2 percobaan beda
+                          gak jelas artinya apa) dan BUKAN dari klik tombol Ulangi (yang
+                          kelewat peserta yang gagal lalu nyerah tanpa pernah klik ulangi).
+                          Status lulus/belum sengaja gak ditampilkan - datanya dibaca
+                          SETELAH pelatihan selesai, bukan saat masih berjalan. */}
+                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                          title="Jumlah submit kuis yang gagal di modul ini">
+                        {s.kuis_gagal > 0 ? `${s.kuis_gagal}×` : '—'}
                       </td>
                     </tr>
                   ))}
