@@ -187,6 +187,10 @@ def summarize_sessions(module_slug):
             'learner_name': None, 'learner_id': None,
             'identity_source': None,
             'module_title': None,
+            # Total slide KONTEN modul ini (ditanam saat export). None kalau
+            # modulnya di-export sebelum fitur ini ada - gak ada cara nebak
+            # dari data lama, jadi jujur ditandai "gak diketahui" bukan 0.
+            'total_slide': None,
             'mulai': r['created_at'], 'selesai': r['created_at'],
             'durasi_total_ms': 0, 'durasi_terekam_ms': 0,
             'jumlah_slide_dilihat': 0, 'jumlah_interaksi': 0,
@@ -194,6 +198,10 @@ def summarize_sessions(module_slug):
             'kuis_gagal': 0,
             'perangkat': None,
             '_ada_session_end': False,
+            # Nomor slide KONTEN unik yang pernah dibuka (bukan kunjungan) -
+            # buat bedain "diulang" (jumlah_slide_dilihat > total_slide) dari
+            # "ada yang gak pernah disentuh sama sekali" (slide_unik < total_slide).
+            '_slide_unik': set(),
         })
         if r.get('learner_name'):
             s['learner_name'] = r['learner_name']
@@ -213,12 +221,15 @@ def summarize_sessions(module_slug):
             # berisi beberapa judul (project didaur ulang), kolom inilah yang
             # dipakai buat misahin sesi milik modul yang mana.
             s['module_title'] = p.get('module_title')
+            s['total_slide'] = p.get('total_slide')
         elif t == 'session_end':
             s['durasi_total_ms'] = max(s['durasi_total_ms'], p.get('total_ms') or 0)
             s['_ada_session_end'] = True
         elif t == 'slide_view':
             s['jumlah_slide_dilihat'] += 1
             s['durasi_terekam_ms'] += p.get('ms') or 0
+            if p.get('kind') == 'slide' and p.get('num') is not None:
+                s['_slide_unik'].add(p['num'])
         elif t == 'interaction':
             s['jumlah_interaksi'] += 1
         elif t == 'quiz_answer':
@@ -241,6 +252,7 @@ def summarize_sessions(module_slug):
     out = list(sessions.values())
     for s in out:
         ada_end = s.pop('_ada_session_end')
+        s['jumlah_slide_unik'] = len(s.pop('_slide_unik'))
         # Kalau sesi ditutup paksa (tab dibunuh HP), session_end gak pernah
         # terkirim -> total_ms 0. Pakai jumlah durasi slide sebagai gantinya
         # biar barisnya tetap kepakai, bukan kebuang.
@@ -304,6 +316,8 @@ def summarize_learners():
         kuis_dijawab = 0
         kuis_benar = 0
         kuis_gagal = 0
+        total_slide_modul = None
+        slide_unik_sesi = set()
         for r in sess_rows:
             if r.get('learner_id'):
                 nip = r['learner_id']
@@ -315,12 +329,15 @@ def summarize_learners():
             t = r['event_type']
             if t == 'session_start':
                 source = p.get('identity_source')
+                total_slide_modul = p.get('total_slide')
             elif t == 'session_end':
                 total_ms = max(total_ms, p.get('total_ms') or 0)
                 ada_end = True
             elif t == 'slide_view':
                 slide += 1
                 terekam_ms += p.get('ms') or 0
+                if p.get('kind') == 'slide' and p.get('num') is not None:
+                    slide_unik_sesi.add(p['num'])
             elif t == 'interaction':
                 inter += 1
             elif t == 'quiz_answer':
@@ -355,14 +372,23 @@ def summarize_learners():
             'kuis_gagal': 0,
             'pertama': mulai,
             'terakhir': mulai,
+            # (slug, nomor) biar nomor slide yang sama di modul BEDA gak
+            # ketuker jadi satu waktu digabung.
+            '_slide_unik': set(),
         })
         if nama and nama not in L['nama_varian']:
             L['nama_varian'].append(nama)
         if source and source not in L['identity_sources']:
             L['identity_sources'].append(source)
-        m = L['modul'].setdefault(slug, {'sesi': 0, 'durasi_ms': 0})
+        m = L['modul'].setdefault(slug, {'sesi': 0, 'durasi_ms': 0, 'total_slide': None})
         m['sesi'] += 1
         m['durasi_ms'] += total_ms
+        # total_slide sama di semua sesi modul ini (baked saat export) -
+        # cukup dicatat sekali, gak perlu dijumlah per sesi.
+        if total_slide_modul is not None:
+            m['total_slide'] = total_slide_modul
+        for num in slide_unik_sesi:
+            L['_slide_unik'].add((slug, num))
         L['jumlah_sesi'] += 1
         L['durasi_total_ms'] += total_ms
         L['durasi_terekam_ms'] += terekam_ms
@@ -388,6 +414,12 @@ def summarize_learners():
     for L in learners.values():
         L['jumlah_modul'] = len(L['modul'])
         L['modul_slugs'] = sorted(L['modul'].keys())
+        L['jumlah_slide_unik'] = len(L.pop('_slide_unik'))
+        # Jumlah slide KONTEN di seluruh modul yang pernah dia buka (dijumlah
+        # sekali per modul, bukan per sesi). None kalau SEMUA modulnya
+        # di-export sebelum fitur ini ada - jangan ditampilkan sebagai 0.
+        totals = [m['total_slide'] for m in L['modul'].values() if m['total_slide'] is not None]
+        L['total_slide_program'] = sum(totals) if totals else None
         L['durasi_menit'] = round(L['durasi_total_ms'] / 60000, 1)
         L['durasi_tatap_layar_menit'] = round(L['durasi_terekam_ms'] / 60000, 1)
         # None kalau SEMUA sesi peserta ini gak pernah ngirim session_end -

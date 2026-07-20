@@ -317,6 +317,12 @@ def generate_html(module):
     out = out.replace('__SLIDE_CONSTS_JS__', slide_block)
 
     out = out.replace('__SLIDE_TITLES_JS__', js_str(titles))
+    # Ditanam biar Command Center bisa nunjukin "52 kunjungan (50/50 slide)"
+    # alih-alih angka telanjang - penyusun modul jarang inget persis modulnya
+    # ada berapa slide, jadi tanpa pembanding ini gak ada yang tau kalau
+    # kunjungan udah lebih dari totalnya (tanda ada pengulangan) atau malah
+    # ada slide yang gak pernah kesentuh sama sekali.
+    out = out.replace('__TOTAL_SLIDES_JS__', js_str(len(slides)))
 
     quizzes = module.get('quizzes', {})
     out = out.replace('__QUIZZES_JS__', js_str(quizzes))

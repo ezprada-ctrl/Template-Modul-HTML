@@ -904,6 +904,11 @@ function switchTab(prefix, idx){
 __SLIDE_CONSTS_JS__
 
 const SLIDE_TITLES = __SLIDE_TITLES_JS__;
+// Dikirim di session_start biar Command Center bisa nunjukin kunjungan
+// dibanding TOTAL slide modul ini - tanpa ini gak ada yang tau kalau
+// kunjungan udah lebih dari totalnya (ada pengulangan) atau ada slide
+// yang gak pernah kesentuh sama sekali.
+const TOTAL_SLIDES = __TOTAL_SLIDES_JS__;
 
 /* ---------------- Quiz data ---------------- */
 const QUIZZES = __QUIZZES_JS__;
@@ -1387,6 +1392,7 @@ function actStart(){
   actEvent('session_start', {
     identity_source: id.source || 'unknown',
     module_title: MODULE_TITLE,
+    total_slide: TOTAL_SLIDES,
     scorm_version: scorm.inited ? scorm.version : null,
     screen: window.innerWidth + 'x' + window.innerHeight,
     touch: ('ontouchstart' in window),

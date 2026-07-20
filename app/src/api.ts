@@ -87,6 +87,14 @@ export interface ActivitySession {
   // Judul modul saat sesi ini direkam. Dipakai buat misahin sesi kalau satu
   // slug ternyata berisi beberapa modul (project didaur ulang).
   module_title: string | null;
+  // Total slide KONTEN modul ini (ditanam saat export). null = modul
+  // di-export sebelum fitur ini ada - penyusun modul sering lupa
+  // angka ini, jadi ditampilkan sebagai pembanding, bukan diasumsikan.
+  total_slide: number | null;
+  // Nomor slide unik yang pernah dibuka (BEDA dari jumlah_slide_dilihat
+  // yang menghitung kunjungan termasuk yang diulang). unik < total_slide
+  // artinya ada slide yang SAMA SEKALI belum pernah disentuh.
+  jumlah_slide_unik: number;
   mulai: string;
   selesai: string;
   durasi_total_ms: number;
@@ -119,10 +127,16 @@ export interface ActivityLearner {
   nama_varian: string[];
   nama_bervariasi: boolean;
   identity_sources: string[];
-  modul: Record<string, { sesi: number; durasi_ms: number }>;
+  modul: Record<string, { sesi: number; durasi_ms: number; total_slide: number | null }>;
   modul_slugs: string[];
   jumlah_modul: number;
   jumlah_sesi: number;
+  // Jumlah slide konten unik yang pernah dibuka, digabung lintas semua
+  // modul (nomor slide yang sama di modul BEDA gak ketuker jadi satu).
+  jumlah_slide_unik: number;
+  // Jumlah slide konten di SELURUH modul yang dia kerjakan, dijumlah sekali
+  // per modul. null kalau semua modulnya di-export sebelum fitur ini ada.
+  total_slide_program: number | null;
   durasi_total_ms: number;
   durasi_menit: number;
   // Sama seperti ActivitySession: tatap layar dipakai sebagai durasi utama

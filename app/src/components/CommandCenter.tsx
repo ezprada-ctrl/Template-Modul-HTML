@@ -308,7 +308,21 @@ export default function CommandCenter() {
                             </>
                           )}
                         </td>
-                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_slide_dilihat}</td>
+                        {/* Angka utama = jumlah KUNJUNGAN (termasuk yang diulang balik ke
+                            slide yang sama). Angka kecil di sebelahnya = berapa slide UNIK
+                            yang pernah dibuka dari total slide di semua modulnya - penyusun
+                            modul sering lupa modulnya ada berapa slide, jadi dikasih
+                            pembanding langsung daripada angka telanjang yang gak ada artinya
+                            tanpa tau totalnya. null = modul lama, belum ada data totalnya. */}
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
+                          {l.jumlah_slide_dilihat}
+                          {l.total_slide_program != null && (
+                            <span style={{ color: 'var(--text-faint)', marginLeft: 4 }}
+                                  title="kunjungan (slide unik dibuka / total slide di semua modulnya)">
+                              ({l.jumlah_slide_unik}/{l.total_slide_program})
+                            </span>
+                          )}
+                        </td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_interaksi}</td>
                         {/* Berapa kali submit kuis GAGAL, dijumlah lintas semua modul peserta
                             ini. Bukan skor terakhir/skor gabungan (itu ambigu, gak jelas
@@ -407,7 +421,21 @@ export default function CommandCenter() {
                           </>
                         )}
                       </td>
-                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.jumlah_slide_dilihat}</td>
+                      {/* Angka utama = jumlah KUNJUNGAN (termasuk yang diulang balik ke
+                          slide yang sama - itu SENGAJA, tanda bolak-balik/kebingungan).
+                          Angka kecil = slide UNIK yang dibuka dari total slide modul ini -
+                          penyusun modul sering lupa modulnya ada berapa slide, jadi
+                          dikasih pembanding langsung. null = modul lama, export sebelum
+                          fitur ini ada. */}
+                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
+                        {s.jumlah_slide_dilihat}
+                        {s.total_slide != null && (
+                          <span style={{ color: 'var(--text-faint)', marginLeft: 4 }}
+                                title="kunjungan (slide unik dibuka / total slide modul ini)">
+                            ({s.jumlah_slide_unik}/{s.total_slide})
+                          </span>
+                        )}
+                      </td>
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.jumlah_interaksi}</td>
                       {/* Berapa kali submit kuis GAGAL (lulus:false) di modul ini - BUKAN
                           skor gabungan semua percobaan (mis. "7/10" dari 2 percobaan beda
