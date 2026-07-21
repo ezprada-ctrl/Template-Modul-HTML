@@ -2037,6 +2037,17 @@ function renderBottomNav(){
 function goTo(idx){
   idx = Math.max(0, Math.min(NAV.length-1, idx));
   const target = NAV[idx];
+  /* Sebelumnya gak ada yang nahan peserta klik balik ke materi (hero/slide)
+     lewat menu samping selagi dia lagi di halaman kuis section itu -
+     section-nya kan udah kebuka, jadi gerbang isSectionUnlocked/
+     isQuizAccessible di bawah gak pernah kesentuh buat kasus ini. Dikunci
+     eksplisit di sini. devMode dilewatin, sama kayak gerbang lain. */
+  const cur = NAV[currentIdx];
+  if(!devMode && cur && cur.kind==='quiz' &&
+     (target.kind==='slide' || target.kind==='hero') && target.section===cur.section){
+    showLockNotice('Kamu sedang mengerjakan kuis. Selesaikan dulu sebelum balik ke materi.');
+    return;
+  }
   if(target.kind==='summary'){
     const lastSec = SECTIONS[SECTIONS.length-1];
     if(!devMode && !isQuizPassed(lastSec.id)){
