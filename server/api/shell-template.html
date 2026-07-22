@@ -1899,7 +1899,13 @@ function renderSidebar(){
         const idx = NAV.indexOf(it);
         const visited = !!state.visited[itemKey(it)];
         const isCurrent = idx===currentIdx;
-        const label = it.num===1 ? 'Sampul' : SLIDE_TITLES[it.num];
+        /* BUKAN it.num===1 — nomor slide KONTEN dimulai dari 1 lagi secara
+           independen dari Sampul (hero-nya sendiri SELALU num:1, hardcode di
+           build_nav generator.py), jadi slide pertama section A ikut num:1
+           juga dan salah kecap jadi "Sampul" kalau dicek dari angkanya.
+           Pola yang benar (samain sama itemKey() dan 2 tempat lain yang
+           sudah pakai ini di file ini) - cek it.kind==='hero'. */
+        const label = it.kind==='hero' ? 'Sampul' : SLIDE_TITLES[it.num];
         bodyHtml += `<button class="nav-item-btn${visited?' visited':''}${isCurrent?' current':''}" onclick="goTo(${idx})">
           <span class="dot"></span><span>${label}</span>
         </button>`;
