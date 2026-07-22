@@ -288,7 +288,7 @@ function SlideAudioField({ slide, onUpdate }: { slide: Slide; onUpdate: (p: Part
   const mode = slide.audioMode || 'manual';
   return (
     <div style={{ border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 10, marginBottom: 10, background: 'var(--surface-2)' }}>
-      <b style={{ fontSize: 12.5 }}>🔊 Audio voiceover slide <span style={{ fontWeight: 400, color: 'var(--text-faint)' }}>(opsional)</span></b>
+      <b style={{ fontSize: 12.5 }}>🔊 Audio <span style={{ fontWeight: 400, color: 'var(--text-faint)' }}>(opsional)</span></b>
       {slide.audioSrc ? (
         <div style={{ marginTop: 8 }}>
           <audio src={slide.audioSrc} controls style={{ width: '100%', marginBottom: 8 }} />

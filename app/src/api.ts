@@ -238,9 +238,17 @@ export async function uploadFileToStorage(file: File, bucket: string): Promise<s
     body: file,
   });
   if (!res.ok) {
-    // 404 here almost always means the bucket doesn't exist yet.
-    const hint = res.status === 404 ? ` — pastikan bucket "${bucket}" sudah dibuat (public) di Supabase Storage` : '';
-    throw new Error(`Gagal upload file (${res.status})${hint}`);
+    // Surface Supabase's actual reason. Note: the Storage API often returns
+    // HTTP 400 even for "Bucket not found" (the semantic 404 lives in the JSON
+    // body), so keying a hint off res.status alone misses it — check the body.
+    let detail = '';
+    try { detail = (await res.text()).slice(0, 300); } catch { /* ignore */ }
+    const bucketMissing = res.status === 404 || /bucket not found/i.test(detail);
+    const mimeBlocked = /mime type|not supported|content type/i.test(detail);
+    let hint = '';
+    if (bucketMissing) hint = ` — bucket "${bucket}" belum ada. Buat dulu di Supabase Storage (public).`;
+    else if (mimeBlocked) hint = ` — tipe file ini ditolak bucket "${bucket}". Di Supabase, set "Allowed MIME types" bucket ke kosong (semua) atau tambahkan audio/*, video/*.`;
+    throw new Error(`Gagal upload file (${res.status})${hint}${detail ? ` · ${detail}` : ''}`);
   }
   return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
 }
