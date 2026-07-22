@@ -671,6 +671,7 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .kc-item{margin-bottom:18px;}
 .kc-item:last-child{margin-bottom:0;}
 .kc-q{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px;line-height:1.5;}
+.kc-retry-hint{font-size:11px;color:var(--text-faint);margin:-8px 0 10px;font-style:italic;}
 .kc-opts{display:flex;flex-direction:column;gap:8px;}
 .kc-opt{
   display:flex;align-items:center;gap:10px;width:100%;text-align:left;
@@ -1081,7 +1082,7 @@ const MODULE_TITLE = '__MODULE_TITLE__';
    resolveReadingWarning) - tetap disimpen di state biasa (bukan cuma
    activity buffer) karena harus tahan lintas sesi/reload, gak cuma
    sekali jalan. */
-let state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}};
+let state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}};
 
 function loadState(){
   scormInit();
@@ -1104,6 +1105,7 @@ function loadState(){
   if(!state.slideRushed) state.slideRushed = {};
   if(!state.quizWarnShown) state.quizWarnShown = {};
   if(!state.kcAnswers) state.kcAnswers = {};
+  if(!state.kcAttempts) state.kcAttempts = {};
 }
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
@@ -2408,8 +2410,10 @@ function kcOpenPopup(num, pendingIdx){
   let html = '';
   kcCurrentGroups.forEach(g=>{
     g.items.forEach((it,qi)=>{
+      const retryHint = it.feedbackMode==='perOption'
+        ? '<div class="kc-retry-hint">Boleh dicoba lagi kalau salah — pilih opsi lain sampai benar.</div>' : '';
       html += `<div class="kc-item" id="${g.block}-q${qi}">`;
-      html += `<div class="kc-q">${it.q}</div>`;
+      html += `<div class="kc-q">${it.q}</div>${retryHint}`;
       html += `<div class="kc-opts">`;
       it.opts.forEach((opt,oi)=>{
         html += `<button type="button" class="kc-opt" data-oi="${oi}" onclick="kcAnswer('${g.block}',${qi},${oi})">${opt}</button>`;
@@ -2419,27 +2423,86 @@ function kcOpenPopup(num, pendingIdx){
   });
   document.getElementById('kc-popup-body').innerHTML = html;
   document.getElementById('kc-popup-overlay').classList.add('show');
-  // Kalau sebagian udah pernah dijawab sebelumnya (mis. reload di tengah
-  // popup), tampilkan hasilnya langsung alih-alih nanya ulang.
-  kcCurrentGroups.forEach(g => g.items.forEach((it,qi) => kcApply(g.block, qi)));
+  // Kalau sebagian udah pernah dijawab/dicoba sebelumnya (mis. reload di
+  // tengah popup), tampilkan hasilnya langsung alih-alih nanya ulang.
+  kcCurrentGroups.forEach(g => g.items.forEach((it,qi) => {
+    kcApply(g.block, qi);           // soal yang udah KELAR (dikunci)
+    kcRestoreAttempts(g.block, qi); // percobaan salah yang belum kelar (perOption)
+  }));
   kcUpdateContinueBtn();
 }
 function kcAnswer(blockId, qi, oi){
   if(!state.kcAnswers) state.kcAnswers = {};
   if(!state.kcAnswers[blockId]) state.kcAnswers[blockId] = {};
-  if(state.kcAnswers[blockId][qi]!==undefined) return; // sudah dijawab
-  state.kcAnswers[blockId][qi] = oi;
-  saveState();
+  if(state.kcAnswers[blockId][qi]!==undefined) return; // soal ini udah KELAR, gak bisa diubah lagi
+
   const data = kcFindItem(blockId, qi) || {};
+  const mode = data.feedbackMode || 'single';
   const benar = (oi === data.correct);
   actEvent('kc_answer', { block: blockId, soal: qi+1, dipilih: oi, benar: benar });
   if(benar) playCorrectSound(); else playWrongSound();
+
+  /* Retry-until-correct: KHUSUS mode perOption dan jawabannya salah - jangan
+     dikunci, tandai cuma tombol yang baru diklik itu (biar peserta gak bisa
+     pilih opsi salah yang sama dua kali), tampilkan feedback opsi itu, terus
+     BERHENTI di sini (jangan set state.kcAnswers) supaya soal ini masih
+     dianggap "belum kejawab" - peserta wajib pilih opsi lain sampai benar.
+     Mode single TETAP dikunci di percobaan pertama walau salah (sesuai
+     desain awal: single = boleh benar-salah, sekali coba selesai). */
+  if(mode==='perOption' && !benar){
+    if(!state.kcAttempts) state.kcAttempts = {};
+    if(!state.kcAttempts[blockId]) state.kcAttempts[blockId] = {};
+    const tried = state.kcAttempts[blockId][qi] || [];
+    if(!tried.includes(oi)) tried.push(oi);
+    state.kcAttempts[blockId][qi] = tried;
+    saveState();
+    kcMarkAttempt(blockId, qi, oi);
+    kcShowAttemptFeedback(blockId, qi, oi, data);
+    return;
+  }
+
+  state.kcAnswers[blockId][qi] = oi;
+  saveState();
   kcApply(blockId, qi);
   kcUpdateContinueBtn();
 }
-/* Terapkan tampilan hasil satu soal (tandai benar/salah, feedback, kunci
-   tombol). Dipakai baik saat baru dijawab maupun saat popup dibuka ulang
-   dengan sebagian jawaban yang udah tersimpan. */
+/* Tandai SATU tombol opsi sebagai "udah dicoba, salah" - dipakai baik pas
+   baru diklik maupun pas popup dibuka ulang (restore percobaan lama). Beda
+   dari kcApply: TIDAK mengunci soal (tombol lain tetap bisa diklik). */
+function kcMarkAttempt(blockId, qi, oi){
+  const item = document.getElementById(blockId+'-q'+qi);
+  if(!item) return;
+  const btn = item.querySelector(`.kc-opt[data-oi="${oi}"]`);
+  if(btn){ btn.disabled = true; btn.classList.add('kc-wrong'); }
+}
+function kcShowAttemptFeedback(blockId, qi, oi, data){
+  data = data || kcFindItem(blockId, qi) || {};
+  const text = (data.optFeedback || [])[oi] || '';
+  const fb = document.getElementById(blockId+'-fb'+qi);
+  if(fb){
+    fb.innerHTML = '<span class="kc-verdict no">✕ Belum tepat, coba opsi lain</span>'
+      + (text ? '<span class="kc-fb-text">'+text+'</span>' : '');
+    fb.style.display = 'block';
+  }
+}
+/* Pas popup dibuka ulang (reload di tengah soal yang belum kejawab benar),
+   pasang lagi tanda "salah, udah dicoba" di semua opsi yang pernah diklik -
+   tanpa ini peserta bisa "curang" ngulang milih opsi yang udah kebukti salah
+   karena tombolnya balik ke keadaan awal (gak disabled) begitu popup dibuka. */
+function kcRestoreAttempts(blockId, qi){
+  if((state.kcAnswers[blockId]||{})[qi] !== undefined) return; // udah kelar, urusan kcApply
+  const tried = (state.kcAttempts[blockId]||{})[qi] || [];
+  if(!tried.length) return;
+  tried.forEach(oi => kcMarkAttempt(blockId, qi, oi));
+  // Feedback percobaan TERAKHIR yang ditampilkan lagi (bukan yang pertama),
+  // biar konsisten sama apa yang peserta lihat sebelum reload.
+  kcShowAttemptFeedback(blockId, qi, tried[tried.length-1]);
+}
+/* Terapkan tampilan hasil FINAL satu soal (selalu jawaban BENAR untuk mode
+   perOption - itu satu-satunya cara soal ini bisa nyampe sini; bisa benar
+   ATAU salah untuk mode single). Mengunci semua tombol. Dipakai baik saat
+   baru dijawab maupun saat popup dibuka ulang dengan jawaban yang udah
+   tersimpan lengkap. */
 function kcApply(blockId, qi){
   const answered = ((state.kcAnswers[blockId]||{})[qi]);
   if(answered===undefined) return;
@@ -2492,7 +2555,7 @@ function resetProgress(){
      orang. Kalau ikut dihapus, sesi rekam yang lagi jalan bakal lanjut tanpa
      identitas diam-diam (gerbangnya cuma muncul sekali di INIT). */
   const identity = state.identity;
-  state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, kcAnswers:{}};
+  state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, kcAnswers:{}, kcAttempts:{}};
   if(identity) state.identity = identity;
   saveState();
   currentIdx = 0;

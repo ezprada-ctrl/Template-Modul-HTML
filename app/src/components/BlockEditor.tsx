@@ -334,8 +334,10 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
     <>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
         Cek pemahaman ringan — muncul sebagai <b>popup begitu peserta mau pindah dari slide ini</b> (klik Selanjutnya/Sebelumnya/menu sidebar).
-        Peserta wajib jawab semua soal dulu (benar atau salah, dua-duanya boleh) baru boleh lanjut — sekali dijawab, popup-nya tidak muncul lagi
-        kalau peserta balik ke slide ini. Boleh 1 soal, boleh benar-salah. Setiap jawaban direkam ke Command Center (kolom "Knowledge Check") dan diberi feedback.
+        Mode <b>"Satu feedback"</b>: peserta dikunci begitu menjawab sekali, benar atau salah dua-duanya boleh langsung lanjut.
+        Mode <b>"Feedback per pilihan"</b>: kalau salah, peserta dikasih tau + boleh coba opsi lain berkali-kali sampai benar — baru
+        setelah itu boleh lanjut (jawab benar langsung di percobaan pertama juga boleh lanjut). Boleh 1 soal. Setiap percobaan
+        direkam ke Command Center (kolom "Knowledge Check").
       </p>
       {items.map((it, qi) => {
         const mode = it.feedbackMode || 'single';
@@ -362,16 +364,30 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
                 )}
               </div>
               {mode === 'perOption' && (
-                <input
-                  style={{ ...inp, marginTop: 3, marginLeft: 24, marginBottom: 0 }}
-                  placeholder={`Feedback untuk pilihan ${oi + 1} (opsional)`}
-                  value={(it.optFeedback || [])[oi] || ''}
-                  onChange={e => {
-                    const optFeedback = [...(it.optFeedback || [])];
-                    optFeedback[oi] = e.target.value;
-                    patchItem(qi, { optFeedback });
-                  }}
-                />
+                <div style={{ marginTop: 3, marginLeft: 24 }}>
+                  {/* Penanda benar/salah ditaruh NEMPEL di field feedback-nya sendiri
+                      (bukan cuma di radio button di atas) — supaya pas nulis feedback
+                      opsi mana pun, jelas keliatan lagi ngisi feedback buat jawaban
+                      benar atau salah, gak ketuker kalau nanti "jawaban benar"-nya
+                      dipindah ke opsi lain (feedback nempel ke POSISI opsi, bukan ke
+                      status benarnya — jadi harus jelas terlihat tiap saat). */}
+                  <span style={{
+                    display: 'inline-block', fontSize: 10, fontWeight: 700, marginBottom: 3,
+                    color: it.correct === oi ? 'var(--success, #2f9e6a)' : 'var(--danger, #c0392b)',
+                  }}>
+                    {it.correct === oi ? '✓ Feedback kalau peserta pilih JAWABAN BENAR ini' : '✕ Feedback kalau peserta pilih jawaban SALAH ini'}
+                  </span>
+                  <input
+                    style={{ ...inp, marginBottom: 0 }}
+                    placeholder={`Feedback untuk pilihan ${oi + 1} (opsional)`}
+                    value={(it.optFeedback || [])[oi] || ''}
+                    onChange={e => {
+                      const optFeedback = [...(it.optFeedback || [])];
+                      optFeedback[oi] = e.target.value;
+                      patchItem(qi, { optFeedback });
+                    }}
+                  />
+                </div>
               )}
             </div>
           ))}
