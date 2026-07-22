@@ -1,6 +1,6 @@
+import io
 import os
 import sys
-import tempfile
 
 # Vercel's Python runtime imports this file dynamically (not via a normal
 # `python index.py` invocation), so this directory isn't automatically on
@@ -9,6 +9,7 @@ import tempfile
 # though it works fine locally.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import requests
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 
@@ -53,18 +54,64 @@ def api_tracking_config():
     return jsonify({'configured': configured})
 
 
+# The PPTX itself never touches this Vercel function's request body anymore
+# (that's the ~4.5MB ceiling that used to break big decks) — the frontend
+# uploads it straight to Supabase Storage first, then just tells us the path.
+# We pull the bytes back down server-side via service_role (bypasses RLS, so
+# no anon SELECT policy is needed on the bucket) and delete the blob right
+# after extraction: unlike images/video, nothing keeps referencing a PPTX
+# after its slides are back in the browser, so there's no reason to let it
+# sit in Storage forever.
+PPTX_BUCKET = 'modul-media'
+
+
+def _storage_creds():
+    return os.environ.get('SUPABASE_URL', '').rstrip('/'), os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '')
+
+
+def _storage_download(bucket, path):
+    url, key = _storage_creds()
+    res = requests.get(
+        f'{url}/storage/v1/object/{bucket}/{path}',
+        headers={'apikey': key, 'Authorization': f'Bearer {key}'}, timeout=30,
+    )
+    res.raise_for_status()
+    return res.content
+
+
+def _storage_delete(bucket, path):
+    url, key = _storage_creds()
+    try:
+        requests.delete(
+            f'{url}/storage/v1/object/{bucket}/{path}',
+            headers={'apikey': key, 'Authorization': f'Bearer {key}'}, timeout=15,
+        )
+    except Exception:
+        pass  # best-effort cleanup — a leftover blob is harmless, just untidy
+
+
 @app.post('/api/extract-pptx')
 def api_extract_pptx():
-    file = request.files.get('file')
-    if not file:
-        return jsonify({'error': 'no file'}), 400
-    with tempfile.NamedTemporaryFile(suffix='.pptx', delete=False) as tmp:
-        file.save(tmp.name)
-        tmp_path = tmp.name
+    data = request.get_json(silent=True) or {}
+    path = data.get('path')
+    if not path:
+        return jsonify({'error': 'path wajib diisi'}), 400
+    url, key = _storage_creds()
+    if not (url and key):
+        return jsonify({
+            'error': 'SUPABASE_SERVICE_ROLE_KEY belum diset di project backend Vercel. '
+                     'Ekstraksi PPTX butuh itu buat baca file dari Storage.'
+        }), 503
     try:
-        slides = pptx_extract.extract(tmp_path)
+        pptx_bytes = _storage_download(PPTX_BUCKET, path)
+    except Exception as e:
+        return jsonify({'error': f'Gagal ambil file PPTX dari storage: {e}'}), 502
+    try:
+        slides = pptx_extract.extract(io.BytesIO(pptx_bytes))
+    except Exception as e:
+        return jsonify({'error': f'Gagal ekstrak PPTX: {e}'}), 400
     finally:
-        os.unlink(tmp_path)
+        _storage_delete(PPTX_BUCKET, path)
     return jsonify({'slides': slides})
 
 

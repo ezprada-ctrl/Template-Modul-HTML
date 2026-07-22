@@ -130,6 +130,30 @@ function App() {
     setShowNewProjectModal(false);
   }
 
+  // Leaving "Import PPTX" with unreviewed draft slides still sitting in `bank`
+  // asks for confirmation first — the extracted deck (every image as base64)
+  // lives purely in this tab's memory and is never saved to the draft, so
+  // walking away silently would otherwise nuke it with no warning. Slides the
+  // user already clicked "+ Tambah ke Canvas" for are safe regardless (that
+  // already copied them into `module.slides`); this only ever discards what
+  // was never added.
+  const [pendingTab, setPendingTab] = useState<Tab | null>(null);
+  function handleTabClick(id: Tab) {
+    if (tab === 'bank' && id !== 'bank' && bank.length > 0) {
+      setPendingTab(id);
+      return;
+    }
+    setTab(id);
+  }
+  function confirmLeaveImport() {
+    setBank([]);
+    if (pendingTab) setTab(pendingTab);
+    setPendingTab(null);
+  }
+  function cancelLeaveImport() {
+    setPendingTab(null);
+  }
+
   // Global undo/redo shortcuts. Kept at document level (not per-field) so it
   // covers every kind of builder edit — deleting a block, reordering slides,
   // changing a block type — not just text fields. Coalescing (above) keeps a
@@ -192,6 +216,14 @@ function App() {
         />
       )}
 
+      {pendingTab && (
+        <LeaveImportWarningModal
+          unaddedCount={bank.filter(s => !module.slides.some(sl => sl.sourceSlideNo === s.slideNo)).length}
+          onConfirm={confirmLeaveImport}
+          onCancel={cancelLeaveImport}
+        />
+      )}
+
       <nav style={{
         display: 'flex', gap: 4, marginBottom: 22,
         borderBottom: '1px solid var(--border)',
@@ -201,7 +233,7 @@ function App() {
           return (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => handleTabClick(t.id)}
               title={t.hint}
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -337,6 +369,30 @@ function NewProjectModal({ onCreate, onSkip }: { onCreate: (nama: string, namaPr
           <button className="btn-primary" onClick={() => onCreate(nama, namaProject)} disabled={!nama.trim()}>
             Mulai
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeaveImportWarningModal({ unaddedCount, onConfirm, onCancel }: {
+  unaddedCount: number; onConfirm: () => void; onCancel: () => void;
+}) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(10,10,12,0.5)', backdropFilter: 'blur(2px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20,
+    }}>
+      <div className="panel" style={{ width: 380, padding: 24, boxShadow: 'var(--shadow-lg)' }}>
+        <h3 style={{ marginTop: 0, marginBottom: 6 }}>Tinggalkan Import PPTX?</h3>
+        <p className="hint" style={{ marginTop: 0, marginBottom: 18 }}>
+          Slide yang tidak Anda pilih akan otomatis dihapus oleh sistem dari menu Import PPTX
+          {unaddedCount > 0 ? ` (${unaddedCount} slide belum ditambahkan ke Canvas)` : ''}. Slide yang sudah
+          diklik "+ Tambah ke Canvas" aman, tidak ikut terhapus.
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <button className="btn-ghost btn-sm" onClick={onCancel}>Batal</button>
+          <button className="btn-primary" onClick={onConfirm}>Lanjut</button>
         </div>
       </div>
     </div>

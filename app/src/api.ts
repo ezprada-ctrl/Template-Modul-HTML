@@ -8,12 +8,34 @@ import type { ModuleData, DraftSlide } from './types';
 const BASE = import.meta.env.VITE_API_BASE
   || `${window.location.protocol}//${window.location.hostname}:5800`;
 
+// 20MB — the actual upload no longer goes through Vercel (which is where the
+// old ~4.5MB body-size ceiling lived), so this is a soft UX guard, not a
+// platform limit. Kept well short of that ceiling anyway because every image
+// in the deck gets converted to base64 and handed back to the browser in one
+// go (see pptx_extract.py) — a huge deck means a huge amount of that sitting
+// in the builder's live memory (the "Import PPTX" bank), not just a slow
+// upload.
+const MAX_PPTX_BYTES = 20 * 1024 * 1024;
+
+// Uploads straight to Supabase Storage (bypasses the Vercel function and its
+// body-size limit entirely — same reasoning as uploadImageToStorage), then
+// asks the backend to pull it back down server-side (via service_role, so no
+// anon SELECT policy is needed) and extract it there. The blob in Storage is
+// deleted by the backend right after extraction — unlike images/video it has
+// no further use once the slides are back in the browser, so there's no
+// reason to let it linger and eat into Storage quota.
 export async function extractPptx(file: File): Promise<DraftSlide[]> {
-  const form = new FormData();
-  form.append('file', file);
-  const res = await fetch(`${BASE}/api/extract-pptx`, { method: 'POST', body: form });
-  if (!res.ok) throw new Error('Gagal ekstrak PPTX');
-  const data = await res.json();
+  if (file.size > MAX_PPTX_BYTES) {
+    throw new Error(`File PPTX maksimal 20MB (file ini ${(file.size / 1024 / 1024).toFixed(1)}MB).`);
+  }
+  const path = await uploadPptxToStorage(file);
+  const res = await fetch(`${BASE}/api/extract-pptx`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Gagal ekstrak PPTX');
   return data.slides.map((s: any) => ({ ...s, reviewed: false }));
 }
 
@@ -220,14 +242,15 @@ const MEDIA_BUCKET = 'modul-media';
 // Uploads the original file (no compression, no quality loss) straight to a
 // Supabase Storage bucket from the browser — never touches our Vercel
 // function, so it's not subject to the ~4.5MB request-body limit that broke
-// base64-in-JSON uploads. Returns a public URL that gets embedded directly in
-// the module JSON (tiny) and in the generated HTML (<img>/<video>/<audio> src).
-export async function uploadFileToStorage(file: File, bucket: string): Promise<string> {
+// base64-in-JSON uploads. Returns both the public URL (what images/video/audio
+// embed in the generated HTML) and the raw storage path (what the backend
+// needs to fetch/delete the object itself server-side, e.g. for PPTX extraction).
+async function uploadFileToStorage(file: File, bucket: string, prefix = ''): Promise<{ url: string; path: string }> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     throw new Error('Supabase Storage belum dikonfigurasi (VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY belum diset)');
   }
   const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const path = `${prefix}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
     method: 'POST',
     headers: {
@@ -250,17 +273,25 @@ export async function uploadFileToStorage(file: File, bucket: string): Promise<s
     else if (mimeBlocked) hint = ` — tipe file ini ditolak bucket "${bucket}". Di Supabase, set "Allowed MIME types" bucket ke kosong (semua) atau tambahkan audio/*, video/*.`;
     throw new Error(`Gagal upload file (${res.status})${hint}${detail ? ` · ${detail}` : ''}`);
   }
-  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+  return { url: `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`, path };
 }
 
 // Thin caller kept for existing image-upload call sites (cover, image block).
-export function uploadImageToStorage(file: File): Promise<string> {
-  return uploadFileToStorage(file, IMAGE_BUCKET);
+export async function uploadImageToStorage(file: File): Promise<string> {
+  return (await uploadFileToStorage(file, IMAGE_BUCKET)).url;
 }
 
 // For video/audio blocks — same flow, different bucket.
-export function uploadMediaToStorage(file: File): Promise<string> {
-  return uploadFileToStorage(file, MEDIA_BUCKET);
+export async function uploadMediaToStorage(file: File): Promise<string> {
+  return (await uploadFileToStorage(file, MEDIA_BUCKET)).url;
+}
+
+// PPTX uploads go in the same bucket under a pptx/ prefix. Unlike
+// images/video, nothing keeps referencing this blob after extraction, so
+// callers only need the PATH (to hand to the backend, which downloads it via
+// service_role and deletes it right after) — never the public URL.
+async function uploadPptxToStorage(file: File): Promise<string> {
+  return (await uploadFileToStorage(file, MEDIA_BUCKET, 'pptx/')).path;
 }
 
 export function fileToDataUri(file: File): Promise<string> {
