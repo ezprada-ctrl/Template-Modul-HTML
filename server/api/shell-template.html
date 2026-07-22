@@ -655,6 +655,40 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 }
 .modal-close:hover{background:var(--rose-soft);color:var(--rose);}
 
+/* ---------------- Knowledge Check (blok cek-paham inline) ---------------- */
+.kc-block{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:20px 22px;box-shadow:var(--shadow-md);margin-bottom:18px;
+}
+.kc-item{margin-bottom:18px;}
+.kc-item:last-child{margin-bottom:0;}
+.kc-q{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px;line-height:1.5;}
+.kc-opts{display:flex;flex-direction:column;gap:8px;}
+.kc-opt{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:12px 15px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-md);color:var(--text);font-size:13.5px;cursor:pointer;
+  transition:.15s;font-family:inherit;
+}
+.kc-opt:hover:not(:disabled){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
+.kc-opt:disabled{cursor:default;}
+.kc-item.kc-locked .kc-opt:not(.kc-correct):not(.kc-wrong){opacity:.6;}
+.kc-opt.kc-correct{border-color:var(--green);background:var(--green-soft);color:var(--text);font-weight:600;}
+.kc-opt.kc-wrong{border-color:var(--rose);background:var(--rose-soft);color:var(--text);font-weight:600;}
+.kc-fb{
+  margin-top:10px;padding:11px 14px;background:var(--surface-2);
+  border-radius:var(--radius-md);font-size:12.5px;line-height:1.55;color:var(--text-dim);
+  display:flex;flex-direction:column;gap:5px;
+}
+.kc-verdict{font-weight:800;font-size:12px;letter-spacing:.02em;}
+.kc-verdict.ok{color:var(--green);}
+.kc-verdict.no{color:var(--rose);}
+.kc-fb-text b{color:var(--accent-2);}
+
+/* Per-slide voiceover player, injected above slide content by applySlideAudio */
+.slide-audio{margin:0 0 18px;}
+.slide-audio audio{width:100%;height:38px;}
+
 /* affordance pulse — subtle recurring hint on click-to-reveal chevrons
    (accordion, sidebar section/bundle toggle, modal trigger) so users
    notice they're clickable without needing to hover first. Stops once
@@ -859,6 +893,9 @@ function flowDiagram(steps, containerId){
   return html;
 }
 window._flowData = {};
+// Knowledge-check grading data, keyed by block id (populated by the slide-
+// constants flush injected below). Defined here, before that flush runs.
+window._kcData = {};
 function toggleFlow(id, idx){
   const steps = window._flowData[id];
   document.querySelectorAll(`#${CSS.escape(id)}-wrap .flow-step`).forEach((el,i)=>{
@@ -933,6 +970,11 @@ const TOTAL_SLIDES = __TOTAL_SLIDES_JS__;
 // lewat terlalu cepat sebelum kuis - lihat resolveReadingWarning() di bawah.
 const SLIDE_MIN_MS = __SLIDE_MIN_MS_JS__;
 
+// Per-slide voiceover audio {slideNumber: {src, mode}}, and whether any block
+// is an Instagram embed (drives the embed.js loader at the bottom).
+const SLIDE_AUDIO = __SLIDE_AUDIO_JS__;
+const HAS_INSTAGRAM = __HAS_INSTAGRAM_JS__;
+
 /* ---------------- Quiz data ---------------- */
 const QUIZZES = __QUIZZES_JS__;
 
@@ -997,7 +1039,7 @@ const MODULE_TITLE = '__MODULE_TITLE__';
    resolveReadingWarning) - tetap disimpen di state biasa (bukan cuma
    activity buffer) karena harus tahan lintas sesi/reload, gak cuma
    sekali jalan. */
-let state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, slideRushed:{}, quizWarnShown:{}};
+let state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}};
 
 function loadState(){
   scormInit();
@@ -1019,6 +1061,7 @@ function loadState(){
   // bakal crash pas modul lama dibuka lagi.
   if(!state.slideRushed) state.slideRushed = {};
   if(!state.quizWarnShown) state.quizWarnShown = {};
+  if(!state.kcAnswers) state.kcAnswers = {};
 }
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
@@ -2001,11 +2044,48 @@ function render(opts){
   const key = itemKey(item);
   if(item.kind!=='quiz'){ state.visited[key]=true; saveState(); }
 
+  // Re-apply any answered knowledge-checks in the freshly-injected slide, wire
+  // its voiceover audio, and (if used) let Instagram's embed.js upgrade any
+  // blockquotes that just got re-injected.
+  kcRestore();
+  applySlideAudio(item);
+  if(HAS_INSTAGRAM && window.instgrm && window.instgrm.Embeds){
+    try{ window.instgrm.Embeds.process(); }catch(e){}
+  }
+
   renderCrumb(item);
   renderSidebar();
   updateProgress();
   renderBottomNav();
   actMarkSlide();
+}
+
+/* Per-slide voiceover: stop whatever was playing, then (for the slide now on
+   screen) inject a player above the content. 'auto' mode tries to play right
+   away; browsers may block autoplay-with-sound until the learner has
+   interacted, so if play() rejects we just leave the visible controls for the
+   learner to press. 'manual' shows the same player without auto-starting. */
+let _slideAudioEl = null;
+function applySlideAudio(item){
+  if(_slideAudioEl){ try{ _slideAudioEl.pause(); }catch(e){} _slideAudioEl = null; }
+  if(!item || item.kind!=='slide') return;
+  const cfg = SLIDE_AUDIO[item.num];
+  if(!cfg || !cfg.src) return;
+  const frame = document.querySelector('#viewport .slide-frame');
+  if(!frame) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'slide-audio';
+  const audio = document.createElement('audio');
+  audio.controls = true;
+  audio.src = cfg.src;
+  audio.style.width = '100%';
+  wrap.appendChild(audio);
+  frame.insertBefore(wrap, frame.firstChild);
+  _slideAudioEl = audio;
+  if(cfg.mode==='auto'){
+    const p = audio.play();
+    if(p && p.catch) p.catch(()=>{ /* autoplay blocked — controls stay visible */ });
+  }
 }
 
 function renderBottomNav(){
@@ -2223,6 +2303,62 @@ function retryQuiz(section){
   render();
 }
 
+/* ---------------- Knowledge Check (blok cek-paham inline) ----------------
+   Mirip kuis TAPI sengaja TIDAK mengunci apa pun: dia hidup sebagai blok di
+   dalam slide biasa (bukan NAV item 'quiz'), jadi gerbang navigasi gak pernah
+   kesentuh. Setiap jawaban (benar/salah) direkam ke Command Center lewat event
+   kc_answer. Jawaban disimpan di state.kcAnswers[blockId][qi] biar bertahan
+   saat slide dikunjungi ulang (slide di-innerHTML ulang tiap render). Sekali
+   soal dijawab, dikunci + feedback muncul (sama pola per-soal kayak kuis). */
+function kcAnswer(blockId, qi, oi){
+  if(!state.kcAnswers) state.kcAnswers = {};
+  if(!state.kcAnswers[blockId]) state.kcAnswers[blockId] = {};
+  if(state.kcAnswers[blockId][qi]!==undefined) return; // sudah dijawab
+  state.kcAnswers[blockId][qi] = oi;
+  saveState();
+  const data = (window._kcData[blockId]||[])[qi] || {};
+  const benar = (oi === data.correct);
+  actEvent('kc_answer', { block: blockId, soal: qi+1, dipilih: oi, benar: benar });
+  if(benar) playCorrectSound(); else playWrongSound();
+  kcApply(blockId, qi);
+}
+/* Terapkan tampilan hasil untuk satu soal ke DOM (tandai benar/salah, tampilkan
+   feedback, kunci tombol). Dipakai baik saat baru dijawab maupun saat restore. */
+function kcApply(blockId, qi){
+  const answered = ((state.kcAnswers[blockId]||{})[qi]);
+  if(answered===undefined) return;
+  const data = (window._kcData[blockId]||[])[qi] || {};
+  const item = document.getElementById(blockId+'-q'+qi);
+  if(!item) return;
+  item.classList.add('kc-locked');
+  item.querySelectorAll('.kc-opt').forEach(btn=>{
+    const bi = parseInt(btn.getAttribute('data-oi'),10);
+    btn.disabled = true;
+    if(bi===data.correct) btn.classList.add('kc-correct');
+    if(bi===answered && bi!==data.correct) btn.classList.add('kc-wrong');
+    if(bi===answered) btn.classList.add('kc-picked');
+  });
+  const benar = (answered===data.correct);
+  const fb = document.getElementById(blockId+'-fb'+qi);
+  if(fb){
+    const label = benar
+      ? '<span class="kc-verdict ok">✓ Benar</span>'
+      : '<span class="kc-verdict no">✕ Belum tepat</span>';
+    fb.innerHTML = label + (data.feedback ? '<span class="kc-fb-text">'+data.feedback+'</span>' : '');
+    fb.style.display = 'block';
+  }
+}
+/* Setelah render() menyuntik slide, pasang ulang semua jawaban KC yang tersimpan
+   di slide yang sedang tampil (kalau ada blok KC di dalamnya). */
+function kcRestore(){
+  document.querySelectorAll('.kc-block').forEach(blk=>{
+    const blockId = blk.getAttribute('data-kc');
+    const ans = state.kcAnswers[blockId];
+    if(!ans) return;
+    Object.keys(ans).forEach(qi=>kcApply(blockId, parseInt(qi,10)));
+  });
+}
+
 /* ---------------- Reset ---------------- */
 function resetProgress(){
   if(!confirm('Reset seluruh progres belajar dan skor kuis?')) return;
@@ -2230,7 +2366,7 @@ function resetProgress(){
      orang. Kalau ikut dihapus, sesi rekam yang lagi jalan bakal lanjut tanpa
      identitas diam-diam (gerbangnya cuma muncul sekali di INIT). */
   const identity = state.identity;
-  state = {visited:{}, quizAnswers:{}, quizSubmitted:{}};
+  state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, kcAnswers:{}};
   if(identity) state.identity = identity;
   saveState();
   currentIdx = 0;
@@ -2250,6 +2386,19 @@ document.addEventListener('keydown', e=>{
 /* ============================= INIT ============================= */
 loadState();
 applyProgressVisibility();
+/* Kalau ada blok embed Instagram, muat embed.js SEKALI dari sini (bukan dari
+   dalam blok — <script> yang disuntik lewat innerHTML gak pernah jalan).
+   render() lalu manggil window.instgrm.Embeds.process() tiap kali slide
+   berisi blockquote IG ditampilkan ulang. Catatan: butuh koneksi keluar ke
+   instagram.com; kalau diblok jaringan LMS, embed IG gagal tampil (blok lain
+   tetap jalan). */
+if(HAS_INSTAGRAM){
+  const s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.instagram.com/embed.js';
+  s.onload = ()=>{ try{ window.instgrm && window.instgrm.Embeds.process(); }catch(e){} };
+  document.body.appendChild(s);
+}
 render();
 /* Setelah render: kalau modul ini ngerekam aktivitas, mulai sesinya (atau
    tampilkan gerbang identitas dulu kalau identitasnya belum ketahuan). */

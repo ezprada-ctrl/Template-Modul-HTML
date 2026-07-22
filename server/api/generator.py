@@ -143,6 +143,13 @@ def render_dtable(b):
 
 
 FLOW_DATA = {}  # collected across the whole generation pass, flushed after SLIDES map
+KC_DATA = {}    # per knowledge-check block: [{correct, feedback}], flushed like FLOW_DATA
+
+# Flags collected while rendering blocks in one generation pass. `has_instagram`
+# drives whether the shell loads Instagram's embed.js (a <script> the block
+# itself can't run, because slide HTML is injected via innerHTML which never
+# executes injected <script> tags). Reset at the start of generate_html.
+GEN_FLAGS = {'has_instagram': False}
 
 
 def render_flow(b):
@@ -188,6 +195,124 @@ def render_html(b):
     return b.get('raw', '')
 
 
+def _caption_html(b):
+    if not b.get('caption'):
+        return ''
+    return f'<p style="font-size:12.5px;color:var(--text-faint);margin-top:8px;">{esc(b.get("caption",""))}</p>'
+
+
+def _youtube_id(url):
+    """Pull the 11-char video id out of any common YouTube URL shape
+    (watch?v=, youtu.be/, /embed/, /shorts/) or accept a bare id. Returns ''
+    if nothing plausible is found, so render_media can show a hint instead of
+    a broken iframe."""
+    url = (url or '').strip()
+    if not url:
+        return ''
+    patterns = [
+        r'(?:youtube\.com/watch\?[^ ]*?[?&]v=)([A-Za-z0-9_-]{11})',
+        r'(?:youtu\.be/)([A-Za-z0-9_-]{11})',
+        r'(?:youtube\.com/embed/)([A-Za-z0-9_-]{11})',
+        r'(?:youtube\.com/shorts/)([A-Za-z0-9_-]{11})',
+    ]
+    for pat in patterns:
+        m = re.search(pat, url)
+        if m:
+            return m.group(1)
+    # Bare id pasted on its own.
+    if re.fullmatch(r'[A-Za-z0-9_-]{11}', url):
+        return url
+    return ''
+
+
+def render_media(b):
+    source = b.get('mediaSource', 'video')
+    caption = _caption_html(b)
+
+    if source == 'youtube':
+        vid = _youtube_id(b.get('embedUrl', ''))
+        if not vid:
+            return ('<div class="card"><p style="color:var(--text-faint);font-size:12.5px;">'
+                    '⚠ URL YouTube belum valid — tempel link seperti '
+                    'https://youtu.be/xxxx atau .../watch?v=xxxx.</p></div>')
+        # Responsive 16:9 (padding-bottom trick) so it scales with the column
+        # instead of a fixed 1280x720 that would overflow on small screens.
+        return (
+            '<div class="card">'
+            '<div style="position:relative;width:100%;padding-bottom:56.25%;height:0;border-radius:12px;overflow:hidden;">'
+            f'<iframe src="https://www.youtube.com/embed/{vid}" '
+            'style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" '
+            'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" '
+            'allowfullscreen loading="lazy"></iframe>'
+            f'</div>{caption}</div>'
+        )
+
+    if source == 'instagram':
+        url = esc(b.get('embedUrl', '').strip())
+        if not url:
+            return ('<div class="card"><p style="color:var(--text-faint);font-size:12.5px;">'
+                    '⚠ URL Instagram belum diisi.</p></div>')
+        GEN_FLAGS['has_instagram'] = True
+        # Official embed markup; embed.js (loaded by the shell) upgrades this
+        # blockquote into the responsive widget. Width auto (~326-540px), the
+        # widget sets its own height (portrait for Reels).
+        return (
+            '<div class="card" style="display:flex;flex-direction:column;align-items:center;">'
+            f'<blockquote class="instagram-media" data-instgrm-permalink="{url}" '
+            'data-instgrm-version="14" '
+            'style="background:#FFF;border:0;margin:0 auto;max-width:540px;width:100%;padding:0;">'
+            '</blockquote>'
+            f'{caption}</div>'
+        )
+
+    # Default: uploaded video. controls + WITH sound (no `muted`), playsinline
+    # so mobile doesn't force fullscreen.
+    src = b.get('src', '')
+    if not src:
+        return ('<div class="card"><p style="color:var(--text-faint);font-size:12.5px;">'
+                '⚠ Video belum diupload.</p></div>')
+    return (
+        '<div class="card">'
+        f'<video controls playsinline preload="metadata" src="{src}" '
+        'style="width:100%;border-radius:12px;display:block;background:#000;"></video>'
+        f'{caption}</div>'
+    )
+
+
+def render_knowledge(b):
+    """Inline knowledge-check: quiz-like but NON-gating. Lives inside a normal
+    slide's block list, never as a NAV quiz item, so it never touches
+    isQuizAccessible/isSectionUnlocked. Each option is a button wired to the
+    shell's global kcAnswer(); state + feedback + activity event are handled
+    client-side. Options escaped; correct index + feedback carried in a JS
+    data map so the shell can grade without re-parsing the DOM."""
+    block_id = b.get('id', 'kc')
+    items = b.get('kcItems', []) or []
+    # Data the shell needs to grade/annotate: per question, the correct index
+    # and feedback text. Stored on window._kcData[blockId] via the flush in
+    # generate_html (same mechanism as FLOW_DATA).
+    KC_DATA[block_id] = [
+        {'correct': it.get('correct', 0), 'feedback': nl2br(it.get('feedback', ''))}
+        for it in items
+    ]
+    out = ['<div class="kc-block" data-kc="' + esc(block_id) + '">']
+    for qi, it in enumerate(items):
+        q = esc(it.get('q', ''))
+        out.append(f'<div class="kc-item" id="{esc(block_id)}-q{qi}">')
+        out.append(f'<div class="kc-q">{q}</div>')
+        out.append('<div class="kc-opts">')
+        for oi, opt in enumerate(it.get('opts', []) or []):
+            out.append(
+                f'<button type="button" class="kc-opt" data-oi="{oi}" '
+                f'onclick="kcAnswer(\'{esc(block_id)}\',{qi},{oi})">{esc(opt)}</button>'
+            )
+        out.append('</div>')
+        out.append(f'<div class="kc-fb" id="{esc(block_id)}-fb{qi}" style="display:none;"></div>')
+        out.append('</div>')
+    out.append('</div>')
+    return ''.join(out)
+
+
 def render_modal(b):
     modal_id = b.get('id', 'modal')
     title = esc(b.get('heading', 'Info Tambahan'))
@@ -218,6 +343,8 @@ BLOCK_RENDERERS = {
     'modal': render_modal,
     'badgeref': render_badge_ref,
     'html': render_html,
+    'media': render_media,
+    'knowledge': render_knowledge,
 }
 
 
@@ -296,6 +423,8 @@ def build_nav(module):
 
 def generate_html(module):
     FLOW_DATA.clear()
+    KC_DATA.clear()
+    GEN_FLAGS['has_instagram'] = False
 
     out = SHELL
 
@@ -340,8 +469,27 @@ def generate_html(module):
     flow_flush = ''.join(
         f"window._flowData['{cid}'] = {js_str(steps)};\n" for cid, steps in FLOW_DATA.items()
     )
-    slide_block = '\n'.join(consts) + '\n' + slides_map + '\n' + flow_flush
+    # Knowledge-check grading data, flushed the same way as flow data (the
+    # blocks are injected via innerHTML, so their handlers read from this
+    # global map instead of re-parsing the DOM).
+    kc_flush = ''.join(
+        f"window._kcData['{bid}'] = {js_str(data)};\n" for bid, data in KC_DATA.items()
+    )
+    slide_block = '\n'.join(consts) + '\n' + slides_map + '\n' + flow_flush + kc_flush
     out = out.replace('__SLIDE_CONSTS_JS__', slide_block)
+
+    # Per-slide voiceover audio: {slideNumber: {src, mode}}. Only slides that
+    # actually have audio are included, so the map stays small.
+    slide_audio = {
+        str(s['number']): {'src': s['audioSrc'], 'mode': s.get('audioMode') or 'manual'}
+        for s in slides if s.get('audioSrc')
+    }
+    out = out.replace('__SLIDE_AUDIO_JS__', js_str(slide_audio))
+
+    # Whether any block is an Instagram embed → shell conditionally loads
+    # embed.js. Set during the render_slide_html loop above (render_media flips
+    # the flag), so it's accurate by now.
+    out = out.replace('__HAS_INSTAGRAM_JS__', js_str(GEN_FLAGS['has_instagram']))
 
     out = out.replace('__SLIDE_TITLES_JS__', js_str(titles))
     # Ditanam biar Command Center bisa nunjukin "52 kunjungan (50/50 slide)"

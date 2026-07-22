@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ModuleData, DraftSlide } from './types';
 import { emptyModule, normalizeModule, buildProjectSlugPrefix } from './types';
 import { loadDraft, saveDraft } from './api';
@@ -23,9 +23,75 @@ const TABS: { id: Tab; label: string; hint: string }[] = [
 const LAST_SLUG_KEY = 'modul-builder-last-slug';
 const THEME_KEY = 'modul-builder-theme';
 
+const HISTORY_CAP = 50;
+// Edits landing within this window (e.g. typing) collapse into one undo step
+// so a single Ctrl+Z doesn't rewind character-by-character.
+const COALESCE_MS = 600;
+
+interface History { past: ModuleData[]; present: ModuleData; future: ModuleData[]; }
+
+// Undo/redo wrapper around the module state. All edits funnel through
+// setModule (value OR updater form, matching the old useState setter), so this
+// is the single choke point where history is recorded. undo/redo/resetHistory
+// never record new history themselves. resetHistory is used when switching to
+// a different project (load draft / new project / auto-restore) so undo can't
+// jump across projects.
+function useModuleHistory(initial: ModuleData) {
+  const [hist, setHist] = useState<History>({ past: [], present: initial, future: [] });
+  const lastEditRef = useRef(0);
+
+  const setModule = useCallback((updater: ModuleData | ((m: ModuleData) => ModuleData)) => {
+    setHist(h => {
+      const next = typeof updater === 'function' ? (updater as (m: ModuleData) => ModuleData)(h.present) : updater;
+      if (next === h.present) return h;
+      const now = Date.now();
+      // Coalesce rapid successive edits into the existing top-of-history
+      // snapshot instead of pushing a new one.
+      const coalesce = h.past.length > 0 && now - lastEditRef.current < COALESCE_MS;
+      lastEditRef.current = now;
+      const past = coalesce ? h.past : [...h.past, h.present].slice(-HISTORY_CAP);
+      return { past, present: next, future: [] };
+    });
+  }, []);
+
+  const undo = useCallback(() => {
+    setHist(h => {
+      if (!h.past.length) return h;
+      lastEditRef.current = 0; // never coalesce across an undo boundary
+      return {
+        past: h.past.slice(0, -1),
+        present: h.past[h.past.length - 1],
+        future: [h.present, ...h.future].slice(0, HISTORY_CAP),
+      };
+    });
+  }, []);
+
+  const redo = useCallback(() => {
+    setHist(h => {
+      if (!h.future.length) return h;
+      lastEditRef.current = 0;
+      return {
+        past: [...h.past, h.present].slice(-HISTORY_CAP),
+        present: h.future[0],
+        future: h.future.slice(1),
+      };
+    });
+  }, []);
+
+  const resetHistory = useCallback((m: ModuleData) => {
+    lastEditRef.current = 0;
+    setHist({ past: [], present: m, future: [] });
+  }, []);
+
+  return {
+    module: hist.present, setModule, undo, redo, resetHistory,
+    canUndo: hist.past.length > 0, canRedo: hist.future.length > 0,
+  };
+}
+
 function App() {
   const [tab, setTab] = useState<Tab>('bank');
-  const [module, setModule] = useState<ModuleData>(emptyModule());
+  const { module, setModule, undo, redo, resetHistory, canUndo, canRedo } = useModuleHistory(emptyModule());
   const [bank, setBank] = useState<DraftSlide[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
@@ -53,16 +119,32 @@ function App() {
       return;
     }
     loadDraft(lastSlug)
-      .then(data => setModule(normalizeModule(data)))
+      .then(data => resetHistory(normalizeModule(data)))
       .catch(() => { /* no matching draft on server, start fresh */ })
       .finally(() => setHydrated(true));
-  }, []);
+  }, [resetHistory]);
 
   function handleCreateProject(nama: string, namaProject: string) {
     const prefix = buildProjectSlugPrefix(nama, namaProject);
-    setModule(emptyModule(prefix));
+    resetHistory(emptyModule(prefix));
     setShowNewProjectModal(false);
   }
+
+  // Global undo/redo shortcuts. Kept at document level (not per-field) so it
+  // covers every kind of builder edit — deleting a block, reordering slides,
+  // changing a block type — not just text fields. Coalescing (above) keeps a
+  // burst of typing from rewinding one character at a time.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod || e.key.toLowerCase() !== 'z' && e.key.toLowerCase() !== 'y') return;
+      const redoCombo = (e.key.toLowerCase() === 'z' && e.shiftKey) || e.key.toLowerCase() === 'y';
+      e.preventDefault();
+      if (redoCombo) redo(); else undo();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [undo, redo]);
 
   // Debounced autosave: any change to the module gets saved to the server
   // draft (Supabase) ~1.2s after the user stops editing.
@@ -93,6 +175,7 @@ function App() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <AutosaveIndicator status={autosaveStatus} />
+          <UndoRedo canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
           <ThemeToggle theme={theme} onToggle={() => setTheme(t => (t === 'light' ? 'dark' : 'light'))} />
         </div>
       </header>
@@ -179,6 +262,31 @@ function ProjectBar({ module, onNewProject }: { module: ModuleData; onNewProject
       <button className="btn-sm" onClick={onNewProject} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
         + Mulai Project Baru
       </button>
+    </div>
+  );
+}
+
+function UndoRedo({ canUndo, canRedo, onUndo, onRedo }: {
+  canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void;
+}) {
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+  const mod = isMac ? '⌘' : 'Ctrl';
+  return (
+    <div style={{ display: 'flex', gap: 4 }}>
+      <button
+        className="btn-icon"
+        onClick={onUndo}
+        disabled={!canUndo}
+        title={`Undo (${mod}+Z)`}
+        style={{ fontSize: 15, opacity: canUndo ? 1 : 0.4 }}
+      >↶</button>
+      <button
+        className="btn-icon"
+        onClick={onRedo}
+        disabled={!canRedo}
+        title={`Redo (${mod}+Shift+Z)`}
+        style={{ fontSize: 15, opacity: canRedo ? 1 : 0.4 }}
+      >↷</button>
     </div>
   );
 }

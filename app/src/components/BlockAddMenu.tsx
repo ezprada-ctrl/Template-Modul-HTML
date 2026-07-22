@@ -18,6 +18,8 @@ export const BLOCK_LABELS: Record<BlockType, string> = {
   badgeref: 'Badge Referensi',
   html: 'HTML Bebas',
   modal: 'Modal Popup (info tambahan)',
+  media: 'Media (Video / YouTube / Instagram)',
+  knowledge: 'Knowledge Check (cek paham)',
 };
 
 const BLOCK_TYPES = Object.keys(BLOCK_LABELS) as BlockType[];

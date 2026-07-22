@@ -2,7 +2,19 @@ import { DEFAULT_THEME } from './themes';
 
 export type BlockType =
   | 'card' | 'callout' | 'definition' | 'pullquote' | 'ticklist'
-  | 'accordion' | 'tabs' | 'timeline' | 'dtable' | 'flow' | 'grid' | 'image' | 'badgeref' | 'html' | 'modal';
+  | 'accordion' | 'tabs' | 'timeline' | 'dtable' | 'flow' | 'grid' | 'image' | 'badgeref' | 'html' | 'modal'
+  | 'media' | 'knowledge';
+
+// One question inside a Knowledge Check block. Same shape idea as
+// QuizQuestion but with a single `feedback` shown after answering (whether
+// right or wrong) and no requirement of exactly 4 options — 2 options
+// (benar/salah) is valid.
+export interface KcQuestion {
+  q: string;
+  opts: string[];
+  correct: number;
+  feedback?: string;
+}
 
 export interface Block {
   id: string;
@@ -47,6 +59,13 @@ export interface Block {
   refText?: string;
   // html
   raw?: string;
+  // media (single block, source picked via mediaSource)
+  // - 'video': uploaded file, URL in `src` (reuses image's src field)
+  // - 'youtube' / 'instagram': raw page URL pasted by author, in `embedUrl`
+  mediaSource?: 'video' | 'youtube' | 'instagram';
+  embedUrl?: string;
+  // knowledge check (inline, non-gating quiz-like block)
+  kcItems?: KcQuestion[];
 }
 
 export interface Section {
@@ -66,6 +85,11 @@ export interface Slide {
   subtitle?: string;
   blocks: Block[];
   sourceSlideNo?: number;
+  // Optional per-slide voiceover. `audioMode` picks the learner experience:
+  // 'auto' plays on slide open (with a fallback control if the browser
+  // blocks autoplay), 'manual' just shows a player the learner may use.
+  audioSrc?: string;
+  audioMode?: 'auto' | 'manual';
 }
 
 export interface QuizQuestion {
@@ -230,6 +254,8 @@ export function newBlock(type: BlockType): Block {
     case 'image': return { id, type, src: '', caption: '' };
     case 'badgeref': return { id, type, refText: '' };
     case 'html': return { id, type, raw: '' };
+    case 'media': return { id, type, mediaSource: 'video', src: '', embedUrl: '', caption: '' };
+    case 'knowledge': return { id, type, kcItems: [{ q: '', opts: ['', ''], correct: 0, feedback: '' }] };
     case 'modal': return { id, type, heading: 'Info Tambahan', bodyHtml: '', icon: '📝' };
     default: return { id, type: 'card', heading: '', bodyHtml: '' };
   }
@@ -250,6 +276,13 @@ export function extractBlockText(block: Block): string {
       return block.refText || '';
     case 'image':
       return block.caption || '';
+    case 'media':
+      return block.caption || '';
+    case 'knowledge':
+      return (block.kcItems || [])
+        .map(it => [it.q, ...(it.opts || [])].filter(Boolean).join(' | '))
+        .filter(Boolean)
+        .join('\n');
     case 'ticklist':
       return (block.items || []).filter(Boolean).join('\n');
     case 'accordion':
@@ -273,6 +306,9 @@ export function extractBlockText(block: Block): string {
 export function isBlockEmpty(block: Block): boolean {
   if (block.type === 'image') return !block.src;
   if (block.type === 'grid') return !(block.blocks && block.blocks.length);
+  // Media has no free text — it's "empty" only when neither an uploaded
+  // video nor an embed URL has been provided.
+  if (block.type === 'media') return !block.src && !block.embedUrl;
   return !extractBlockText(block).trim();
 }
 
@@ -291,6 +327,12 @@ function applyBlockText(block: Block, text: string): Block {
       return { ...block, refText: text.split('\n')[0] };
     case 'image':
       return { ...block, caption: text };
+    case 'media':
+      return { ...block, caption: text };
+    case 'knowledge':
+      // Carry migrated text into the first question's prompt, keeping the
+      // default two empty options so it's a valid (answerable) question.
+      return { ...block, kcItems: [{ q: text.split('\n')[0], opts: ['', ''], correct: 0, feedback: '' }] };
     case 'ticklist':
       return { ...block, items: text.split('\n').filter(Boolean) };
     case 'accordion':

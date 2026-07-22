@@ -10,6 +10,7 @@ import type { ModuleData, Slide, Section } from '../types';
 import { uid, renumberModule } from '../types';
 import BlockEditor from './BlockEditor';
 import SlidePreview from './SlidePreview';
+import { uploadMediaToStorage } from '../api';
 
 interface Props {
   module: ModuleData;
@@ -277,6 +278,60 @@ function BundleAnimatedDemo({ label, slideTitles, theme }: {
   );
 }
 
+// Per-slide voiceover audio. Upload goes to the modul-media bucket (same
+// browser->Supabase flow as images/video). `audioMode` decides the learner
+// experience: 'auto' tries to play on slide open (with a manual fallback if
+// the browser blocks it), 'manual' just shows a player.
+function SlideAudioField({ slide, onUpdate }: { slide: Slide; onUpdate: (p: Partial<Slide>) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const mode = slide.audioMode || 'manual';
+  return (
+    <div style={{ border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 10, marginBottom: 10, background: 'var(--surface-2)' }}>
+      <b style={{ fontSize: 12.5 }}>🔊 Audio voiceover slide <span style={{ fontWeight: 400, color: 'var(--text-faint)' }}>(opsional)</span></b>
+      {slide.audioSrc ? (
+        <div style={{ marginTop: 8 }}>
+          <audio src={slide.audioSrc} controls style={{ width: '100%', marginBottom: 8 }} />
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+            <label style={{ fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
+              <input type="radio" name={`audiomode-${slide.id}`} checked={mode === 'auto'} onChange={() => onUpdate({ audioMode: 'auto' })} />
+              Auto-play saat slide dibuka
+            </label>
+            <label style={{ fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
+              <input type="radio" name={`audiomode-${slide.id}`} checked={mode === 'manual'} onChange={() => onUpdate({ audioMode: 'manual' })} />
+              Manual (peserta yang play)
+            </label>
+            <button className="btn-danger btn-sm" onClick={() => onUpdate({ audioSrc: '', audioMode: undefined })}>Hapus audio</button>
+          </div>
+          <p className="hint" style={{ fontSize: 11, margin: '6px 0 0' }}>
+            {mode === 'auto'
+              ? 'Auto-play bisa diblok browser tanpa interaksi peserta; kalau diblok, pemutar tetap muncul agar peserta bisa play manual.'
+              : 'Peserta bebas mau dengar atau tidak — pemutar muncul di atas isi slide.'}
+          </p>
+        </div>
+      ) : (
+        <div style={{ marginTop: 8 }}>
+          <input type="file" accept="audio/*" onChange={async e => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            setBusy(true); setErr('');
+            try {
+              const url = await uploadMediaToStorage(file);
+              onUpdate({ audioSrc: url, audioMode: 'manual' });
+            } catch (ex: any) {
+              setErr(ex?.message || 'Gagal upload audio');
+            } finally {
+              setBusy(false);
+            }
+          }} />
+          {busy && <span style={{ fontSize: 11, color: 'var(--text-faint)', marginLeft: 6 }}>mengunggah…</span>}
+          {err && <p style={{ fontSize: 11, color: 'var(--danger, #c0392b)', margin: '4px 0 0' }}>{err}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
   slide: Slide; module: ModuleData; open: boolean; onToggle: () => void;
   onUpdate: (p: Partial<Slide>) => void; onRemove: () => void;
@@ -333,6 +388,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
                 onChange={e => onUpdate({ subtitle: e.target.value })}
                 style={{ width: '100%', marginBottom: 8, minHeight: 40, resize: 'vertical' }} />
             </div>
+            <SlideAudioField slide={slide} onUpdate={onUpdate} />
             <BlockEditor blocks={slide.blocks} onChange={blocks => onUpdate({ blocks })} />
           </div>
           <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>

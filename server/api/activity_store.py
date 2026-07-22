@@ -197,6 +197,9 @@ def summarize_sessions(module_slug):
             'kuis_dijawab': 0, 'kuis_benar': 0, 'kuis_diulang': 0,
             'kuis_gagal': 0,
             'peringatan_baca_cepat': 0, 'peringatan_diabaikan': 0,
+            # Knowledge Check (blok cek-paham inline, TIDAK mengunci). Dihitung
+            # TERPISAH dari kuis section biar angka "gagal kuis" tetap bersih.
+            'kc_dijawab': 0, 'kc_benar': 0,
             'perangkat': None,
             '_ada_session_end': False,
             # Nomor slide KONTEN unik yang pernah dibuka (bukan kunjungan) -
@@ -256,6 +259,12 @@ def summarize_sessions(module_slug):
             s['peringatan_baca_cepat'] += 1
             if p.get('choice') == 'yakin':
                 s['peringatan_diabaikan'] += 1
+        elif t == 'kc_answer':
+            # Jawaban blok Knowledge Check (cek paham inline). Direkam tiap
+            # jawaban, benar maupun salah - TERPISAH dari kuis section.
+            s['kc_dijawab'] += 1
+            if p.get('benar'):
+                s['kc_benar'] += 1
 
     out = list(sessions.values())
     for s in out:
@@ -326,6 +335,8 @@ def summarize_learners():
         kuis_gagal = 0
         peringatan_baca_cepat = 0
         peringatan_diabaikan = 0
+        kc_dijawab = 0
+        kc_benar = 0
         total_slide_modul = None
         slide_unik_sesi = set()
         for r in sess_rows:
@@ -361,6 +372,10 @@ def summarize_learners():
                 peringatan_baca_cepat += 1
                 if p.get('choice') == 'yakin':
                     peringatan_diabaikan += 1
+            elif t == 'kc_answer':
+                kc_dijawab += 1
+                if p.get('benar'):
+                    kc_benar += 1
         if not total_ms:
             total_ms = terekam_ms
 
@@ -386,6 +401,8 @@ def summarize_learners():
             'kuis_gagal': 0,
             'peringatan_baca_cepat': 0,
             'peringatan_diabaikan': 0,
+            'kc_dijawab': 0,
+            'kc_benar': 0,
             'pertama': mulai,
             'terakhir': mulai,
             # (slug, nomor) biar nomor slide yang sama di modul BEDA gak
@@ -423,6 +440,8 @@ def summarize_learners():
         L['kuis_gagal'] += kuis_gagal
         L['peringatan_baca_cepat'] += peringatan_baca_cepat
         L['peringatan_diabaikan'] += peringatan_diabaikan
+        L['kc_dijawab'] += kc_dijawab
+        L['kc_benar'] += kc_benar
         if mulai < L['pertama']:
             L['pertama'] = mulai
         if mulai > L['terakhir']:

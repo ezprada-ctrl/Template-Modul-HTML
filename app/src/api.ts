@@ -121,6 +121,12 @@ export interface ActivitySession {
   // (mengabaikan peringatan) alih-alih "Kembali, pelajari lagi".
   peringatan_baca_cepat: number;
   peringatan_diabaikan: number;
+  // Knowledge Check (blok cek-paham inline, TIDAK mengunci navigasi). Dihitung
+  // TERPISAH dari kuis section: kc_dijawab = jumlah soal knowledge-check yang
+  // dijawab, kc_benar = yang benar. Boleh diulang bebas, jadi ini murni
+  // "berapa banyak dicoba & berapa yang tepat", bukan skor kelulusan.
+  kc_dijawab: number;
+  kc_benar: number;
   perangkat: string | null;
 }
 
@@ -163,6 +169,10 @@ export interface ActivityLearner {
   // Sama seperti ActivitySession, dijumlah lintas semua modul.
   peringatan_baca_cepat: number;
   peringatan_diabaikan: number;
+  // Knowledge Check dijumlah lintas semua modul peserta ini (lihat catatan
+  // di ActivitySession). Terpisah total dari kolom Kuis.
+  kc_dijawab: number;
+  kc_benar: number;
   pertama: string;
   terakhir: string;
 }
@@ -202,19 +212,23 @@ export async function ccRawRows(password: string, moduleSlug: string): Promise<a
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const IMAGE_BUCKET = 'modul-images';
+// Separate bucket for video/audio so heavy media files don't mix with the
+// image bucket. Must be created once in Supabase (public, anon-insert),
+// mirroring modul-images. If it's missing, uploads 404 with a clear message.
+const MEDIA_BUCKET = 'modul-media';
 
-// Uploads the original file (no compression, no quality loss) straight to
-// Supabase Storage from the browser — never touches our Vercel function, so
-// it's not subject to the ~4.5MB request-body limit that broke base64-in-JSON
-// uploads. Returns a public URL that gets embedded directly in the module
-// JSON (tiny) and in the generated HTML's <img src="..."> / background-image.
-export async function uploadImageToStorage(file: File): Promise<string> {
+// Uploads the original file (no compression, no quality loss) straight to a
+// Supabase Storage bucket from the browser — never touches our Vercel
+// function, so it's not subject to the ~4.5MB request-body limit that broke
+// base64-in-JSON uploads. Returns a public URL that gets embedded directly in
+// the module JSON (tiny) and in the generated HTML (<img>/<video>/<audio> src).
+export async function uploadFileToStorage(file: File, bucket: string): Promise<string> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     throw new Error('Supabase Storage belum dikonfigurasi (VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY belum diset)');
   }
-  const ext = file.name.includes('.') ? file.name.split('.').pop() : 'png';
+  const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${IMAGE_BUCKET}/${path}`, {
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
     method: 'POST',
     headers: {
       apikey: SUPABASE_ANON_KEY,
@@ -223,8 +237,22 @@ export async function uploadImageToStorage(file: File): Promise<string> {
     },
     body: file,
   });
-  if (!res.ok) throw new Error(`Gagal upload gambar (${res.status})`);
-  return `${SUPABASE_URL}/storage/v1/object/public/${IMAGE_BUCKET}/${path}`;
+  if (!res.ok) {
+    // 404 here almost always means the bucket doesn't exist yet.
+    const hint = res.status === 404 ? ` — pastikan bucket "${bucket}" sudah dibuat (public) di Supabase Storage` : '';
+    throw new Error(`Gagal upload file (${res.status})${hint}`);
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+}
+
+// Thin caller kept for existing image-upload call sites (cover, image block).
+export function uploadImageToStorage(file: File): Promise<string> {
+  return uploadFileToStorage(file, IMAGE_BUCKET);
+}
+
+// For video/audio blocks — same flow, different bucket.
+export function uploadMediaToStorage(file: File): Promise<string> {
+  return uploadFileToStorage(file, MEDIA_BUCKET);
 }
 
 export function fileToDataUri(file: File): Promise<string> {

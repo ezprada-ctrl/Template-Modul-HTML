@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import type { Block, BlockType } from '../types';
 import { newBlock, changeBlockType, isBlockEmpty } from '../types';
+import type { KcQuestion } from '../types';
 import EmojiPicker from './EmojiPicker';
 import BlockAddMenu, { BLOCK_LABELS } from './BlockAddMenu';
-import { uploadImageToStorage } from '../api';
+import { uploadImageToStorage, uploadMediaToStorage } from '../api';
 
 interface Props {
   blocks: Block[];
@@ -216,6 +218,10 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       return <input style={inp} placeholder="Teks badge (mis. Pasal 4 · PMK 15/2025)" value={block.refText || ''} onChange={e => onChange({ refText: e.target.value })} />;
     case 'html':
       return <textarea style={ta} placeholder="HTML bebas" value={block.raw || ''} onChange={e => onChange({ raw: e.target.value })} />;
+    case 'media':
+      return <MediaFields block={block} onChange={onChange} inp={inp} />;
+    case 'knowledge':
+      return <KnowledgeFields block={block} onChange={onChange} inp={inp} ta={ta} />;
     case 'modal':
       return <>
         <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
@@ -249,5 +255,119 @@ function ImageUploadField({ value, onChange }: { value: string; onChange: (v: st
       }} />
       {busy && <span style={{ fontSize: 11, color: 'var(--text-faint)', marginLeft: 6 }}>mengunggah…</span>}
     </div>
+  );
+}
+
+type FieldStyle = CSSProperties;
+
+// --------------------------------------------------------------- Media block
+function MediaFields({ block, onChange, inp }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle }) {
+  const source = block.mediaSource || 'video';
+  return (
+    <>
+      <select style={inp} value={source} onChange={e => onChange({ mediaSource: e.target.value as any })}>
+        <option value="video">Upload Video (dari file)</option>
+        <option value="youtube">Embed YouTube (URL)</option>
+        <option value="instagram">Embed Instagram (URL)</option>
+      </select>
+
+      {source === 'video' && <>
+        <VideoUploadField value={block.src || ''} onChange={src => onChange({ src })} />
+        <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
+        <p className="hint" style={{ fontSize: 11, margin: '2px 0 0' }}>
+          Suara video ikut otomatis (tidak di-mute). Peserta punya kontrol play/pause/volume bawaan.
+        </p>
+      </>}
+
+      {source === 'youtube' && <>
+        <input style={inp} placeholder="URL YouTube (mis. https://youtu.be/xxxx atau .../watch?v=xxxx)" value={block.embedUrl || ''} onChange={e => onChange({ embedUrl: e.target.value })} />
+        <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
+        <p className="hint" style={{ fontSize: 11, margin: '2px 0 0' }}>
+          Ditampilkan 16:9 responsif (mengikuti lebar kolom, setara 1280×720).
+        </p>
+      </>}
+
+      {source === 'instagram' && <>
+        <input style={inp} placeholder="URL postingan/Reels Instagram (mis. https://www.instagram.com/reel/xxxx/)" value={block.embedUrl || ''} onChange={e => onChange({ embedUrl: e.target.value })} />
+        <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
+        <p className="hint" style={{ fontSize: 11, margin: '2px 0 0' }}>
+          Ukuran widget IG responsif otomatis (portrait untuk Reels). Catatan: embed IG butuh koneksi ke instagram.com — belum diuji tembus dari jaringan LMS.
+        </p>
+      </>}
+    </>
+  );
+}
+
+function VideoUploadField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  return (
+    <div style={{ marginBottom: 6 }}>
+      {value && <video src={value} controls style={{ width: 200, display: 'block', marginBottom: 4, borderRadius: 6 }} />}
+      <input type="file" accept="video/*" onChange={async e => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setBusy(true); setErr('');
+        try {
+          const url = await uploadMediaToStorage(file);
+          onChange(url);
+        } catch (ex: any) {
+          setErr(ex?.message || 'Gagal upload video');
+        } finally {
+          setBusy(false);
+        }
+      }} />
+      {busy && <span style={{ fontSize: 11, color: 'var(--text-faint)', marginLeft: 6 }}>mengunggah…</span>}
+      {err && <p style={{ fontSize: 11, color: 'var(--danger, #c0392b)', margin: '4px 0 0' }}>{err}</p>}
+    </div>
+  );
+}
+
+// ----------------------------------------------------------- Knowledge Check
+function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle; ta: FieldStyle }) {
+  const items = block.kcItems || [];
+  function patchItem(qi: number, patch: Partial<KcQuestion>) {
+    const next = items.map((it, x) => (x === qi ? { ...it, ...patch } : it));
+    onChange({ kcItems: next });
+  }
+  return (
+    <>
+      <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
+        Cek pemahaman ringan — <b>tidak mengunci</b> slide/section berikutnya. Boleh 1 soal, boleh benar-salah.
+        Setiap jawaban (benar/salah) direkam ke Command Center (kolom "Knowledge Check") dan diberi feedback.
+      </p>
+      {items.map((it, qi) => (
+        <div key={qi} style={{ border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 8, marginBottom: 6 }}>
+          <input style={inp} placeholder={`Pertanyaan ${qi + 1}`} value={it.q} onChange={e => patchItem(qi, { q: e.target.value })} />
+          {(it.opts || []).map((opt, oi) => (
+            <div key={oi} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 3 }}>
+              <label title="Tandai sebagai jawaban benar" style={{ display: 'flex', alignItems: 'center' }}>
+                <input type="radio" name={`kc-${block.id}-${qi}`} checked={it.correct === oi} onChange={() => patchItem(qi, { correct: oi })} />
+              </label>
+              <input style={{ ...inp, marginBottom: 0 }} placeholder={`Pilihan ${oi + 1}`} value={opt} onChange={e => {
+                const opts = [...(it.opts || [])]; opts[oi] = e.target.value; patchItem(qi, { opts });
+              }} />
+              {(it.opts || []).length > 2 && (
+                <button title="Hapus pilihan" onClick={() => {
+                  const opts = (it.opts || []).filter((_, x) => x !== oi);
+                  // Keep `correct` pointing at a valid option after removal.
+                  const correct = it.correct >= opts.length ? opts.length - 1 : (it.correct > oi ? it.correct - 1 : it.correct);
+                  patchItem(qi, { opts, correct });
+                }}>×</button>
+              )}
+            </div>
+          ))}
+          <div style={{ display: 'flex', gap: 6, margin: '4px 0 6px' }}>
+            <button onClick={() => patchItem(qi, { opts: [...(it.opts || []), ''] })}>+ pilihan</button>
+            <span className="hint" style={{ fontSize: 11, alignSelf: 'center' }}>● = jawaban benar</span>
+          </div>
+          <textarea style={ta} placeholder="Feedback (muncul setelah dijawab, baik benar maupun salah)" value={it.feedback || ''} onChange={e => patchItem(qi, { feedback: e.target.value })} />
+          {items.length > 1 && (
+            <button className="btn-danger btn-sm" style={{ marginTop: 4 }} onClick={() => onChange({ kcItems: items.filter((_, x) => x !== qi) })}>Hapus soal</button>
+          )}
+        </div>
+      ))}
+      <button onClick={() => onChange({ kcItems: [...items, { q: '', opts: ['', ''], correct: 0, feedback: '' }] })}>+ soal</button>
+    </>
   );
 }

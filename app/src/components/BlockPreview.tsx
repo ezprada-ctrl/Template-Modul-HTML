@@ -109,6 +109,20 @@ export const BLOCK_PREVIEW_STYLES = `
 .pbp-scope .image-demo .ph{width:100%;height:90px;border-radius:10px;background:linear-gradient(135deg,var(--accent-soft),var(--surface-2));display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--accent-2);}
 .pbp-scope .image-demo .cap{margin:8px 0 0;font-size:11px;color:var(--text-faint);}
 
+.pbp-scope .media-demo{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;box-shadow:var(--shadow-md);}
+.pbp-scope .media-demo .frame{width:100%;height:100px;border-radius:10px;background:linear-gradient(135deg,var(--navy),#0e1730);display:flex;align-items:center;justify-content:center;position:relative;}
+.pbp-scope .media-demo .play{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--navy);padding-left:3px;}
+.pbp-scope .media-demo .tag{position:absolute;top:8px;left:8px;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.35);padding:2px 7px;border-radius:20px;}
+.pbp-scope .media-demo .cap{margin:8px 0 0;font-size:11px;color:var(--text-faint);}
+
+.pbp-scope .kc-demo{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;box-shadow:var(--shadow-md);}
+.pbp-scope .kc-demo .kc-q{font-size:12.5px;font-weight:700;color:var(--navy);margin:0 0 10px;}
+.pbp-scope .kc-demo .kc-opt{display:flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--text-dim);margin-bottom:6px;background:var(--surface);}
+.pbp-scope .kc-demo .kc-opt.correct{border-color:var(--green);background:var(--green-soft);color:var(--text);font-weight:600;}
+.pbp-scope .kc-demo .kc-opt .mk{width:16px;height:16px;border-radius:50%;border:1px solid var(--border-strong);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;}
+.pbp-scope .kc-demo .kc-opt.correct .mk{background:var(--green);border-color:var(--green);color:#fff;}
+.pbp-scope .kc-demo .kc-fb{margin:8px 0 0;font-size:11px;line-height:1.5;color:var(--text-dim);background:var(--surface-2);border-radius:var(--radius-sm);padding:8px 10px;}
+
 @keyframes pbpRiseIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 `;
 
@@ -300,6 +314,29 @@ export default function BlockPreviewCard({ type }: { type: BlockType }) {
     case 'modal': {
       return <ModalDemo />;
     }
+    case 'media':
+      return (
+        <div className="pbp-scope">
+          <div className="media-demo">
+            <div className="frame">
+              <span className="tag">Media</span>
+              <span className="play">▶</span>
+            </div>
+            <p className="cap">Video upload · YouTube · Instagram</p>
+          </div>
+        </div>
+      );
+    case 'knowledge':
+      return (
+        <div className="pbp-scope">
+          <div className="kc-demo">
+            <p className="kc-q">Lorem ipsum dolor sit amet?</p>
+            <div className="kc-opt"><span className="mk" />Pilihan A</div>
+            <div className="kc-opt correct"><span className="mk">✓</span>Pilihan B (benar)</div>
+            <p className="kc-fb">Feedback muncul setelah dijawab — benar maupun salah. Tidak mengunci slide berikutnya.</p>
+          </div>
+        </div>
+      );
     default:
       return null;
   }

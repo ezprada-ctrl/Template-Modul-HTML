@@ -127,6 +127,8 @@ export default function CommandCenter() {
         kuis_benar: l.kuis_benar,
         kuis_dijawab: l.kuis_dijawab,
         kuis_gagal: l.kuis_gagal,
+        knowledge_check_benar: l.kc_benar,
+        knowledge_check_dijawab: l.kc_dijawab,
         pertama: l.pertama,
         terakhir: l.terakhir,
       };
@@ -268,7 +270,7 @@ export default function CommandCenter() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
-                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Peringatan', 'Modul yang dibuka'].map(h => (
+                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Peringatan', 'Modul yang dibuka'].map(h => (
                         <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
                       ))}
                     </tr>
@@ -332,6 +334,13 @@ export default function CommandCenter() {
                             title="Jumlah submit kuis yang gagal, dijumlah dari semua modul yang peserta ini kerjakan">
                           {l.kuis_gagal > 0 ? `${l.kuis_gagal}×` : '—'}
                         </td>
+                        {/* Knowledge Check = blok cek-paham inline yang TIDAK mengunci apa
+                            pun. Benar/dijawab, dijumlah lintas semua modul. Sengaja TERPISAH
+                            dari kolom Kuis biar angka gagal-kuis tetap bersih. */}
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                            title="Knowledge check (cek paham, tidak mengunci): jawaban benar / total dijawab, dari semua modulnya">
+                          {l.kc_dijawab > 0 ? `${l.kc_benar}/${l.kc_dijawab}` : '—'}
+                        </td>
                         {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
                             sebelum kuis, dijumlah lintas semua modul. ⚠ = ada yang tetap
                             "Yakin, lanjut ke kuis" walau udah diperingatkan. */}
@@ -386,8 +395,8 @@ export default function CommandCenter() {
             // ini cuma nambah kebisingan.
             const bentrok = !!modules.find(m => m.module_slug === activeSlug)?.kemungkinan_bentrok;
             const kolom = bentrok
-              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Peringatan']
-              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Peringatan'];
+              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Peringatan']
+              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Peringatan'];
             return (
             <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
@@ -457,6 +466,12 @@ export default function CommandCenter() {
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                           title="Jumlah submit kuis yang gagal di modul ini">
                         {s.kuis_gagal > 0 ? `${s.kuis_gagal}×` : '—'}
+                      </td>
+                      {/* Knowledge check (blok cek-paham inline, TIDAK mengunci): jawaban
+                          benar / total dijawab di modul ini. Terpisah dari kolom Kuis. */}
+                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                          title="Knowledge check (cek paham, tidak mengunci): jawaban benar / total dijawab di modul ini">
+                        {s.kc_dijawab > 0 ? `${s.kc_benar}/${s.kc_dijawab}` : '—'}
                       </td>
                       {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
                           (< 50% waktu baca minimum Brysbaert) sebelum percobaan kuis
