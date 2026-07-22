@@ -697,6 +697,24 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .slide-audio{margin:0 0 18px;}
 .slide-audio audio{width:100%;height:38px;}
 
+/* YouTube facade: thumbnail asli video + tombol play, klik -> iframe player
+   (playYouTube). Kotaknya sudah beraspek-rasio lewat inline style dari
+   generator (padding-bottom 56.25% / 177.78%). */
+.video-facade{transition:filter .2s ease;}
+.video-facade::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.16);transition:background .2s ease;}
+.video-facade:hover::after{background:rgba(0,0,0,.03);}
+.video-play{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;
+  width:66px;height:66px;border-radius:50%;background:rgba(20,20,22,.78);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 26px rgba(0,0,0,.45);transition:.2s ease;
+}
+.video-facade:hover .video-play{background:#cc0000;transform:translate(-50%,-50%) scale(1.07);}
+.video-play::before{
+  content:'';border-style:solid;border-width:12px 0 12px 20px;
+  border-color:transparent transparent transparent #fff;margin-left:5px;
+}
+
 /* affordance pulse — subtle recurring hint on click-to-reveal chevrons
    (accordion, sidebar section/bundle toggle, modal trigger) so users
    notice they're clickable without needing to hover first. Stops once
@@ -2110,6 +2128,23 @@ function applySlideAudio(item){
     const p = audio.play();
     if(p && p.catch) p.catch(()=>{ /* autoplay blocked — controls stay visible */ });
   }
+}
+
+/* Klik facade thumbnail -> ganti jadi iframe player yang langsung main.
+   Kotak baru mewarisi inline-style facade (padding-bottom ratio + posisi),
+   jadi rasio & ukuran persis sama, cuma background thumbnail-nya dibuang. */
+function playYouTube(el){
+  const id = el.getAttribute('data-ytid');
+  if(!id) return;
+  const box = document.createElement('div');
+  box.setAttribute('style', el.getAttribute('style') || '');
+  box.style.background = '#000';
+  box.style.cursor = 'default';
+  box.innerHTML = '<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1&rel=0" '
+    + 'style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" '
+    + 'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" '
+    + 'allowfullscreen></iframe>';
+  el.replaceWith(box);
 }
 
 function renderBottomNav(){

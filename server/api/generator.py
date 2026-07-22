@@ -202,17 +202,20 @@ def _caption_html(b):
 
 def _youtube_id(url):
     """Pull the 11-char video id out of any common YouTube URL shape
-    (watch?v=, youtu.be/, /embed/, /shorts/) or accept a bare id. Returns ''
-    if nothing plausible is found, so render_media can show a hint instead of
-    a broken iframe."""
+    (watch?v=, youtu.be/, /embed/, /shorts/, /live/) or accept a bare id.
+    Returns '' if nothing plausible is found, so render_media can show a hint
+    instead of a broken embed."""
     url = (url or '').strip()
     if not url:
         return ''
     patterns = [
-        r'(?:youtube\.com/watch\?[^ ]*?[?&]v=)([A-Za-z0-9_-]{11})',
-        r'(?:youtu\.be/)([A-Za-z0-9_-]{11})',
-        r'(?:youtube\.com/embed/)([A-Za-z0-9_-]{11})',
-        r'(?:youtube\.com/shorts/)([A-Za-z0-9_-]{11})',
+        # watch?v=ID and ...&v=ID — the `[?&]` matches the `?` right before v,
+        # which the previous (buggy) pattern required a param BEFORE v to work.
+        r'[?&]v=([A-Za-z0-9_-]{11})',
+        r'youtu\.be/([A-Za-z0-9_-]{11})',
+        r'youtube\.com/embed/([A-Za-z0-9_-]{11})',
+        r'youtube\.com/shorts/([A-Za-z0-9_-]{11})',
+        r'youtube\.com/live/([A-Za-z0-9_-]{11})',
     ]
     for pat in patterns:
         m = re.search(pat, url)
@@ -229,22 +232,36 @@ def render_media(b):
     caption = _caption_html(b)
 
     if source == 'youtube':
-        vid = _youtube_id(b.get('embedUrl', ''))
+        raw_url = b.get('embedUrl', '') or ''
+        vid = _youtube_id(raw_url)
         if not vid:
             return ('<div class="card"><p style="color:var(--text-faint);font-size:12.5px;">'
                     '⚠ URL YouTube belum valid — tempel link seperti '
                     'https://youtu.be/xxxx atau .../watch?v=xxxx.</p></div>')
-        # Responsive 16:9 (padding-bottom trick) so it scales with the column
-        # instead of a fixed 1280x720 that would overflow on small screens.
-        return (
-            '<div class="card">'
-            '<div style="position:relative;width:100%;padding-bottom:56.25%;height:0;border-radius:12px;overflow:hidden;">'
-            f'<iframe src="https://www.youtube.com/embed/{vid}" '
-            'style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" '
-            'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" '
-            'allowfullscreen loading="lazy"></iframe>'
-            f'</div>{caption}</div>'
+        # Facade: tampilkan thumbnail asli video di dalam kotak beraspek-rasio
+        # + tombol play; baru pas diklik iframe player-nya dimuat (playYouTube
+        # di shell). Lebih ringan + lebih rapi ketimbang langsung nanam iframe,
+        # dan yang keliatan di slide persis gambar depan videonya. Shorts =
+        # 9:16 (portrait, lebar dibatasi), selain itu 16:9.
+        is_short = '/shorts/' in raw_url
+        ratio = '177.78%' if is_short else '56.25%'  # tinggi:lebar (9:16 vs 16:9)
+        thumb = f'https://i.ytimg.com/vi/{vid}/hqdefault.jpg'
+        facade = (
+            f'<div class="video-facade" data-ytid="{vid}" role="button" tabindex="0" '
+            f'onclick="playYouTube(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();playYouTube(this);}}" '
+            f'aria-label="Putar video YouTube" '
+            f'style="position:relative;width:100%;padding-bottom:{ratio};height:0;'
+            f'border-radius:12px;overflow:hidden;cursor:pointer;'
+            f'background:#000 center/cover no-repeat url(&#39;{thumb}&#39;);">'
+            '<span class="video-play"></span>'
+            '</div>'
         )
+        # Shorts (9:16) dibatasi lebarnya lewat WRAPPER, bukan max-width di
+        # facade-nya sendiri - padding-bottom% dihitung dari lebar containing
+        # block, jadi kalau facade-nya yang di-cap, rasionya jadi meleset.
+        if is_short:
+            facade = f'<div style="max-width:320px;margin:0 auto;">{facade}</div>'
+        return f'<div class="card">{facade}{caption}</div>'
 
     if source == 'instagram':
         url = esc(b.get('embedUrl', '').strip())
@@ -253,13 +270,17 @@ def render_media(b):
                     '⚠ URL Instagram belum diisi.</p></div>')
         GEN_FLAGS['has_instagram'] = True
         # Official embed markup; embed.js (loaded by the shell) upgrades this
-        # blockquote into the responsive widget. Width auto (~326-540px), the
-        # widget sets its own height (portrait for Reels).
+        # blockquote into the responsive widget yang menampilkan thumbnail +
+        # caption postingan. Beda dari YouTube, thumbnail IG gak bisa diambil
+        # tanpa API token Meta, jadi widget resmi ini satu-satunya cara anon
+        # buat nampilin gambar depannya. Placeholder di dalam blockquote tampil
+        # sebelum widget selesai load (atau kalau jaringan blokir instagram.com).
         return (
             '<div class="card" style="display:flex;flex-direction:column;align-items:center;">'
             f'<blockquote class="instagram-media" data-instgrm-permalink="{url}" '
             'data-instgrm-version="14" '
-            'style="background:#FFF;border:0;margin:0 auto;max-width:540px;width:100%;padding:0;">'
+            'style="background:#FFF;border:0;margin:0 auto;max-width:540px;width:100%;min-height:120px;padding:0;">'
+            '<div style="padding:24px;text-align:center;color:#8891a8;font-size:12.5px;">Memuat postingan Instagram…</div>'
             '</blockquote>'
             f'{caption}</div>'
         )

@@ -283,7 +283,7 @@ function MediaFields({ block, onChange, inp }: { block: Block; onChange: (p: Par
         <input style={inp} placeholder="URL YouTube (mis. https://youtu.be/xxxx atau .../watch?v=xxxx)" value={block.embedUrl || ''} onChange={e => onChange({ embedUrl: e.target.value })} />
         <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
         <p className="hint" style={{ fontSize: 11, margin: '2px 0 0' }}>
-          Ditampilkan 16:9 responsif (mengikuti lebar kolom, setara 1280×720).
+          Tampil sebagai thumbnail asli video + tombol play (16:9, atau 9:16 untuk Shorts) — video baru main saat diklik. Boleh link watch?v=, youtu.be/, atau /shorts/.
         </p>
       </>}
 
