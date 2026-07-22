@@ -310,21 +310,34 @@ def render_knowledge(b):
 def kc_items_for_slide(slide):
     """Collect all knowledge-check blocks on a slide into the shape the shell's
     popup needs. q/opts are HTML-escaped and feedback nl2br'd here so the shell
-    can inject them straight into innerHTML without re-escaping."""
+    can inject them straight into innerHTML without re-escaping.
+
+    Two feedback modes per question (authored via `feedbackMode`, defaults to
+    'single'): 'single' keeps the one shared `feedback` text shown regardless
+    of which option was picked; 'perOption' instead carries `optFeedback` -
+    one entry per option, index-matched to `opts`, each optional. The shell
+    picks whichever mode applies at answer time (kcApply)."""
     out = []
     for b in slide.get('blocks', []):
         if b.get('type') != 'knowledge':
             continue
-        items = [
-            {
+        items = []
+        for it in (b.get('kcItems') or []):
+            opts = it.get('opts') or []
+            if not opts:
+                continue  # skip malformed questions with no options
+            mode = it.get('feedbackMode') or 'single'
+            opt_feedback_raw = it.get('optFeedback') or []
+            item = {
                 'q': esc(it.get('q', '')),
-                'opts': [esc(o) for o in (it.get('opts') or [])],
+                'opts': [esc(o) for o in opts],
                 'correct': it.get('correct', 0),
+                'feedbackMode': mode,
                 'feedback': nl2br(it.get('feedback', '')),
+                # Index-matched to opts; missing/short entries just become ''.
+                'optFeedback': [nl2br(opt_feedback_raw[i]) if i < len(opt_feedback_raw) else '' for i in range(len(opts))],
             }
-            for it in (b.get('kcItems') or [])
-            if (it.get('opts') or [])  # skip malformed questions with no options
-        ]
+            items.append(item)
         if items:
             out.append({'block': b.get('id', 'kc'), 'items': items})
     return out

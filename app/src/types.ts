@@ -6,14 +6,22 @@ export type BlockType =
   | 'media' | 'knowledge';
 
 // One question inside a Knowledge Check block. Same shape idea as
-// QuizQuestion but with a single `feedback` shown after answering (whether
-// right or wrong) and no requirement of exactly 4 options — 2 options
-// (benar/salah) is valid.
+// QuizQuestion but no requirement of exactly 4 options — 2 options
+// (benar/salah) is valid. Two feedback modes, chosen per question by
+// whoever authors it:
+// - 'single' (default, feedbackMode unset): one shared `feedback` text shown
+//   after answering, same whether the pick was right or wrong.
+// - 'perOption': `optFeedback[i]` (parallel to opts[i]) shown instead, keyed
+//   to whichever option the learner actually picked — so a wrong pick can
+//   explain specifically why THAT option is wrong. Each entry is optional;
+//   an unfilled one just shows the ✓/✕ verdict with no extra text.
 export interface KcQuestion {
   q: string;
   opts: string[];
   correct: number;
   feedback?: string;
+  feedbackMode?: 'single' | 'perOption';
+  optFeedback?: string[];
 }
 
 export interface Block {

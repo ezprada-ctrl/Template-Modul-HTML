@@ -2460,7 +2460,14 @@ function kcApply(blockId, qi){
     const label = benar
       ? '<span class="kc-verdict ok">✓ Benar</span>'
       : '<span class="kc-verdict no">✕ Belum tepat</span>';
-    fb.innerHTML = label + (data.feedback ? '<span class="kc-fb-text">'+data.feedback+'</span>' : '');
+    // 'perOption' (dipilih per soal saat authoring): feedback keyed ke opsi
+    // yang BENERAN DIKLIK peserta (bisa beda-beda tiap opsi salah), bukan cuma
+    // "benar/salah" generik. 'single' (default): satu teks sama aja siapa pun
+    // yang diklik - perilaku lama. Keduanya optional; kosong = cuma label ✓/✕.
+    const text = data.feedbackMode === 'perOption'
+      ? ((data.optFeedback || [])[answered] || '')
+      : (data.feedback || '');
+    fb.innerHTML = label + (text ? '<span class="kc-fb-text">'+text+'</span>' : '');
     fb.style.display = 'block';
   }
 }

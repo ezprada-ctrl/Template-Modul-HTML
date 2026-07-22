@@ -337,24 +337,41 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
         Peserta wajib jawab semua soal dulu (benar atau salah, dua-duanya boleh) baru boleh lanjut — sekali dijawab, popup-nya tidak muncul lagi
         kalau peserta balik ke slide ini. Boleh 1 soal, boleh benar-salah. Setiap jawaban direkam ke Command Center (kolom "Knowledge Check") dan diberi feedback.
       </p>
-      {items.map((it, qi) => (
+      {items.map((it, qi) => {
+        const mode = it.feedbackMode || 'single';
+        return (
         <div key={qi} style={{ border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 8, marginBottom: 6 }}>
           <input style={inp} placeholder={`Pertanyaan ${qi + 1}`} value={it.q} onChange={e => patchItem(qi, { q: e.target.value })} />
           {(it.opts || []).map((opt, oi) => (
-            <div key={oi} style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 3 }}>
-              <label title="Tandai sebagai jawaban benar" style={{ display: 'flex', alignItems: 'center' }}>
-                <input type="radio" name={`kc-${block.id}-${qi}`} checked={it.correct === oi} onChange={() => patchItem(qi, { correct: oi })} />
-              </label>
-              <input style={{ ...inp, marginBottom: 0 }} placeholder={`Pilihan ${oi + 1}`} value={opt} onChange={e => {
-                const opts = [...(it.opts || [])]; opts[oi] = e.target.value; patchItem(qi, { opts });
-              }} />
-              {(it.opts || []).length > 2 && (
-                <button title="Hapus pilihan" onClick={() => {
-                  const opts = (it.opts || []).filter((_, x) => x !== oi);
-                  // Keep `correct` pointing at a valid option after removal.
-                  const correct = it.correct >= opts.length ? opts.length - 1 : (it.correct > oi ? it.correct - 1 : it.correct);
-                  patchItem(qi, { opts, correct });
-                }}>×</button>
+            <div key={oi} style={{ marginBottom: 6 }}>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <label title="Tandai sebagai jawaban benar" style={{ display: 'flex', alignItems: 'center' }}>
+                  <input type="radio" name={`kc-${block.id}-${qi}`} checked={it.correct === oi} onChange={() => patchItem(qi, { correct: oi })} />
+                </label>
+                <input style={{ ...inp, marginBottom: 0 }} placeholder={`Pilihan ${oi + 1}`} value={opt} onChange={e => {
+                  const opts = [...(it.opts || [])]; opts[oi] = e.target.value; patchItem(qi, { opts });
+                }} />
+                {(it.opts || []).length > 2 && (
+                  <button title="Hapus pilihan" onClick={() => {
+                    const opts = (it.opts || []).filter((_, x) => x !== oi);
+                    const optFeedback = (it.optFeedback || []).filter((_, x) => x !== oi);
+                    // Keep `correct` pointing at a valid option after removal.
+                    const correct = it.correct >= opts.length ? opts.length - 1 : (it.correct > oi ? it.correct - 1 : it.correct);
+                    patchItem(qi, { opts, optFeedback, correct });
+                  }}>×</button>
+                )}
+              </div>
+              {mode === 'perOption' && (
+                <input
+                  style={{ ...inp, marginTop: 3, marginLeft: 24, marginBottom: 0 }}
+                  placeholder={`Feedback untuk pilihan ${oi + 1} (opsional)`}
+                  value={(it.optFeedback || [])[oi] || ''}
+                  onChange={e => {
+                    const optFeedback = [...(it.optFeedback || [])];
+                    optFeedback[oi] = e.target.value;
+                    patchItem(qi, { optFeedback });
+                  }}
+                />
               )}
             </div>
           ))}
@@ -362,12 +379,24 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
             <button onClick={() => patchItem(qi, { opts: [...(it.opts || []), ''] })}>+ pilihan</button>
             <span className="hint" style={{ fontSize: 11, alignSelf: 'center' }}>● = jawaban benar</span>
           </div>
-          <textarea style={ta} placeholder="Feedback (muncul setelah dijawab, baik benar maupun salah)" value={it.feedback || ''} onChange={e => patchItem(qi, { feedback: e.target.value })} />
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '6px 0 3px' }}>Model feedback</label>
+          <select style={inp} value={mode} onChange={e => patchItem(qi, { feedbackMode: e.target.value as 'single' | 'perOption' })}>
+            <option value="single">Satu feedback untuk semua jawaban</option>
+            <option value="perOption">Feedback per pilihan jawaban (opsional per pilihan)</option>
+          </select>
+          {mode === 'single' ? (
+            <textarea style={ta} placeholder="Feedback (muncul setelah dijawab, baik benar maupun salah)" value={it.feedback || ''} onChange={e => patchItem(qi, { feedback: e.target.value })} />
+          ) : (
+            <p className="hint" style={{ fontSize: 11, margin: '0 0 4px' }}>
+              Isi feedback langsung di bawah tiap pilihan di atas — boleh sebagian pilihan aja yang diisi, sisanya cukup tampil ✓/✕ tanpa penjelasan.
+            </p>
+          )}
           {items.length > 1 && (
             <button className="btn-danger btn-sm" style={{ marginTop: 4 }} onClick={() => onChange({ kcItems: items.filter((_, x) => x !== qi) })}>Hapus soal</button>
           )}
         </div>
-      ))}
+        );
+      })}
       <button onClick={() => onChange({ kcItems: [...items, { q: '', opts: ['', ''], correct: 0, feedback: '' }] })}>+ soal</button>
     </>
   );
