@@ -333,8 +333,9 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
   return (
     <>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-        Cek pemahaman ringan — <b>tidak mengunci</b> slide/section berikutnya. Boleh 1 soal, boleh benar-salah.
-        Setiap jawaban (benar/salah) direkam ke Command Center (kolom "Knowledge Check") dan diberi feedback.
+        Cek pemahaman ringan — muncul sebagai <b>popup begitu peserta mau pindah dari slide ini</b> (klik Selanjutnya/Sebelumnya/menu sidebar).
+        Peserta wajib jawab semua soal dulu (benar atau salah, dua-duanya boleh) baru boleh lanjut — sekali dijawab, popup-nya tidak muncul lagi
+        kalau peserta balik ke slide ini. Boleh 1 soal, boleh benar-salah. Setiap jawaban direkam ke Command Center (kolom "Knowledge Check") dan diberi feedback.
       </p>
       {items.map((it, qi) => (
         <div key={qi} style={{ border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 8, marginBottom: 6 }}>

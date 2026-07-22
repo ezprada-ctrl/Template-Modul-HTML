@@ -333,7 +333,7 @@ export default function BlockPreviewCard({ type }: { type: BlockType }) {
             <p className="kc-q">Lorem ipsum dolor sit amet?</p>
             <div className="kc-opt"><span className="mk" />Pilihan A</div>
             <div className="kc-opt correct"><span className="mk">✓</span>Pilihan B (benar)</div>
-            <p className="kc-fb">Feedback muncul setelah dijawab — benar maupun salah. Tidak mengunci slide berikutnya.</p>
+            <p className="kc-fb">Muncul sebagai popup pas peserta mau pindah slide — wajib dijawab (benar/salah bebas) sebelum lanjut, sekali per slide.</p>
           </div>
         </div>
       );

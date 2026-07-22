@@ -143,7 +143,6 @@ def render_dtable(b):
 
 
 FLOW_DATA = {}  # collected across the whole generation pass, flushed after SLIDES map
-KC_DATA = {}    # per knowledge-check block: [{correct, feedback}], flushed like FLOW_DATA
 
 # Flags collected while rendering blocks in one generation pass. `has_instagram`
 # drives whether the shell loads Instagram's embed.js (a <script> the block
@@ -280,37 +279,34 @@ def render_media(b):
 
 
 def render_knowledge(b):
-    """Inline knowledge-check: quiz-like but NON-gating. Lives inside a normal
-    slide's block list, never as a NAV quiz item, so it never touches
-    isQuizAccessible/isSectionUnlocked. Each option is a button wired to the
-    shell's global kcAnswer(); state + feedback + activity event are handled
-    client-side. Options escaped; correct index + feedback carried in a JS
-    data map so the shell can grade without re-parsing the DOM."""
-    block_id = b.get('id', 'kc')
-    items = b.get('kcItems', []) or []
-    # Data the shell needs to grade/annotate: per question, the correct index
-    # and feedback text. Stored on window._kcData[blockId] via the flush in
-    # generate_html (same mechanism as FLOW_DATA).
-    KC_DATA[block_id] = [
-        {'correct': it.get('correct', 0), 'feedback': nl2br(it.get('feedback', ''))}
-        for it in items
-    ]
-    out = ['<div class="kc-block" data-kc="' + esc(block_id) + '">']
-    for qi, it in enumerate(items):
-        q = esc(it.get('q', ''))
-        out.append(f'<div class="kc-item" id="{esc(block_id)}-q{qi}">')
-        out.append(f'<div class="kc-q">{q}</div>')
-        out.append('<div class="kc-opts">')
-        for oi, opt in enumerate(it.get('opts', []) or []):
-            out.append(
-                f'<button type="button" class="kc-opt" data-oi="{oi}" '
-                f'onclick="kcAnswer(\'{esc(block_id)}\',{qi},{oi})">{esc(opt)}</button>'
-            )
-        out.append('</div>')
-        out.append(f'<div class="kc-fb" id="{esc(block_id)}-fb{qi}" style="display:none;"></div>')
-        out.append('</div>')
-    out.append('</div>')
-    return ''.join(out)
+    """Knowledge-check renders NOTHING inline. It surfaces as a popup when the
+    learner tries to LEAVE the slide it's on (see openKcPopup/goTo in the
+    shell). The question data is baked per-slide into SLIDE_KC (built in
+    generate_html), so nothing needs to be in the slide body here."""
+    return ''
+
+
+def kc_items_for_slide(slide):
+    """Collect all knowledge-check blocks on a slide into the shape the shell's
+    popup needs. q/opts are HTML-escaped and feedback nl2br'd here so the shell
+    can inject them straight into innerHTML without re-escaping."""
+    out = []
+    for b in slide.get('blocks', []):
+        if b.get('type') != 'knowledge':
+            continue
+        items = [
+            {
+                'q': esc(it.get('q', '')),
+                'opts': [esc(o) for o in (it.get('opts') or [])],
+                'correct': it.get('correct', 0),
+                'feedback': nl2br(it.get('feedback', '')),
+            }
+            for it in (b.get('kcItems') or [])
+            if (it.get('opts') or [])  # skip malformed questions with no options
+        ]
+        if items:
+            out.append({'block': b.get('id', 'kc'), 'items': items})
+    return out
 
 
 def render_modal(b):
@@ -423,7 +419,6 @@ def build_nav(module):
 
 def generate_html(module):
     FLOW_DATA.clear()
-    KC_DATA.clear()
     GEN_FLAGS['has_instagram'] = False
 
     out = SHELL
@@ -469,13 +464,7 @@ def generate_html(module):
     flow_flush = ''.join(
         f"window._flowData['{cid}'] = {js_str(steps)};\n" for cid, steps in FLOW_DATA.items()
     )
-    # Knowledge-check grading data, flushed the same way as flow data (the
-    # blocks are injected via innerHTML, so their handlers read from this
-    # global map instead of re-parsing the DOM).
-    kc_flush = ''.join(
-        f"window._kcData['{bid}'] = {js_str(data)};\n" for bid, data in KC_DATA.items()
-    )
-    slide_block = '\n'.join(consts) + '\n' + slides_map + '\n' + flow_flush + kc_flush
+    slide_block = '\n'.join(consts) + '\n' + slides_map + '\n' + flow_flush
     out = out.replace('__SLIDE_CONSTS_JS__', slide_block)
 
     # Per-slide voiceover audio: {slideNumber: {src, mode}}. Only slides that
@@ -485,6 +474,18 @@ def generate_html(module):
         for s in slides if s.get('audioSrc')
     }
     out = out.replace('__SLIDE_AUDIO_JS__', js_str(slide_audio))
+
+    # Knowledge-check questions, per slide: {slideNumber: [{block, items:[...]}]}.
+    # Renders as NOTHING in the slide body (render_knowledge returns '') -
+    # the shell shows these as a popup when the learner tries to LEAVE the
+    # slide, not inline. Only slides that actually carry a knowledge-check
+    # block are included.
+    slide_kc = {}
+    for s in slides:
+        kc = kc_items_for_slide(s)
+        if kc:
+            slide_kc[str(s['number'])] = kc
+    out = out.replace('__SLIDE_KC_JS__', js_str(slide_kc))
 
     # Whether any block is an Instagram embed → shell conditionally loads
     # embed.js. Set during the render_slide_html loop above (render_media flips
