@@ -50,6 +50,15 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
         devMode = true;
         const idx = NAV.findIndex(it => ${findExpr});
         if (idx >= 0) goTo(idx);
+        // Dev Mode was only needed to jump straight here past section/quiz
+        // gates that don't matter for "how does this one slide look" - left
+        // on, it also silently skips every OTHER gate (Knowledge Check's
+        // leave-slide popup, quiz lock, reading-speed nag), making them look
+        // broken when someone clicks Next/Prev inside this preview to test
+        // them. toggleDevMode() (not a raw "devMode = false") so the sidebar
+        // lock icons and Dev Mode button state stay in sync with the real
+        // (now non-dev) gating - not just the variable.
+        if (devMode) toggleDevMode();
       `);
     } catch {
       // iframe not ready yet, ignore
