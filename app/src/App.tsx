@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ModuleData, DraftSlide } from './types';
 import { emptyModule, normalizeModule, buildProjectSlugPrefix } from './types';
-import { loadDraft, saveDraft } from './api';
+import { listDrafts, loadDraft, saveDraft } from './api';
 import SlideBank from './components/SlideBank';
 import Canvas from './components/Canvas';
 import CoverForm from './components/CoverForm';
@@ -94,6 +94,15 @@ function App() {
   const { module, setModule, undo, redo, resetHistory, canUndo, canRedo } = useModuleHistory(emptyModule());
   const [bank, setBank] = useState<DraftSlide[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  // Separate from `hydrated`: whether the user has actually settled on a
+  // project to work on (named-new, skip-anonymous-new, or opened an existing
+  // draft). Autosave is gated on this too — without it, the very first
+  // `emptyModule()` this component boots with (before the user has even
+  // looked at the "Project baru" modal) gets silently written to Supabase as
+  // an orphaned blank draft ~1.2s after mount, on EVERY first-time visit,
+  // regardless of what the user ends up choosing. That's what was flooding
+  // "Muat daftar draft" with junk.
+  const [projectReady, setProjectReady] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [theme, setTheme] = useState<'light' | 'dark'>(
@@ -114,6 +123,9 @@ function App() {
   useEffect(() => {
     const lastSlug = localStorage.getItem(LAST_SLUG_KEY);
     if (!lastSlug) {
+      // Deliberately does NOT set projectReady here — the placeholder
+      // emptyModule() this component booted with must not get autosaved
+      // until the user actually picks something in the modal below.
       setShowNewProjectModal(true);
       setHydrated(true);
       return;
@@ -121,12 +133,28 @@ function App() {
     loadDraft(lastSlug)
       .then(data => resetHistory(normalizeModule(data)))
       .catch(() => { /* no matching draft on server, start fresh */ })
-      .finally(() => setHydrated(true));
+      .finally(() => { setHydrated(true); setProjectReady(true); });
   }, [resetHistory]);
 
   function handleCreateProject(nama: string, namaProject: string) {
     const prefix = buildProjectSlugPrefix(nama, namaProject);
     resetHistory(emptyModule(prefix));
+    setProjectReady(true);
+    setShowNewProjectModal(false);
+  }
+
+  function handleSkipNewProject() {
+    // "Lewati" = deliberately start blank & anonymous — that's a real choice
+    // (unlike just having the modal open with nothing clicked yet), so it's
+    // fine for the current blank module to get autosaved from here on.
+    setProjectReady(true);
+    setShowNewProjectModal(false);
+  }
+
+  function handleOpenExistingDraft(slug: string, data: ModuleData) {
+    resetHistory(normalizeModule(data));
+    localStorage.setItem(LAST_SLUG_KEY, slug);
+    setProjectReady(true);
     setShowNewProjectModal(false);
   }
 
@@ -171,9 +199,10 @@ function App() {
   }, [undo, redo]);
 
   // Debounced autosave: any change to the module gets saved to the server
-  // draft (Supabase) ~1.2s after the user stops editing.
+  // draft (Supabase) ~1.2s after the user stops editing. Gated on
+  // projectReady too (not just hydrated) — see its declaration above for why.
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !projectReady) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     setAutosaveStatus('saving');
     saveTimer.current = setTimeout(async () => {
@@ -186,7 +215,7 @@ function App() {
       }
     }, 1200);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [module, hydrated]);
+  }, [module, hydrated, projectReady]);
 
   return (
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: '28px 28px 80px' }}>
@@ -212,7 +241,8 @@ function App() {
       {showNewProjectModal && (
         <NewProjectModal
           onCreate={handleCreateProject}
-          onSkip={() => setShowNewProjectModal(false)}
+          onSkip={handleSkipNewProject}
+          onOpenExisting={handleOpenExistingDraft}
         />
       )}
 
@@ -336,9 +366,43 @@ function ThemeToggle({ theme, onToggle }: { theme: 'light' | 'dark'; onToggle: (
   );
 }
 
-function NewProjectModal({ onCreate, onSkip }: { onCreate: (nama: string, namaProject: string) => void; onSkip: () => void }) {
+function NewProjectModal({ onCreate, onSkip, onOpenExisting }: {
+  onCreate: (nama: string, namaProject: string) => void;
+  onSkip: () => void;
+  onOpenExisting: (slug: string, data: ModuleData) => void;
+}) {
   const [nama, setNama] = useState('');
   const [namaProject, setNamaProject] = useState('');
+  // Toggles this modal into "pick an existing draft" mode. Kept inline
+  // (rather than sending the user off to the Preview tab first) so nothing
+  // ever gets autosaved in between - the placeholder blank module this app
+  // boots with only becomes "real" once one of onCreate/onSkip/onOpenExisting
+  // actually fires, never just from opening this panel to look around.
+  const [mode, setMode] = useState<'create' | 'existing'>('create');
+  const [drafts, setDrafts] = useState<string[] | null>(null);
+  const [draftsError, setDraftsError] = useState('');
+  const [loadingSlug, setLoadingSlug] = useState('');
+
+  async function openExistingMode() {
+    setMode('existing');
+    if (drafts !== null) return; // already fetched once
+    try {
+      setDrafts(await listDrafts());
+    } catch (e: any) {
+      setDraftsError(e.message || 'Gagal mengambil daftar draft.');
+    }
+  }
+
+  async function pickDraft(slug: string) {
+    setLoadingSlug(slug);
+    try {
+      const data = await loadDraft(slug);
+      onOpenExisting(slug, normalizeModule(data));
+    } catch (e: any) {
+      setDraftsError(e.message || `Gagal memuat draft "${slug}".`);
+      setLoadingSlug('');
+    }
+  }
 
   return (
     <div style={{
@@ -346,30 +410,63 @@ function NewProjectModal({ onCreate, onSkip }: { onCreate: (nama: string, namaPr
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20,
     }}>
       <div className="panel" style={{ width: 380, padding: 24, boxShadow: 'var(--shadow-lg)' }}>
-        <h3 style={{ marginTop: 0, marginBottom: 6 }}>Project baru</h3>
-        <p className="hint" style={{ marginTop: 0, marginBottom: 18 }}>
-          Isi nama kamu &amp; nama project biar gampang dikenali di daftar draft — walau localStorage kehapus, kamu masih ingat slug-nya.
-        </p>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-dim)', marginBottom: 5 }}>Nama kamu</label>
-        <input
-          value={nama}
-          onChange={e => setNama(e.target.value)}
-          placeholder="mis. Budi Santoso"
-          style={{ width: '100%', marginBottom: 14 }}
-        />
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-dim)', marginBottom: 5 }}>Nama project (opsional)</label>
-        <input
-          value={namaProject}
-          onChange={e => setNamaProject(e.target.value)}
-          placeholder="mis. Modul Etika Profesi"
-          style={{ width: '100%', marginBottom: 20 }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <button className="btn-ghost btn-sm" onClick={onSkip}>Lewati</button>
-          <button className="btn-primary" onClick={() => onCreate(nama, namaProject)} disabled={!nama.trim()}>
-            Mulai
-          </button>
-        </div>
+        {mode === 'create' ? (
+          <>
+            <h3 style={{ marginTop: 0, marginBottom: 6 }}>Project baru</h3>
+            <p className="hint" style={{ marginTop: 0, marginBottom: 18 }}>
+              Isi nama kamu &amp; nama project biar gampang dikenali di daftar draft — walau localStorage kehapus, kamu masih ingat slug-nya.
+              Sudah punya project? <button className="btn-ghost btn-sm" style={{ padding: '1px 6px' }} onClick={openExistingMode}>Buka draft yang sudah ada</button>
+            </p>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-dim)', marginBottom: 5 }}>Nama kamu</label>
+            <input
+              value={nama}
+              onChange={e => setNama(e.target.value)}
+              placeholder="mis. Budi Santoso"
+              style={{ width: '100%', marginBottom: 14 }}
+            />
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-dim)', marginBottom: 5 }}>Nama project (opsional)</label>
+            <input
+              value={namaProject}
+              onChange={e => setNamaProject(e.target.value)}
+              placeholder="mis. Modul Etika Profesi"
+              style={{ width: '100%', marginBottom: 20 }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+              <button className="btn-ghost btn-sm" onClick={onSkip}>Lewati</button>
+              <button className="btn-primary" onClick={() => onCreate(nama, namaProject)} disabled={!nama.trim()}>
+                Mulai
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h3 style={{ marginTop: 0, marginBottom: 6 }}>Buka draft yang sudah ada</h3>
+            <p className="hint" style={{ marginTop: 0, marginBottom: 14 }}>
+              Pilih project yang mau dilanjutkan.
+            </p>
+            {draftsError && <p style={{ color: 'var(--danger)', fontSize: 12.5, marginBottom: 10 }}>{draftsError}</p>}
+            {drafts === null && !draftsError && <p className="hint">Memuat daftar draft…</p>}
+            {drafts !== null && drafts.length === 0 && <p className="hint">Belum ada draft tersimpan.</p>}
+            {drafts !== null && drafts.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto', marginBottom: 16 }}>
+                {drafts.map(slug => (
+                  <button
+                    key={slug}
+                    className="btn-sm"
+                    style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                    disabled={loadingSlug !== ''}
+                    onClick={() => pickDraft(slug)}
+                  >
+                    {loadingSlug === slug ? 'Memuat…' : slug}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+              <button className="btn-ghost btn-sm" onClick={() => setMode('create')} disabled={loadingSlug !== ''}>← Kembali</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
