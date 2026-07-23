@@ -687,12 +687,12 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .kc-fb{
   margin-top:10px;padding:11px 14px;background:var(--surface-2);
   border-radius:var(--radius-md);font-size:12.5px;line-height:1.55;color:var(--text-dim);
-  display:flex;flex-direction:column;gap:5px;
 }
 .kc-verdict{font-weight:800;font-size:12px;letter-spacing:.02em;}
 .kc-verdict.ok{color:var(--green);}
 .kc-verdict.no{color:var(--rose);}
 .kc-fb-text b{color:var(--accent-2);}
+.kc-fb-retry{display:block;margin-top:4px;font-size:11px;font-style:italic;color:var(--text-faint);}
 
 /* Per-slide voiceover player, injected above slide content by applySlideAudio */
 .slide-audio{margin:0 0 18px;}
@@ -2480,10 +2480,21 @@ function kcShowAttemptFeedback(blockId, qi, oi, data){
   const text = (data.optFeedback || [])[oi] || '';
   const fb = document.getElementById(blockId+'-fb'+qi);
   if(fb){
-    fb.innerHTML = '<span class="kc-verdict no">✕ Belum tepat, coba opsi lain</span>'
-      + (text ? '<span class="kc-fb-text">'+text+'</span>' : '');
+    fb.innerHTML = kcVerdictHtml(false, text) + ' <span class="kc-fb-retry">Coba opsi lain.</span>';
     fb.style.display = 'block';
   }
+}
+/* Satu format dipakai di mana pun verdict+feedback ditampilkan: "Benar -
+   <feedback>" / "Salah - <feedback>", atau cuma "Benar."/"Salah." kalau
+   feedback-nya dikosongin. Dulu verdict & feedback dua <span> terpisah
+   tanpa spasi/pemisah di antaranya (nempel jadi satu kata pas dirender) dan
+   kata untuk salah beda panjang dari yang benar ("Belum tepat" vs "Benar") -
+   disamain di sini, satu tempat, biar semua pemanggil otomatis konsisten. */
+function kcVerdictHtml(benar, text){
+  const label = benar ? '✓ Benar' : '✕ Salah';
+  const cls = benar ? 'ok' : 'no';
+  if(!text) return `<span class="kc-verdict ${cls}">${label}.</span>`;
+  return `<span class="kc-verdict ${cls}">${label}</span> - <span class="kc-fb-text">${text}</span>`;
 }
 /* Pas popup dibuka ulang (reload di tengah soal yang belum kejawab benar),
    pasang lagi tanda "salah, udah dicoba" di semua opsi yang pernah diklik -
@@ -2520,9 +2531,6 @@ function kcApply(blockId, qi){
   const benar = (answered===data.correct);
   const fb = document.getElementById(blockId+'-fb'+qi);
   if(fb){
-    const label = benar
-      ? '<span class="kc-verdict ok">✓ Benar</span>'
-      : '<span class="kc-verdict no">✕ Belum tepat</span>';
     // 'perOption' (dipilih per soal saat authoring): feedback keyed ke opsi
     // yang BENERAN DIKLIK peserta (bisa beda-beda tiap opsi salah), bukan cuma
     // "benar/salah" generik. 'single' (default): satu teks sama aja siapa pun
@@ -2530,7 +2538,7 @@ function kcApply(blockId, qi){
     const text = data.feedbackMode === 'perOption'
       ? ((data.optFeedback || [])[answered] || '')
       : (data.feedback || '');
-    fb.innerHTML = label + (text ? '<span class="kc-fb-text">'+text+'</span>' : '');
+    fb.innerHTML = kcVerdictHtml(benar, text);
     fb.style.display = 'block';
   }
 }
