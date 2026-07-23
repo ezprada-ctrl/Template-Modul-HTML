@@ -182,8 +182,24 @@ def render_grid(b):
 
 
 def render_image(b):
-    caption = f'<p style="font-size:12.5px;color:var(--text-faint);margin-top:8px;">{esc(b.get("caption",""))}</p>' if b.get('caption') else ''
-    return f'<div class="card"><img src="{b.get("src","")}" style="width:100%;border-radius:12px;display:block;" alt="">{caption}</div>'
+    # Semua field layout opsional. Kalau gak diisi -> boxed, 100%, tengah,
+    # gak float = PERSIS output lama, jadi draft/modul lama render sama.
+    clean = bool(b.get('imgClean'))
+    align = b.get('imgAlign') if b.get('imgAlign') in ('left', 'center', 'right') else 'center'
+    float_side = b.get('imgFloat') if b.get('imgFloat') in ('left', 'right') else 'none'
+    try:
+        w = int(b.get('imgWidth')) if b.get('imgWidth') is not None else 100
+    except (TypeError, ValueError):
+        w = 100
+    w = max(10, min(100, w))
+
+    caption = (f'<p class="img-cap">{esc(b.get("caption",""))}</p>'
+               if b.get('caption') else '')
+    inner_cls = 'img-inner img-clean' if clean else 'img-inner img-card'
+    box = f'<div class="{inner_cls}"><img src="{b.get("src","")}" alt="">{caption}</div>'
+
+    wrap = 'img-float-' + float_side if float_side != 'none' else 'img-align-' + align
+    return f'<div class="img-blk {wrap}" style="--img-w:{w}%">{box}</div>'
 
 
 def render_badge_ref(b):
@@ -390,7 +406,10 @@ def render_slide_html(slide):
     title = f'<h1 class="slide-title">{esc(slide.get("title",""))}</h1>'
     sub = f'<p class="slide-sub">{slide.get("subtitle","")}</p>' if slide.get('subtitle') else ''
     body = ''.join(render_block(b) for b in slide.get('blocks', []))
-    return kicker + title + sub + body
+    # Nutup float dari blok gambar "dampingi teks" biar tingginya kekurung di
+    # dalam slide ini (gak bocor ke bawah/ke slide lain). Kosong + zero-height
+    # kalau gak ada float sama sekali - aman selalu ditaruh.
+    return kicker + title + sub + body + '<div class="img-clear"></div>'
 
 
 # Kecepatan baca diam rata-rata orang dewasa: 238 kata/menit (Brysbaert 2019,

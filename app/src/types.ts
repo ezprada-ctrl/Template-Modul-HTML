@@ -63,6 +63,12 @@ export interface Block {
   // image
   src?: string;
   caption?: string;
+  // Layout controls (all optional; unset = current behaviour: boxed, 100%,
+  // centered, no float — so old drafts render exactly as before).
+  imgClean?: boolean;                        // true = tanpa kotak/bg/border/bayangan (mode karakter); auto-nyala kalau PNG transparan
+  imgWidth?: number;                         // lebar % (10–100), default 100
+  imgAlign?: 'left' | 'center' | 'right';    // posisi horizontal saat blok berdiri sendiri (default center)
+  imgFloat?: 'none' | 'left' | 'right';      // 'left'/'right' = dampingi teks (karakter di sisi itu, blok setelahnya mengalir di sebelahnya)
   // badgeref
   refText?: string;
   // html

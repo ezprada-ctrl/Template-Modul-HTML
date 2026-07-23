@@ -210,10 +210,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
         <button onClick={() => onChange({ steps: [...(block.steps || []), { n: (block.steps?.length || 0) + 1, title: '', detail: '' }] })}>+ langkah</button>
       </>;
     case 'image':
-      return <>
-        <ImageUploadField value={block.src || ''} onChange={src => onChange({ src })} />
-        <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
-      </>;
+      return <ImageFields block={block} onChange={onChange} inp={inp} />;
     case 'badgeref':
       return <input style={inp} placeholder="Teks badge (mis. Pasal 4 · PMK 15/2025)" value={block.refText || ''} onChange={e => onChange({ refText: e.target.value })} />;
     case 'html':
@@ -237,7 +234,41 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
   }
 }
 
-function ImageUploadField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+// Deteksi apakah PNG punya area transparan cukup luas (bukan cuma anti-alias
+// tepi) - dipakai buat auto-nyalain mode "bersih/karakter". Gambar diperkecil
+// ke <=120px dulu biar scan-nya ringan; JPEG/gambar non-PNG langsung false
+// (gak mungkin transparan). Kalau canvas gagal (mis. ketaint), aman -> false.
+async function detectPngTransparency(file: File): Promise<boolean> {
+  if (file.type !== 'image/png') return false;
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, 120 / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale));
+        const h = Math.max(1, Math.round(img.naturalHeight * scale));
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d', { willReadFrequently: true });
+        if (!ctx) { resolve(false); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        let transparent = 0;
+        for (let i = 3; i < data.length; i += 4) if (data[i] < 240) transparent++;
+        resolve(transparent > w * h * 0.03);
+      } catch {
+        resolve(false);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(false); };
+    img.src = url;
+  });
+}
+
+function ImageUploadField({ value, onChange, onDetect }: { value: string; onChange: (v: string) => void; onDetect?: (isTransparent: boolean) => void }) {
   const [busy, setBusy] = useState(false);
   return (
     <div style={{ marginBottom: 6 }}>
@@ -249,12 +280,71 @@ function ImageUploadField({ value, onChange }: { value: string; onChange: (v: st
         try {
           const url = await uploadImageToStorage(file);
           onChange(url);
+          if (onDetect) onDetect(await detectPngTransparency(file));
         } finally {
           setBusy(false);
         }
       }} />
       {busy && <span style={{ fontSize: 11, color: 'var(--text-faint)', marginLeft: 6 }}>mengunggah…</span>}
     </div>
+  );
+}
+
+function ImageFields({ block, onChange, inp }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle }) {
+  const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
+  const clean = !!block.imgClean;
+  const width = block.imgWidth ?? 100;
+  const floatSide = block.imgFloat && block.imgFloat !== 'none' ? block.imgFloat : 'none';
+  const align = block.imgAlign || 'center';
+  const layout = floatSide === 'none' ? 'block' : `float-${floatSide}`;
+  return (
+    <>
+      <ImageUploadField
+        value={block.src || ''}
+        onChange={src => onChange({ src })}
+        // PNG transparan -> auto mode bersih. Sengaja cuma nge-SET true (gak
+        // nge-unset): kalau tim override manual, upload ulang gambar opaque
+        // gak nabrak pilihannya.
+        onDetect={t => { if (t) onChange({ imgClean: true }); }}
+      />
+      <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
+
+      <label style={lbl}>Tampilan</label>
+      <select style={inp} value={clean ? 'clean' : 'card'} onChange={e => onChange({ imgClean: e.target.value === 'clean' })}>
+        <option value="card">Dengan kotak (gambar biasa)</option>
+        <option value="clean">Bersih / karakter (tanpa kotak) — buat PNG transparan</option>
+      </select>
+
+      <label style={lbl}>Ukuran ({width}%)</label>
+      <input type="range" min={10} max={100} step={5} value={width}
+        onChange={e => onChange({ imgWidth: parseInt(e.target.value, 10) })}
+        style={{ width: '100%', marginBottom: 4 }} />
+
+      <label style={lbl}>Tata letak</label>
+      <select style={inp} value={layout} onChange={e => {
+        const v = e.target.value;
+        onChange({ imgFloat: v === 'block' ? 'none' : (v === 'float-left' ? 'left' : 'right') });
+      }}>
+        <option value="block">Sendiri (di atas/bawah teks)</option>
+        <option value="float-left">Dampingi teks — karakter di KIRI</option>
+        <option value="float-right">Dampingi teks — karakter di KANAN</option>
+      </select>
+
+      {layout === 'block' && (
+        <>
+          <label style={lbl}>Posisi horizontal</label>
+          <select style={inp} value={align} onChange={e => onChange({ imgAlign: e.target.value as 'left' | 'center' | 'right' })}>
+            <option value="left">Kiri</option>
+            <option value="center">Tengah</option>
+            <option value="right">Kanan</option>
+          </select>
+        </>
+      )}
+
+      <p className="hint" style={{ fontSize: 11, margin: '4px 0 0' }}>
+        PNG transparan otomatis jadi mode "bersih" saat diupload. "Dampingi teks" bikin gambar berdiri di satu sisi &amp; materi mengalir di sebelahnya (di HP otomatis jadi atas-bawah).
+      </p>
+    </>
   );
 }
 
