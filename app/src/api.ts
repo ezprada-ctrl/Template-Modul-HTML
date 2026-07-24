@@ -100,6 +100,17 @@ export interface ActivityModule {
   kemungkinan_bentrok: boolean;
 }
 
+// Satu kejadian popup peringatan kecepatan baca (reading_warning). Ditembak
+// SEKALI per section (gerbang quizWarnShown di shell-template.html) - jadi
+// satu entri di sini sudah otomatis "percobaan pertama saja", gak ada
+// duplikat dari peserta ngulang kuis section yang sama.
+export interface PeringatanDetail {
+  section: string; // id section, mis. 'a' -> tampilkan sebagai "Section A"
+  slides: number[]; // nomor slide KONTEN yang ketangkap di bawah 50% waktu baca minimum Brysbaert
+  choice: string; // 'yakin' (tetap lanjut ke kuis) | 'kembali' (baca ulang)
+  modul?: string; // cuma ada di ActivityLearner (lintas modul) - slug modul asalnya
+}
+
 export interface ActivitySession {
   session_id: string;
   module_slug: string;
@@ -155,6 +166,10 @@ export interface ActivitySession {
   // (mengabaikan peringatan) alih-alih "Kembali, pelajari lagi".
   peringatan_baca_cepat: number;
   peringatan_diabaikan: number;
+  // Rincian tiap kejadian di atas: section mana + nomor slide persis yang
+  // ketangkap + pilihan peserta. Dipakai buat tampilan "lihat slide mana
+  // aja" di Command Center, terpisah dari angka agregat di atas.
+  peringatan_detail: PeringatanDetail[];
   // Knowledge Check (blok cek-paham inline, TIDAK mengunci navigasi). Dihitung
   // TERPISAH dari kuis section: kc_dijawab = jumlah soal knowledge-check yang
   // dijawab, kc_benar = yang benar. Boleh diulang bebas, jadi ini murni
@@ -207,6 +222,9 @@ export interface ActivityLearner {
   // Sama seperti ActivitySession, dijumlah lintas semua modul.
   peringatan_baca_cepat: number;
   peringatan_diabaikan: number;
+  // Sama seperti ActivitySession, digabung lintas semua modul - tiap entri
+  // bawa field `modul` (slug) karena peserta ini bisa punya beberapa modul.
+  peringatan_detail: PeringatanDetail[];
   // Knowledge Check dijumlah lintas semua modul peserta ini (lihat catatan
   // di ActivitySession). Terpisah total dari kolom Kuis.
   kc_dijawab: number;

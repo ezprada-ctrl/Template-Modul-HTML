@@ -215,6 +215,13 @@ def summarize_sessions(module_slug):
             # video_progress bisa nembak beberapa kali per blok - jeda-lanjut,
             # nonton ulang - makanya diambil nilai MAX-nya, bukan yang terakhir).
             '_video_max': {},
+            # Rincian tiap kejadian reading_warning (section + nomor slide
+            # persis yang ketangkap + pilihan peserta) - beda dari
+            # peringatan_baca_cepat/peringatan_diabaikan yang cuma angka
+            # agregat. Ditembak SEKALI per section (gerbang quizWarnShown di
+            # shell-template.html), jadi ini otomatis sudah "percobaan
+            # pertama saja" - gak ada duplikat dari percobaan kuis berikutnya.
+            '_peringatan_detail': [],
         })
         if r.get('learner_name'):
             s['learner_name'] = r['learner_name']
@@ -276,6 +283,11 @@ def summarize_sessions(module_slug):
             s['peringatan_baca_cepat'] += 1
             if p.get('choice') == 'yakin':
                 s['peringatan_diabaikan'] += 1
+            s['_peringatan_detail'].append({
+                'section': p.get('section'),
+                'slides': p.get('slides') or [],
+                'choice': p.get('choice'),
+            })
         elif t == 'kc_answer':
             # Jawaban blok Knowledge Check (cek paham inline). Direkam tiap
             # jawaban, benar maupun salah - TERPISAH dari kuis section.
@@ -296,6 +308,7 @@ def summarize_sessions(module_slug):
         video_max = s.pop('_video_max')
         s['video_dimulai'] = len(video_max)
         s['video_rata_persen'] = round(sum(video_max.values()) / len(video_max)) if video_max else None
+        s['peringatan_detail'] = s.pop('_peringatan_detail')
         # Kalau sesi ditutup paksa (tab dibunuh HP), session_end gak pernah
         # terkirim -> total_ms 0. Pakai jumlah durasi slide sebagai gantinya
         # biar barisnya tetap kepakai, bukan kebuang.
@@ -367,6 +380,7 @@ def summarize_learners():
         video_max_sesi = {}
         total_slide_modul = None
         slide_unik_sesi = set()
+        peringatan_detail_sesi = []
         for r in sess_rows:
             if r.get('learner_id'):
                 nip = r['learner_id']
@@ -406,6 +420,11 @@ def summarize_learners():
                 peringatan_baca_cepat += 1
                 if p.get('choice') == 'yakin':
                     peringatan_diabaikan += 1
+                peringatan_detail_sesi.append({
+                    'section': p.get('section'),
+                    'slides': p.get('slides') or [],
+                    'choice': p.get('choice'),
+                })
             elif t == 'kc_answer':
                 kc_dijawab += 1
                 if p.get('benar'):
@@ -435,6 +454,11 @@ def summarize_learners():
             'kuis_gagal': 0,
             'peringatan_baca_cepat': 0,
             'peringatan_diabaikan': 0,
+            # Rincian tiap kejadian reading_warning, ditag dengan slug modul
+            # asalnya (peserta bisa punya beberapa modul) - lihat catatan
+            # yang sama di summarize_sessions soal kenapa ini otomatis
+            # "percobaan pertama saja".
+            'peringatan_detail': [],
             'kc_dijawab': 0,
             'kc_benar': 0,
             'pertama': mulai,
@@ -483,6 +507,8 @@ def summarize_learners():
         L['kuis_gagal'] += kuis_gagal
         L['peringatan_baca_cepat'] += peringatan_baca_cepat
         L['peringatan_diabaikan'] += peringatan_diabaikan
+        for d in peringatan_detail_sesi:
+            L['peringatan_detail'].append({**d, 'modul': slug})
         L['kc_dijawab'] += kc_dijawab
         L['kc_benar'] += kc_benar
         if mulai < L['pertama']:

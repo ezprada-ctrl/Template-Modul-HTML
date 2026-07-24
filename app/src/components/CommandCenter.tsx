@@ -1,6 +1,32 @@
-import { useRef, useState } from 'react';
-import type { ActivityModule, ActivitySession, ActivityLearner } from '../api';
+import { Fragment, useRef, useState } from 'react';
+import type { ActivityModule, ActivitySession, ActivityLearner, PeringatanDetail } from '../api';
 import { ccListModules, ccListSessions, ccListLearners, ccRawRows } from '../api';
+
+// Rincian slide di bawah WPM buat satu kejadian reading_warning - dipakai di
+// baris expand kolom Peringatan (Per Modul & Per Peserta sama-sama pakai ini).
+function PeringatanRincian({ detail }: { detail: PeringatanDetail[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '9px 13px 11px', fontSize: 12 }}>
+      {detail.map((d, i) => (
+        <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
+          {d.modul && <span className="faint">{d.modul} ·</span>}
+          <span style={{ fontWeight: 600 }}>Section {d.section ? d.section.toUpperCase() : '?'}</span>
+          <span className="dim">
+            slide {d.slides.length ? d.slides.join(', ') : '—'}
+          </span>
+          <span style={{
+            fontSize: 11, padding: '1px 7px', borderRadius: 100,
+            color: d.choice === 'yakin' ? 'var(--danger)' : 'var(--success)',
+            background: d.choice === 'yakin' ? 'var(--danger-soft, rgba(181,64,47,.08))' : 'transparent',
+            border: `1px solid ${d.choice === 'yakin' ? 'var(--danger)' : 'var(--border)'}`,
+          }}>
+            {d.choice === 'yakin' ? 'diabaikan, tetap lanjut' : 'balik baca ulang'}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /**
  * Command Center — baca & unduh rekaman aktivitas peserta.
@@ -32,6 +58,16 @@ export default function CommandCenter() {
   // kolom terpisah.
   const sessionsTableRef = useRef<HTMLDivElement>(null);
   const learnersTableRef = useRef<HTMLDivElement>(null);
+  // Baris (session_id / learner_id) yang expand-nya lagi kebuka di kolom
+  // Peringatan. Key gabungan view+id biar gak ketuker antara dua tabel.
+  const [expandedPeringatan, setExpandedPeringatan] = useState<Set<string>>(new Set());
+  function togglePeringatan(key: string) {
+    setExpandedPeringatan(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
 
   async function unlock() {
     setBusy(true);
@@ -324,8 +360,9 @@ ${ref.current.outerHTML}
                     </tr>
                   </thead>
                   <tbody>
-                    {learners.map(l => (
-                      <tr key={l.learner_id} style={{ borderTop: '1px solid var(--border)' }}>
+                    {learners.map(l => { const pKey = `peserta-${l.learner_id}`; const pOpen = expandedPeringatan.has(pKey); return (
+                    <Fragment key={l.learner_id}>
+                      <tr style={{ borderTop: '1px solid var(--border)' }}>
                         <td style={{ padding: '8px 11px' }}>
                           {l.nama || <span style={{ color: 'var(--text-faint)' }}>—</span>}
                           {/* Satu NIP dengan beberapa varian nama = tanda NIP
@@ -420,7 +457,13 @@ ${ref.current.outerHTML}
                             3-3nya diabaikan atau cuma 1 dari 3. */}
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                             title="Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat sebelum kuis (dari semua modulnya)">
-                          {l.peringatan_baca_cepat > 0 ? `${l.peringatan_baca_cepat}×` : '—'}
+                          {l.peringatan_baca_cepat > 0 ? (
+                            <button onClick={() => togglePeringatan(pKey)}
+                                    style={{ font: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text)', textDecoration: 'underline dotted' }}
+                                    title="Klik untuk lihat slide mana saja yang ketangkap">
+                              {l.peringatan_baca_cepat}× <span style={{ fontSize: 10 }}>{pOpen ? '▾' : '▸'}</span>
+                            </button>
+                          ) : '—'}
                           {l.peringatan_diabaikan > 0 && (
                             <span title={`${l.peringatan_diabaikan} dari ${l.peringatan_baca_cepat} peringatan itu tetap dipilih "lanjut ke kuis" tanpa baca ulang`}
                                   style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>
@@ -430,7 +473,13 @@ ${ref.current.outerHTML}
                         </td>
                         <td style={{ padding: '8px 11px', color: 'var(--text-faint)' }}>{l.modul_slugs.join(', ')}</td>
                       </tr>
-                    ))}
+                      {pOpen && l.peringatan_detail.length > 0 && (
+                        <tr style={{ borderTop: '1px dashed var(--border)', background: 'var(--surface-2)' }}>
+                          <td colSpan={13}><PeringatanRincian detail={l.peringatan_detail} /></td>
+                        </tr>
+                      )}
+                    </Fragment>
+                    ); })}
                   </tbody>
                 </table>
               </div>
@@ -487,8 +536,9 @@ ${ref.current.outerHTML}
                   </tr>
                 </thead>
                 <tbody>
-                  {sessions.map(s => (
-                    <tr key={s.session_id} style={{ borderTop: '1px solid var(--border)' }}>
+                  {sessions.map(s => { const pKey = `sesi-${s.session_id}`; const pOpen = expandedPeringatan.has(pKey); return (
+                    <Fragment key={s.session_id}>
+                    <tr style={{ borderTop: '1px solid var(--border)' }}>
                       <td style={{ padding: '8px 11px' }}>{s.learner_name || <span style={{ color: 'var(--text-faint)' }}>—</span>}</td>
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.learner_id || '—'}</td>
                       {bentrok && <td style={{ padding: '8px 11px' }}>{s.module_title || <span style={{ color: 'var(--text-faint)' }}>—</span>}</td>}
@@ -581,7 +631,13 @@ ${ref.current.outerHTML}
                           soal berapa dari 3 itu yang beneran diabaikan. */}
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                           title="Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat sebelum kuis, di modul ini">
-                        {s.peringatan_baca_cepat > 0 ? `${s.peringatan_baca_cepat}×` : '—'}
+                        {s.peringatan_baca_cepat > 0 ? (
+                          <button onClick={() => togglePeringatan(pKey)}
+                                  style={{ font: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text)', textDecoration: 'underline dotted' }}
+                                  title="Klik untuk lihat slide mana saja yang ketangkap">
+                            {s.peringatan_baca_cepat}× <span style={{ fontSize: 10 }}>{pOpen ? '▾' : '▸'}</span>
+                          </button>
+                        ) : '—'}
                         {s.peringatan_diabaikan > 0 && (
                           <span title={`${s.peringatan_diabaikan} dari ${s.peringatan_baca_cepat} peringatan itu tetap dipilih "lanjut ke kuis" tanpa baca ulang`}
                                 style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>
@@ -590,7 +646,13 @@ ${ref.current.outerHTML}
                         )}
                       </td>
                     </tr>
-                  ))}
+                    {pOpen && s.peringatan_detail.length > 0 && (
+                      <tr style={{ borderTop: '1px dashed var(--border)', background: 'var(--surface-2)' }}>
+                        <td colSpan={kolom.length}><PeringatanRincian detail={s.peringatan_detail} /></td>
+                      </tr>
+                    )}
+                    </Fragment>
+                  ); })}
                 </tbody>
               </table>
             </div>
