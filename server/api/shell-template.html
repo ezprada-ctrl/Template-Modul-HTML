@@ -1025,6 +1025,9 @@ const SLIDE_TITLES = __SLIDE_TITLES_JS__;
 // kunjungan udah lebih dari totalnya (ada pengulangan) atau ada slide
 // yang gak pernah kesentuh sama sekali.
 const TOTAL_SLIDES = __TOTAL_SLIDES_JS__;
+// Sama filosofinya - tanpa ini Command Center gak bisa bedain "0 video
+// ditonton" dari "modul ini emang gak punya video sama sekali".
+const TOTAL_VIDEO = __TOTAL_VIDEO_JS__;
 // Waktu baca minimum per nomor slide (ms), dari jumlah kata slide itu dibagi
 // 238 kata/menit (Brysbaert 2019). Dipakai buat deteksi slide yang di-klik-
 // lewat terlalu cepat sebelum kuis - lihat resolveReadingWarning() di bawah.
@@ -1034,6 +1037,7 @@ const SLIDE_MIN_MS = __SLIDE_MIN_MS_JS__;
 // is an Instagram embed (drives the embed.js loader at the bottom).
 const SLIDE_AUDIO = __SLIDE_AUDIO_JS__;
 const HAS_INSTAGRAM = __HAS_INSTAGRAM_JS__;
+const HAS_YOUTUBE = __HAS_YOUTUBE_JS__;
 
 // Knowledge-check questions per slide: {slideNumber: [{block, items:[{q,opts,
 // correct,feedback}]}]}. Renders as NOTHING inline (render_knowledge in
@@ -1535,6 +1539,7 @@ function actStart(){
     identity_source: id.source || 'unknown',
     module_title: MODULE_TITLE,
     total_slide: TOTAL_SLIDES,
+    total_video: TOTAL_VIDEO,
     scorm_version: scorm.inited ? scorm.version : null,
     screen: window.innerWidth + 'x' + window.innerHeight,
     touch: ('ontouchstart' in window),
@@ -2161,22 +2166,95 @@ function applySlideAudio(item){
   }
 }
 
-/* Klik facade thumbnail -> ganti jadi iframe player yang langsung main.
-   Kotak baru mewarisi inline-style facade (padding-bottom ratio + posisi),
-   jadi rasio & ukuran persis sama, cuma background thumbnail-nya dibuang. */
+/* ---------------- Rekam "seberapa jauh video beneran ditonton" ----------------
+   Sama filosofinya kayak slide (kunjungan vs slide UNIK): bukan "pernah
+   dibuka", tapi "titik terjauh yang pernah dicapai / durasi total" - resisten
+   ke maju-mundur nyari-nyari, dan gak digelembungkan sama nonton ulang bagian
+   yang sama. window._videoProgress dipegang di memori, cuma dikirim ke
+   server di titik-titik penting (jeda/selesai/pindah slide) - BUKAN tiap
+   tick timeupdate, biar gak nyepam server. */
+window._videoProgress = {};
+function videoTrackTime(blockId, currentTime, duration){
+  if(!duration || !isFinite(duration) || duration<=0) return;
+  const st = window._videoProgress[blockId] || (window._videoProgress[blockId]={furthest:0,duration:0,lastSent:-1,started:false});
+  st.duration = duration;
+  if(currentTime > st.furthest) st.furthest = currentTime;
+}
+function videoMarkStarted(blockId){
+  const st = window._videoProgress[blockId] || (window._videoProgress[blockId]={furthest:0,duration:0,lastSent:-1,started:false});
+  st.started = true;
+}
+function videoSendCheckpoint(blockId, ended){
+  const st = window._videoProgress[blockId];
+  if(!st || !st.started || !st.duration) return;
+  const raw = ended ? st.duration : st.furthest;
+  const persen = Math.max(0, Math.min(100, Math.round(raw/st.duration*100)));
+  if(persen <= st.lastSent) return; // nilai ini (atau lebih tinggi) udah pernah kekirim
+  st.lastSent = persen;
+  actEvent('video_progress', {block: blockId, persen: persen});
+}
+/* Dipanggil dari goTo() SEBELUM slide yang lagi ditinggalkan diganti -
+   video yang masih diputar pas peserta pindah (gak sempat dijeda/selesai
+   sendiri) tetap kekirim progres terakhirnya, bukan hilang diam-diam. */
+function videoFlushAll(){
+  for(var blockId in window._videoProgress) videoSendCheckpoint(blockId, false);
+}
+
+/* Klik facade thumbnail -> ganti jadi player YouTube ASLI lewat IFrame Player
+   API (bukan iframe polos) - biar bisa dengar play/pause/selesai buat rekam
+   aktivitas. Kotak baru mewarisi inline-style facade (padding-bottom ratio +
+   posisi), jadi rasio & ukuran persis sama, cuma background thumbnail-nya
+   dibuang. API-nya dimuat sekali di INIT (search HAS_YOUTUBE); kalau peserta
+   sempat klik play SEBELUM skrip itu selesai dimuat, permintaannya ditahan di
+   _ytPending dan baru dieksekusi begitu onYouTubeIframeAPIReady jalan. */
+window._ytPending = null;
+window._ytSamplers = {};
 function playYouTube(el){
   const id = el.getAttribute('data-ytid');
+  const blockId = el.getAttribute('data-block') || id;
   if(!id) return;
+  const containerId = 'yt-player-'+blockId;
   const box = document.createElement('div');
+  box.id = containerId;
   box.setAttribute('style', el.getAttribute('style') || '');
   box.style.background = '#000';
   box.style.cursor = 'default';
-  box.innerHTML = '<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1&rel=0" '
-    + 'style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" '
-    + 'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" '
-    + 'allowfullscreen></iframe>';
   el.replaceWith(box);
+  if(window.YT && window.YT.Player) videoCreateYouTubePlayer(containerId, id, blockId);
+  else window._ytPending = {containerId: containerId, videoId: id, blockId: blockId};
 }
+function videoCreateYouTubePlayer(containerId, videoId, blockId){
+  new YT.Player(containerId, {
+    videoId: videoId,
+    playerVars: {autoplay: 1, rel: 0},
+    events: {onStateChange: function(e){ videoOnYtStateChange(blockId, e); }}
+  });
+}
+function videoOnYtStateChange(blockId, e){
+  const player = e.target;
+  if(window._ytSamplers[blockId]){ clearInterval(window._ytSamplers[blockId]); delete window._ytSamplers[blockId]; }
+  if(e.data===YT.PlayerState.PLAYING){
+    videoMarkStarted(blockId);
+    window._ytSamplers[blockId] = setInterval(function(){
+      try{ videoTrackTime(blockId, player.getCurrentTime(), player.getDuration()); }catch(err){}
+    }, 1500);
+  } else if(e.data===YT.PlayerState.PAUSED){
+    try{ videoTrackTime(blockId, player.getCurrentTime(), player.getDuration()); }catch(err){}
+    videoSendCheckpoint(blockId, false);
+  } else if(e.data===YT.PlayerState.ENDED){
+    try{ videoTrackTime(blockId, player.getDuration(), player.getDuration()); }catch(err){}
+    videoSendCheckpoint(blockId, true);
+  }
+}
+/* Dipanggil sekali dari skrip IFrame API sendiri begitu selesai dimuat -
+   HARUS didefinisikan sebelum <script src="...iframe_api"> ditambahkan
+   (lihat INIT), karena skrip itu manggil global ini begitu dia siap. */
+window.onYouTubeIframeAPIReady = function(){
+  if(window._ytPending){
+    const p = window._ytPending; window._ytPending = null;
+    videoCreateYouTubePlayer(p.containerId, p.videoId, p.blockId);
+  }
+};
 
 function renderBottomNav(){
   const item = NAV[currentIdx];
@@ -2259,6 +2337,10 @@ function goTo(idx){
       }
     }
   }
+  // Video yang lagi diputar tapi belum sempat dijeda/selesai sendiri (peserta
+  // langsung pindah slide) tetap kekirim progres terakhirnya di sini, bukan
+  // hilang diam-diam pas viewport-nya diganti kontennya.
+  videoFlushAll();
   currentIdx = idx;
   render();
   if(window.innerWidth<=900) closeSidebar();
@@ -2618,6 +2700,18 @@ if(HAS_INSTAGRAM){
   s.src = 'https://www.instagram.com/embed.js';
   s.onload = ()=>{ try{ window.instgrm && window.instgrm.Embeds.process(); }catch(e){} };
   document.body.appendChild(s);
+}
+/* Kalau ada blok YouTube, muat IFrame Player API SEKALI dari sini - dibutuhkan
+   supaya play/pause/selesai video bisa didengar buat rekam aktivitas (iframe
+   polos gak bisa diamati sama sekali dari luar). onYouTubeIframeAPIReady
+   (didefinisikan di atas, sebelum baris ini) dipanggil OTOMATIS sama skrip
+   ini begitu siap - bukan lewat onload biasa. Butuh koneksi keluar ke
+   youtube.com; kalau diblok jaringan LMS, video YouTube gagal main (blok
+   lain tetap jalan, sama kayak Instagram). */
+if(HAS_YOUTUBE){
+  const ys = document.createElement('script');
+  ys.src = 'https://www.youtube.com/iframe_api';
+  document.body.appendChild(ys);
 }
 render();
 /* Setelah render: kalau modul ini ngerekam aktivitas, mulai sesinya (atau

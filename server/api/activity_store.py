@@ -191,6 +191,11 @@ def summarize_sessions(module_slug):
             # modulnya di-export sebelum fitur ini ada - gak ada cara nebak
             # dari data lama, jadi jujur ditandai "gak diketahui" bukan 0.
             'total_slide': None,
+            # Total blok video/YouTube di modul ini (ditanam saat export,
+            # TIDAK termasuk Instagram - itu gak mungkin diamati sama sekali,
+            # lihat catatan di generator.py). None = modul lama sebelum fitur
+            # ini ada, bukan "gak punya video".
+            'total_video': None,
             'mulai': r['created_at'], 'selesai': r['created_at'],
             'durasi_total_ms': 0, 'durasi_terekam_ms': 0,
             'jumlah_slide_dilihat': 0, 'jumlah_interaksi': 0,
@@ -206,6 +211,10 @@ def summarize_sessions(module_slug):
             # buat bedain "diulang" (jumlah_slide_dilihat > total_slide) dari
             # "ada yang gak pernah disentuh sama sekali" (slide_unik < total_slide).
             '_slide_unik': set(),
+            # blockId -> persen TERJAUH yang pernah dicapai video itu (event
+            # video_progress bisa nembak beberapa kali per blok - jeda-lanjut,
+            # nonton ulang - makanya diambil nilai MAX-nya, bukan yang terakhir).
+            '_video_max': {},
         })
         if r.get('learner_name'):
             s['learner_name'] = r['learner_name']
@@ -226,6 +235,14 @@ def summarize_sessions(module_slug):
             # dipakai buat misahin sesi milik modul yang mana.
             s['module_title'] = p.get('module_title')
             s['total_slide'] = p.get('total_slide')
+            s['total_video'] = p.get('total_video')
+        elif t == 'video_progress':
+            block = p.get('block')
+            persen = p.get('persen')
+            if block and persen is not None:
+                prev = s['_video_max'].get(block, 0)
+                if persen > prev:
+                    s['_video_max'][block] = persen
         elif t == 'session_end':
             s['durasi_total_ms'] = max(s['durasi_total_ms'], p.get('total_ms') or 0)
             s['_ada_session_end'] = True
@@ -270,6 +287,15 @@ def summarize_sessions(module_slug):
     for s in out:
         ada_end = s.pop('_ada_session_end')
         s['jumlah_slide_unik'] = len(s.pop('_slide_unik'))
+        # "Berapa video yang DIMULAI" (persen tercatat > 0, apa pun) dari
+        # total video di modul ini, + rata-rata seberapa jauh video yang
+        # DIMULAI itu ditonton. Video yang gak pernah disentuh gak masuk
+        # rata-rata (bukan dianggap 0%) - itu urusan kolom "dimulai", bukan
+        # bikin rata-ratanya keliatan jelek gara-gara video yang emang gak
+        # dibuka sama sekali.
+        video_max = s.pop('_video_max')
+        s['video_dimulai'] = len(video_max)
+        s['video_rata_persen'] = round(sum(video_max.values()) / len(video_max)) if video_max else None
         # Kalau sesi ditutup paksa (tab dibunuh HP), session_end gak pernah
         # terkirim -> total_ms 0. Pakai jumlah durasi slide sebagai gantinya
         # biar barisnya tetap kepakai, bukan kebuang.
@@ -337,6 +363,8 @@ def summarize_learners():
         peringatan_diabaikan = 0
         kc_dijawab = 0
         kc_benar = 0
+        total_video_modul = None
+        video_max_sesi = {}
         total_slide_modul = None
         slide_unik_sesi = set()
         for r in sess_rows:
@@ -351,6 +379,12 @@ def summarize_learners():
             if t == 'session_start':
                 source = p.get('identity_source')
                 total_slide_modul = p.get('total_slide')
+                total_video_modul = p.get('total_video')
+            elif t == 'video_progress':
+                block = p.get('block')
+                persen = p.get('persen')
+                if block and persen is not None and persen > video_max_sesi.get(block, 0):
+                    video_max_sesi[block] = persen
             elif t == 'session_end':
                 total_ms = max(total_ms, p.get('total_ms') or 0)
                 ada_end = True
@@ -408,20 +442,29 @@ def summarize_learners():
             # (slug, nomor) biar nomor slide yang sama di modul BEDA gak
             # ketuker jadi satu waktu digabung.
             '_slide_unik': set(),
+            # (slug, block) - sama alasannya kayak _slide_unik: block id yang
+            # kebetulan sama di modul BEDA gak boleh ketuker jadi satu video.
+            '_video_max': {},
         })
         if nama and nama not in L['nama_varian']:
             L['nama_varian'].append(nama)
         if source and source not in L['identity_sources']:
             L['identity_sources'].append(source)
-        m = L['modul'].setdefault(slug, {'sesi': 0, 'durasi_ms': 0, 'total_slide': None})
+        m = L['modul'].setdefault(slug, {'sesi': 0, 'durasi_ms': 0, 'total_slide': None, 'total_video': None})
         m['sesi'] += 1
         m['durasi_ms'] += total_ms
-        # total_slide sama di semua sesi modul ini (baked saat export) -
-        # cukup dicatat sekali, gak perlu dijumlah per sesi.
+        # total_slide/total_video sama di semua sesi modul ini (baked saat
+        # export) - cukup dicatat sekali, gak perlu dijumlah per sesi.
         if total_slide_modul is not None:
             m['total_slide'] = total_slide_modul
+        if total_video_modul is not None:
+            m['total_video'] = total_video_modul
         for num in slide_unik_sesi:
             L['_slide_unik'].add((slug, num))
+        for block, persen in video_max_sesi.items():
+            key2 = (slug, block)
+            if persen > L['_video_max'].get(key2, 0):
+                L['_video_max'][key2] = persen
         L['jumlah_sesi'] += 1
         L['durasi_total_ms'] += total_ms
         L['durasi_terekam_ms'] += terekam_ms
@@ -457,6 +500,11 @@ def summarize_learners():
         # di-export sebelum fitur ini ada - jangan ditampilkan sebagai 0.
         totals = [m['total_slide'] for m in L['modul'].values() if m['total_slide'] is not None]
         L['total_slide_program'] = sum(totals) if totals else None
+        video_totals = [m['total_video'] for m in L['modul'].values() if m['total_video'] is not None]
+        L['total_video_program'] = sum(video_totals) if video_totals else None
+        video_max = L.pop('_video_max')
+        L['video_dimulai'] = len(video_max)
+        L['video_rata_persen'] = round(sum(video_max.values()) / len(video_max)) if video_max else None
         L['durasi_menit'] = round(L['durasi_total_ms'] / 60000, 1)
         L['durasi_tatap_layar_menit'] = round(L['durasi_terekam_ms'] / 60000, 1)
         # None kalau SEMUA sesi peserta ini gak pernah ngirim session_end -

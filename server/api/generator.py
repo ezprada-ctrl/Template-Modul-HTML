@@ -148,7 +148,7 @@ FLOW_DATA = {}  # collected across the whole generation pass, flushed after SLID
 # drives whether the shell loads Instagram's embed.js (a <script> the block
 # itself can't run, because slide HTML is injected via innerHTML which never
 # executes injected <script> tags). Reset at the start of generate_html.
-GEN_FLAGS = {'has_instagram': False}
+GEN_FLAGS = {'has_instagram': False, 'has_youtube': False}
 
 
 def render_flow(b):
@@ -246,6 +246,7 @@ def _youtube_id(url):
 def render_media(b):
     source = b.get('mediaSource', 'video')
     caption = _caption_html(b)
+    block_id = esc(b.get('id', 'media'))
 
     if source == 'youtube':
         raw_url = b.get('embedUrl', '') or ''
@@ -255,15 +256,18 @@ def render_media(b):
                     '⚠ URL YouTube belum valid — tempel link seperti '
                     'https://youtu.be/xxxx atau .../watch?v=xxxx.</p></div>')
         # Facade: tampilkan thumbnail asli video di dalam kotak beraspek-rasio
-        # + tombol play; baru pas diklik iframe player-nya dimuat (playYouTube
-        # di shell). Lebih ringan + lebih rapi ketimbang langsung nanam iframe,
+        # + tombol play; baru pas diklik player YouTube asli (YT.Player, lewat
+        # IFrame Player API - bukan iframe polos, biar bisa dengar
+        # play/pause/selesai buat rekam aktivitas) dimuat (playYouTube di
+        # shell). Lebih ringan + lebih rapi ketimbang langsung nanam iframe,
         # dan yang keliatan di slide persis gambar depan videonya. Shorts =
         # 9:16 (portrait, lebar dibatasi), selain itu 16:9.
         is_short = '/shorts/' in raw_url
         ratio = '177.78%' if is_short else '56.25%'  # tinggi:lebar (9:16 vs 16:9)
         thumb = f'https://i.ytimg.com/vi/{vid}/hqdefault.jpg'
+        GEN_FLAGS['has_youtube'] = True
         facade = (
-            f'<div class="video-facade" data-ytid="{vid}" role="button" tabindex="0" '
+            f'<div class="video-facade" data-ytid="{vid}" data-block="{block_id}" role="button" tabindex="0" '
             f'onclick="playYouTube(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){{event.preventDefault();playYouTube(this);}}" '
             f'aria-label="Putar video YouTube" '
             f'style="position:relative;width:100%;padding-bottom:{ratio};height:0;'
@@ -302,14 +306,23 @@ def render_media(b):
         )
 
     # Default: uploaded video. controls + WITH sound (no `muted`), playsinline
-    # so mobile doesn't force fullscreen.
+    # so mobile doesn't force fullscreen. Inline event-handler attributes
+    # (onplay/ontimeupdate/dst) - BUKAN <script>, jadi tetap jalan normal
+    # walau videonya disuntik lewat innerHTML (beda dari tag <script> yang
+    # dibungkam browser kalau ditanam lewat innerHTML). Dipakai buat rekam
+    # "seberapa jauh beneran ditonton", bukan cuma "pernah dibuka" - lihat
+    # videoTrackTime/videoSendCheckpoint di shell-template.html.
     src = b.get('src', '')
     if not src:
         return ('<div class="card"><p style="color:var(--text-faint);font-size:12.5px;">'
                 '⚠ Video belum diupload.</p></div>')
     return (
         '<div class="card">'
-        f'<video controls playsinline preload="metadata" src="{src}" '
+        f'<video controls playsinline preload="metadata" src="{src}" data-block="{block_id}" '
+        f'onplay="videoMarkStarted(\'{block_id}\')" '
+        f'ontimeupdate="videoTrackTime(\'{block_id}\',this.currentTime,this.duration)" '
+        f'onpause="videoSendCheckpoint(\'{block_id}\',false)" '
+        f'onended="videoSendCheckpoint(\'{block_id}\',true)" '
         'style="width:100%;border-radius:12px;display:block;background:#000;"></video>'
         f'{caption}</div>'
     )
@@ -473,6 +486,7 @@ def build_nav(module):
 def generate_html(module):
     FLOW_DATA.clear()
     GEN_FLAGS['has_instagram'] = False
+    GEN_FLAGS['has_youtube'] = False
 
     out = SHELL
 
@@ -544,6 +558,7 @@ def generate_html(module):
     # embed.js. Set during the render_slide_html loop above (render_media flips
     # the flag), so it's accurate by now.
     out = out.replace('__HAS_INSTAGRAM_JS__', js_str(GEN_FLAGS['has_instagram']))
+    out = out.replace('__HAS_YOUTUBE_JS__', js_str(GEN_FLAGS['has_youtube']))
 
     out = out.replace('__SLIDE_TITLES_JS__', js_str(titles))
     # Ditanam biar Command Center bisa nunjukin "52 kunjungan (50/50 slide)"
@@ -552,6 +567,16 @@ def generate_html(module):
     # kunjungan udah lebih dari totalnya (tanda ada pengulangan) atau malah
     # ada slide yang gak pernah kesentuh sama sekali.
     out = out.replace('__TOTAL_SLIDES_JS__', js_str(len(slides)))
+    # Sama filosofinya kayak TOTAL_SLIDES: tanpa pembanding, Command Center gak
+    # bisa bedain "0 dari 3 video ditonton" dari "modul ini emang gak punya
+    # video". Instagram SENGAJA gak dihitung - widgetnya jalan di iframe
+    # cross-origin milik instagram.com, gak ada cara kita amati apa pun yang
+    # terjadi di dalamnya (bukan belum-dibikin, tapi mentok teknis).
+    total_video = sum(
+        1 for s in slides for b in s.get('blocks', [])
+        if b.get('type') == 'media' and (b.get('mediaSource') or 'video') in ('video', 'youtube')
+    )
+    out = out.replace('__TOTAL_VIDEO_JS__', js_str(total_video))
     # Waktu baca minimum per slide (ms), dari jumlah kata / 238 wpm (Brysbaert
     # 2019). Dipakai modul buat deteksi slide yang di-klik-lewat terlalu
     # cepat sebelum kuis bagian itu - lihat resolveReadingWarning() di

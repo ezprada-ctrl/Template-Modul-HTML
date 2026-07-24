@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ActivityModule, ActivitySession, ActivityLearner } from '../api';
 import { ccListModules, ccListSessions, ccListLearners, ccRawRows } from '../api';
 
@@ -26,6 +26,12 @@ export default function CommandCenter() {
   const [busy, setBusy] = useState(false);
   // true kalau backend motong hasil di MAX_ROWS — rekap cuma sebagian.
   const [terpotong, setTerpotong] = useState(false);
+  // Nempel ke wrapper tabel yang lagi tampil, dipakai buat "Unduh tampilan
+  // (HTML)" - beda dari CSV, ini nyimpen tabelnya UTUH persis kayak yang
+  // kelihatan di layar (warna, badge ⚠, dst ikut), bukan angka mentah per
+  // kolom terpisah.
+  const sessionsTableRef = useRef<HTMLDivElement>(null);
+  const learnersTableRef = useRef<HTMLDivElement>(null);
 
   async function unlock() {
     setBusy(true);
@@ -72,14 +78,50 @@ export default function CommandCenter() {
     }
   }
 
-  function download(filename: string, text: string) {
-    const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
+  function download(filename: string, text: string, mime = 'text/csv;charset=utf-8;') {
+    const blob = new Blob([text], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  // Design tokens dipakai ulang di sini (bukan cuma dilink) karena file
+  // hasil unduhan ini BERDIRI SENDIRI - dibuka nanti tanpa app.css sama
+  // sekali, jadi var(--border)/var(--danger)/dst di style inline tabel
+  // (React nulis literal string "var(--danger)" ke atribut style) gak akan
+  // ke-resolve tanpa definisinya ditanam ulang di sini. Nilai disalin dari
+  // index.css (tema terang saja - file statis, gak ada toggle tema).
+  const EXPORT_TOKENS_CSS = `
+    :root{
+      --bg:#ffffff; --bg-2:#f6f6f7; --surface:#ffffff; --surface-2:#f3f3f5; --surface-3:#e9e9ec;
+      --border:#e4e4e7; --border-strong:#d1d1d6;
+      --text:#18181b; --text-dim:#565660; --text-faint:#9a9aa4;
+      --danger:#c0392c; --danger-soft:rgba(192,57,44,.09);
+      --success:#2f8f57; --success-soft:rgba(47,143,87,.12);
+      --radius-sm:7px; --radius:10px;
+    }
+    body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg-2);color:var(--text);padding:24px;margin:0;}
+    h1{font-size:16px;margin:0 0 4px;}
+    .exp-meta{font-size:12.5px;color:var(--text-dim);margin:0 0 18px;}
+    table{border-collapse:collapse;font-size:12.5px;white-space:nowrap;}
+  `;
+
+  // Unduh tabel yang lagi TAMPIL di layar UTUH apa adanya (warna, badge ⚠,
+  // dst ikut) - beda dari CSV yang sengaja isinya angka mentah per kolom.
+  // Cuma nyalin markup (outerHTML) tabel yang udah dirender React, bukan
+  // nge-render ulang - jadi PASTI persis sama kayak yang keliatan.
+  function unduhTampilan(ref: React.RefObject<HTMLDivElement | null>, filename: string, judul: string) {
+    if (!ref.current) return;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${judul}</title>
+<style>${EXPORT_TOKENS_CSS}</style></head><body>
+<h1>${judul}</h1>
+<p class="exp-meta">Diunduh ${new Date().toLocaleString('id-ID')} — tampilan persis seperti di Command Center saat diunduh.</p>
+${ref.current.outerHTML}
+</body></html>`;
+    download(filename, html, 'text/html;charset=utf-8;');
   }
 
   // Excel Indonesia sering buka CSV dengan pemisah titik-koma. Tapi yang
@@ -129,6 +171,9 @@ export default function CommandCenter() {
         kuis_gagal: l.kuis_gagal,
         knowledge_check_benar: l.kc_benar,
         knowledge_check_dijawab: l.kc_dijawab,
+        video_dimulai: l.video_dimulai,
+        video_total: l.total_video_program ?? '',
+        video_rata_persen_ditonton: l.video_rata_persen ?? '',
         pertama: l.pertama,
         terakhir: l.terakhir,
       };
@@ -259,6 +304,9 @@ export default function CommandCenter() {
             <button className="btn-sm" onClick={unduhPeserta} disabled={!learners.length}>
               ⬇ CSV rekap per peserta
             </button>
+            <button className="btn-sm" onClick={() => unduhTampilan(learnersTableRef, 'aktivitas-per-peserta-tampilan.html', 'Command Center — Per Peserta')} disabled={!learners.length}>
+              ⬇ Unduh tampilan (HTML)
+            </button>
           </div>
 
           {busy && <p className="hint">Memuat…</p>}
@@ -266,11 +314,11 @@ export default function CommandCenter() {
 
           {learners.length > 0 && (
             <>
-              <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+              <div ref={learnersTableRef} style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
-                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Peringatan', 'Modul yang dibuka'].map(h => (
+                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Peringatan', 'Modul yang dibuka'].map(h => (
                         <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
                       ))}
                     </tr>
@@ -341,6 +389,28 @@ export default function CommandCenter() {
                             title="Knowledge check (cek paham, tidak mengunci): jawaban benar / total dijawab, dari semua modulnya">
                           {l.kc_dijawab > 0 ? `${l.kc_benar}/${l.kc_dijawab}` : '—'}
                         </td>
+                        {/* Video (upload + YouTube - Instagram gak mungkin diamati, lihat
+                            catatan generator.py): berapa video yang DIMULAI dari total video
+                            di semua modulnya, + rata-rata seberapa jauh video yang dimulai itu
+                            ditonton ("titik terjauh dicapai / durasi", bukan cuma "dibuka").
+                            — kalau modulnya emang gak punya video (atau di-export sebelum
+                            fitur ini ada). ⚠ = rata-rata ditonton di bawah 20% - nanda video
+                            yang dibuka tapi langsung ditinggal. */}
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                            title="Video (upload + YouTube) yang dimulai / total video di semua modulnya, dan rata-rata seberapa jauh ditonton">
+                          {!l.total_video_program ? (
+                            <span style={{ color: 'var(--text-faint)' }}>—</span>
+                          ) : (
+                            <>
+                              {l.video_dimulai}/{l.total_video_program}
+                              {l.video_dimulai > 0 && <> · {l.video_rata_persen}%</>}
+                              {l.video_dimulai > 0 && (l.video_rata_persen ?? 0) < 20 && (
+                                <span title="Rata-rata ditonton di bawah 20% - kemungkinan video dibuka lalu langsung ditinggal"
+                                      style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                              )}
+                            </>
+                          )}
+                        </td>
                         {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
                             sebelum kuis, dijumlah lintas semua modul. ⚠ = ada yang tetap
                             "Yakin, lanjut ke kuis" walau udah diperingatkan. */}
@@ -383,6 +453,9 @@ export default function CommandCenter() {
             <button className="btn-sm" onClick={unduhMentah} disabled={busy}>
               ⬇ CSV mentah (semua event)
             </button>
+            <button className="btn-sm" onClick={() => unduhTampilan(sessionsTableRef, `aktivitas-${activeSlug}-tampilan.html`, `Command Center — ${activeSlug}`)} disabled={!sessions.length}>
+              ⬇ Unduh tampilan (HTML)
+            </button>
           </div>
 
           {busy && <p className="hint">Memuat…</p>}
@@ -395,10 +468,10 @@ export default function CommandCenter() {
             // ini cuma nambah kebisingan.
             const bentrok = !!modules.find(m => m.module_slug === activeSlug)?.kemungkinan_bentrok;
             const kolom = bentrok
-              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Peringatan']
-              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Peringatan'];
+              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Peringatan']
+              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Peringatan'];
             return (
-            <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+            <div ref={sessionsTableRef} style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ background: 'var(--surface-2)' }}>
@@ -472,6 +545,26 @@ export default function CommandCenter() {
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                           title="Knowledge check (cek paham, tidak mengunci): jawaban benar / total dijawab di modul ini">
                         {s.kc_dijawab > 0 ? `${s.kc_benar}/${s.kc_dijawab}` : '—'}
+                      </td>
+                      {/* Video (upload + YouTube - Instagram gak mungkin diamati): berapa
+                          video yang DIMULAI dari total video di modul ini, + rata-rata
+                          seberapa jauh yang dimulai itu ditonton (titik terjauh dicapai /
+                          durasi). — kalau modul ini emang gak punya video. ⚠ = rata-rata
+                          di bawah 20%, tanda video dibuka lalu langsung ditinggal. */}
+                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                          title="Video (upload + YouTube) yang dimulai / total video di modul ini, dan rata-rata seberapa jauh ditonton">
+                        {!s.total_video ? (
+                          <span style={{ color: 'var(--text-faint)' }}>—</span>
+                        ) : (
+                          <>
+                            {s.video_dimulai}/{s.total_video}
+                            {s.video_dimulai > 0 && <> · {s.video_rata_persen}%</>}
+                            {s.video_dimulai > 0 && (s.video_rata_persen ?? 0) < 20 && (
+                              <span title="Rata-rata ditonton di bawah 20% - kemungkinan video dibuka lalu langsung ditinggal"
+                                    style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                            )}
+                          </>
+                        )}
                       </td>
                       {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
                           (< 50% waktu baca minimum Brysbaert) sebelum percobaan kuis

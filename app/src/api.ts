@@ -117,6 +117,18 @@ export interface ActivitySession {
   // yang menghitung kunjungan termasuk yang diulang). unik < total_slide
   // artinya ada slide yang SAMA SEKALI belum pernah disentuh.
   jumlah_slide_unik: number;
+  // Total blok video/YouTube di modul ini (Instagram TIDAK termasuk — itu
+  // gak mungkin diamati sama sekali, lihat catatan di generator.py). null
+  // kalau modulnya di-export sebelum fitur ini ada.
+  total_video: number | null;
+  // Berapa video yang DIMULAI (persen tercatat > 0), dan rata-rata seberapa
+  // jauh video yang dimulai itu ditonton — "titik terjauh yang pernah
+  // dicapai / durasi", bukan cuma "pernah dibuka". Video yang gak pernah
+  // disentuh TIDAK ikut dihitung di rata-rata (biar gak bikin angkanya
+  // keliatan jelek gara-gara video yang emang gak dibuka). null kalau belum
+  // ada satu video pun yang dimulai.
+  video_dimulai: number;
+  video_rata_persen: number | null;
   mulai: string;
   selesai: string;
   durasi_total_ms: number;
@@ -161,7 +173,7 @@ export interface ActivityLearner {
   nama_varian: string[];
   nama_bervariasi: boolean;
   identity_sources: string[];
-  modul: Record<string, { sesi: number; durasi_ms: number; total_slide: number | null }>;
+  modul: Record<string, { sesi: number; durasi_ms: number; total_slide: number | null; total_video: number | null }>;
   modul_slugs: string[];
   jumlah_modul: number;
   jumlah_sesi: number;
@@ -171,6 +183,10 @@ export interface ActivityLearner {
   // Jumlah slide konten di SELURUH modul yang dia kerjakan, dijumlah sekali
   // per modul. null kalau semua modulnya di-export sebelum fitur ini ada.
   total_slide_program: number | null;
+  // Sama seperti ActivitySession, dijumlah/digabung lintas semua modul.
+  total_video_program: number | null;
+  video_dimulai: number;
+  video_rata_persen: number | null;
   durasi_total_ms: number;
   durasi_menit: number;
   // Sama seperti ActivitySession: tatap layar dipakai sebagai durasi utama
