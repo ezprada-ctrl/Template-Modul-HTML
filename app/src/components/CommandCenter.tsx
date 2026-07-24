@@ -1,6 +1,7 @@
 import { Fragment, useRef, useState } from 'react';
 import type { ActivityModule, ActivitySession, ActivityLearner, PeringatanDetail, VideoDetail } from '../api';
 import { ccListModules, ccListSessions, ccListLearners, ccRawRows } from '../api';
+import { DEMO_MODULES, DEMO_SESSIONS, DEMO_LEARNERS } from '../demoActivityData';
 
 // Rincian slide di bawah WPM buat satu kejadian reading_warning - dipakai di
 // baris expand kolom Peringatan (Per Modul & Per Peserta sama-sama pakai ini).
@@ -69,6 +70,10 @@ function VideoRincian({ detail }: { detail: VideoDetail[] }) {
 export default function CommandCenter() {
   const [password, setPassword] = useState('');
   const [unlocked, setUnlocked] = useState(false);
+  // true kalau lagi nampilin data KARANGAN (demoActivityData.ts), bukan
+  // rekaman peserta sungguhan - dipakai buat coba tampilan/latih baca tabel
+  // tanpa password & tanpa modul yang beneran udah dipakai peserta.
+  const [demoMode, setDemoMode] = useState(false);
   const [modules, setModules] = useState<ActivityModule[]>([]);
   const [sessions, setSessions] = useState<ActivitySession[]>([]);
   const [learners, setLearners] = useState<ActivityLearner[]>([]);
@@ -111,10 +116,25 @@ export default function CommandCenter() {
     }
   }
 
+  // Buka Command Center dengan data KARANGAN, tanpa password/jaringan sama
+  // sekali - bukan cuma password kosong, ini gak pernah manggil ccPost.
+  // Dipakai buat coba tampilan/latih tim baca tabel sebelum ada data
+  // peserta asli, atau tunjukkin fitur ke orang lain tanpa bagi password.
+  function enterDemo() {
+    setError('');
+    setDemoMode(true);
+    setUnlocked(true);
+    setModules(DEMO_MODULES);
+    setTerpotong(false);
+    setView('modul');
+    setActiveSlug('');
+  }
+
   async function openModule(slug: string) {
+    setActiveSlug(slug);
+    if (demoMode) { setSessions(DEMO_SESSIONS); setTerpotong(false); return; }
     setBusy(true);
     setError('');
-    setActiveSlug(slug);
     try {
       const r = await ccListSessions(password, slug);
       setSessions(r.items);
@@ -128,6 +148,7 @@ export default function CommandCenter() {
 
   async function openPeserta() {
     setView('peserta');
+    if (demoMode) { setLearners(DEMO_LEARNERS); setTerpotong(false); return; }
     setBusy(true);
     setError('');
     try {
@@ -249,6 +270,7 @@ ${ref.current.outerHTML}
   }
 
   async function unduhMentah() {
+    if (demoMode) return;
     setBusy(true);
     setError('');
     try {
@@ -260,6 +282,11 @@ ${ref.current.outerHTML}
     } finally {
       setBusy(false);
     }
+  }
+
+  function kunciLagi() {
+    setUnlocked(false); setDemoMode(false); setPassword('');
+    setSessions([]); setLearners([]); setModules([]); setActiveSlug('');
   }
 
   if (!unlocked) {
@@ -281,6 +308,14 @@ ${ref.current.outerHTML}
         <button className="btn-primary" onClick={unlock} disabled={busy || !password}>
           {busy ? 'Membuka…' : 'Buka'}
         </button>
+        {/* Nol password, nol jaringan - murni data karangan (demoActivityData.ts)
+            biar bisa coba tampilan/latih baca tabel atau tunjukkin fitur ke
+            orang lain tanpa perlu bagi password beneran. */}
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+          <button className="btn-ghost btn-sm" onClick={enterDemo} style={{ width: '100%' }}>
+            👁 Lihat contoh tampilan (data karangan, tanpa password)
+          </button>
+        </div>
       </div>
     );
   }
@@ -289,13 +324,26 @@ ${ref.current.outerHTML}
     <div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 }}>
         <h2 style={{ margin: 0 }}>Command Center</h2>
-        <button className="btn-ghost btn-sm" onClick={() => { setUnlocked(false); setPassword(''); setSessions([]); setActiveSlug(''); }}>
+        <button className="btn-ghost btn-sm" onClick={kunciLagi}>
           Kunci lagi
         </button>
       </div>
       <p className="hint" style={{ marginTop: 0, marginBottom: 16 }}>
         Rekaman aktivitas dari modul yang “Rekam aktivitas peserta”-nya dicentang.
       </p>
+
+      {/* Ditandai keras di paling atas - data di bawah ini KARANGAN, bukan
+          rekaman peserta sungguhan. Warnanya sengaja beda dari banner
+          "terpotong" (itu soal data ASLI yang kurang lengkap, ini soal data
+          yang emang bukan asli sama sekali). */}
+      {demoMode && (
+        <p style={{ color: 'var(--text)', fontSize: 12.5, fontWeight: 600, border: '1px solid var(--border-strong)',
+                    background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', padding: '9px 12px', margin: '0 0 14px',
+                    display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          👁 Mode Contoh — semua nama, NIP, dan angka di bawah ini <b>karangan</b> buat latihan baca tabel, bukan peserta sungguhan.
+          <button className="btn-ghost btn-sm" onClick={kunciLagi} style={{ marginLeft: 'auto' }}>Keluar dari Contoh</button>
+        </p>
+      )}
 
       {error && <p style={{ color: 'var(--danger)', fontSize: 12.5 }}>{error}</p>}
 
@@ -547,7 +595,8 @@ ${ref.current.outerHTML}
             <button className="btn-sm" onClick={unduhRingkasan} disabled={!sessions.length}>
               ⬇ CSV ringkasan per sesi
             </button>
-            <button className="btn-sm" onClick={unduhMentah} disabled={busy}>
+            <button className="btn-sm" onClick={unduhMentah} disabled={busy || demoMode}
+                    title={demoMode ? 'Gak tersedia di Mode Contoh - data mentah cuma ada di Supabase asli' : undefined}>
               ⬇ CSV mentah (semua event)
             </button>
             <button className="btn-sm" onClick={() => unduhTampilan(sessionsTableRef, `aktivitas-${activeSlug}-tampilan.html`, `Command Center — ${activeSlug}`)} disabled={!sessions.length}>
