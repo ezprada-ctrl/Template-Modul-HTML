@@ -20,19 +20,30 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
   const [loading, setLoading] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Penomor permintaan - bukan cuma debounce timer. Debounce cuma nahan timer
+  // BARU nyala pas masih ngetik; begitu 500ms lewat, generateHtml() jalan di
+  // background dan permintaan BERIKUTNYA (dari ketikan setelahnya) bisa lolos
+  // ke server juga sebelum yang pertama balik. Kalau jaringan gak stabil,
+  // yang pertama bisa balik BELAKANGAN dan nimpa preview dengan konten lama.
+  // Nomor ini dicek sebelum setHtml/setError - hasil yang bukan permintaan
+  // TERAKHIR dibuang, gak peduli urutan baliknya.
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setLoading(true);
+    const myRequestId = ++requestIdRef.current;
     debounceRef.current = setTimeout(async () => {
       try {
         const out = await generateHtml(module);
+        if (myRequestId !== requestIdRef.current) return; // sudah kesalip permintaan lebih baru
         setHtml(out);
         setError('');
       } catch (e: any) {
+        if (myRequestId !== requestIdRef.current) return;
         setError(e.message || 'Gagal generate preview');
       } finally {
-        setLoading(false);
+        if (myRequestId === requestIdRef.current) setLoading(false);
       }
     }, 500);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };

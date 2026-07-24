@@ -2208,6 +2208,16 @@ function videoSendCheckpoint(blockId, ended){
    sendiri) tetap kekirim progres terakhirnya, bukan hilang diam-diam. */
 function videoFlushAll(){
   for(var blockId in window._videoProgress) videoSendCheckpoint(blockId, false);
+  // Video YouTube yang lagi PLAYING pas pindah slide gak sempat kena
+  // clearInterval - itu baru kejadian di event onStateChange BERIKUTNYA
+  // (pause/selesai), yang gak akan pernah datang karena iframe-nya
+  // keburu dihancurkan begitu slide baru di-render. Dibersihkan eksplisit
+  // di sini (checkpoint terakhir di atas udah ngirim progres akhirnya),
+  // biar gak nyangkut ngepoll iframe yang udah gak ada sepanjang sisa sesi.
+  for(var sBlockId in window._ytSamplers){
+    clearInterval(window._ytSamplers[sBlockId]);
+    delete window._ytSamplers[sBlockId];
+  }
 }
 
 /* Klik facade thumbnail -> ganti jadi player YouTube ASLI lewat IFrame Player
@@ -2216,8 +2226,15 @@ function videoFlushAll(){
    posisi), jadi rasio & ukuran persis sama, cuma background thumbnail-nya
    dibuang. API-nya dimuat sekali di INIT (search HAS_YOUTUBE); kalau peserta
    sempat klik play SEBELUM skrip itu selesai dimuat, permintaannya ditahan di
-   _ytPending dan baru dieksekusi begitu onYouTubeIframeAPIReady jalan. */
-window._ytPending = null;
+   _ytPendingQueue dan baru dieksekusi begitu onYouTubeIframeAPIReady jalan.
+
+   ANTREAN, bukan slot tunggal: kalau ada LEBIH DARI SATU video YouTube di
+   slide yang sama (atau peserta sempat klik dua video sebelum API-nya
+   kelar dimuat), slot tunggal bikin video pertama ketiban video kedua -
+   facade-nya udah kadung diganti kotak hitam kosong (`el.replaceWith`),
+   tapi player-nya gak pernah dibikin karena permintaannya keburu ditimpa,
+   jadi kotaknya nyangkut hitam permanen sampai halaman di-reload. */
+window._ytPendingQueue = [];
 window._ytSamplers = {};
 function playYouTube(el){
   const id = el.getAttribute('data-ytid');
@@ -2231,7 +2248,7 @@ function playYouTube(el){
   box.style.cursor = 'default';
   el.replaceWith(box);
   if(window.YT && window.YT.Player) videoCreateYouTubePlayer(containerId, id, blockId);
-  else window._ytPending = {containerId: containerId, videoId: id, blockId: blockId};
+  else window._ytPendingQueue.push({containerId: containerId, videoId: id, blockId: blockId});
 }
 function videoCreateYouTubePlayer(containerId, videoId, blockId){
   new YT.Player(containerId, {
@@ -2260,10 +2277,9 @@ function videoOnYtStateChange(blockId, e){
    HARUS didefinisikan sebelum <script src="...iframe_api"> ditambahkan
    (lihat INIT), karena skrip itu manggil global ini begitu dia siap. */
 window.onYouTubeIframeAPIReady = function(){
-  if(window._ytPending){
-    const p = window._ytPending; window._ytPending = null;
-    videoCreateYouTubePlayer(p.containerId, p.videoId, p.blockId);
-  }
+  const queue = window._ytPendingQueue;
+  window._ytPendingQueue = [];
+  queue.forEach(function(p){ videoCreateYouTubePlayer(p.containerId, p.videoId, p.blockId); });
 };
 
 function renderBottomNav(){
