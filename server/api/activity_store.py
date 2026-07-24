@@ -215,6 +215,11 @@ def summarize_sessions(module_slug):
             # video_progress bisa nembak beberapa kali per blok - jeda-lanjut,
             # nonton ulang - makanya diambil nilai MAX-nya, bukan yang terakhir).
             '_video_max': {},
+            # blockId -> nomor slide rumah video itu (dikirim tiap checkpoint,
+            # sama di semua baris blok yang sama - dipakai buat label
+            # "Slide N" di rincian per-video Command Center, bukan cuma
+            # rata-rata gabungan semua video.
+            '_video_slide': {},
             # Rincian tiap kejadian reading_warning (section + nomor slide
             # persis yang ketangkap + pilihan peserta) - beda dari
             # peringatan_baca_cepat/peringatan_diabaikan yang cuma angka
@@ -250,6 +255,8 @@ def summarize_sessions(module_slug):
                 prev = s['_video_max'].get(block, 0)
                 if persen > prev:
                     s['_video_max'][block] = persen
+                if p.get('slide') is not None:
+                    s['_video_slide'][block] = p.get('slide')
         elif t == 'session_end':
             s['durasi_total_ms'] = max(s['durasi_total_ms'], p.get('total_ms') or 0)
             s['_ada_session_end'] = True
@@ -306,8 +313,16 @@ def summarize_sessions(module_slug):
         # bikin rata-ratanya keliatan jelek gara-gara video yang emang gak
         # dibuka sama sekali.
         video_max = s.pop('_video_max')
+        video_slide = s.pop('_video_slide')
         s['video_dimulai'] = len(video_max)
         s['video_rata_persen'] = round(sum(video_max.values()) / len(video_max)) if video_max else None
+        # Rincian PER VIDEO (bukan cuma rata-rata gabungan) - video_rata_persen
+        # di atas gampang menyamarkan satu video yang beneran gak ditonton di
+        # antara yang lain ditonton penuh. Diurutkan dari yang paling rendah
+        # duluan (paling perlu ditinjau), sama seperti pola peringatan_detail.
+        s['video_detail'] = sorted(
+            [{'slide': video_slide.get(b), 'persen': p} for b, p in video_max.items()],
+            key=lambda d: d['persen'])
         s['peringatan_detail'] = s.pop('_peringatan_detail')
         # Kalau sesi ditutup paksa (tab dibunuh HP), session_end gak pernah
         # terkirim -> total_ms 0. Pakai jumlah durasi slide sebagai gantinya
@@ -378,6 +393,7 @@ def summarize_learners():
         kc_benar = 0
         total_video_modul = None
         video_max_sesi = {}
+        video_slide_sesi = {}
         total_slide_modul = None
         slide_unik_sesi = set()
         peringatan_detail_sesi = []
@@ -399,6 +415,8 @@ def summarize_learners():
                 persen = p.get('persen')
                 if block and persen is not None and persen > video_max_sesi.get(block, 0):
                     video_max_sesi[block] = persen
+                if block and p.get('slide') is not None:
+                    video_slide_sesi[block] = p.get('slide')
             elif t == 'session_end':
                 total_ms = max(total_ms, p.get('total_ms') or 0)
                 ada_end = True
@@ -469,6 +487,9 @@ def summarize_learners():
             # (slug, block) - sama alasannya kayak _slide_unik: block id yang
             # kebetulan sama di modul BEDA gak boleh ketuker jadi satu video.
             '_video_max': {},
+            # (slug, block) -> nomor slide, dipasangkan sama _video_max buat
+            # bangun video_detail (rincian per video, bukan cuma rata-rata).
+            '_video_slide': {},
         })
         if nama and nama not in L['nama_varian']:
             L['nama_varian'].append(nama)
@@ -489,6 +510,8 @@ def summarize_learners():
             key2 = (slug, block)
             if persen > L['_video_max'].get(key2, 0):
                 L['_video_max'][key2] = persen
+            if block in video_slide_sesi:
+                L['_video_slide'][key2] = video_slide_sesi[block]
         L['jumlah_sesi'] += 1
         L['durasi_total_ms'] += total_ms
         L['durasi_terekam_ms'] += terekam_ms
@@ -529,8 +552,16 @@ def summarize_learners():
         video_totals = [m['total_video'] for m in L['modul'].values() if m['total_video'] is not None]
         L['total_video_program'] = sum(video_totals) if video_totals else None
         video_max = L.pop('_video_max')
+        video_slide = L.pop('_video_slide')
         L['video_dimulai'] = len(video_max)
         L['video_rata_persen'] = round(sum(video_max.values()) / len(video_max)) if video_max else None
+        # Sama seperti summarize_sessions, tapi ditag nama modul karena satu
+        # peserta bisa punya video di beberapa modul. Diurutkan dari yang
+        # paling rendah duluan.
+        L['video_detail'] = sorted(
+            [{'modul': slug, 'slide': video_slide.get((slug, b)), 'persen': p}
+             for (slug, b), p in video_max.items()],
+            key=lambda d: d['persen'])
         L['durasi_menit'] = round(L['durasi_total_ms'] / 60000, 1)
         L['durasi_tatap_layar_menit'] = round(L['durasi_terekam_ms'] / 60000, 1)
         # None kalau SEMUA sesi peserta ini gak pernah ngirim session_end -

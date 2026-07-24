@@ -1,5 +1,5 @@
 import { Fragment, useRef, useState } from 'react';
-import type { ActivityModule, ActivitySession, ActivityLearner, PeringatanDetail } from '../api';
+import type { ActivityModule, ActivitySession, ActivityLearner, PeringatanDetail, VideoDetail } from '../api';
 import { ccListModules, ccListSessions, ccListLearners, ccRawRows } from '../api';
 
 // Rincian slide di bawah WPM buat satu kejadian reading_warning - dipakai di
@@ -22,6 +22,32 @@ function PeringatanRincian({ detail }: { detail: PeringatanDetail[] }) {
           }}>
             {d.choice === 'yakin' ? 'diabaikan, tetap lanjut' : 'balik baca ulang'}
           </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Rincian PER VIDEO (bukan rata-rata gabungan) - dipakai di baris expand
+// kolom Video. Mini-bar biar tinggi/rendahnya kelihatan sekilas tanpa harus
+// baca angka satu-satu, sama filosofinya kayak sparkline. Diurutkan dari
+// backend (paling rendah duluan, paling perlu ditinjau).
+function VideoRincian({ detail }: { detail: VideoDetail[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '9px 13px 11px', fontSize: 12 }}>
+      {detail.map((d, i) => (
+        <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'center' }}>
+          {d.modul && <span className="faint">{d.modul} ·</span>}
+          <span className="dim" style={{ minWidth: 62, fontWeight: 600 }}>
+            {d.slide != null ? `Slide ${d.slide}` : 'Slide ?'}
+          </span>
+          <div style={{ width: 110, height: 6, borderRadius: 3, background: 'var(--surface-3)', overflow: 'hidden' }}>
+            <div style={{
+              width: `${d.persen}%`, height: '100%',
+              background: d.persen < 20 ? 'var(--danger)' : d.persen >= 80 ? 'var(--success)' : 'var(--text-faint)',
+            }} />
+          </div>
+          <span className="num" style={{ minWidth: 34, textAlign: 'right' }}>{d.persen}%</span>
         </div>
       ))}
     </div>
@@ -58,11 +84,12 @@ export default function CommandCenter() {
   // kolom terpisah.
   const sessionsTableRef = useRef<HTMLDivElement>(null);
   const learnersTableRef = useRef<HTMLDivElement>(null);
-  // Baris (session_id / learner_id) yang expand-nya lagi kebuka di kolom
-  // Peringatan. Key gabungan view+id biar gak ketuker antara dua tabel.
-  const [expandedPeringatan, setExpandedPeringatan] = useState<Set<string>>(new Set());
-  function togglePeringatan(key: string) {
-    setExpandedPeringatan(prev => {
+  // Baris expand yang lagi kebuka, dipakai bareng kolom Peringatan & Video.
+  // Key diprefix per-kolom+view (mis. "peringatan-sesi-x" / "video-sesi-x")
+  // biar dua kolom di baris yang sama bisa expand independen.
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  function toggleRow(key: string) {
+    setExpandedRows(prev => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
@@ -360,7 +387,10 @@ ${ref.current.outerHTML}
                     </tr>
                   </thead>
                   <tbody>
-                    {learners.map(l => { const pKey = `peserta-${l.learner_id}`; const pOpen = expandedPeringatan.has(pKey); return (
+                    {learners.map(l => {
+                      const pKey = `peringatan-peserta-${l.learner_id}`; const pOpen = expandedRows.has(pKey);
+                      const vKey = `video-peserta-${l.learner_id}`; const vOpen = expandedRows.has(vKey);
+                      return (
                     <Fragment key={l.learner_id}>
                       <tr style={{ borderTop: '1px solid var(--border)' }}>
                         <td style={{ padding: '8px 11px' }}>
@@ -427,25 +457,32 @@ ${ref.current.outerHTML}
                           {l.kc_dijawab > 0 ? `${l.kc_benar}/${l.kc_dijawab}` : '—'}
                         </td>
                         {/* Video (upload + YouTube - Instagram gak mungkin diamati, lihat
-                            catatan generator.py): berapa video yang DIMULAI dari total video
-                            di semua modulnya, + rata-rata seberapa jauh video yang dimulai itu
-                            ditonton ("titik terjauh dicapai / durasi", bukan cuma "dibuka").
-                            — kalau modulnya emang gak punya video (atau di-export sebelum
-                            fitur ini ada). ⚠ = rata-rata ditonton di bawah 20% - nanda video
-                            yang dibuka tapi langsung ditinggal. */}
+                            catatan generator.py): "dimulai" = berapa video yang DIKLIK PLAY
+                            minimal sekali (BUKAN "selesai ditonton" - gampang kebaca salah
+                            kalau dibaca cepat, mis. "4/4" kelihatan kayak "4 dari 4 kelar"),
+                            dari total video di semua modulnya. rata² = rata-rata seberapa
+                            jauh video yang dimulai itu ditonton ("titik terjauh dicapai /
+                            durasi"). — kalau modulnya emang gak punya video. ⚠ = rata-rata
+                            di bawah 20%. Klik buat lihat rincian PER video (rata-rata bisa
+                            nyembunyiin satu video yang gak ditonton sama sekali di antara
+                            yang lain ditonton penuh). */}
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
-                            title="Video (upload + YouTube) yang dimulai / total video di semua modulnya, dan rata-rata seberapa jauh ditonton">
+                            title="Video (upload + YouTube) yang DIKLIK PLAY / total video di semua modulnya, dan rata-rata seberapa jauh ditonton">
                           {!l.total_video_program ? (
                             <span style={{ color: 'var(--text-faint)' }}>—</span>
-                          ) : (
-                            <>
-                              {l.video_dimulai}/{l.total_video_program}
-                              {l.video_dimulai > 0 && <> · {l.video_rata_persen}%</>}
-                              {l.video_dimulai > 0 && (l.video_rata_persen ?? 0) < 20 && (
+                          ) : l.video_dimulai > 0 ? (
+                            <button onClick={() => toggleRow(vKey)}
+                                    style={{ font: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text)', textDecoration: 'underline dotted' }}
+                                    title="Klik untuk lihat persentase tiap video">
+                              {l.video_dimulai}/{l.total_video_program} diklik · {l.video_rata_persen}%
+                              {(l.video_rata_persen ?? 0) < 20 && (
                                 <span title="Rata-rata ditonton di bawah 20% - kemungkinan video dibuka lalu langsung ditinggal"
-                                      style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                                      style={{ marginLeft: 4, color: 'var(--danger)' }}>⚠</span>
                               )}
-                            </>
+                              {' '}<span style={{ fontSize: 10 }}>{vOpen ? '▾' : '▸'}</span>
+                            </button>
+                          ) : (
+                            <>0/{l.total_video_program} diklik</>
                           )}
                         </td>
                         {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
@@ -458,7 +495,7 @@ ${ref.current.outerHTML}
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                             title="Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat sebelum kuis (dari semua modulnya)">
                           {l.peringatan_baca_cepat > 0 ? (
-                            <button onClick={() => togglePeringatan(pKey)}
+                            <button onClick={() => toggleRow(pKey)}
                                     style={{ font: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text)', textDecoration: 'underline dotted' }}
                                     title="Klik untuk lihat slide mana saja yang ketangkap">
                               {l.peringatan_baca_cepat}× <span style={{ fontSize: 10 }}>{pOpen ? '▾' : '▸'}</span>
@@ -473,6 +510,11 @@ ${ref.current.outerHTML}
                         </td>
                         <td style={{ padding: '8px 11px', color: 'var(--text-faint)' }}>{l.modul_slugs.join(', ')}</td>
                       </tr>
+                      {vOpen && l.video_detail.length > 0 && (
+                        <tr style={{ borderTop: '1px dashed var(--border)', background: 'var(--surface-2)' }}>
+                          <td colSpan={13}><VideoRincian detail={l.video_detail} /></td>
+                        </tr>
+                      )}
                       {pOpen && l.peringatan_detail.length > 0 && (
                         <tr style={{ borderTop: '1px dashed var(--border)', background: 'var(--surface-2)' }}>
                           <td colSpan={13}><PeringatanRincian detail={l.peringatan_detail} /></td>
@@ -536,7 +578,10 @@ ${ref.current.outerHTML}
                   </tr>
                 </thead>
                 <tbody>
-                  {sessions.map(s => { const pKey = `sesi-${s.session_id}`; const pOpen = expandedPeringatan.has(pKey); return (
+                  {sessions.map(s => {
+                    const pKey = `peringatan-sesi-${s.session_id}`; const pOpen = expandedRows.has(pKey);
+                    const vKey = `video-sesi-${s.session_id}`; const vOpen = expandedRows.has(vKey);
+                    return (
                     <Fragment key={s.session_id}>
                     <tr style={{ borderTop: '1px solid var(--border)' }}>
                       <td style={{ padding: '8px 11px' }}>{s.learner_name || <span style={{ color: 'var(--text-faint)' }}>—</span>}</td>
@@ -602,24 +647,31 @@ ${ref.current.outerHTML}
                           title="Knowledge check (cek paham, tidak mengunci): jawaban benar / total dijawab di modul ini">
                         {s.kc_dijawab > 0 ? `${s.kc_benar}/${s.kc_dijawab}` : '—'}
                       </td>
-                      {/* Video (upload + YouTube - Instagram gak mungkin diamati): berapa
-                          video yang DIMULAI dari total video di modul ini, + rata-rata
-                          seberapa jauh yang dimulai itu ditonton (titik terjauh dicapai /
-                          durasi). — kalau modul ini emang gak punya video. ⚠ = rata-rata
-                          di bawah 20%, tanda video dibuka lalu langsung ditinggal. */}
+                      {/* Video (upload + YouTube - Instagram gak mungkin diamati): "dimulai" =
+                          berapa video yang DIKLIK PLAY minimal sekali (BUKAN "selesai
+                          ditonton" - "4/4" gampang kebaca salah sebagai "4 dari 4 kelar"),
+                          dari total video di modul ini. rata² = rata-rata seberapa jauh yang
+                          dimulai itu ditonton (titik terjauh dicapai / durasi). — kalau modul
+                          ini emang gak punya video. ⚠ = rata-rata di bawah 20%. Klik buat
+                          lihat rincian PER video - rata-rata bisa nyembunyiin satu video yang
+                          gak ditonton sama sekali di antara yang lain ditonton penuh. */}
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
-                          title="Video (upload + YouTube) yang dimulai / total video di modul ini, dan rata-rata seberapa jauh ditonton">
+                          title="Video (upload + YouTube) yang DIKLIK PLAY / total video di modul ini, dan rata-rata seberapa jauh ditonton">
                         {!s.total_video ? (
                           <span style={{ color: 'var(--text-faint)' }}>—</span>
-                        ) : (
-                          <>
-                            {s.video_dimulai}/{s.total_video}
-                            {s.video_dimulai > 0 && <> · {s.video_rata_persen}%</>}
-                            {s.video_dimulai > 0 && (s.video_rata_persen ?? 0) < 20 && (
+                        ) : s.video_dimulai > 0 ? (
+                          <button onClick={() => toggleRow(vKey)}
+                                  style={{ font: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text)', textDecoration: 'underline dotted' }}
+                                  title="Klik untuk lihat persentase tiap video">
+                            {s.video_dimulai}/{s.total_video} diklik · {s.video_rata_persen}%
+                            {(s.video_rata_persen ?? 0) < 20 && (
                               <span title="Rata-rata ditonton di bawah 20% - kemungkinan video dibuka lalu langsung ditinggal"
-                                    style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                                    style={{ marginLeft: 4, color: 'var(--danger)' }}>⚠</span>
                             )}
-                          </>
+                            {' '}<span style={{ fontSize: 10 }}>{vOpen ? '▾' : '▸'}</span>
+                          </button>
+                        ) : (
+                          <>0/{s.total_video} diklik</>
                         )}
                       </td>
                       {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
@@ -632,7 +684,7 @@ ${ref.current.outerHTML}
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                           title="Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat sebelum kuis, di modul ini">
                         {s.peringatan_baca_cepat > 0 ? (
-                          <button onClick={() => togglePeringatan(pKey)}
+                          <button onClick={() => toggleRow(pKey)}
                                   style={{ font: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--text)', textDecoration: 'underline dotted' }}
                                   title="Klik untuk lihat slide mana saja yang ketangkap">
                             {s.peringatan_baca_cepat}× <span style={{ fontSize: 10 }}>{pOpen ? '▾' : '▸'}</span>
@@ -646,6 +698,11 @@ ${ref.current.outerHTML}
                         )}
                       </td>
                     </tr>
+                    {vOpen && s.video_detail.length > 0 && (
+                      <tr style={{ borderTop: '1px dashed var(--border)', background: 'var(--surface-2)' }}>
+                        <td colSpan={kolom.length}><VideoRincian detail={s.video_detail} /></td>
+                      </tr>
+                    )}
                     {pOpen && s.peringatan_detail.length > 0 && (
                       <tr style={{ borderTop: '1px dashed var(--border)', background: 'var(--surface-2)' }}>
                         <td colSpan={kolom.length}><PeringatanRincian detail={s.peringatan_detail} /></td>

@@ -111,6 +111,15 @@ export interface PeringatanDetail {
   modul?: string; // cuma ada di ActivityLearner (lintas modul) - slug modul asalnya
 }
 
+// Rincian SATU video (blok media video/YouTube) - bukan cuma rata-rata
+// gabungan (video_rata_persen), yang bisa menyamarkan satu video yang gak
+// ditonton di antara yang lain ditonton penuh.
+export interface VideoDetail {
+  slide: number | null; // nomor slide rumah video ini. null = data lama sebelum field ini ada
+  persen: number; // titik terjauh yang dicapai / durasi, 0-100
+  modul?: string; // cuma ada di ActivityLearner (lintas modul) - slug modul asalnya
+}
+
 export interface ActivitySession {
   session_id: string;
   module_slug: string;
@@ -140,6 +149,10 @@ export interface ActivitySession {
   // ada satu video pun yang dimulai.
   video_dimulai: number;
   video_rata_persen: number | null;
+  // Rincian per video (slide + persen masing-masing), diurutkan dari yang
+  // paling rendah duluan — dipakai buat lihat video MANA yang jarang
+  // ditonton, bukan cuma rata-rata gabungan semuanya.
+  video_detail: VideoDetail[];
   mulai: string;
   selesai: string;
   durasi_total_ms: number;
@@ -202,6 +215,10 @@ export interface ActivityLearner {
   total_video_program: number | null;
   video_dimulai: number;
   video_rata_persen: number | null;
+  // Rincian per video (slide + persen masing-masing), diurutkan dari yang
+  // paling rendah duluan — dipakai buat lihat video MANA yang jarang
+  // ditonton, bukan cuma rata-rata gabungan semuanya.
+  video_detail: VideoDetail[];
   durasi_total_ms: number;
   durasi_menit: number;
   // Sama seperti ActivitySession: tatap layar dipakai sebagai durasi utama

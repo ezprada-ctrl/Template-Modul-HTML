@@ -2176,13 +2176,20 @@ function applySlideAudio(item){
 window._videoProgress = {};
 function videoTrackTime(blockId, currentTime, duration){
   if(!duration || !isFinite(duration) || duration<=0) return;
-  const st = window._videoProgress[blockId] || (window._videoProgress[blockId]={furthest:0,duration:0,lastSent:-1,started:false});
+  const st = window._videoProgress[blockId] || (window._videoProgress[blockId]={furthest:0,duration:0,lastSent:-1,started:false,slide:null});
   st.duration = duration;
   if(currentTime > st.furthest) st.furthest = currentTime;
 }
 function videoMarkStarted(blockId){
-  const st = window._videoProgress[blockId] || (window._videoProgress[blockId]={furthest:0,duration:0,lastSent:-1,started:false});
+  const st = window._videoProgress[blockId] || (window._videoProgress[blockId]={furthest:0,duration:0,lastSent:-1,started:false,slide:null});
   st.started = true;
+  // Dicatat SEKALI pas mulai (bukan diambil ulang tiap checkpoint) - blok
+  // video gak pindah slide sendiri, jadi slide saat pertama diputar itu
+  // sudah pasti slide rumahnya video ini.
+  if(st.slide == null){
+    const item = NAV[currentIdx];
+    st.slide = (item && item.num) || null;
+  }
 }
 function videoSendCheckpoint(blockId, ended){
   const st = window._videoProgress[blockId];
@@ -2191,7 +2198,10 @@ function videoSendCheckpoint(blockId, ended){
   const persen = Math.max(0, Math.min(100, Math.round(raw/st.duration*100)));
   if(persen <= st.lastSent) return; // nilai ini (atau lebih tinggi) udah pernah kekirim
   st.lastSent = persen;
-  actEvent('video_progress', {block: blockId, persen: persen});
+  // slide ikut dikirim tiap checkpoint (bukan cuma sekali) - persen TERJAUH
+  // per video baru diketahui backend-nya dari baris TERAKHIR yang menang
+  // (lihat activity_store.py), jadi baris itu perlu bawa slide-nya sendiri.
+  actEvent('video_progress', {block: blockId, persen: persen, slide: st.slide});
 }
 /* Dipanggil dari goTo() SEBELUM slide yang lagi ditinggalkan diganti -
    video yang masih diputar pas peserta pindah (gak sempat dijeda/selesai
