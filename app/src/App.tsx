@@ -221,9 +221,9 @@ function App() {
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: '28px 28px 80px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 22 }}>
         <div>
-          <h1 style={{ margin: '0 0 4px' }}>Template Modul Ikram</h1>
+          <h1 style={{ margin: '0 0 4px' }}>Ekosistem Modul Interaktif</h1>
           <p className="hint" style={{ margin: 0 }}>
-            Penyusun modul e-learning drag-and-drop — output identik dengan Modul 1 &amp; Modul 2.
+            Muhamad Ikram · Pengembang Teknologi Pembelajaran
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
