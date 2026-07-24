@@ -412,14 +412,20 @@ ${ref.current.outerHTML}
                           )}
                         </td>
                         {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
-                            sebelum kuis, dijumlah lintas semua modul. ⚠ = ada yang tetap
-                            "Yakin, lanjut ke kuis" walau udah diperingatkan. */}
+                            sebelum kuis, dijumlah lintas semua modul. Angka utama = total
+                            peringatan yang MUNCUL (termasuk yang ditindaklanjuti dengan baca
+                            ulang) - "(n diabaikan)" adalah SUBSET dari angka itu yang tetap
+                            pilih "Yakin, lanjut ke kuis". Ditulis sebagai pecahan eksplisit
+                            (bukan cuma ikon ⚠) karena "3× ⚠" ambigu: gak kelihatan apakah
+                            3-3nya diabaikan atau cuma 1 dari 3. */}
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                             title="Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat sebelum kuis (dari semua modulnya)">
                           {l.peringatan_baca_cepat > 0 ? `${l.peringatan_baca_cepat}×` : '—'}
                           {l.peringatan_diabaikan > 0 && (
-                            <span title={`${l.peringatan_diabaikan}× tetap pilih lanjut ke kuis meski diperingatkan`}
-                                  style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                            <span title={`${l.peringatan_diabaikan} dari ${l.peringatan_baca_cepat} peringatan itu tetap dipilih "lanjut ke kuis" tanpa baca ulang`}
+                                  style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>
+                              ({l.peringatan_diabaikan} diabaikan)
+                            </span>
                           )}
                         </td>
                         <td style={{ padding: '8px 11px', color: 'var(--text-faint)' }}>{l.modul_slugs.join(', ')}</td>
@@ -568,14 +574,19 @@ ${ref.current.outerHTML}
                       </td>
                       {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
                           (< 50% waktu baca minimum Brysbaert) sebelum percobaan kuis
-                          pertama bagian itu. ⚠ = tetap pilih "Yakin, lanjut ke kuis"
-                          meski udah diperingatkan (bukan "Kembali, pelajari lagi"). */}
+                          pertama bagian itu. Angka utama = total peringatan yang MUNCUL
+                          (termasuk yang ditindaklanjuti dengan baca ulang) - "(n diabaikan)"
+                          adalah SUBSET yang tetap pilih "Yakin, lanjut ke kuis" (bukan
+                          "Kembali, pelajari lagi"). Dieja eksplisit karena "3× ⚠" ambigu
+                          soal berapa dari 3 itu yang beneran diabaikan. */}
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                           title="Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat sebelum kuis, di modul ini">
                         {s.peringatan_baca_cepat > 0 ? `${s.peringatan_baca_cepat}×` : '—'}
                         {s.peringatan_diabaikan > 0 && (
-                          <span title={`${s.peringatan_diabaikan}× tetap pilih lanjut ke kuis meski diperingatkan`}
-                                style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                          <span title={`${s.peringatan_diabaikan} dari ${s.peringatan_baca_cepat} peringatan itu tetap dipilih "lanjut ke kuis" tanpa baca ulang`}
+                                style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>
+                            ({s.peringatan_diabaikan} diabaikan)
+                          </span>
                         )}
                       </td>
                     </tr>
