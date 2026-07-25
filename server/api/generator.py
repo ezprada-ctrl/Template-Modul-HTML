@@ -414,6 +414,36 @@ def render_block(b):
     return fn(b)
 
 
+def count_interaktif(blocks):
+    """Berapa banyak "menu tersembunyi" yang HARUS diklik peserta buat kebuka.
+
+    Ini penyebut buat sinyal interaktif di rekap peserta. Harus persis
+    sepadan dengan apa yang dihitung `_interaksi_key()` di activity_store.py
+    sebagai pembilang, kalau enggak rasionya bisa keluar aneh (5/4).
+
+    Yang dihitung: tiap item accordion (masing-masing punya id sendiri), tiap
+    tombol modal, dan tab/langkah alur SELAIN yang pertama - idx 0 di tabs &
+    diagram alur udah kebuka duluan tanpa diklik, jadi dia bukan sesuatu yang
+    "digali". Blok statis (card/callout/timeline/tabel) sengaja gak dihitung:
+    gak ada yang perlu diklik, jadi gak ada yang bisa kelewat.
+    """
+    total = 0
+    for b in blocks or []:
+        t = b.get('type')
+        if t == 'accordion':
+            total += len(b.get('accItems', []))
+        elif t == 'modal':
+            total += 1
+        elif t == 'tabs':
+            total += max(0, len(b.get('tabItems', [])) - 1)
+        elif t == 'flow':
+            total += max(0, len(b.get('steps', [])) - 1)
+        elif t == 'grid':
+            # Grid cuma wadah - blok interaktif di dalamnya tetap harus diklik.
+            total += count_interaktif(b.get('blocks', []))
+    return total
+
+
 def render_slide_html(slide):
     kicker = f'<div class="kicker"><span class="num">{slide["number"]}</span>{esc(slide.get("kickerLabel",""))}</div>'
     title = f'<h1 class="slide-title">{esc(slide.get("title",""))}</h1>'
@@ -577,6 +607,12 @@ def generate_html(module):
         if b.get('type') == 'media' and (b.get('mediaSource') or 'video') in ('video', 'youtube')
     )
     out = out.replace('__TOTAL_VIDEO_JS__', js_str(total_video))
+    # Penyebut sinyal interaktif di rekap peserta ("baru 2 dari 9 menu yang
+    # kamu buka"). Sama alasannya kayak dua konstanta di atas: tanpa angka
+    # total, "2 menu diklik" gak bisa dibedain antara modul yang cuma punya 2
+    # dan modul yang punya 20.
+    out = out.replace('__TOTAL_INTERAKTIF_JS__', js_str(
+        sum(count_interaktif(s.get('blocks', [])) for s in slides)))
     # Waktu baca minimum per slide (ms), dari jumlah kata / 238 wpm (Brysbaert
     # 2019). Dipakai modul buat deteksi slide yang di-klik-lewat terlalu
     # cepat sebelum kuis bagian itu - lihat resolveReadingWarning() di
@@ -585,6 +621,17 @@ def generate_html(module):
 
     quizzes = module.get('quizzes', {})
     out = out.replace('__QUIZZES_JS__', js_str(quizzes))
+
+    # Judul section yang PUNYA kuis, buat narasi rekap ("paling banyak gagal di
+    # Section B (Judulnya)"). Sengaja cuma yang punya kuis, bukan semua section:
+    # backend pakai map ini juga sebagai penanda "modul ini punya kuis apa
+    # nggak". Section tanpa kuis gak pernah ngelewatin gerbang peringatan
+    # baca-cepat, jadi kalau ikut dihitung, modul tanpa kuis bakal dinilai
+    # "bagus" di dua sinyal yang sebenarnya gak berlaku buat dia (n/a).
+    section_titles = {
+        sec['id']: sec.get('title', '') for sec in sections if quizzes.get(sec['id'])
+    }
+    out = out.replace('__SECTION_TITLES_JS__', js_str(section_titles))
 
     multi_groups = module.get('multiGroups', {})
     out = out.replace('__MULTI_GROUPS_JS__', js_str(multi_groups))
@@ -607,6 +654,19 @@ def generate_html(module):
     out = out.replace('__TRACK_ACTIVITY_JS__', js_str(track))
     out = out.replace('__SUPABASE_URL_JS__', js_str(os.environ.get('SUPABASE_URL', '').rstrip('/') if track else ''))
     out = out.replace('__SUPABASE_ANON_KEY_JS__', js_str(os.environ.get('SUPABASE_ANON_KEY', '') if track else ''))
+
+    # Popup "Ringkasan Belajarmu" buat peserta sendiri di slide Ringkasan.
+    # Dipaksa mati kalau perekaman aktivitas mati: tanpa tracking gak ada satu
+    # baris pun buat direkap, jadi popup-nya cuma bakal nampilin kosong.
+    show_recap = track and bool(module.get('showRecap', False))
+    out = out.replace('__SHOW_RECAP_JS__', js_str(show_recap))
+    # Beda dari event aktivitas yang nembak Supabase LANGSUNG (anon
+    # INSERT-only), rekap harus MEMBACA - dan anon sengaja nol izin SELECT.
+    # Jadi bacanya lewat backend kita (service_role di sisi server). Modul
+    # selama ini gak pernah tau URL backend, makanya wajib ditanam di sini.
+    out = out.replace('__RECAP_API_JS__', js_str(
+        os.environ.get('RECAP_API_BASE', 'https://template-modul-html-backend.vercel.app').rstrip('/')
+        if show_recap else ''))
 
     hero_title_html = nl2br(module.get('heroTitleHtml') or esc(module.get('title', '')))
     out = out.replace('__HERO_TITLE_HTML__', hero_title_html)

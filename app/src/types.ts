@@ -130,6 +130,12 @@ export interface ModuleData {
   // asks the learner for Nama + NIP up front. Opt-in per module so ordinary
   // modules don't send anything at all.
   trackActivity?: boolean;
+  // When true, the learner sees their OWN activity recap as an infographic
+  // popup at the end of the module (screen time, videos watched, rushed
+  // slides, knowledge-check first-attempt score, weakest quiz section,
+  // unopened interactive menus) with narrative tuned to how they did.
+  // Requires trackActivity — without it there is no data to show at all.
+  showRecap?: boolean;
   theme: { accent: string; accent2: string; onAccent: string; navy: string };
   sections: Section[];
   slides: Slide[];
@@ -182,6 +188,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     coverImageDataUri: '',
     hideProgress: false,
     trackActivity: false,
+    showRecap: false,
     theme: { ...DEFAULT_THEME },
     sections: [{ id: 'a', title: 'A. Bagian Satu', short: 'Bagian Satu', icon: 'A', color: '#c99a3d' }],
     slides: [],

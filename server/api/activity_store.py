@@ -52,7 +52,7 @@ def _headers():
     }
 
 
-def fetch_rows(module_slug=None, columns='*', event_type=None):
+def fetch_rows(module_slug=None, columns='*', event_type=None, learner_id=None):
     """Ambil semua baris, dipaginasi.
 
     Loop-nya sengaja maju sebanyak baris yang BENERAN diterima dan berhenti
@@ -84,6 +84,11 @@ def fetch_rows(module_slug=None, columns='*', event_type=None):
             params['module_slug'] = f'eq.{module_slug}'
         if event_type:
             params['event_type'] = f'eq.{event_type}'
+        # Disaring di sisi server (PostgREST): rekap pribadi peserta cuma
+        # butuh barisnya sendiri, jangan seret seluruh baris modul ke memori
+        # fungsi serverless cuma buat dibuang lagi di sini.
+        if learner_id:
+            params['learner_id'] = f'eq.{learner_id}'
         res = requests.get(
             f'{SUPABASE_URL}/rest/v1/modul_activity',
             params=params, headers=_headers(), timeout=30,
@@ -582,3 +587,254 @@ def summarize_learners():
         out.append(L)
     out.sort(key=lambda x: (-x['jumlah_modul'], -x['durasi_total_ms']))
     return out
+
+
+# ---------------------------------------------------------------------------
+# Rekap pribadi peserta ("Ringkasan Belajarmu")
+#
+# BEDA TOTAL dari summarize_sessions/summarize_learners di atas: yang itu buat
+# TIM (semua peserta, dikunci password). Yang ini buat PESERTA ITU SENDIRI,
+# dipanggil dari dalam modul yang lagi dia buka, dan CUMA boleh balikin baris
+# milik NIP yang diminta - jangan pernah ditambahi kebocoran ke peserta lain.
+#
+# Ambang "jelek" di bawah ini SUDAH DISEPAKATI user, jangan diubah diam-diam:
+#   slide kelewat cepat  -> ada minimal 1
+#   ditinggal            -> > 10 menit (sama persis ambang ⚠ Command Center)
+#   video                -> ada yang gak diklik SAMA SEKALI, atau rata-rata <50%
+#   knowledge check      -> benar < 50% DARI PERCOBAAN PERTAMA
+#   kuis                 -> section terparah gagal >= 2 kali
+#   interaktif           -> < 50% menu yang tersedia pernah diklik
+#
+# Tiap sinyal TRI-STATE: 'jelek' / 'bagus' / None (= n/a, modulnya emang gak
+# punya elemen itu). n/a WAJIB dibedakan dari 'jelek' - kalau modul tanpa video
+# dihitung "jelek", semua peserta di modul itu kena vonis gara-gara sesuatu
+# yang gak pernah ada.
+DITINGGAL_JELEK_MENIT = 10
+VIDEO_JELEK_PERSEN = 50
+KC_JELEK_PERSEN = 50
+KUIS_JELEK_GAGAL = 2
+INTERAKTIF_JELEK_PERSEN = 50
+
+# idx 0 pada tabs & diagram alur TAMPIL DULUAN tanpa diklik - jadi dia bukan
+# "menu tersembunyi yang harus digali". Dikecualikan di dua sisi sekaligus
+# (penyebut di generator.py, dan penghitungan unik di sini) supaya rasionya
+# jujur; kalau cuma dikecualikan sebelah, peserta bisa dapat 5/4.
+_IDX0_DEFAULT_VISIBLE = ('tabs', 'flow')
+
+
+def _interaksi_key(payload):
+    """Kunci unik satu elemen interaktif, atau None kalau elemen itu memang
+    tampil duluan tanpa perlu diklik (idx 0 tabs/flow)."""
+    jenis = payload.get('jenis')
+    idx = payload.get('idx')
+    if jenis in _IDX0_DEFAULT_VISIBLE and (idx == 0 or idx is None):
+        return None
+    return (jenis, payload.get('id'), idx)
+
+
+def recap_for_learner(module_slug, learner_id, live_session_id=None, live_total_ms=None):
+    """Rekap satu peserta di satu modul + pembanding rata-rata kelas.
+
+    Balikan sengaja berisi ANGKA MENTAH + status tiap sinyal, bukan kalimat
+    jadi - narasinya disusun di sisi modul (shell-template.html) supaya bisa
+    diubah tanpa deploy ulang backend.
+
+    `live_*` itu sesi yang LAGI BERJALAN waktu peserta buka rekapnya. Wajib
+    ada, kalau enggak sinyal "ditinggal" gak akan pernah nyala di popup ini:
+    ditinggal = total waktu sesi - waktu yang beneran ketatap, dan "total
+    waktu sesi" cuma dikirim di `session_end` - yang justru belum kejadian
+    persis pada saat peserta lagi ngeliat rekapnya. Modul yang tau angka itu
+    sekarang, jadi dia yang nyetorin.
+    """
+    rows = _tanpa_preflight(fetch_rows(module_slug=module_slug, learner_id=learner_id))
+
+    nama = None
+    total_slide = None
+    total_video = None
+    total_interaktif = None
+    slide_titles = {}
+    section_titles = {}
+    terekam_ms = 0
+    # Ditinggal dihitung PER SESI, bukan dari satu angka gabungan. Peserta yang
+    # ngulang modul punya beberapa sesi; kalau waktu tatap dijumlah lintas sesi
+    # tapi totalnya cuma diambil dari satu sesi, selisihnya jadi ngawur (bisa
+    # minus lalu ke-clamp jadi 0 = "gak pernah ditinggal" palsu).
+    sesi_terekam_ms = {}
+    sesi_total_ms = {}
+    slide_unik = set()
+    video_max = {}
+    video_slide = {}
+    peringatan_detail = []
+    kuis_gagal_per_section = {}
+    interaksi_unik = set()
+    # (block, soal) -> benar?  HANYA percobaan PERTAMA yang disimpan. Baris
+    # datang urut created_at.asc, jadi kemunculan pertama = percobaan pertama.
+    # Ini krusial: mode perOption ngasih peserta ngulang SAMPAI benar, jadi
+    # kalau dipukul rata semua percobaan, hampir semua orang keliatan 100%.
+    kc_pertama = {}
+
+    for r in rows:
+        if r.get('learner_name'):
+            nama = r['learner_name']
+        p = r.get('payload') or {}
+        t = r['event_type']
+        if t == 'session_start':
+            total_slide = p.get('total_slide', total_slide)
+            total_video = p.get('total_video', total_video)
+            total_interaktif = p.get('total_interaktif', total_interaktif)
+            if p.get('slide_titles'):
+                slide_titles = p['slide_titles']
+            if p.get('section_titles'):
+                section_titles = p['section_titles']
+        elif t == 'slide_view':
+            ms = p.get('ms') or 0
+            terekam_ms += ms
+            sesi_terekam_ms[r.get('session_id')] = sesi_terekam_ms.get(r.get('session_id'), 0) + ms
+            if p.get('kind') == 'slide' and p.get('num') is not None:
+                slide_unik.add(p['num'])
+        elif t == 'session_end':
+            sid = r.get('session_id')
+            sesi_total_ms[sid] = max(sesi_total_ms.get(sid, 0), p.get('total_ms') or 0)
+        elif t == 'video_progress':
+            block, persen = p.get('block'), p.get('persen')
+            if block and persen is not None:
+                if persen > video_max.get(block, 0):
+                    video_max[block] = persen
+                if p.get('slide') is not None:
+                    video_slide[block] = p['slide']
+        elif t == 'quiz_submit':
+            if p.get('lulus') is False and p.get('section'):
+                kuis_gagal_per_section[p['section']] = kuis_gagal_per_section.get(p['section'], 0) + 1
+        elif t == 'reading_warning':
+            peringatan_detail.append({
+                'section': p.get('section'),
+                'slides': p.get('slides') or [],
+                'choice': p.get('choice'),
+            })
+        elif t == 'kc_answer':
+            key = (p.get('block'), p.get('soal'))
+            if key not in kc_pertama:
+                kc_pertama[key] = bool(p.get('benar'))
+        elif t == 'interaction':
+            k = _interaksi_key(p)
+            if k:
+                interaksi_unik.add(k)
+
+    # Sesi yang lagi berjalan: totalnya belum pernah dikirim lewat session_end
+    # (peserta masih di dalam modul), jadi diambil dari setoran modul. Kalau
+    # sesi itu ternyata SUDAH punya session_end (peserta buka rekap, nutup
+    # modul, lalu buka lagi), yang dari database menang - itu angka final.
+    if live_session_id and live_total_ms and live_session_id not in sesi_total_ms:
+        sesi_total_ms[live_session_id] = live_total_ms
+
+    # ---- ringkas tiap sinyal ----
+    tatap_menit = round(terekam_ms / 60000, 1)
+    # Cuma sesi yang totalnya diketahui yang ikut dihitung. Sesi yang tabnya
+    # dibunuh paksa (gak pernah ngirim session_end) sengaja dilewatin, bukan
+    # dianggap nol - lihat alasan yang sama di summarize_sessions.
+    ditinggal_ms = sum(
+        max(0, tot - sesi_terekam_ms.get(sid, 0)) for sid, tot in sesi_total_ms.items()
+    )
+    ditinggal_menit = round(ditinggal_ms / 60000, 1) if sesi_total_ms else None
+
+    # Slide kelewat cepat: nomor slide unik + judulnya, plus apakah peserta
+    # sempat diperingatkan tapi tetap milih lanjut ke kuis.
+    slide_rushed = []
+    seen_rushed = set()
+    for d in peringatan_detail:
+        for num in d['slides']:
+            if num in seen_rushed:
+                continue
+            seen_rushed.add(num)
+            slide_rushed.append({'num': num, 'judul': slide_titles.get(str(num)) or ''})
+    peringatan_diabaikan = sum(1 for d in peringatan_detail if d.get('choice') == 'yakin')
+
+    video_dimulai = len(video_max)
+    video_rata = round(sum(video_max.values()) / video_dimulai) if video_dimulai else None
+    video_detail = sorted(
+        [{'slide': video_slide.get(b), 'persen': p} for b, p in video_max.items()],
+        key=lambda d: d['persen'])
+
+    kc_total = len(kc_pertama)
+    kc_benar = sum(1 for v in kc_pertama.values() if v)
+
+    kuis_section_terparah = None
+    if kuis_gagal_per_section:
+        sid, gagal = max(kuis_gagal_per_section.items(), key=lambda kv: kv[1])
+        kuis_section_terparah = {'section': sid, 'judul': section_titles.get(sid) or '', 'gagal': gagal}
+
+    interaktif_diklik = len(interaksi_unik)
+
+    # ---- status tiap sinyal (None = n/a, modulnya gak punya elemen ini) ----
+    def _st(kondisi_jelek, ada_datanya=True):
+        if not ada_datanya:
+            return None
+        return 'jelek' if kondisi_jelek else 'bagus'
+
+    sinyal = {
+        # n/a kalau modulnya gak punya kuis sama sekali - tanpa kuis, gerbang
+        # peringatan baca-cepat memang gak pernah ketrigger, jadi "nol
+        # peringatan" di situ bukan bukti peserta membaca dengan benar.
+        'slide_cepat': _st(len(slide_rushed) > 0, bool(section_titles)),
+        'ditinggal': _st((ditinggal_menit or 0) > DITINGGAL_JELEK_MENIT, ditinggal_menit is not None),
+        'video': _st(
+            (total_video or 0) > video_dimulai or (video_rata or 0) < VIDEO_JELEK_PERSEN,
+            bool(total_video)),
+        'kc': _st(kc_benar * 100 < kc_total * KC_JELEK_PERSEN, kc_total > 0),
+        'kuis': _st(
+            bool(kuis_section_terparah) and kuis_section_terparah['gagal'] >= KUIS_JELEK_GAGAL,
+            bool(section_titles)),
+        'interaktif': _st(
+            interaktif_diklik * 100 < (total_interaktif or 0) * INTERAKTIF_JELEK_PERSEN,
+            bool(total_interaktif)),
+    }
+    jumlah_jelek = sum(1 for v in sinyal.values() if v == 'jelek')
+    cabang = 'kurang' if jumlah_jelek >= 3 else ('menengah' if jumlah_jelek == 2 else 'rajin')
+
+    return {
+        'ada_data': bool(rows),
+        'nama': nama,
+        'learner_id': learner_id,
+        'tatap_menit': tatap_menit,
+        'ditinggal_menit': ditinggal_menit,
+        'slide_unik': len(slide_unik),
+        'total_slide': total_slide,
+        'slide_rushed': slide_rushed,
+        'peringatan_diabaikan': peringatan_diabaikan,
+        'video_dimulai': video_dimulai,
+        'total_video': total_video,
+        'video_rata_persen': video_rata,
+        'video_detail': video_detail,
+        'kc_benar': kc_benar,
+        'kc_total': kc_total,
+        'kuis_terparah': kuis_section_terparah,
+        'interaktif_diklik': interaktif_diklik,
+        'total_interaktif': total_interaktif,
+        'sinyal': sinyal,
+        'jumlah_jelek': jumlah_jelek,
+        'cabang': cabang,
+        'rata_kelas_tatap_menit': _rata_kelas_tatap_menit(module_slug),
+    }
+
+
+def _rata_kelas_tatap_menit(module_slug):
+    """Rata-rata tatap layar SEMUA peserta di modul ini, buat pembanding di
+    rekap pribadi. None kalau belum ada peserta lain yang cukup buat
+    dibandingkan - satu orang gak bisa jadi 'rata-rata kelas'.
+
+    Cuma narik kolom seperlunya (bukan payload penuh) supaya query pembanding
+    ini gak jadi beban di tiap peserta yang buka rekapnya.
+    """
+    rows = _tanpa_preflight(fetch_rows(
+        module_slug=module_slug, columns='learner_id,event_type,payload'))
+    per_learner = {}
+    for r in rows:
+        if r['event_type'] != 'slide_view':
+            continue
+        nip = r.get('learner_id')
+        if not nip:
+            continue
+        per_learner[nip] = per_learner.get(nip, 0) + ((r.get('payload') or {}).get('ms') or 0)
+    if len(per_learner) < 2:
+        return None
+    return round(sum(per_learner.values()) / len(per_learner) / 60000, 1)

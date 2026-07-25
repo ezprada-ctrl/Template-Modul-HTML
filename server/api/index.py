@@ -227,6 +227,45 @@ def api_activity_rows():
         return jsonify({'error': str(e)}), 503
 
 
+@app.post('/api/activity/my-recap')
+def api_activity_my_recap():
+    """Rekap belajar SATU peserta, dipanggil dari dalam modul yang lagi dia buka.
+
+    SENGAJA TANPA PASSWORD — beda peruntukan dari endpoint Command Center di
+    atas. Yang di atas itu buat TIM (semua peserta sekaligus, data pribadi
+    orang lain, wajib dikunci). Yang ini cuma balikin rekap milik NIP yang
+    diminta, dalam bentuk AGREGAT (angka ringkas), bukan baris mentah.
+
+    Batas yang disadari: siapa pun yang tau NIP orang lain bisa manggil ini
+    dan lihat rekap orang itu. Itu konsekuensi model kepercayaan yang sudah
+    dipakai modul sejak awal (NIP = identitas, gak ada login di mana pun) —
+    bukan kebocoran baru yang diperkenalkan endpoint ini. Yang TIDAK boleh
+    ditambahkan ke sini: daftar peserta, pencarian NIP, atau apa pun yang
+    bikin NIP bisa DITEMUKAN dari sini; tanpa itu, endpoint ini gak bisa
+    dipakai buat memanen data massal.
+    """
+    data = request.get_json(silent=True) or {}
+    slug = (data.get('module_slug') or '').strip()
+    nip = (data.get('learner_id') or '').strip()
+    if not slug or not nip:
+        return jsonify({'error': 'module_slug dan learner_id wajib diisi'}), 400
+    # Sesi yang lagi berjalan waktu rekap dibuka. Belum ada di database
+    # (session_end baru kekirim pas modulnya ditutup), padahal justru sesi
+    # inilah yang barusan dijalani peserta - tanpa ini sinyal "ditinggal"
+    # gak pernah bisa nyala di popup.
+    live_session_id = (data.get('live_session_id') or '').strip() or None
+    try:
+        live_total_ms = int(data.get('live_total_ms') or 0) or None
+    except (TypeError, ValueError):
+        live_total_ms = None
+    try:
+        activity_store.reset_truncation()
+        return jsonify(activity_store.recap_for_learner(
+            slug, nip, live_session_id=live_session_id, live_total_ms=live_total_ms))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
 @app.get('/api/keepalive')
 def api_keepalive():
     """Hit daily by Vercel Cron (schedule lives in server/vercel.json) so the

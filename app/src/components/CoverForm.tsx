@@ -138,6 +138,27 @@ export default function CoverForm({ module, setModule }: Props) {
               nanti datanya nyampur di Command Center.
             </p>
           )}
+          {/* Rekap buat peserta — sengaja nempel di bawah "Rekam aktivitas"
+              dan cuma muncul kalau centang itu nyala: tanpa perekaman gak ada
+              satu angka pun buat diringkas, jadi centang ini sendirian bakal
+              nampilin popup kosong. Nilainya sengaja TIDAK ikut dimatikan
+              waktu tracking dimatikan — generator udah maksa mati saat export,
+              jadi pilihan penyusun tetap keinget kalau tracking dinyalain lagi. */}
+          {module.trackActivity && (
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-dim)', cursor: 'pointer', margin: '2px 0 0 26px' }}>
+              <input type="checkbox" checked={!!module.showRecap} style={{ marginTop: 3 }}
+                onChange={e => setModule({ ...module, showRecap: e.target.checked })} />
+              <span>
+                Tampilkan Rekap Aktivitas ke Peserta
+                <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2, lineHeight: 1.5 }}>
+                  Di slide Ringkasan, peserta dikasih popup “Ringkasan Belajarmu” berisi catatan sesinya
+                  sendiri (durasi tatap layar, slide yang kelewat cepat, video, Knowledge Check, kuis,
+                  menu interaktif) plus ajakan mengulang kalau sesinya kurang maksimal. Yang dilihat
+                  cuma datanya sendiri — peserta gak bisa lihat data peserta lain.
+                </span>
+              </span>
+            </label>
+          )}
           <label style={{ color: 'var(--text-dim)' }}>
             Judul besar di layar sampul (boleh HTML sederhana, mis. pakai <code>&lt;br&gt;</code> untuk ganti baris
             atau <code>&lt;span&gt;...&lt;/span&gt;</code> untuk bagian yang diwarnai emas)
