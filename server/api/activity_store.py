@@ -813,14 +813,21 @@ def recap_for_learner(module_slug, learner_id, live_session_id=None, live_total_
         'sinyal': sinyal,
         'jumlah_jelek': jumlah_jelek,
         'cabang': cabang,
-        'rata_kelas_tatap_menit': _rata_kelas_tatap_menit(module_slug),
+        'rata_kelas_tatap_menit': _rata_kelas_tatap_menit(module_slug, exclude_learner_id=learner_id),
     }
 
 
-def _rata_kelas_tatap_menit(module_slug):
-    """Rata-rata tatap layar SEMUA peserta di modul ini, buat pembanding di
-    rekap pribadi. None kalau belum ada peserta lain yang cukup buat
-    dibandingkan - satu orang gak bisa jadi 'rata-rata kelas'.
+def _rata_kelas_tatap_menit(module_slug, exclude_learner_id=None):
+    """Rata-rata tatap layar peserta LAIN di modul ini, buat pembanding di
+    rekap pribadi. None kalau belum ada peserta LAIN yang cukup buat
+    dibandingkan - satu orang gak bisa jadi 'rata-rata kelas', dan diri
+    sendiri bukan pembanding buat diri sendiri.
+
+    BUG yang sempat kejadian (ketemu 2026-07-26 pas verifikasi lewat replay
+    event sungguhan, bukan angka karangan): sebelum ini `exclude_learner_id`
+    gak ada sama sekali, jadi peserta yang buka rekapnya ikut kehitung di
+    dalam "rata-rata peserta LAIN" miliknya sendiri - labelnya bilang "peserta
+    lain" tapi angkanya diam-diam kecampur data dia sendiri.
 
     Cuma narik kolom seperlunya DAN cuma event_type slide_view (disaring di
     server lewat PostgREST, bukan dibuang belakangan di Python) - beda dari
@@ -834,9 +841,9 @@ def _rata_kelas_tatap_menit(module_slug):
     per_learner = {}
     for r in rows:
         nip = r.get('learner_id')
-        if not nip:
+        if not nip or nip == exclude_learner_id:
             continue
         per_learner[nip] = per_learner.get(nip, 0) + ((r.get('payload') or {}).get('ms') or 0)
-    if len(per_learner) < 2:
+    if len(per_learner) < 1:
         return None
     return round(sum(per_learner.values()) / len(per_learner) / 60000, 1)

@@ -2370,9 +2370,10 @@ function recapGabung(arr){
 }
 
 function recapSectionLabel(k){
-  const sid = String(k.section || '');
-  const nama = 'Section ' + sid.toUpperCase();
-  return k.judul ? (nama + ' (' + recapEsc(k.judul) + ')') : nama;
+  // Judul section udah bawa penanda hurufnya sendiri ("B. Dasar Hukum"),
+  // jadi nulis "Section B (B. Dasar Hukum)" cuma ngulang "B" dua kali.
+  // Judul aja cukup; "Section X" cuma fallback kalau judulnya kosong.
+  return k.judul ? recapEsc(k.judul) : ('Section ' + String(k.section || '').toUpperCase());
 }
 
 function recapNarasi(d){
@@ -2408,21 +2409,26 @@ function recapNarasi(d){
     const total = d.total_video || 0;
     const mulai = d.video_dimulai || 0;
     const rata = d.video_rata_persen;
+    // "rata-rata" cuma masuk akal kalau ada LEBIH dari satu video yang
+    // diputar - rata-rata dari satu angka ya angka itu sendiri, jadi
+    // kalau cuma 1 video diputar, sebut persennya langsung tanpa embel2
+    // "rata-rata" biar gak kedengaran janggal.
+    const frasaRata = mulai > 1 ? 'rata-rata ' : '';
     let bad;
     if(mulai === 0){
       bad = `Dari <b>${total} video</b> di modul ini, belum ada satu pun yang kamu putar. `
           + `Padahal biasanya justru di situ penjelasan yang paling gampang dicerna.`;
     } else if(mulai < total){
       bad = `Dari <b>${total} video</b> di modul ini, baru <b>${mulai}</b> yang kamu putar`
-          + (rata != null ? `, dan yang diputar pun rata-rata baru sampai <b>${rata}%</b>` : '') + `.`;
+          + (rata != null ? `, dan yang diputar pun ${frasaRata}baru sampai <b>${rata}%</b>` : '') + `.`;
     } else {
-      bad = `Semua <b>${total} video</b> kamu putar, tapi rata-rata baru sampai <b>${rata}%</b> — `
+      bad = `Semua <b>${total} video</b> kamu putar, tapi ${frasaRata}baru sampai <b>${rata}%</b> — `
           + `sebagian besar berhenti di tengah jalan.`;
     }
     return {
       ic: '🎬', bad: bad,
-      soft: `video di modul ini rata-rata baru ketonton ${rata != null ? rata : 0}%, sempetin dituntasin ya`,
-      good: `Video kamu tonton sampai rata-rata <b>${rata}%</b> (${mulai} dari ${total}) — bukan cuma diputar sekilas.`
+      soft: `video di modul ini ${frasaRata}baru ketonton ${rata != null ? rata : 0}%, sempetin dituntasin ya`,
+      good: `Video kamu tonton sampai ${frasaRata}<b>${rata}%</b> (${mulai} dari ${total}) — bukan cuma diputar sekilas.`
     };
   };
 
@@ -2488,7 +2494,7 @@ function recapStatsHtml(d){
       <div class="recap-stat-label">Slide dibuka</div>
       <div class="recap-stat-value">${d.slide_unik}<span style="font-size:13px;color:var(--text-faint)">/${d.total_slide}</span></div>
       ${d.slide_unik < d.total_slide
-          ? `<div class="recap-stat-note">${d.total_slide - d.slide_unik} slide belum kesentuh</div>`
+          ? `<div class="recap-stat-note">${d.total_slide - d.slide_unik} slide dibuka terlalu cepat, sistem tidak sempat merekam aktivitas kamu di sana</div>`
           : '<div class="recap-stat-note">Semua slide pernah dibuka</div>'}
     </div>`;
   }
@@ -2541,8 +2547,7 @@ function recapRender(d){
     headline = 'Yuk, Tingkatkan Lagi Sesi Belajarmu';
     poin = jelek.map(k => { const n = N[k](); return recapPoint('bad', n.ic, n.bad); }).join('');
     closing = 'Terlihat dari hal di atas, sepertinya sesi belajar kali ini belum maksimal. '
-            + 'Gak apa-apa — belajar emang gak selalu bisa buat fokus penuh. '
-            + 'Yuk ulangi modul ini pas kamu ada waktu lebih tenang, progresmu bakal tersimpan otomatis.';
+            + 'Kamu bisa ulangi modul ini kapan aja pas kamu ada waktu lebih tenang, progresmu tersimpan otomatis.';
   } else if(d.cabang === 'rajin'){
     headline = 'Mantap, Kamu Belajar dengan Serius! 👏';
     poin = bagus.map(k => { const n = N[k](); return recapPoint('good', n.ic, n.good); }).join('');
@@ -2588,47 +2593,64 @@ function recapRender(d){
 let recapDemoAktif = false;
 let recapDemoIdx = 0;
 
+/* Angka-angka di bawah ini BUKAN karangan - ditarik dari simulasi replay
+   event ASLI (Puppeteer nge-drive goTo/answerQuiz/kcAnswer/dst yang beneran,
+   Date.now() dikontrol biar cepat, event yang beneran terkirim modul
+   ditangkap lalu dijalanin lewat recap_for_learner() Python yang ASLI) -
+   bukan diketik tangan. Pelajaran dari [[project_rekap_peserta_popup]]:
+   angka karangan gampang keliru konsisten sendiri (mis. "34 slide belum
+   kesentuh" tapi cuma "3 slide dilewat cepat" - dua metrik beda mekanisme
+   yang kalau diketik manual gampang gak nyambung). Cuma JUDUL slide yang
+   ditulis manual (kosmetik, gak butuh verifikasi - modul simulasinya cuma
+   punya judul generik "Section - Slide N"). */
 const RECAP_CONTOH = [
   { /* cabang KURANG - persona paling bermasalah, sinyal numpuk sekaligus */
     ada_data: true, nama: 'Rahmat Wijaya', learner_id: '199203152015031005',
-    tatap_menit: 8.4, ditinggal_menit: 27.5, slide_unik: 61, total_slide: 95,
-    slide_rushed: [{num: 14, judul: 'Asas Pemungutan Pajak'}, {num: 15, judul: 'Fungsi Budgetair'},
-                   {num: 33, judul: 'Kode Etik Pegawai'}],
-    peringatan_diabaikan: 2,
-    video_dimulai: 1, total_video: 4, video_rata_persen: 14,
-    video_detail: [{slide: 5, persen: 14}],
-    kc_benar: 3, kc_total: 12,
-    kuis_terparah: {section: 'b', judul: 'B. Dasar Hukum', gagal: 3},
-    interaktif_diklik: 4, total_interaktif: 26,
+    tatap_menit: 1.2, ditinggal_menit: 26.0, slide_unik: 5, total_slide: 18,
+    slide_rushed: [
+      {num: 1, judul: 'Dasar Hukum Perpajakan'}, {num: 2, judul: 'Asas Pemungutan Pajak'},
+      {num: 3, judul: 'Subjek dan Objek Pajak'}, {num: 4, judul: 'Kewajiban Wajib Pajak'},
+      {num: 5, judul: 'Sanksi Administratif'}, {num: 8, judul: 'Batas Waktu Pelaporan'},
+      {num: 9, judul: 'Formulir SPT Tahunan'}, {num: 10, judul: 'Prosedur Pelaporan Online'},
+      {num: 11, judul: 'Rekonsiliasi Data'}, {num: 13, judul: 'Kode Etik Pegawai'},
+      {num: 14, judul: 'Sanksi Pelanggaran Etika'}, {num: 15, judul: 'Prosedur Pengaduan'},
+      {num: 16, judul: 'Studi Kasus Pelanggaran'}, {num: 17, judul: 'Evaluasi Kepatuhan'},
+    ],
+    peringatan_diabaikan: 3,
+    video_dimulai: 1, total_video: 2, video_rata_persen: 20,
+    video_detail: [{slide: 7, persen: 20}],
+    kc_benar: 0, kc_total: 2,
+    kuis_terparah: {section: 'b', judul: 'B. Kewajiban Pelaporan', gagal: 2},
+    interaktif_diklik: 1, total_interaktif: 8,
     sinyal: {slide_cepat: 'jelek', ditinggal: 'jelek', video: 'jelek',
              kc: 'jelek', kuis: 'jelek', interaktif: 'jelek'},
-    jumlah_jelek: 6, cabang: 'kurang', rata_kelas_tatap_menit: 46.2,
+    jumlah_jelek: 6, cabang: 'kurang', rata_kelas_tatap_menit: 5.4,
   },
   { /* cabang MENENGAH - dua sinyal nyala, sisanya bagus */
     ada_data: true, nama: 'Dewi Anggraini', learner_id: '198807242011122003',
-    tatap_menit: 38.0, ditinggal_menit: 4.0, slide_unik: 91, total_slide: 95,
-    slide_rushed: [{num: 47, judul: 'Sanksi Administratif'}],
+    tatap_menit: 5.4, ditinggal_menit: 3.0, slide_unik: 18, total_slide: 18,
+    slide_rushed: [{num: 9, judul: 'Formulir SPT Tahunan'}],
     peringatan_diabaikan: 0,
-    video_dimulai: 4, total_video: 4, video_rata_persen: 81,
-    video_detail: [{slide: 5, persen: 74}, {slide: 19, persen: 88}],
-    kc_benar: 9, kc_total: 12,
-    kuis_terparah: {section: 'c', judul: 'C. Etika Profesi', gagal: 1},
-    interaktif_diklik: 9, total_interaktif: 26,
+    video_dimulai: 2, total_video: 2, video_rata_persen: 88,
+    video_detail: [{slide: 8, persen: 85}, {slide: 7, persen: 90}],
+    kc_benar: 2, kc_total: 2,
+    kuis_terparah: null,
+    interaktif_diklik: 2, total_interaktif: 8,
     sinyal: {slide_cepat: 'jelek', ditinggal: 'bagus', video: 'bagus',
              kc: 'bagus', kuis: 'bagus', interaktif: 'jelek'},
-    jumlah_jelek: 2, cabang: 'menengah', rata_kelas_tatap_menit: 46.2,
+    jumlah_jelek: 2, cabang: 'menengah', rata_kelas_tatap_menit: 3.3,
   },
   { /* cabang RAJIN */
     ada_data: true, nama: 'Siti Amara', learner_id: '198801052012052411',
-    tatap_menit: 54.0, ditinggal_menit: 2.0, slide_unik: 94, total_slide: 95,
+    tatap_menit: 5.4, ditinggal_menit: 1.0, slide_unik: 18, total_slide: 18,
     slide_rushed: [], peringatan_diabaikan: 0,
-    video_dimulai: 4, total_video: 4, video_rata_persen: 88,
-    video_detail: [{slide: 6, persen: 80}, {slide: 33, persen: 97}],
-    kc_benar: 11, kc_total: 12, kuis_terparah: null,
-    interaktif_diklik: 23, total_interaktif: 26,
+    video_dimulai: 2, total_video: 2, video_rata_persen: 95,
+    video_detail: [{slide: 8, persen: 93}, {slide: 7, persen: 97}],
+    kc_benar: 2, kc_total: 2, kuis_terparah: null,
+    interaktif_diklik: 6, total_interaktif: 8,
     sinyal: {slide_cepat: 'bagus', ditinggal: 'bagus', video: 'bagus',
              kc: 'bagus', kuis: 'bagus', interaktif: 'bagus'},
-    jumlah_jelek: 0, cabang: 'rajin', rata_kelas_tatap_menit: 46.2,
+    jumlah_jelek: 0, cabang: 'rajin', rata_kelas_tatap_menit: 3.3,
   },
 ];
 
