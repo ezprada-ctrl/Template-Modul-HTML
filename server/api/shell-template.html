@@ -227,14 +227,6 @@ a{color:inherit;}
   font-size:11px;line-height:1.65;
 }
 #trackcheck-status.dev-visible{display:block;}
-#recapdemo-btn{
-  display:none;
-  margin-top:8px;width:100%;padding:10px;border-radius:var(--radius-md);
-  background:transparent;border:1px solid var(--border);color:var(--text-faint);
-  font-size:12px;font-weight:600;cursor:pointer;transition:.18s;
-}
-#recapdemo-btn.dev-visible{display:block;}
-#recapdemo-btn:hover{border-color:var(--accent);color:var(--accent-2);}
 #trackcheck-status .tc-row{display:flex;justify-content:space-between;gap:8px;}
 #trackcheck-status .tc-k{color:var(--text-faint);}
 #trackcheck-status .tc-v{font-weight:700;text-align:right;}
@@ -796,14 +788,6 @@ ul.tick li b, ol.tick li b{color:var(--text);}
   background:var(--navy-soft);border:1px solid var(--border);
   font-size:13px;line-height:1.65;color:var(--text);
 }
-/* Penanda "ini contoh, bukan data beneran". Sengaja di paling atas panel &
-   gak bisa kelewat — tim bakal nunjukin layar ini ke orang lain, jadi salah
-   baca sekali aja langsung nyebar jadi angka yang dikira asli. */
-.recap-demo-banner{
-  background:var(--surface-2);border:1px solid var(--border-strong);
-  border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:16px;
-  font-size:11.5px;font-weight:600;color:var(--text);line-height:1.5;
-}
 .recap-loading,.recap-empty{
   padding:34px 10px;text-align:center;font-size:13px;color:var(--text-faint);line-height:1.6;
 }
@@ -993,12 +977,6 @@ ul.tick li b, ol.tick li b{color:var(--text);}
          "kredensialnya ada" tapi "jaringan di sini beneran tembus". -->
     <button id="trackcheck-btn" onclick="runTrackCheck()">🔎 Cek Rekam Aktivitas</button>
     <div id="trackcheck-status"></div>
-    <!-- Contoh rekap peserta buat tim penyusun. Sengaja ditaruh di sini, bukan
-         di Command Center: yang dipakai persis renderer popup ASLI (cuma
-         datanya yang karangan), jadi kalau redaksi narasinya diubah, contoh
-         yang dilihat tim ikut berubah sendiri — gak ada dua salinan kalimat
-         yang bisa beda diam-diam. Nol jaringan, nol data peserta sungguhan. -->
-    <button id="recapdemo-btn" onclick="recapDemo()">👁 Lihat Contoh Rekap Peserta</button>
     <button id="devmode-btn" onclick="toggleDevMode()">Dev Mode</button>
   </aside>
 
@@ -1980,11 +1958,6 @@ function toggleDevMode(){
     document.getElementById('trackcheck-btn').classList.remove('dev-visible');
     document.getElementById('trackcheck-status').classList.remove('dev-visible');
     document.getElementById('trackcheck-status').innerHTML = '';
-    document.getElementById('recapdemo-btn').classList.remove('dev-visible');
-    /* Contoh karangan ditutup begitu keluar Dev Mode, biar gak nyangkut
-       kebuka di layar waktu modulnya balik ke mode peserta. Data asli
-       (recapData) gak ikut dibuang — contoh emang gak pernah nulis ke situ. */
-    if(recapDemoAktif) recapClose();
     // Leaving Dev Mode also drops the local preview override - it was only
     // ever a "what would this look like" convenience, never a real setting.
     devHideProgressPreview = false;
@@ -2017,7 +1990,6 @@ function submitDevModePassword(){
     document.getElementById('hideprogress-btn').classList.add('dev-visible');
     document.getElementById('trackcheck-btn').classList.add('dev-visible');
     document.getElementById('trackcheck-status').classList.add('dev-visible');
-    document.getElementById('recapdemo-btn').classList.add('dev-visible');
     /* Status awal ditampilkan tanpa nunggu diklik: kalau modulnya ternyata
        gak bakal ngerekam, itu harus langsung keliatan, bukan cuma kalau
        orangnya kebetulan iseng ngeklik. */
@@ -2294,7 +2266,6 @@ function recapEsc(s){
 
 function recapOpen(){
   if(!RECAP_READY) return;
-  recapDemoAktif = false;   /* balik ke data asli kalau sebelumnya lagi lihat contoh */
   const ov = document.getElementById('recap-overlay');
   const body = document.getElementById('recap-body');
   const actions = document.getElementById('recap-actions');
@@ -2320,7 +2291,6 @@ function recapOpen(){
 
 function recapClose(){
   document.getElementById('recap-overlay').classList.remove('show');
-  recapDemoAktif = false;
 }
 
 function recapFetch(){
@@ -2565,7 +2535,6 @@ function recapRender(d){
 
   const sapaan = d.nama ? `${recapEsc(String(d.nama).split(' ')[0])}, ini` : 'Ini';
   body.innerHTML = `
-    ${recapDemoAktif ? `<div class="recap-demo-banner">👁 Contoh untuk tim penyusun — semua nama, NIP, dan angka di bawah ini <b>karangan</b>. Cabang: <b>${d.cabang}</b> (${d.jumlah_jelek} sinyal menyala).</div>` : ''}
     <div class="recap-eyebrow">Ringkasan Belajarmu</div>
     <h2 class="recap-headline">${headline}</h2>
     <p class="recap-sub">${sapaan} catatan sesi belajarmu di modul ini. Cuma kamu yang lihat halaman ini.</p>
@@ -2573,96 +2542,6 @@ function recapRender(d){
     ${recapChartHtml(d)}
     ${poin}
     <div class="recap-closing">${closing}</div>`;
-
-  if(recapDemoAktif){
-    actions.innerHTML =
-      '<button class="nav-btn primary" onclick="recapDemo()">Contoh berikutnya →</button>'
-      + '<button class="nav-btn" style="margin-top:8px" onclick="recapClose()">Tutup</button>';
-  }
-}
-
-/* ---------- contoh rekap buat tim penyusun (Dev Mode) ----------
-   Dipakai supaya tim bisa lihat SEMUA cabang narasi tanpa harus jadi peserta
-   jelek dulu, dan tanpa nunggu ada data asli. Dirender lewat recapRender()
-   yang sama persis dipakai peserta — cuma datanya yang karangan.
-
-   NIP-nya sengaja dibikin konsisten (8 digit pertama = tanggal lahir, digit
-   ke-4 dari belakang = kelamin 1 L / 2 P) supaya kalau ada yang meriksa,
-   umur & jenis kelaminnya nyambung sama namanya - bukan angka asal yang
-   kelihatan palsu waktu dipakai buat contoh ke orang lain. */
-let recapDemoAktif = false;
-let recapDemoIdx = 0;
-
-/* Angka-angka di bawah ini BUKAN karangan - ditarik dari simulasi replay
-   event ASLI (Puppeteer nge-drive goTo/answerQuiz/kcAnswer/dst yang beneran,
-   Date.now() dikontrol biar cepat, event yang beneran terkirim modul
-   ditangkap lalu dijalanin lewat recap_for_learner() Python yang ASLI) -
-   bukan diketik tangan. Pelajaran dari [[project_rekap_peserta_popup]]:
-   angka karangan gampang keliru konsisten sendiri (mis. "34 slide belum
-   kesentuh" tapi cuma "3 slide dilewat cepat" - dua metrik beda mekanisme
-   yang kalau diketik manual gampang gak nyambung). Cuma JUDUL slide yang
-   ditulis manual (kosmetik, gak butuh verifikasi - modul simulasinya cuma
-   punya judul generik "Section - Slide N"). */
-const RECAP_CONTOH = [
-  { /* cabang KURANG - persona paling bermasalah, sinyal numpuk sekaligus */
-    ada_data: true, nama: 'Rahmat Wijaya', learner_id: '199203152015031005',
-    tatap_menit: 1.2, ditinggal_menit: 26.0, slide_unik: 5, total_slide: 18,
-    slide_rushed: [
-      {num: 1, judul: 'Dasar Hukum Perpajakan'}, {num: 2, judul: 'Asas Pemungutan Pajak'},
-      {num: 3, judul: 'Subjek dan Objek Pajak'}, {num: 4, judul: 'Kewajiban Wajib Pajak'},
-      {num: 5, judul: 'Sanksi Administratif'}, {num: 8, judul: 'Batas Waktu Pelaporan'},
-      {num: 9, judul: 'Formulir SPT Tahunan'}, {num: 10, judul: 'Prosedur Pelaporan Online'},
-      {num: 11, judul: 'Rekonsiliasi Data'}, {num: 13, judul: 'Kode Etik Pegawai'},
-      {num: 14, judul: 'Sanksi Pelanggaran Etika'}, {num: 15, judul: 'Prosedur Pengaduan'},
-      {num: 16, judul: 'Studi Kasus Pelanggaran'}, {num: 17, judul: 'Evaluasi Kepatuhan'},
-    ],
-    peringatan_diabaikan: 3,
-    video_dimulai: 1, total_video: 2, video_rata_persen: 20,
-    video_detail: [{slide: 7, persen: 20}],
-    kc_benar: 0, kc_total: 2,
-    kuis_terparah: {section: 'b', judul: 'B. Kewajiban Pelaporan', gagal: 2},
-    interaktif_diklik: 1, total_interaktif: 8,
-    sinyal: {slide_cepat: 'jelek', ditinggal: 'jelek', video: 'jelek',
-             kc: 'jelek', kuis: 'jelek', interaktif: 'jelek'},
-    jumlah_jelek: 6, cabang: 'kurang', rata_kelas_tatap_menit: 5.4,
-  },
-  { /* cabang MENENGAH - dua sinyal nyala, sisanya bagus */
-    ada_data: true, nama: 'Dewi Anggraini', learner_id: '198807242011122003',
-    tatap_menit: 5.4, ditinggal_menit: 3.0, slide_unik: 18, total_slide: 18,
-    slide_rushed: [{num: 9, judul: 'Formulir SPT Tahunan'}],
-    peringatan_diabaikan: 0,
-    video_dimulai: 2, total_video: 2, video_rata_persen: 88,
-    video_detail: [{slide: 8, persen: 85}, {slide: 7, persen: 90}],
-    kc_benar: 2, kc_total: 2,
-    kuis_terparah: null,
-    interaktif_diklik: 2, total_interaktif: 8,
-    sinyal: {slide_cepat: 'jelek', ditinggal: 'bagus', video: 'bagus',
-             kc: 'bagus', kuis: 'bagus', interaktif: 'jelek'},
-    jumlah_jelek: 2, cabang: 'menengah', rata_kelas_tatap_menit: 3.3,
-  },
-  { /* cabang RAJIN */
-    ada_data: true, nama: 'Siti Amara', learner_id: '198801052012052411',
-    tatap_menit: 5.4, ditinggal_menit: 1.0, slide_unik: 18, total_slide: 18,
-    slide_rushed: [], peringatan_diabaikan: 0,
-    video_dimulai: 2, total_video: 2, video_rata_persen: 95,
-    video_detail: [{slide: 8, persen: 93}, {slide: 7, persen: 97}],
-    kc_benar: 2, kc_total: 2, kuis_terparah: null,
-    interaktif_diklik: 6, total_interaktif: 8,
-    sinyal: {slide_cepat: 'bagus', ditinggal: 'bagus', video: 'bagus',
-             kc: 'bagus', kuis: 'bagus', interaktif: 'bagus'},
-    jumlah_jelek: 0, cabang: 'rajin', rata_kelas_tatap_menit: 3.3,
-  },
-];
-
-function recapDemo(){
-  recapDemoAktif = true;
-  const contoh = RECAP_CONTOH[recapDemoIdx % RECAP_CONTOH.length];
-  recapDemoIdx++;
-  /* recapData sengaja TIDAK diisi contoh ini - biar rekap asli peserta gak
-     ketimpa angka karangan kalau tombolnya kepencet di modul yang lagi
-     dipakai beneran. */
-  document.getElementById('recap-overlay').classList.add('show');
-  recapRender(contoh);
 }
 
 function render(opts){
