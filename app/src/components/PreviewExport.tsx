@@ -73,7 +73,7 @@ export default function PreviewExport({ module, setModule }: Props) {
       )}
       {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
       {html && (
-        <iframe srcDoc={html} style={{ width: '100%', height: '80vh', border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: '#fff' }} />
+        <iframe srcDoc={html} allow="autoplay; encrypted-media; picture-in-picture; clipboard-write" style={{ width: '100%', height: '80vh', border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: '#fff' }} />
       )}
     </div>
   );

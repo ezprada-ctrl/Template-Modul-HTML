@@ -238,9 +238,15 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
 // tepi) - dipakai buat auto-nyalain mode "bersih/karakter". Gambar diperkecil
 // ke <=120px dulu biar scan-nya ringan; JPEG/gambar non-PNG langsung false
 // (gak mungkin transparan). Kalau canvas gagal (mis. ketaint), aman -> false.
+//
+// Satu-satunya jalur kode yang beda antara PNG dan JPEG - JPEG selalu resolve
+// instan di baris pertama, PNG lewat decode+canvas penuh. Dibungkus timeout
+// 5 detik: kalau img.onload/onerror gak pernah kepanggil (PNG aneh/besar yang
+// bikin decode-nya nyangkut di browser tertentu), pemanggil (ImageUploadField)
+// gak boleh ikut nyangkut selamanya nunggu janji yang gak pernah selesai.
 async function detectPngTransparency(file: File): Promise<boolean> {
   if (file.type !== 'image/png') return false;
-  return new Promise(resolve => {
+  const detect = new Promise<boolean>(resolve => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
@@ -266,9 +272,11 @@ async function detectPngTransparency(file: File): Promise<boolean> {
     img.onerror = () => { URL.revokeObjectURL(url); resolve(false); };
     img.src = url;
   });
+  const timeout = new Promise<boolean>(resolve => setTimeout(() => resolve(false), 5000));
+  return Promise.race([detect, timeout]);
 }
 
-function ImageUploadField({ value, onChange, onDetect }: { value: string; onChange: (v: string) => void; onDetect?: (isTransparent: boolean) => void }) {
+function ImageUploadField({ value, onUploaded }: { value: string; onUploaded: (url: string, transparent: boolean) => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   return (
@@ -279,9 +287,25 @@ function ImageUploadField({ value, onChange, onDetect }: { value: string; onChan
         if (!file) return;
         setBusy(true); setErr('');
         try {
-          const url = await uploadImageToStorage(file);
-          onChange(url);
-          if (onDetect) onDetect(await detectPngTransparency(file));
+          // Upload + deteksi transparansi, BARU panggil onUploaded SEKALI di
+          // akhir dengan keduanya sekaligus. Dulu ini dua panggilan onChange
+          // terpisah (onChange(url) lalu onDetect(bool) belakangan) - berarti
+          // dua-duanya numpang di closure `update()` milik BlockEditor yang
+          // SAMA dari render yang SAMA (async function yang lagi jalan gak
+          // "nyegerin" closure-nya sendiri di tengah jalan walau React
+          // sempat re-render di antaranya). Panggilan KEDUA nge-merge patch-
+          // nya ke snapshot block versi LAMA (dari sebelum src ke-set oleh
+          // panggilan pertama) dan nimpa balik src jadi kosong lagi - PERSIS
+          // bug "PNG transparan gagal total tanpa notif, JPEG selalu jalan"
+          // (JPEG gak pernah punya panggilan kedua sama sekali; deteksi
+          // transparansinya langsung false di baris pertama detectPngTransparency,
+          // jadi jalur ini gak pernah kesentuh). Satu panggilan onUploaded,
+          // satu patch gabungan, satu update() - gak ada lagi race-nya.
+          const [url, transparent] = await Promise.all([
+            uploadImageToStorage(file),
+            detectPngTransparency(file),
+          ]);
+          onUploaded(url, transparent);
         } catch (ex: any) {
           setErr(ex?.message || 'Gagal upload gambar');
         } finally {
@@ -305,11 +329,12 @@ function ImageFields({ block, onChange, inp }: { block: Block; onChange: (p: Par
     <>
       <ImageUploadField
         value={block.src || ''}
-        onChange={src => onChange({ src })}
         // PNG transparan -> auto mode bersih. Sengaja cuma nge-SET true (gak
         // nge-unset): kalau tim override manual, upload ulang gambar opaque
-        // gak nabrak pilihannya.
-        onDetect={t => { if (t) onChange({ imgClean: true }); }}
+        // gak nabrak pilihannya. Satu patch gabungan, satu onChange - lihat
+        // catatan di ImageUploadField soal kenapa ini gak boleh dipecah jadi
+        // dua panggilan onChange terpisah.
+        onUploaded={(src, transparent) => onChange(transparent ? { src, imgClean: true } : { src })}
       />
       <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
 

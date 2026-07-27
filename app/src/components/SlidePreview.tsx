@@ -88,6 +88,7 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
           ref={iframeRef}
           srcDoc={html}
           onLoad={jumpToSlide}
+          allow="autoplay; encrypted-media; picture-in-picture; clipboard-write"
           style={{ border: 'none', flex: 1, width: '100%' }}
         />
       )}
