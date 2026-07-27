@@ -822,15 +822,17 @@ def _rata_kelas_tatap_menit(module_slug):
     rekap pribadi. None kalau belum ada peserta lain yang cukup buat
     dibandingkan - satu orang gak bisa jadi 'rata-rata kelas'.
 
-    Cuma narik kolom seperlunya (bukan payload penuh) supaya query pembanding
-    ini gak jadi beban di tiap peserta yang buka rekapnya.
+    Cuma narik kolom seperlunya DAN cuma event_type slide_view (disaring di
+    server lewat PostgREST, bukan dibuang belakangan di Python) - beda dari
+    fetch_rows(learner_id=...) punya recap_for_learner yang otomatis kecil
+    karena udah difilter ke satu NIP, query pembanding ini jalan buat SEMUA
+    peserta modul, jadi paling gampang membengkak kalau gak disaring ketat
+    dari awal. Tiap peserta yang buka rekapnya manggil ulang query ini.
     """
     rows = _tanpa_preflight(fetch_rows(
-        module_slug=module_slug, columns='learner_id,event_type,payload'))
+        module_slug=module_slug, columns='learner_id,payload', event_type='slide_view'))
     per_learner = {}
     for r in rows:
-        if r['event_type'] != 'slide_view':
-            continue
         nip = r.get('learner_id')
         if not nip:
             continue
