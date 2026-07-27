@@ -270,22 +270,26 @@ async function detectPngTransparency(file: File): Promise<boolean> {
 
 function ImageUploadField({ value, onChange, onDetect }: { value: string; onChange: (v: string) => void; onDetect?: (isTransparent: boolean) => void }) {
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
   return (
     <div style={{ marginBottom: 6 }}>
       {value && <img src={value} style={{ width: 120, display: 'block', marginBottom: 4, borderRadius: 4 }} />}
       <input type="file" accept="image/*" onChange={async e => {
         const file = e.target.files?.[0];
         if (!file) return;
-        setBusy(true);
+        setBusy(true); setErr('');
         try {
           const url = await uploadImageToStorage(file);
           onChange(url);
           if (onDetect) onDetect(await detectPngTransparency(file));
+        } catch (ex: any) {
+          setErr(ex?.message || 'Gagal upload gambar');
         } finally {
           setBusy(false);
         }
       }} />
       {busy && <span style={{ fontSize: 11, color: 'var(--text-faint)', marginLeft: 6 }}>mengunggah…</span>}
+      {err && <p style={{ fontSize: 11, color: 'var(--danger, #c0392b)', margin: '4px 0 0' }}>{err}</p>}
     </div>
   );
 }
