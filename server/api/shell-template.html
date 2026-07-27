@@ -2689,12 +2689,24 @@ function playYouTube(el){
   const blockId = el.getAttribute('data-block') || id;
   if(!id) return;
   const containerId = 'yt-player-'+blockId;
-  const box = document.createElement('div');
-  box.id = containerId;
-  box.setAttribute('style', el.getAttribute('style') || '');
-  box.style.background = '#000';
-  box.style.cursor = 'default';
-  el.replaceWith(box);
+  // Wrapper mewarisi style ratio-box facade (position:relative;height:0;
+  // padding-bottom:X%;overflow:hidden) dan TETAP jadi div biasa - YT.Player
+  // cuma menyasar `inner`, bukan wrapper ini. Kalau style ratio-box itu
+  // ditaruh LANGSUNG di elemen yang di-replace YT.Player jadi iframe (bug
+  // lama), iframe hasilnya ikut ke-height:0 juga - videonya kepotong habis
+  // (tinggi kotak renderingnya 0px, overflow:hidden), jadi gambar gak
+  // keliatan sama sekali walau audio tetap jalan (audio iframe gak
+  // kepengaruh ukuran visual). Makanya butuh `inner` terpisah yang
+  // posisinya absolute nutupin 100% wrapper.
+  const wrapper = document.createElement('div');
+  wrapper.setAttribute('style', el.getAttribute('style') || '');
+  wrapper.style.background = '#000';
+  wrapper.style.cursor = 'default';
+  const inner = document.createElement('div');
+  inner.id = containerId;
+  inner.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
+  wrapper.appendChild(inner);
+  el.replaceWith(wrapper);
   if(window.YT && window.YT.Player) videoCreateYouTubePlayer(containerId, id, blockId);
   else window._ytPendingQueue.push({containerId: containerId, videoId: id, blockId: blockId});
 }
