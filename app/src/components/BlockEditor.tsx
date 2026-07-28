@@ -157,7 +157,10 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       </>;
     case 'ticklist':
       return <>
-        <label style={{ fontSize: 12 }}><input type="checkbox" checked={!!block.ordered} onChange={e => onChange({ ordered: e.target.checked })} /> bernomor</label>
+        <label style={{ fontSize: 12, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
+          <input type="checkbox" checked={!!block.ordered} onChange={e => onChange({ ordered: e.target.checked })} />
+          bernomor
+        </label>
         {(block.items || []).map((item, i) => (
           <div key={i} style={{ display: 'flex', gap: 4 }}>
             <input style={inp} value={item} onChange={e => {

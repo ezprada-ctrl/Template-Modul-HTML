@@ -122,6 +122,12 @@ input[type="checkbox"], input[type="radio"] {
   cursor: pointer;
   width: 15px; height: 15px;
   padding: 0;
+  /* Hampir semua label centang di app ini `display:flex` (kotak + teks
+     bersebelahan). Tanpa ini, kotaknya ikut flex-shrink default (1) dan
+     kegencet jadi lebih sempit dari 15px begitu teks di sebelahnya cukup
+     panjang - hasilnya kotak centang beda-beda ukuran antar baris, dan
+     malah gak persegi lagi (mis. 13x15). */
+  flex-shrink: 0;
 }
 input[type="file"] {
   padding: 6px;
@@ -181,8 +187,22 @@ button:disabled:hover { background: var(--surface-2); border-color: var(--border
 .btn-ghost { background: transparent; border-color: transparent; color: var(--text-dim); }
 .btn-ghost:hover { background: var(--surface-3); border-color: transparent; color: var(--text); }
 
-.btn-sm { padding: 4px 9px; font-size: 12px; }
-.btn-icon { padding: 5px 9px; line-height: 1; color: var(--text-dim); }
+.btn-sm { padding: 4px 9px; font-size: 12px; min-height: 26px; }
+/* Tombol ikon SELALU kotak seukuran, gak ikut metrik glyph-nya. Dulu
+   ukurannya ngikut isi: "🌙" jadi 40px sementara "↶" 32px di baris yang
+   sama, dan "▾" jadi 24px sementara "↑" 26px - jadi tombol yang
+   bersebelahan keliatan beda ukuran & gak sejajar. Semua isinya cuma satu
+   glyph, jadi lebar/tinggi tetap aman dipatok. */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  padding: 0;
+  line-height: 1;
+  color: var(--text-dim);
+}
+.btn-icon.btn-sm { width: 26px; height: 26px; padding: 0; }
 
 /* ---- Structural helpers ---- */
 .panel {
