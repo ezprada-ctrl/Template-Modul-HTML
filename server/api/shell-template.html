@@ -2707,15 +2707,48 @@ function playYouTube(el){
   inner.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
   wrapper.appendChild(inner);
   el.replaceWith(wrapper);
+  // file:// (buka file export langsung dari disk, atau preview lokal tool
+  // authoring sebelum upload) gak punya origin http/https yang valid -
+  // YouTube IFrame JS API nolak jalan (Error 153: video player configuration
+  // error) walau skrip API-nya sendiri kebuka. KLC beneran serve modul lewat
+  // https jadi JS API-nya kepake normal di sana (dapet tracking play/pause/
+  // selesai) - tapi biar gak nyangkut item hitam pas ditest lokal, langsung
+  // lompat ke iframe YouTube polos kalau protocol-nya file:.
+  if(window.location.protocol === 'file:'){
+    videoFallbackPlainIframe(containerId, id);
+    return;
+  }
   if(window.YT && window.YT.Player) videoCreateYouTubePlayer(containerId, id, blockId);
   else window._ytPendingQueue.push({containerId: containerId, videoId: id, blockId: blockId});
 }
+// Fallback kalau JS API gagal dipakai (file://, atau YT.Player sendiri error
+// - mis. video di-restrict/onError event). Videonya tetap main (autoplay
+// jalan di iframe polos), cuma kehilangan tracking play/pause/selesai buat
+// video ini doang - lebih baik daripada kotak hitam nyangkut permanen.
+function videoFallbackPlainIframe(containerId, videoId){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  const ifr = document.createElement('iframe');
+  ifr.id = containerId;
+  ifr.src = 'https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0';
+  ifr.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
+  ifr.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+  ifr.setAttribute('allowfullscreen', '');
+  el.replaceWith(ifr);
+}
 function videoCreateYouTubePlayer(containerId, videoId, blockId){
-  new YT.Player(containerId, {
-    videoId: videoId,
-    playerVars: {autoplay: 1, rel: 0},
-    events: {onStateChange: function(e){ videoOnYtStateChange(blockId, e); }}
-  });
+  try{
+    new YT.Player(containerId, {
+      videoId: videoId,
+      playerVars: {autoplay: 1, rel: 0},
+      events: {
+        onStateChange: function(e){ videoOnYtStateChange(blockId, e); },
+        onError: function(){ videoFallbackPlainIframe(containerId, videoId); }
+      }
+    });
+  }catch(err){
+    videoFallbackPlainIframe(containerId, videoId);
+  }
 }
 function videoOnYtStateChange(blockId, e){
   const player = e.target;
