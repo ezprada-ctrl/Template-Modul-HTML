@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Block, BlockType } from '../types';
-import { newBlock, changeBlockType, isBlockEmpty } from '../types';
+import { newBlock, changeBlockType, isBlockEmpty, extractBlockText } from '../types';
 import type { KcQuestion } from '../types';
 import EmojiPicker from './EmojiPicker';
 import BlockAddMenu, { BLOCK_LABELS } from './BlockAddMenu';
@@ -26,7 +26,26 @@ const BLOCK_CARD_STYLES = `
 .slide-workspace.has-focused-block{box-shadow: 0 0 0 2px var(--ink); background: var(--surface-2);}
 `;
 
+// Ringkasan satu baris buat header blok pas lagi collapsed - biar keliatan
+// "blok mana ini" tanpa harus buka. heading (card/modal) didahulukan karena
+// paling identik ketimbang isi body; sisanya pakai extractBlockText yang
+// sudah generik per tipe (dipakai juga buat isBlockEmpty & migrasi tipe).
+function blockSummary(block: Block): string {
+  const raw = [block.heading, extractBlockText(block)].filter(Boolean).join(' — ');
+  const flat = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!flat) return '';
+  return flat.length > 70 ? flat.slice(0, 70) + '…' : flat;
+}
+
 export default function BlockEditor({ blocks, onChange }: Props) {
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  function toggleCollapse(id: string) {
+    setCollapsed(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
   function update(i: number, patch: Partial<Block>) {
     const next = [...blocks];
     next[i] = { ...next[i], ...patch };
@@ -55,32 +74,49 @@ export default function BlockEditor({ blocks, onChange }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <style>{BLOCK_CARD_STYLES}</style>
-      {blocks.map((b, i) => (
-        <div key={b.id} className="block-card" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 11, background: 'var(--surface-2)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <select
-              className="block-card-label"
-              value={b.type}
-              onChange={e => changeType(i, e.target.value as BlockType)}
-              title="Ganti tipe blok ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang"
-              style={{
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
-                color: 'var(--text-faint)', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer',
-              }}
-            >
-              {Object.entries(BLOCK_LABELS).map(([type, label]) => (
-                <option key={type} value={type}>{label}</option>
-              ))}
-            </select>
-            <div style={{ display: 'flex', gap: 4 }}>
-              <button className="btn-icon btn-sm" title="Naik" onClick={() => move(i, -1)}>↑</button>
-              <button className="btn-icon btn-sm" title="Turun" onClick={() => move(i, 1)}>↓</button>
-              <button className="btn-danger btn-sm" onClick={() => remove(i)}>Hapus</button>
+      {blocks.map((b, i) => {
+        const isCollapsed = collapsed.has(b.id);
+        const summary = isCollapsed ? blockSummary(b) : '';
+        return (
+          <div key={b.id} className="block-card" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 11, background: 'var(--surface-2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: isCollapsed ? 0 : 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                <button
+                  className="btn-icon btn-sm"
+                  title={isCollapsed ? 'Buka blok ini' : 'Tutup blok ini'}
+                  onClick={() => toggleCollapse(b.id)}
+                  style={{ flexShrink: 0, transform: isCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform var(--ease)' }}
+                >▾</button>
+                <select
+                  className="block-card-label"
+                  value={b.type}
+                  onChange={e => changeType(i, e.target.value as BlockType)}
+                  title="Ganti tipe blok ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang"
+                  style={{
+                    fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
+                    color: 'var(--text-faint)', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0,
+                  }}
+                >
+                  {Object.entries(BLOCK_LABELS).map(([type, label]) => (
+                    <option key={type} value={type}>{label}</option>
+                  ))}
+                </select>
+                {summary && (
+                  <span style={{ fontSize: 12, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                    {summary}
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                <button className="btn-icon btn-sm" title="Naik" onClick={() => move(i, -1)}>↑</button>
+                <button className="btn-icon btn-sm" title="Turun" onClick={() => move(i, 1)}>↓</button>
+                <button className="btn-danger btn-sm" onClick={() => remove(i)}>Hapus</button>
+              </div>
             </div>
+            {!isCollapsed && <BlockFields block={b} onChange={patch => update(i, patch)} />}
           </div>
-          <BlockFields block={b} onChange={patch => update(i, patch)} />
-        </div>
-      ))}
+        );
+      })}
       <BlockAddMenu onAdd={add} />
     </div>
   );
