@@ -1,6 +1,6 @@
 import io
 import os
-import sys
+import sys  # noqa: force fresh Vercel build (all routes were 404ing after last deploy)
 
 # Vercel's Python runtime imports this file dynamically (not via a normal
 # `python index.py` invocation), so this directory isn't automatically on
