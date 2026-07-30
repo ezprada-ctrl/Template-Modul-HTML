@@ -171,6 +171,16 @@ export default function CoverForm({ module, setModule }: Props) {
               onChange={e => setModule({ ...module, heroDesc: e.target.value })} />
           </label>
           <label style={{ color: 'var(--text-dim)' }}>
+            Judul di slide penutup ("Selesai") saat modul kelar dipelajari (boleh HTML sederhana, sama
+            kayak judul sampul di atas)
+            <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.endingTitleHtml || ''}
+              placeholder={`${module.title || 'Modul Baru'}<br><span>Berhasil Diselesaikan</span>`}
+              onChange={e => setModule({ ...module, endingTitleHtml: e.target.value })} />
+            <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
+              Dikosongkan = otomatis pakai judul modul + "Berhasil Diselesaikan" (kayak contoh abu-abu di atas).
+            </span>
+          </label>
+          <label style={{ color: 'var(--text-dim)' }}>
             Label kecil di atas nama modul pada sidebar (mis. "Open Access")
             <input style={{ width: '100%', marginTop: 5 }} value={module.sidebarEyebrow}
               onChange={e => setModule({ ...module, sidebarEyebrow: e.target.value })} />

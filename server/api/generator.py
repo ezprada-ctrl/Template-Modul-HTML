@@ -674,6 +674,16 @@ def generate_html(module):
     hero_desc = nl2br(module.get('heroDesc', ''))
     out = out.replace('__HERO_DESC__', hero_desc)
 
+    # Judul slide penutup ("Selesai") - dulu ini teks tetap ("Materi Gambaran
+    # Umum, Hukum, dan Etika Berhasil Diselesaikan") ketinggalan dari modul
+    # lain di shell-template.html, jadi nongol di SEMUA modul orang lain
+    # walau temanya beda-beda. Sekarang bisa dikustom per modul dari tab
+    # Sampul; kalau dikosongkan, jatuh ke default otomatis pakai judul
+    # modul-nya sendiri (bukan sisa teks modul lain).
+    default_ending = f"{esc(module.get('title', ''))}<br><span>Berhasil Diselesaikan</span>"
+    ending_title_html = nl2br(module.get('endingTitleHtml') or '') or default_ending
+    out = out.replace('__ENDING_TITLE_HTML__', ending_title_html)
+
     sidebar_eyebrow = esc(module.get('sidebarEyebrow') or 'Open Access')
     out = out.replace('__SIDEBAR_EYEBROW__', sidebar_eyebrow)
 

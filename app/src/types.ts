@@ -118,6 +118,11 @@ export interface ModuleData {
   slug: string;
   heroTitleHtml: string;
   heroDesc: string;
+  // Judul di slide penutup ("Selesai") di akhir modul. Kosong = generator
+  // pakai default otomatis dari `title` module ini - jadi modul lama yang
+  // dibuat sebelum field ini ada tetap dapet judul penutup yang masuk akal
+  // (bukan sisa teks modul lain) tanpa penyusunnya perlu isi apa-apa.
+  endingTitleHtml?: string;
   sidebarEyebrow: string;
   sidebarTitle: string;
   coverImageDataUri: string;
@@ -183,6 +188,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     slug,
     heroTitleHtml: 'Modul Baru',
     heroDesc: '',
+    endingTitleHtml: '',
     sidebarEyebrow: 'Open Access',
     sidebarTitle: 'Modul Baru',
     coverImageDataUri: '',
