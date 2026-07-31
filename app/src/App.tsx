@@ -14,7 +14,7 @@ type Tab = 'bank' | 'canvas' | 'cover' | 'quiz' | 'preview' | 'command';
 const TABS: { id: Tab; label: string; hint: string }[] = [
   { id: 'bank', label: 'Import PPTX', hint: 'Ekstrak slide dari file PPTX' },
   { id: 'canvas', label: 'Susun Modul', hint: 'Tata slide & isi blok konten' },
-  { id: 'cover', label: 'Sampul', hint: 'Judul, tema, gambar sampul' },
+  { id: 'cover', label: 'Tema', hint: 'Judul, tema, gambar sampul' },
   { id: 'quiz', label: 'Kuis', hint: 'Soal per section' },
   { id: 'preview', label: 'Preview & Export', hint: 'Lihat hasil & unduh HTML' },
   { id: 'command', label: 'Command Center', hint: 'Rekaman aktivitas peserta (butuh password)' },
