@@ -155,6 +155,13 @@ export interface ModuleData {
   // dibuat sebelum field ini ada tetap dapet judul penutup yang masuk akal
   // (bukan sisa teks modul lain) tanpa penyusunnya perlu isi apa-apa.
   endingTitleHtml?: string;
+  // Gambar latar opsional khusus slide penutup (beda dari coverImageDataUri,
+  // itu punya Sampul). Kosong = slide penutup polos seperti sebelum field ini
+  // ada. `endingImageBrightness` (0-100, default 50 = redup) ngatur
+  // filter:brightness() di layer gambarnya SAJA (teks judul tetap putih
+  // penuh, gak ikut meredup) - lihat render_summary_bg di generator.py.
+  endingImageDataUri?: string;
+  endingImageBrightness?: number;
   sidebarEyebrow: string;
   sidebarTitle: string;
   coverImageDataUri: string;

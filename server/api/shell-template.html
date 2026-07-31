@@ -479,6 +479,21 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .cover-bg .hero-title{color:#ffffff;}
 .cover-bg .hero-desc{color:rgba(255,255,255,.82);}
 
+/* ---- Gambar latar opsional slide penutup (ModuleData.endingImageDataUri) ----
+   Beda dari .cover-bg: kecerahan gambarnya bisa diatur penyusun modul (lewat
+   filter:brightness() yang ditanam generator.py), makanya gambar ditaruh di
+   DIV TERPISAH (.ending-bg-img) di belakang teks, bukan background-image
+   langsung di container yang sama - kalau container yang kena filter,
+   teksnya ikut meredup juga. .summary-screen jaga tampilan lama (padding
+   ringkas, gak ada bingkai) buat modul TANPA gambar latar - byte-identical
+   ke sebelum fitur ini ada. */
+.summary-screen{min-height:auto;padding:30px 0;}
+.summary-screen.ending-bg{position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:60px 40px 50px;}
+.ending-bg-img{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0;}
+.ending-bg>*:not(.ending-bg-img){position:relative;z-index:1;}
+.ending-bg .hero-eyebrow{color:rgba(255,255,255,.85);}
+.ending-bg .hero-title{color:#ffffff;}
+
 /* bottom nav */
 #bottomnav{
   display:flex;align-items:center;gap:14px;padding:16px 34px;border-top:1px solid var(--border);
@@ -2257,7 +2272,8 @@ function renderSummary(){
     ? `<button class="nav-btn primary recap-reopen" onclick="recapOpen()">📊 Lihat Ringkasan Belajarmu</button>`
     : '';
   return `
-  <div class="hero-screen" style="min-height:auto;padding:30px 0;">
+  <div class="hero-screen summary-screen__ENDING_BG_CLASS__">
+    __ENDING_BG_IMG_HTML__
     <div class="hero-eyebrow">Selesai</div>
     <h1 class="hero-title" style="font-size:clamp(26px,4.2vw,40px);">__ENDING_TITLE_HTML__</h1>
     ${recapBtn}

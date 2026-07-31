@@ -740,6 +740,26 @@ def generate_html(module):
     ending_title_html = nl2br(module.get('endingTitleHtml') or '') or default_ending
     out = out.replace('__ENDING_TITLE_HTML__', ending_title_html)
 
+    # Gambar latar opsional slide penutup, diredupkan lewat filter:brightness()
+    # di LAYER GAMBARNYA SENDIRI (div terpisah di belakang teks) - bukan di
+    # container yang sama dengan judul, soalnya filter di container bakal
+    # ikut meredupkan teksnya juga. Kosong = slide penutup polos, class+div
+    # kosong semua, byte-identical ke sebelum field ini ada.
+    ending_image = module.get('endingImageDataUri', '')
+    if ending_image:
+        try:
+            brightness = int(module.get('endingImageBrightness')) if module.get('endingImageBrightness') is not None else 50
+        except (TypeError, ValueError):
+            brightness = 50
+        brightness = max(0, min(100, brightness))
+        out = out.replace('__ENDING_BG_CLASS__', ' ending-bg')
+        out = out.replace(
+            '__ENDING_BG_IMG_HTML__',
+            f'<div class="ending-bg-img" style="background-image:url(\'{ending_image}\');filter:brightness({brightness}%)"></div>')
+    else:
+        out = out.replace('__ENDING_BG_CLASS__', '')
+        out = out.replace('__ENDING_BG_IMG_HTML__', '')
+
     sidebar_eyebrow = esc(module.get('sidebarEyebrow') or 'Open Access')
     out = out.replace('__SIDEBAR_EYEBROW__', sidebar_eyebrow)
 

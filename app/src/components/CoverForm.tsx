@@ -221,11 +221,73 @@ export default function CoverForm({ module, setModule }: Props) {
             <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.endingTitleHtml || ''}
               onChange={e => setModule({ ...module, endingTitleHtml: e.target.value })} />
           </label>
+          <EndingImageField module={module} setModule={setModule} />
         </div>
         <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
           <SlidePreview module={module} target="summary" />
         </div>
       </div>
+    </div>
+  );
+}
+
+// Gambar latar opsional khusus slide penutup, dengan slider kecerahan supaya
+// judul putih di atasnya tetap kebaca (bukan filter di keseluruhan
+// container - itu bakal ikut meredupkan teksnya, lihat generator.py).
+// Preview thumbnail di sini pakai filter:brightness() langsung di <img> cuma
+// buat gambaran cepat sambil geser slider - tampilan FINAL yang benar
+// (gambar + teks berlapis) ada di panel "Preview langsung — slide penutup"
+// di sebelah kanan.
+function EndingImageField({ module, setModule }: { module: ModuleData; setModule: (m: ModuleData) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const brightness = module.endingImageBrightness ?? 50;
+
+  async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError('');
+    try {
+      const url = await uploadImageToStorage(file);
+      setModule({ ...module, endingImageDataUri: url });
+    } catch (err: any) {
+      setError(err.message || 'Gagal upload gambar');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <label style={{ color: 'var(--text-dim)' }}>
+        Gambar latar slide penutup <span className="hint" style={{ fontSize: 11 }}>(opsional, disimpan di Supabase Storage)</span>
+      </label>
+      {module.endingImageDataUri ? (
+        <div style={{ marginTop: 6 }}>
+          <img src={module.endingImageDataUri} style={{
+            width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 'var(--radius)',
+            border: '1px solid var(--border)', filter: `brightness(${brightness}%)`,
+          }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-dim)', marginTop: 8 }}>
+            Kecerahan
+            <input type="range" min={0} max={100} step={5} value={brightness}
+              onChange={e => setModule({ ...module, endingImageBrightness: parseInt(e.target.value, 10) })}
+              style={{ flex: 1 }} />
+            {brightness}%
+          </label>
+          <p className="hint" style={{ fontSize: 11, margin: '2px 0 8px' }}>
+            Makin rendah = makin redup/gelap — biar judul putih di atasnya tetap kebaca jelas.
+          </p>
+          <button className="btn-danger btn-sm" onClick={() => setModule({ ...module, endingImageDataUri: '', endingImageBrightness: undefined })}>
+            Hapus gambar
+          </button>
+        </div>
+      ) : (
+        <input type="file" accept="image/*" onChange={onUpload} style={{ marginTop: 6, display: 'block' }} />
+      )}
+      {uploading && <p style={{ fontSize: 12, color: 'var(--text-faint)' }}>Mengunggah gambar…</p>}
+      {error && <p style={{ fontSize: 12, color: 'var(--danger)' }}>{error}</p>}
     </div>
   );
 }
