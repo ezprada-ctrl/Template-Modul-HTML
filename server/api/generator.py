@@ -462,6 +462,28 @@ def count_interaktif(blocks):
     return total
 
 
+def clamp_brightness(value, default):
+    """0-100, dipakai buat gambar latar sampul & slide penutup. `default`
+    beda-beda per konteks (lihat pemanggilnya) - sengaja parameter, bukan
+    konstanta, karena sampul & slide penutup punya alasan default berbeda."""
+    try:
+        b = int(value) if value is not None else default
+    except (TypeError, ValueError):
+        b = default
+    return max(0, min(100, b))
+
+
+def render_bg_image_layer(css_class, src, brightness):
+    """Div lapisan gambar latar dengan filter:brightness() DI LAYER GAMBARNYA
+    SENDIRI, bukan di container yang sama dengan teks - kalau container yang
+    kena filter, teksnya ikut meredup juga. Dipakai sampul (.cover-bg-img,
+    di depan-nya masih ada .cover-bg-gradient bawaan) dan slide penutup
+    (.ending-bg-img). Kosong kalau src kosong - gak nyisain <div> percuma."""
+    if not src:
+        return ''
+    return f'<div class="{css_class}" style="background-image:url(\'{src}\');filter:brightness({brightness}%)"></div>'
+
+
 # 8 titik jangkar buat dekorasi grafis murni (mis. gambar dari Canva) - lihat
 # komentar Decoration di types.ts buat alasan kenapa titik jangkar dipakai,
 # bukan koordinat X/Y bebas (itu sempat dibahas & ditolak buat blok Gambar,
@@ -588,8 +610,14 @@ def generate_html(module):
     out = out.replace('__THEME_ACCENT__', theme_accent)
     out = out.replace('__THEME_NAVY__', theme_navy)
 
+    # Default 100 (bukan 50 kayak slide penutup) - sampul udah punya
+    # .cover-bg-gradient bawaan buat jamin judul putih kebaca, jadi slider
+    # ini murni tambahan opsional buat MEREDAM LEBIH LANJUT di atas itu.
+    # Modul lama (belum ada field ini) render identik: brightness 100% =
+    # filter no-op, gambar tampil apa adanya persis kayak sebelum ada fitur ini.
     cover = module.get('coverImageDataUri', '')
-    out = out.replace('__COVER_IMAGE__', cover)
+    cover_brightness = clamp_brightness(module.get('coverImageBrightness'), 100)
+    out = out.replace('__COVER_BG_IMG_HTML__', render_bg_image_layer('cover-bg-img', cover, cover_brightness))
 
     slug = module.get('slug') or slugify(module.get('title', 'modul'))
     out = out.replace('__STORAGE_KEY__', f'pilar-{slug}-progress-v1')
@@ -746,19 +774,9 @@ def generate_html(module):
     # ikut meredupkan teksnya juga. Kosong = slide penutup polos, class+div
     # kosong semua, byte-identical ke sebelum field ini ada.
     ending_image = module.get('endingImageDataUri', '')
-    if ending_image:
-        try:
-            brightness = int(module.get('endingImageBrightness')) if module.get('endingImageBrightness') is not None else 50
-        except (TypeError, ValueError):
-            brightness = 50
-        brightness = max(0, min(100, brightness))
-        out = out.replace('__ENDING_BG_CLASS__', ' ending-bg')
-        out = out.replace(
-            '__ENDING_BG_IMG_HTML__',
-            f'<div class="ending-bg-img" style="background-image:url(\'{ending_image}\');filter:brightness({brightness}%)"></div>')
-    else:
-        out = out.replace('__ENDING_BG_CLASS__', '')
-        out = out.replace('__ENDING_BG_IMG_HTML__', '')
+    ending_brightness = clamp_brightness(module.get('endingImageBrightness'), 50)
+    out = out.replace('__ENDING_BG_CLASS__', ' ending-bg' if ending_image else '')
+    out = out.replace('__ENDING_BG_IMG_HTML__', render_bg_image_layer('ending-bg-img', ending_image, ending_brightness))
 
     sidebar_eyebrow = esc(module.get('sidebarEyebrow') or 'Open Access')
     out = out.replace('__SIDEBAR_EYEBROW__', sidebar_eyebrow)

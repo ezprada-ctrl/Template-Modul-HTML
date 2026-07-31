@@ -11,8 +11,6 @@ interface Props {
 }
 
 export default function CoverForm({ module, setModule }: Props) {
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
   // Status kredensial rekam-aktivitas di backend. Dicek otomatis begitu
   // "Rekam aktivitas" nyala, biar penyusun tau SEBELUM export kalau modulnya
   // bakal bisu gara-gara env var backend kosong. null = belum/masih dicek.
@@ -29,21 +27,6 @@ export default function CoverForm({ module, setModule }: Props) {
       .catch(() => { if (alive) setTrackCheckErr(true); });
     return () => { alive = false; };
   }, [module.trackActivity]);
-
-  async function onCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setError('');
-    try {
-      const url = await uploadImageToStorage(file);
-      setModule({ ...module, coverImageDataUri: url });
-    } catch (err: any) {
-      setError(err.message || 'Gagal upload gambar');
-    } finally {
-      setUploading(false);
-    }
-  }
 
   return (
     <div>
@@ -185,15 +168,16 @@ export default function CoverForm({ module, setModule }: Props) {
             <input style={{ width: '100%', marginTop: 5 }} value={module.sidebarTitle}
               onChange={e => setModule({ ...module, sidebarTitle: e.target.value })} />
           </label>
-          <label style={{ color: 'var(--text-dim)' }}>
-            Gambar Sampul <span className="hint" style={{ fontSize: 11 }}>(disimpan di Supabase Storage, kualitas asli)</span>
-            <input type="file" accept="image/*" onChange={onCoverUpload} style={{ marginTop: 5, display: 'block' }} />
-          </label>
-          {uploading && <p style={{ fontSize: 12, color: 'var(--text-faint)' }}>Mengunggah gambar…</p>}
-          {error && <p style={{ fontSize: 12, color: 'var(--danger)' }}>{error}</p>}
-          {module.coverImageDataUri && (
-            <img src={module.coverImageDataUri} style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }} />
-          )}
+          <BackgroundImageField
+            label="Gambar Sampul (opsional, disimpan di Supabase Storage, kualitas asli)"
+            imageUri={module.coverImageDataUri}
+            brightness={module.coverImageBrightness}
+            defaultBrightness={100}
+            brightnessHint='Sampul udah punya gradasi gelap bawaan biar judul putih tetap kebaca — slider ini buat meredamnya LEBIH LANJUT kalau perlu. 100% = gambar asli + gradasi bawaan.'
+            onUpload={url => setModule({ ...module, coverImageDataUri: url })}
+            onBrightnessChange={n => setModule({ ...module, coverImageBrightness: n })}
+            onRemove={() => setModule({ ...module, coverImageDataUri: '', coverImageBrightness: undefined })}
+          />
           <DecorationEditor
             decorations={module.coverDecorations || []}
             onChange={coverDecorations => setModule({ ...module, coverDecorations })}
@@ -221,7 +205,16 @@ export default function CoverForm({ module, setModule }: Props) {
             <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.endingTitleHtml || ''}
               onChange={e => setModule({ ...module, endingTitleHtml: e.target.value })} />
           </label>
-          <EndingImageField module={module} setModule={setModule} />
+          <BackgroundImageField
+            label="Gambar latar slide penutup (opsional, disimpan di Supabase Storage)"
+            imageUri={module.endingImageDataUri}
+            brightness={module.endingImageBrightness}
+            defaultBrightness={50}
+            brightnessHint="Makin rendah = makin redup/gelap — biar judul putih di atasnya tetap kebaca jelas."
+            onUpload={url => setModule({ ...module, endingImageDataUri: url })}
+            onBrightnessChange={n => setModule({ ...module, endingImageBrightness: n })}
+            onRemove={() => setModule({ ...module, endingImageDataUri: '', endingImageBrightness: undefined })}
+          />
         </div>
         <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
           <SlidePreview module={module} target="summary" />
@@ -231,26 +224,38 @@ export default function CoverForm({ module, setModule }: Props) {
   );
 }
 
-// Gambar latar opsional khusus slide penutup, dengan slider kecerahan supaya
-// judul putih di atasnya tetap kebaca (bukan filter di keseluruhan
-// container - itu bakal ikut meredupkan teksnya, lihat generator.py).
-// Preview thumbnail di sini pakai filter:brightness() langsung di <img> cuma
-// buat gambaran cepat sambil geser slider - tampilan FINAL yang benar
-// (gambar + teks berlapis) ada di panel "Preview langsung — slide penutup"
-// di sebelah kanan.
-function EndingImageField({ module, setModule }: { module: ModuleData; setModule: (m: ModuleData) => void }) {
+// Gambar latar opsional (dipakai Sampul & slide penutup), dengan slider
+// kecerahan supaya teks putih di atasnya tetap kebaca (filter:brightness()
+// ditanam di LAYER GAMBARNYA SENDIRI di generator.py, bukan di container
+// yang sama dengan teks - itu bakal ikut meredupkan teksnya juga). Preview
+// thumbnail di sini pakai filter:brightness() langsung di <img> cuma buat
+// gambaran cepat sambil geser slider - tampilan FINAL yang benar (gambar +
+// teks berlapis) ada di panel "Preview langsung" di sebelah kanan.
+// `defaultBrightness` beda-beda per pemanggil: Sampul default 100 (udah
+// punya gradasi gelap bawaan, slider ini cuma tambahan), slide penutup
+// default 50 (gak ada gradasi bawaan sama sekali).
+function BackgroundImageField({ label, imageUri, brightness, defaultBrightness, brightnessHint, onUpload, onBrightnessChange, onRemove }: {
+  label: string;
+  imageUri: string | undefined;
+  brightness: number | undefined;
+  defaultBrightness: number;
+  brightnessHint: string;
+  onUpload: (url: string) => void;
+  onBrightnessChange: (n: number) => void;
+  onRemove: () => void;
+}) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  const brightness = module.endingImageBrightness ?? 50;
+  const b = brightness ?? defaultBrightness;
 
-  async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     setError('');
     try {
       const url = await uploadImageToStorage(file);
-      setModule({ ...module, endingImageDataUri: url });
+      onUpload(url);
     } catch (err: any) {
       setError(err.message || 'Gagal upload gambar');
     } finally {
@@ -260,31 +265,25 @@ function EndingImageField({ module, setModule }: { module: ModuleData; setModule
 
   return (
     <div style={{ marginTop: 14 }}>
-      <label style={{ color: 'var(--text-dim)' }}>
-        Gambar latar slide penutup <span className="hint" style={{ fontSize: 11 }}>(opsional, disimpan di Supabase Storage)</span>
-      </label>
-      {module.endingImageDataUri ? (
+      <label style={{ color: 'var(--text-dim)' }}>{label}</label>
+      {imageUri ? (
         <div style={{ marginTop: 6 }}>
-          <img src={module.endingImageDataUri} style={{
-            width: '100%', maxHeight: 160, objectFit: 'cover', borderRadius: 'var(--radius)',
-            border: '1px solid var(--border)', filter: `brightness(${brightness}%)`,
+          <img src={imageUri} style={{
+            width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 'var(--radius)',
+            border: '1px solid var(--border)', filter: `brightness(${b}%)`,
           }} />
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-dim)', marginTop: 8 }}>
             Kecerahan
-            <input type="range" min={0} max={100} step={5} value={brightness}
-              onChange={e => setModule({ ...module, endingImageBrightness: parseInt(e.target.value, 10) })}
+            <input type="range" min={0} max={100} step={5} value={b}
+              onChange={e => onBrightnessChange(parseInt(e.target.value, 10))}
               style={{ flex: 1 }} />
-            {brightness}%
+            {b}%
           </label>
-          <p className="hint" style={{ fontSize: 11, margin: '2px 0 8px' }}>
-            Makin rendah = makin redup/gelap — biar judul putih di atasnya tetap kebaca jelas.
-          </p>
-          <button className="btn-danger btn-sm" onClick={() => setModule({ ...module, endingImageDataUri: '', endingImageBrightness: undefined })}>
-            Hapus gambar
-          </button>
+          <p className="hint" style={{ fontSize: 11, margin: '2px 0 8px' }}>{brightnessHint}</p>
+          <button className="btn-danger btn-sm" onClick={onRemove}>Hapus gambar</button>
         </div>
       ) : (
-        <input type="file" accept="image/*" onChange={onUpload} style={{ marginTop: 6, display: 'block' }} />
+        <input type="file" accept="image/*" onChange={handleUpload} style={{ marginTop: 6, display: 'block' }} />
       )}
       {uploading && <p style={{ fontSize: 12, color: 'var(--text-faint)' }}>Mengunggah gambar…</p>}
       {error && <p style={{ fontSize: 12, color: 'var(--danger)' }}>{error}</p>}

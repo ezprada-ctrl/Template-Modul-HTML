@@ -165,6 +165,13 @@ export interface ModuleData {
   sidebarEyebrow: string;
   sidebarTitle: string;
   coverImageDataUri: string;
+  // Kecerahan gambar sampul (0-100). BEDA DEFAULT dari endingImageBrightness:
+  // sampul dari dulu udah punya gradient gelap bawaan (lihat .cover-bg di
+  // shell-template.html) buat jamin judul putih tetap kebaca - jadi default
+  // di sini 100 (= gambar asli, gradient bawaan aja) supaya modul lama yang
+  // udah punya coverImageDataUri render IDENTIK kayak sebelum field ini ada.
+  // Geser slider di bawah 100 = REDAM LEBIH LANJUT di atas gradient itu.
+  coverImageBrightness?: number;
   // Dekorasi grafis opsional khusus layar sampul - sama mekanismenya kayak
   // Slide.decorations, cuma taruhnya di module langsung karena Sampul bukan
   // Slide.
