@@ -5,7 +5,7 @@ import { generateHtml } from '../api';
 interface Props {
   module: ModuleData;
   slideNumber?: number;
-  target?: 'slide' | 'hero';
+  target?: 'slide' | 'hero' | 'summary';
   label?: string;
 }
 
@@ -53,8 +53,8 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
   function jumpToSlide() {
     const win = iframeRef.current?.contentWindow as any;
     if (!win) return;
-    const findExpr = target === 'hero'
-      ? `it.kind === 'hero'`
+    const findExpr = target === 'hero' ? `it.kind === 'hero'`
+      : target === 'summary' ? `it.kind === 'summary'`
       : `it.kind === 'slide' && it.num === ${slideNumber}`;
     try {
       win.eval(`
@@ -79,7 +79,11 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', height: '100%', minHeight: 420, display: 'flex', flexDirection: 'column', background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
       <div style={{ padding: '8px 12px', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--text-faint)', display: 'flex', justifyContent: 'space-between' }}>
-        <span>{label || (target === 'hero' ? 'Preview langsung — sampul' : `Preview langsung — slide #${slideNumber}`)}</span>
+        <span>{label || (
+          target === 'hero' ? 'Preview langsung — sampul'
+          : target === 'summary' ? 'Preview langsung — slide penutup'
+          : `Preview langsung — slide #${slideNumber}`
+        )}</span>
         {loading && <span>memperbarui…</span>}
       </div>
       {error && <p style={{ color: 'var(--danger)', fontSize: 12, padding: 10 }}>{error}</p>}

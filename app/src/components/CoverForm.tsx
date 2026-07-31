@@ -3,6 +3,7 @@ import type { ModuleData } from '../types';
 import { uploadImageToStorage, checkTrackingConfig } from '../api';
 import { THEME_PRESETS, findThemePresetId } from '../themes';
 import SlidePreview from './SlidePreview';
+import DecorationEditor from './DecorationEditor';
 
 interface Props {
   module: ModuleData;
@@ -160,8 +161,12 @@ export default function CoverForm({ module, setModule }: Props) {
             </label>
           )}
           <label style={{ color: 'var(--text-dim)' }}>
-            Judul besar di layar sampul (boleh HTML sederhana, mis. pakai <code>&lt;br&gt;</code> untuk ganti baris
-            atau <code>&lt;span&gt;...&lt;/span&gt;</code> untuk bagian yang diwarnai emas)
+            Judul besar di layar sampul
+            <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
+              Ketik biasa — tekan Enter buat ganti baris, otomatis jadi baris baru saat di-generate (gak perlu
+              ngetik <code>&lt;br&gt;</code> sendiri). Mau ada bagian yang diwarnai emas? Bungkus teksnya pakai{' '}
+              <code>&lt;span&gt;...&lt;/span&gt;</code>.
+            </span>
             <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.heroTitleHtml}
               onChange={e => setModule({ ...module, heroTitleHtml: e.target.value })} />
           </label>
@@ -169,16 +174,6 @@ export default function CoverForm({ module, setModule }: Props) {
             Deskripsi singkat di bawah judul sampul
             <textarea style={{ width: '100%', minHeight: 50, marginTop: 5 }} value={module.heroDesc}
               onChange={e => setModule({ ...module, heroDesc: e.target.value })} />
-          </label>
-          <label style={{ color: 'var(--text-dim)' }}>
-            Judul di slide penutup ("Selesai") saat modul kelar dipelajari (boleh HTML sederhana, sama
-            kayak judul sampul di atas)
-            <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.endingTitleHtml || ''}
-              placeholder={`${module.title || 'Modul Baru'}<br><span>Berhasil Diselesaikan</span>`}
-              onChange={e => setModule({ ...module, endingTitleHtml: e.target.value })} />
-            <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
-              Dikosongkan = otomatis pakai judul modul + "Berhasil Diselesaikan" (kayak contoh abu-abu di atas).
-            </span>
           </label>
           <label style={{ color: 'var(--text-dim)' }}>
             Label kecil di atas nama modul pada sidebar (mis. "Open Access")
@@ -199,9 +194,36 @@ export default function CoverForm({ module, setModule }: Props) {
           {module.coverImageDataUri && (
             <img src={module.coverImageDataUri} style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }} />
           )}
+          <DecorationEditor
+            decorations={module.coverDecorations || []}
+            onChange={coverDecorations => setModule({ ...module, coverDecorations })}
+          />
         </div>
         <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
           <SlidePreview module={module} target="hero" />
+        </div>
+      </div>
+
+      {/* Baris terpisah di bawah (bukan digabung ke kolom kiri di atas) -
+          biar preview slide penutup punya panel sendiri di sebelahnya,
+          gak numpang di panel sampul yang udah sticky mengikuti field-field
+          di atas. */}
+      <div style={{ display: 'flex', gap: 28, marginTop: 28 }}>
+        <div style={{ flex: '1 1 50%', minWidth: 0 }}>
+          <label style={{ color: 'var(--text-dim)' }}>
+            Judul di slide penutup ("Selesai") saat modul kelar dipelajari
+            <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
+              Sama seperti judul sampul: ketik biasa, Enter otomatis ganti baris (gak perlu ngetik{' '}
+              <code>&lt;br&gt;</code> sendiri). Opsional bungkus sebagian teks pakai{' '}
+              <code>&lt;span&gt;...&lt;/span&gt;</code> buat highlight emas. Dikosongkan = otomatis pakai judul
+              modul + "Berhasil Diselesaikan" (lihat preview di samping).
+            </span>
+            <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.endingTitleHtml || ''}
+              onChange={e => setModule({ ...module, endingTitleHtml: e.target.value })} />
+          </label>
+        </div>
+        <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
+          <SlidePreview module={module} target="summary" />
         </div>
       </div>
     </div>

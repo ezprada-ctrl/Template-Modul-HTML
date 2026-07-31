@@ -462,15 +462,51 @@ def count_interaktif(blocks):
     return total
 
 
+# 8 titik jangkar buat dekorasi grafis murni (mis. gambar dari Canva) - lihat
+# komentar Decoration di types.ts buat alasan kenapa titik jangkar dipakai,
+# bukan koordinat X/Y bebas (itu sempat dibahas & ditolak buat blok Gambar,
+# alasan yang sama berlaku di sini). Divalidasi terhadap whitelist ini
+# sebelum dipakai bikin nama class - sama pola defensifnya kayak imgAlign/
+# imgFloat di render_image(), walau nilainya cuma bisa datang dari <select>
+# di builder (bukan celah XSS beneran, cuma jaga-jaga kalau ada data lama/
+# rusak lolos ke sini).
+DECOR_ANCHORS = {
+    'top-left', 'top-center', 'top-right', 'right-center',
+    'bottom-right', 'bottom-center', 'bottom-left', 'left-center',
+}
+
+
+def render_decorations(decorations):
+    """Lapisan dekorasi non-interaktif (pointer-events:none di CSS) di
+    sekitar konten - BUKAN blok, gak ikut alur render_block/BlockEditor.
+    Slide/Sampul tanpa dekorasi menghasilkan string kosong, jadi output modul
+    lama (sebelum fitur ini ada) sama sekali gak berubah."""
+    out = ''
+    for d in decorations or []:
+        anchor = d.get('anchor') if d.get('anchor') in DECOR_ANCHORS else 'top-right'
+        try:
+            size = int(d.get('size')) if d.get('size') is not None else 110
+        except (TypeError, ValueError):
+            size = 110
+        size = max(40, min(260, size))
+        src = d.get('src', '')
+        if not src:
+            continue
+        out += (f'<img class="decor-img decor-{anchor}" src="{src}" alt="" '
+                f'style="--decor-w:{size}px">')
+    return out
+
+
 def render_slide_html(slide):
     kicker = f'<div class="kicker"><span class="num">{slide["number"]}</span>{esc(slide.get("kickerLabel",""))}</div>'
     title = f'<h1 class="slide-title">{esc(slide.get("title",""))}</h1>'
     sub = f'<p class="slide-sub">{slide.get("subtitle","")}</p>' if slide.get('subtitle') else ''
     body = ''.join(render_block(b) for b in slide.get('blocks', []))
+    decor = render_decorations(slide.get('decorations'))
     # Nutup float dari blok gambar "dampingi teks" biar tingginya kekurung di
     # dalam slide ini (gak bocor ke bawah/ke slide lain). Kosong + zero-height
     # kalau gak ada float sama sekali - aman selalu ditaruh.
-    return kicker + title + sub + body + '<div class="img-clear"></div>'
+    return kicker + title + sub + body + '<div class="img-clear"></div>' + decor
 
 
 # Kecepatan baca diam rata-rata orang dewasa: 238 kata/menit (Brysbaert 2019,
@@ -691,6 +727,8 @@ def generate_html(module):
 
     hero_desc = nl2br(module.get('heroDesc', ''))
     out = out.replace('__HERO_DESC__', hero_desc)
+
+    out = out.replace('__HERO_DECOR_HTML__', render_decorations(module.get('coverDecorations')))
 
     # Judul slide penutup ("Selesai") - dulu ini teks tetap ("Materi Gambaran
     # Umum, Hukum, dan Etika Berhasil Diselesaikan") ketinggalan dari modul
