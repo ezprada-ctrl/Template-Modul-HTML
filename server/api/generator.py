@@ -89,7 +89,10 @@ def render_ticklist(b):
     tag = 'ol' if b.get('ordered') else 'ul'
     stacked = ' tick-stacked' if b.get('stacked') else ''
     items = ''.join(f'<li>{item}</li>' for item in b.get('items', []))
-    return f'<{tag} class="tick{stacked}">{items}</{tag}>'
+    # Opsional (reuses card's `heading` field) - kosong = cuma daftarnya
+    # tampil sendiri, persis perilaku sebelum field ini ada.
+    heading = f'<div class="tick-heading">{esc(b.get("heading",""))}</div>' if b.get('heading') else ''
+    return f'{heading}<{tag} class="tick{stacked}">{items}</{tag}>'
 
 
 def render_accordion(b):

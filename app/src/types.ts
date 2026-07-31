@@ -42,7 +42,8 @@ export interface Block {
   // pullquote
   num?: string;
   text?: string;
-  // ticklist
+  // ticklist — `heading` (reuses card's field above) is optional: kosong =
+  // cuma daftarnya tampil sendiri (perilaku lama, draft lama gak berubah).
   ordered?: boolean;
   stacked?: boolean;
   items?: string[];

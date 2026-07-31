@@ -157,6 +157,10 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       </>;
     case 'ticklist':
       return <>
+        <input style={inp} placeholder="Judul daftar (opsional)" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
+        <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
+          Kosongkan kalau daftarnya gak perlu judul — nanti cuma daftarnya sendiri yang tampil.
+        </p>
         <label style={{ fontSize: 12, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
           <input type="checkbox" checked={!!block.ordered} onChange={e => onChange({ ordered: e.target.checked })} />
           bernomor
