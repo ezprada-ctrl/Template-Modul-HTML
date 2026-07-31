@@ -371,7 +371,23 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8 }}>
         <span {...attributes} {...listeners} style={{ cursor: 'grab', color: 'var(--text-faint)', fontSize: 15, padding: '0 2px' }} title="Geser untuk atur urutan">⠿</span>
         <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, whiteSpace: 'nowrap' }}>#{slide.number}{slide.sourceSlideNo ? ` · PPTX ${slide.sourceSlideNo}` : ''}</span>
-        <input value={slide.title} onChange={e => onUpdate({ title: e.target.value })} style={{ flex: 1 }} />
+        {/* Cuma nampilin nama slide di sini (bukan input) - diedit di dalam
+            panel expand, DI BAWAH Kicker, biar urutan field di form ngikutin
+            urutan asli di output (kicker kecil DULU, baru judul besar) -
+            dulu field ini input langsung bisa diketik di sini, tapi itu
+            bikin urutan form (judul dulu, kicker belakangan) kebalik dari
+            urutan tampilnya di slide (kicker dulu, judul belakangan),
+            membingungkan penyusun modul. Klik teksnya buat langsung expand. */}
+        <span
+          onClick={onToggle}
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}
+          title="Klik untuk edit judul & isi slide"
+          style={{ flex: 1, cursor: 'pointer', color: slide.title ? 'var(--text)' : 'var(--text-faint)', fontStyle: slide.title ? 'normal' : 'italic' }}
+        >
+          {slide.title || '(judul belum diisi — klik untuk edit)'}
+        </span>
         <select value={slide.sectionId} onChange={e => onUpdate({ sectionId: e.target.value })} title="Pindah ke section lain">
           {module.sections.map(sec => <option key={sec.id} value={sec.id}>{sec.icon}. {sec.short}</option>)}
         </select>
@@ -381,9 +397,21 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
       {open && (
         <div className="slide-workspace" ref={workspaceRef} style={{ padding: 14, borderTop: '1px solid var(--border)', display: 'flex', gap: 28 }}>
           <div style={{ flex: '1 1 50%', minWidth: 0 }}>
+            {/* Urutan 3 field ini SENGAJA disamakan sama urutan tampilnya di
+                slide asli (lihat render_slide_html di generator.py: kicker →
+                judul → subjudul) - biar gak ada lagi mismatch "field paling
+                atas dikira tampil paling duluan" kayak yang bikin bingung. */}
             <div>
-              <input placeholder="Kicker label (mis. A.1 JUDUL)" value={slide.kickerLabel}
-                onChange={e => onUpdate({ kickerLabel: e.target.value })} style={{ width: '100%', marginBottom: 4 }} />
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '0 0 3px' }}>
+                Kicker <span style={{ fontWeight: 400, color: 'var(--text-faint)' }}>(label kecil, tampil di ATAS judul — mis. A.1 JUDUL)</span>
+              </label>
+              <input placeholder="mis. A.1 JUDUL" value={slide.kickerLabel}
+                onChange={e => onUpdate({ kickerLabel: e.target.value })} style={{ width: '100%', marginBottom: 8 }} />
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '0 0 3px' }}>
+                Judul besar slide
+              </label>
+              <input placeholder="Judul slide" value={slide.title}
+                onChange={e => onUpdate({ title: e.target.value })} style={{ width: '100%', marginBottom: 8 }} />
               <textarea placeholder="Subjudul (opsional)" value={slide.subtitle || ''}
                 onChange={e => onUpdate({ subtitle: e.target.value })}
                 style={{ width: '100%', marginBottom: 8, minHeight: 40, resize: 'vertical' }} />
