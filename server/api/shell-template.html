@@ -275,7 +275,12 @@ a{color:inherit;}
    breakpoint blok Gambar float) - dekorasi murni kosmetik, gak ada isi yang
    hilang kalau gak tampil di HP, jadi paling aman default-nya hilang
    ketimbang resiko nutupin teks/tombol di layar kecil. */
-.decor-img{position:absolute;width:var(--decor-w,110px);height:auto;pointer-events:none;z-index:1;}
+/* min-height: sebelum gambar kelar di-load browser, tinggi "auto" ke-hitung
+   0px (rasio aslinya belum diketahui) - kelihatan kayak gak ada apa-apa
+   padahal cuma masih loading. Floor kecil ini kasih footprint minimal
+   selama nunggu; begitu gambar kelar load, height:auto tetap menang balik
+   ke ukuran proporsional aslinya (min-height cuma jadi batas bawah). */
+.decor-img{position:absolute;width:var(--decor-w,110px);height:auto;min-height:24px;pointer-events:none;z-index:1;}
 .decor-top-left{top:0;left:0;}
 .decor-top-center{top:0;left:50%;transform:translateX(-50%);}
 .decor-top-right{top:0;right:0;}
