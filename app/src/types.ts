@@ -78,6 +78,13 @@ export interface Block {
   // - 'youtube' / 'instagram': raw page URL pasted by author, in `embedUrl`
   mediaSource?: 'video' | 'youtube' | 'instagram';
   embedUrl?: string;
+  // Rasio tampilan kotak video — cuma berlaku untuk 'video' (upload); YouTube
+  // sudah punya rasio sendiri (16:9/9:16 Shorts otomatis dari URL), Instagram
+  // responsif lewat embed.js. Unset = "asli" = ikut rasio asli file videonya
+  // (perilaku lama, draft lama tetap render sama). Kalau video aslinya beda
+  // rasio dari yang dipilih, ditampilkan utuh dengan letterbox (bar hitam),
+  // BUKAN dipotong — lihat render_media() di generator.py.
+  videoRatio?: '16:9' | '4:3' | '1:1' | '9:16';
   // knowledge check (inline, non-gating quiz-like block)
   kcItems?: KcQuestion[];
 }

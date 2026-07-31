@@ -243,6 +243,12 @@ def _youtube_id(url):
     return ''
 
 
+# Rasio kotak video upload (bukan YouTube - itu punya rasio otomatis sendiri).
+# Unset/nilai gak dikenal = 'asli' = ikut rasio asli file video, gak ada
+# aspect-ratio yang di-set sama sekali (perilaku lama, draft lama gak berubah).
+VIDEO_RATIO_CSS = {'16:9': '16/9', '4:3': '4/3', '1:1': '1/1', '9:16': '9/16'}
+
+
 def render_media(b):
     source = b.get('mediaSource', 'video')
     caption = _caption_html(b)
@@ -316,6 +322,15 @@ def render_media(b):
     if not src:
         return ('<div class="card"><p style="color:var(--text-faint);font-size:12.5px;">'
                 '⚠ Video belum diupload.</p></div>')
+    # 'asli' (default): gak ada aspect-ratio di-set, tinggi kotak ngikut rasio
+    # asli file video-nya sendiri - persis perilaku sebelum field ini ada.
+    # Rasio dipilih: kotak dipaksa ke rasio itu + object-fit:contain, jadi
+    # video yang aslinya beda rasio ditampilkan UTUH dengan letterbox (bar
+    # hitam dari background:#000 di bawahnya), bukan dipotong.
+    ratio_css = VIDEO_RATIO_CSS.get(b.get('videoRatio'))
+    style = 'width:100%;border-radius:12px;display:block;background:#000;'
+    if ratio_css:
+        style += f'aspect-ratio:{ratio_css};object-fit:contain;'
     return (
         '<div class="card">'
         f'<video controls playsinline preload="metadata" src="{src}" data-block="{block_id}" '
@@ -323,7 +338,7 @@ def render_media(b):
         f'ontimeupdate="videoTrackTime(\'{block_id}\',this.currentTime,this.duration)" '
         f'onpause="videoSendCheckpoint(\'{block_id}\',false)" '
         f'onended="videoSendCheckpoint(\'{block_id}\',true)" '
-        'style="width:100%;border-radius:12px;display:block;background:#000;"></video>'
+        f'style="{style}"></video>'
         f'{caption}</div>'
     )
 

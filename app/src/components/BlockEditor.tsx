@@ -421,6 +421,7 @@ type FieldStyle = CSSProperties;
 // --------------------------------------------------------------- Media block
 function MediaFields({ block, onChange, inp }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle }) {
   const source = block.mediaSource || 'video';
+  const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
   return (
     <>
       <select style={inp} value={source} onChange={e => onChange({ mediaSource: e.target.value as any })}>
@@ -431,9 +432,21 @@ function MediaFields({ block, onChange, inp }: { block: Block; onChange: (p: Par
 
       {source === 'video' && <>
         <VideoUploadField value={block.src || ''} onChange={src => onChange({ src })} />
+
+        <label style={lbl}>Rasio tampilan</label>
+        <select style={inp} value={block.videoRatio || 'asli'}
+          onChange={e => onChange({ videoRatio: e.target.value === 'asli' ? undefined : e.target.value as any })}>
+          <option value="asli">Asli (ikut rasio file video)</option>
+          <option value="16:9">16:9 — horizontal</option>
+          <option value="4:3">4:3 — klasik</option>
+          <option value="1:1">1:1 — persegi</option>
+          <option value="9:16">9:16 — vertikal</option>
+        </select>
+
         <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
         <p className="hint" style={{ fontSize: 11, margin: '2px 0 0' }}>
           Suara video ikut otomatis (tidak di-mute). Peserta punya kontrol play/pause/volume bawaan.
+          {block.videoRatio && ' Kalau video aslinya beda rasio dari pilihan di atas, ditampilkan utuh dengan bar hitam di sisi yang kelebihan (gak dipotong).'}
         </p>
       </>}
 
