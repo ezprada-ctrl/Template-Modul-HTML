@@ -3187,7 +3187,7 @@ function resetProgress(){
      orang. Kalau ikut dihapus, sesi rekam yang lagi jalan bakal lanjut tanpa
      identitas diam-diam (gerbangnya cuma muncul sekali di INIT). */
   const identity = state.identity;
-  state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, kcAnswers:{}, kcAttempts:{}};
+  state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}};
   if(identity) state.identity = identity;
   saveState();
   currentIdx = 0;

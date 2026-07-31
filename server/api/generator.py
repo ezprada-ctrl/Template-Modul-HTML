@@ -82,7 +82,7 @@ def render_definition(b):
 
 def render_pullquote(b):
     return (f'<div class="pull-quote"><span class="pq-num">{esc(b.get("num",""))}</span>'
-            f'<span class="pq-text">{b.get("text","")}</span></div>')
+            f'<span class="pq-text">{nl2br(b.get("text",""))}</span></div>')
 
 
 def render_ticklist(b):
@@ -138,7 +138,7 @@ def render_dtable(b):
     headers = ''.join(f'<th>{esc(h)}</th>' for h in b.get('headers', []))
     rows = ''
     for row in b.get('rows', []):
-        rows += '<tr>' + ''.join(f'<td>{cell}</td>' for cell in row) + '</tr>'
+        rows += '<tr>' + ''.join(f'<td>{esc(cell)}</td>' for cell in row) + '</tr>'
     return f'<table class="dtable"><thead><tr>{headers}</tr></thead><tbody>{rows}</tbody></table>'
 
 
