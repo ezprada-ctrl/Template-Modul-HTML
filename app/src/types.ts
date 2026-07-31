@@ -164,6 +164,14 @@ export interface ModuleData {
   // Requires trackActivity — without it there is no data to show at all.
   showRecap?: boolean;
   theme: { accent: string; accent2: string; onAccent: string; navy: string };
+  // Gaya dekorasi grafis (blob/cincin/dll) - INDEPENDEN dari `theme` di atas
+  // (theme cuma warna, ini cuma bentuk - lihat GRAPHIC_STYLES di
+  // graphicStyles.ts). 'none' = polos seperti sebelum fitur ini ada (default,
+  // jadi modul lama tanpa field ini render identik). Kalau diisi, berlaku ke
+  // SELURUH modul: Sampul, tiap slide konten, dan slide penutup sekaligus -
+  // masing-masing komposisi beda (lihat render_graphic_deco di generator.py),
+  // bukan bentuk yang sama ditempel ulang.
+  graphicStyle?: string;
   sections: Section[];
   slides: Slide[];
   quizzes: Record<string, QuizQuestion[]>;
@@ -218,6 +226,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     trackActivity: false,
     showRecap: false,
     theme: { ...DEFAULT_THEME },
+    graphicStyle: 'none',
     sections: [{ id: 'a', title: 'A. Bagian Satu', short: 'Bagian Satu', icon: 'A', color: '#c99a3d' }],
     slides: [],
     quizzes: {},

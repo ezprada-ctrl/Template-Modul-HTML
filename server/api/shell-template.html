@@ -267,7 +267,7 @@ a{color:inherit;}
 }
 
 #viewport{flex:1;overflow-y:auto;padding:44px 5vw 120px;}
-.slide-frame{max-width:940px;margin:0 auto;animation:riseIn .5s cubic-bezier(.16,1,.3,1);position:relative;}
+.slide-frame{max-width:940px;margin:0 auto;animation:riseIn .5s cubic-bezier(.16,1,.3,1);position:relative;isolation:isolate;}
 
 @keyframes riseIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 
@@ -437,7 +437,7 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 /* hero */
 .hero-screen{
   min-height:calc(100vh - 90px);display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;position:relative;
+  text-align:center;position:relative;isolation:isolate;
 }
 .hero-glow{position:absolute;width:560px;height:560px;background:radial-gradient(circle,var(--accent-glow),transparent 70%);opacity:.4;filter:blur(10px);top:-160px;pointer-events:none;}
 .hero-eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-2);margin-bottom:20px;}
@@ -472,6 +472,36 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .cover-bg-img{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0;}
 .cover-bg-gradient{position:absolute;inset:0;background-image:linear-gradient(180deg,rgba(10,14,20,.35),rgba(8,10,14,.72));z-index:1;pointer-events:none;}
 .cover-bg .hero-eyebrow,.cover-bg .hero-title,.cover-bg .hero-desc,.cover-bg .hero-meta,.cover-bg .btn-primary{position:relative;z-index:2;}
+
+/* ---- Dekorasi grafis opsional (ModuleData.graphicStyle - generator.py
+   render_graphic_deco()), INDEPENDEN dari foto sampul/penutup di atas.
+   .g-deco dipakai Sampul & Penutup: z-index:1 duduk DI ANTARA layer foto
+   (z0) dan teks (z2 - lihat aturan di atas & .ending-bg di bawah, plus
+   aturan umum z-index:2 buat teks hero tanpa foto), DOM-order-nya SETELAH
+   div foto/gradasi supaya menang tumpuk di antara yang z-index-nya sama.
+   .g-deco-behind dipakai slide konten: z-index NEGATIF supaya otomatis
+   kalah tumpuk dari BLOK APA PUN (card/accordion/tabs/dst) tanpa perlu
+   nyentuh CSS tiap jenis blok satu-satu - amannya berkat `isolation:isolate`
+   di .hero-screen/.slide-frame (containment lokal, z-index gak bocor ke
+   elemen lain di halaman). Isi di dalamnya cuma bentuk dekoratif murni CSS
+   (blob/orb/dot/dst, lihat GRAPHIC_DECO di generator.py) - `pointer-events:
+   none` di semua level biar gak pernah nyerobot klik. */
+.g-deco{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1;}
+.g-deco-behind{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;}
+.g-blob,.g-orb,.g-dotgrid,.g-bracket,.g-tri,.g-ring,.g-dot,.g-dash,.g-arcband,.g-rectstack{position:absolute;}
+.g-orb{border-radius:50%;background:radial-gradient(circle, var(--accent-glow), transparent 72%);}
+.g-dotgrid{background-image:radial-gradient(var(--accent) 1.2px, transparent 1.5px);background-size:12px 12px;}
+.g-tri{clip-path:polygon(50% 0%, 0% 100%, 100% 100%);}
+.g-ring{border-radius:50%;background:transparent;}
+.g-dot{border-radius:50%;}
+.g-dash{border-radius:2px;}
+.g-arcband{border-radius:50%;}
+.g-rectstack{border-radius:9px;background:transparent;}
+/* Berlaku SELALU (bukan cuma di dalam .cover-bg/.ending-bg) - slide penutup
+   TANPA foto latar gak punya aturan z-index buat teksnya sama sekali secara
+   default (cuma dapet position:relative bawaan dari .hero-screen), jadi
+   tanpa ini teks bisa ketiban .g-deco (z1) begitu gaya grafis dipilih. */
+.hero-eyebrow,.hero-title,.hero-desc,.hero-meta,.btn-primary,.recap-reopen{position:relative;z-index:2;}
 .cover-bg .hero-title{color:#ffffff;}
 .cover-bg .hero-desc{color:rgba(255,255,255,.82);}
 
@@ -486,7 +516,12 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .summary-screen{min-height:auto;padding:30px 0;}
 .summary-screen.ending-bg{position:relative;overflow:hidden;border-radius:var(--radius-lg);padding:60px 40px 50px;}
 .ending-bg-img{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0;}
-.ending-bg>*:not(.ending-bg-img){position:relative;z-index:1;}
+/* :not(.g-deco) - tanpa ini, .g-deco ikut kesapu jadi position:relative
+   (dari absolute) dan patahin layout inset:0-nya sendiri. z-index:1 yang
+   dikasih ke sini kebetulan sama kayak punya .g-deco sendiri - amannya dari
+   DOM order (.g-deco ditaruh generator.py SEBELUM .hero-eyebrow/.hero-title,
+   jadi di antara yang z-index-nya seri, teks tetap menang tumpuk). */
+.ending-bg>*:not(.ending-bg-img):not(.g-deco){position:relative;z-index:1;}
 .ending-bg .hero-eyebrow{color:rgba(255,255,255,.85);}
 .ending-bg .hero-title{color:#ffffff;}
 
@@ -2190,6 +2225,7 @@ function renderHero(){
   <div class="hero-screen cover-bg">
     __COVER_BG_IMG_HTML__
     <div class="cover-bg-gradient"></div>
+    __COVER_DECO_HTML__
     <h1 class="hero-title">__HERO_TITLE_HTML__</h1>
     <p class="hero-desc">__HERO_DESC__</p>
     <button class="btn-primary" onclick="goNext()">Mulai Belajar →</button>
@@ -2271,6 +2307,7 @@ function renderSummary(){
   return `
   <div class="hero-screen summary-screen__ENDING_BG_CLASS__">
     __ENDING_BG_IMG_HTML__
+    __ENDING_DECO_HTML__
     <div class="hero-eyebrow">Selesai</div>
     <h1 class="hero-title" style="font-size:clamp(26px,4.2vw,40px);">__ENDING_TITLE_HTML__</h1>
     ${recapBtn}

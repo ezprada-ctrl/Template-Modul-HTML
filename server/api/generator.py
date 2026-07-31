@@ -484,7 +484,201 @@ def render_bg_image_layer(css_class, src, brightness):
     return f'<div class="{css_class}" style="background-image:url(\'{src}\');filter:brightness({brightness}%)"></div>'
 
 
-def render_slide_html(slide):
+# ---------------------------------------------------------------- graphic style decorations
+# 10 gaya dekorasi siap-pakai (ModuleData.graphicStyle, pilihan INDEPENDEN dari
+# theme/warna - lihat GRAPHIC_STYLES di app/src/graphicStyles.ts). Nilai
+# px/opacity di bawah adalah hasil skala ~3.3x dari prototipe Artifact yang
+# sudah direview & di-approve user (mockup pakai panel ilustratif ~270px,
+# kanvas modul asli jauh lebih besar - lihat memory
+# project_builder_bugfixes_theme_discussion_2026-07-31). Lebar/tinggi/posisi
+# ikut skala, opacity & ketebalan garis SENGAJA TIDAK diskalakan (garis tipis
+# harus tetap kerasa tipis di kanvas besar, bukan ikut menebal).
+#
+# Tiap gaya wajib py 3 varian BEDA KOMPOSISI (bukan bentuk sama ditempel
+# ulang): 'cover' boleh paling besar TAPI tetap dijaga ringan (Sampul bisa
+# punya foto upload di belakangnya - lihat coverImageDataUri - motif
+# solid-fill/opacity-tinggi gampang tabrakan, ini pelajaran dari fix
+# diagonal-block/cover yang sempat kegedean+ketebalan), 'content' PALING
+# kecil/redup (jangan ganggu teks, dipakai SAMA di semua slide konten),
+# 'ending' sengaja beda dari cover (simetris 2 sisi atau dikalikan/disebar).
+GRAPHIC_DECO = {
+    'blob': {
+        'cover': (
+            '<div class="g-blob" style="width:495px;height:455px;right:-152px;bottom:-132px;opacity:.35;background:var(--accent);border-radius:42% 58% 65% 35% / 45% 40% 60% 55%;"></div>'
+            '<div class="g-blob" style="width:257px;height:231px;left:-73px;top:-66px;opacity:.16;background:var(--navy);border-radius:58% 42% 35% 65% / 55% 60% 40% 45%;"></div>'
+        ),
+        'content': (
+            '<div class="g-blob" style="width:205px;height:185px;right:-53px;top:-46px;opacity:.10;background:var(--accent);border-radius:40% 60% 55% 45% / 55% 45% 60% 40%;"></div>'
+        ),
+        'ending': (
+            '<div class="g-blob" style="width:317px;height:290px;left:-92px;top:-79px;opacity:.22;background:var(--accent);border-radius:48% 52% 40% 60% / 50% 45% 55% 50%;"></div>'
+            '<div class="g-blob" style="width:317px;height:290px;right:-92px;bottom:-79px;opacity:.22;background:var(--navy);border-radius:52% 48% 60% 40% / 50% 55% 45% 50%;"></div>'
+        ),
+    },
+    'gradient-orb': {
+        'cover': '<div class="g-orb" style="width:627px;height:627px;right:-211px;top:-231px;"></div>',
+        'content': '<div class="g-orb" style="width:145px;height:145px;right:33px;top:20px;"></div>',
+        'ending': (
+            '<div class="g-orb" style="width:231px;height:231px;left:-59px;bottom:-86px;"></div>'
+            '<div class="g-orb" style="width:139px;height:139px;left:185px;bottom:-46px;"></div>'
+            '<div class="g-orb" style="width:178px;height:178px;right:46px;bottom:-66px;"></div>'
+            '<div class="g-orb" style="width:99px;height:99px;right:317px;bottom:13px;"></div>'
+        ),
+    },
+    'dot-grid': {
+        'cover': (
+            '<div class="g-dotgrid" style="width:495px;height:495px;right:-33px;bottom:-33px;opacity:.55;'
+            '-webkit-mask-image:radial-gradient(circle at 100% 100%, black 0%, black 25%, transparent 72%);'
+            'mask-image:radial-gradient(circle at 100% 100%, black 0%, black 25%, transparent 72%);"></div>'
+        ),
+        'content': (
+            '<div class="g-dotgrid" style="width:211px;height:211px;right:0;top:0;opacity:.35;'
+            '-webkit-mask-image:radial-gradient(circle at 100% 0%, black 0%, black 15%, transparent 75%);'
+            'mask-image:radial-gradient(circle at 100% 0%, black 0%, black 15%, transparent 75%);"></div>'
+        ),
+        'ending': (
+            '<div class="g-dotgrid" style="left:0;right:0;bottom:0;height:178px;opacity:.4;'
+            '-webkit-mask-image:linear-gradient(to top, black 0%, transparent 100%);'
+            'mask-image:linear-gradient(to top, black 0%, transparent 100%);"></div>'
+        ),
+    },
+    'corner-bracket': {
+        'cover': (
+            '<div class="g-bracket" style="width:152px;height:152px;left:46px;top:46px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);opacity:.5;"></div>'
+            '<div class="g-bracket" style="width:152px;height:152px;right:46px;bottom:46px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.5;"></div>'
+        ),
+        'content': (
+            '<div class="g-bracket" style="width:73px;height:73px;right:33px;top:33px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.3;"></div>'
+        ),
+        'ending': (
+            '<div class="g-bracket" style="width:99px;height:99px;left:40px;top:40px;border-top:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:99px;height:99px;right:40px;top:40px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:99px;height:99px;left:40px;bottom:40px;border-bottom:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:99px;height:99px;right:40px;bottom:40px;border-bottom:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>'
+        ),
+    },
+    'diagonal-block': {
+        # cover SENGAJA kecil+redup (72x64 skala mockup -> 238x211, opacity .26)
+        # - lihat catatan skala di atas file, ini bukan angka asal, ini hasil
+        # fix eksplisit user (dulu 2 segitiga solid gede/tebal, tabrakan sama
+        # foto sampul upload-an).
+        'cover': '<div class="g-tri" style="width:238px;height:211px;right:-40px;bottom:-33px;opacity:.26;background:var(--accent);"></div>',
+        'content': '<div class="g-tri" style="width:172px;height:73px;right:-26px;top:-26px;opacity:.65;background:var(--accent);transform:rotate(8deg);"></div>',
+        'ending': (
+            '<div class="g-tri" style="width:231px;height:211px;left:-46px;top:-40px;opacity:.4;background:var(--navy);transform:rotate(180deg);"></div>'
+            '<div class="g-tri" style="width:231px;height:211px;right:-46px;bottom:-40px;opacity:.7;background:var(--accent);"></div>'
+        ),
+    },
+    'ring': {
+        'cover': '<div class="g-ring" style="width:660px;height:660px;border:2px solid var(--accent);right:-231px;top:-277px;opacity:.4;"></div>',
+        'content': '<div class="g-ring" style="width:132px;height:132px;border:1.5px solid var(--accent);right:26px;top:20px;opacity:.28;"></div>',
+        'ending': (
+            '<div class="g-ring" style="width:211px;height:211px;border:1.6px solid var(--accent);left:-66px;bottom:-79px;opacity:.4;"></div>'
+            '<div class="g-ring" style="width:132px;height:132px;border:1.6px solid var(--navy);left:99px;bottom:-33px;opacity:.35;"></div>'
+            '<div class="g-ring" style="width:165px;height:165px;border:1.6px solid var(--accent);right:-20px;bottom:-59px;opacity:.3;"></div>'
+        ),
+    },
+    'layered-triangle': {
+        'cover': (
+            '<div class="g-tri" style="width:363px;height:330px;right:-59px;bottom:-53px;opacity:.24;background:var(--accent);transform:rotate(-6deg);"></div>'
+            '<div class="g-tri" style="width:264px;height:244px;right:20px;bottom:-33px;opacity:.2;background:var(--navy);transform:rotate(10deg);"></div>'
+        ),
+        'content': (
+            '<svg viewBox="0 0 40 40" style="position:absolute;right:13px;top:13px;width:86px;height:86px;">'
+            '<polygon points="20,4 4,34 36,34" style="stroke:var(--accent);" stroke-width="1.6" fill="none" opacity="0.4"/>'
+            '</svg>'
+        ),
+        'ending': (
+            '<div class="g-tri" style="width:112px;height:99px;left:66px;bottom:20px;opacity:.3;background:var(--accent);transform:rotate(-14deg);"></div>'
+            '<div class="g-tri" style="width:86px;height:79px;left:264px;bottom:86px;opacity:.25;background:var(--navy);transform:rotate(20deg);"></div>'
+            '<div class="g-tri" style="width:99px;height:92px;right:79px;bottom:7px;opacity:.28;background:var(--accent);transform:rotate(8deg);"></div>'
+        ),
+    },
+    'confetti': {
+        'cover': (
+            '<div class="g-dot" style="width:26px;height:26px;background:var(--accent);right:66px;bottom:198px;opacity:.6;"></div>'
+            '<div class="g-dot" style="width:17px;height:17px;background:var(--navy);right:185px;bottom:99px;opacity:.4;"></div>'
+            '<div class="g-dot" style="width:20px;height:20px;background:var(--accent);right:297px;bottom:231px;opacity:.5;"></div>'
+            '<div class="g-dash" style="width:40px;height:10px;background:var(--accent-2);right:132px;bottom:145px;opacity:.55;transform:rotate(-24deg);"></div>'
+            '<div class="g-dot" style="width:13px;height:13px;background:var(--navy);right:46px;bottom:66px;opacity:.45;"></div>'
+            '<div class="g-dash" style="width:33px;height:10px;background:var(--accent);right:363px;bottom:119px;opacity:.4;transform:rotate(18deg);"></div>'
+            '<div class="g-dot" style="width:20px;height:20px;background:var(--accent-2);right:231px;bottom:46px;opacity:.5;"></div>'
+        ),
+        'content': (
+            '<div class="g-dot" style="width:17px;height:17px;background:var(--accent);right:40px;top:26px;opacity:.5;"></div>'
+            '<div class="g-dot" style="width:12px;height:12px;background:var(--navy);right:86px;top:59px;opacity:.4;"></div>'
+        ),
+        'ending': (
+            '<div class="g-dot" style="width:20px;height:20px;background:var(--accent);left:53px;bottom:53px;opacity:.55;"></div>'
+            '<div class="g-dash" style="width:36px;height:10px;background:var(--navy);left:145px;bottom:33px;opacity:.4;transform:rotate(-16deg);"></div>'
+            '<div class="g-dot" style="width:13px;height:13px;background:var(--accent-2);left:264px;bottom:66px;opacity:.5;"></div>'
+            '<div class="g-dot" style="width:23px;height:23px;background:var(--accent);left:429px;bottom:26px;opacity:.5;"></div>'
+            '<div class="g-dash" style="width:40px;height:10px;background:var(--accent);left:554px;bottom:53px;opacity:.45;transform:rotate(20deg);"></div>'
+            '<div class="g-dot" style="width:17px;height:17px;background:var(--navy);right:79px;bottom:46px;opacity:.45;"></div>'
+            '<div class="g-dot" style="width:13px;height:13px;background:var(--accent-2);right:165px;bottom:73px;opacity:.4;"></div>'
+        ),
+    },
+    'stacked-arc': {
+        'cover': (
+            '<div class="g-arcband" style="width:660px;height:660px;right:-363px;bottom:-396px;background:var(--accent);opacity:.16;"></div>'
+            '<div class="g-arcband" style="width:495px;height:495px;right:-281px;bottom:-314px;background:var(--accent);opacity:.22;"></div>'
+            '<div class="g-arcband" style="width:330px;height:330px;right:-191px;bottom:-224px;background:var(--navy);opacity:.28;"></div>'
+        ),
+        'content': (
+            '<div class="g-arcband" style="width:185px;height:185px;right:-79px;top:-99px;background:var(--accent);opacity:.16;"></div>'
+            '<div class="g-arcband" style="width:112px;height:112px;right:-40px;top:-53px;background:var(--accent);opacity:.22;"></div>'
+        ),
+        'ending': (
+            '<div class="g-arcband" style="width:297px;height:297px;left:-165px;bottom:-185px;background:var(--accent);opacity:.18;"></div>'
+            '<div class="g-arcband" style="width:198px;height:198px;left:-106px;bottom:-125px;background:var(--navy);opacity:.24;"></div>'
+            '<div class="g-arcband" style="width:297px;height:297px;right:-165px;bottom:-185px;background:var(--navy);opacity:.18;"></div>'
+            '<div class="g-arcband" style="width:198px;height:198px;right:-106px;bottom:-125px;background:var(--accent);opacity:.24;"></div>'
+        ),
+    },
+    'layered-rect': {
+        'cover': (
+            '<div class="g-rectstack" style="width:297px;height:231px;border:1.6px solid var(--accent);right:-53px;bottom:-46px;opacity:.3;transform:rotate(-7deg);"></div>'
+            '<div class="g-rectstack" style="width:297px;height:231px;border:1.6px solid var(--accent);right:-20px;bottom:-26px;opacity:.45;transform:rotate(2deg);"></div>'
+            '<div class="g-rectstack" style="width:297px;height:231px;border:1.6px solid var(--navy);right:7px;bottom:-7px;opacity:.55;transform:rotate(9deg);"></div>'
+        ),
+        'content': '<div class="g-rectstack" style="width:99px;height:79px;border:1.4px solid var(--accent);right:20px;top:20px;opacity:.32;"></div>',
+        'ending': (
+            '<div class="g-rectstack" style="width:165px;height:132px;border:1.5px solid var(--accent);left:-33px;top:-26px;opacity:.3;transform:rotate(-6deg);"></div>'
+            '<div class="g-rectstack" style="width:165px;height:132px;border:1.5px solid var(--navy);left:-7px;top:-7px;opacity:.45;transform:rotate(4deg);"></div>'
+            '<div class="g-rectstack" style="width:165px;height:132px;border:1.5px solid var(--navy);right:-33px;bottom:-26px;opacity:.3;transform:rotate(6deg);"></div>'
+            '<div class="g-rectstack" style="width:165px;height:132px;border:1.5px solid var(--accent);right:-7px;bottom:-7px;opacity:.45;transform:rotate(-4deg);"></div>'
+        ),
+    },
+}
+
+
+def render_graphic_deco(style_id, kind):
+    """Dekorasi grafis opsional (ModuleData.graphicStyle) buat satu bagian
+    modul. `kind`: 'cover'|'content'|'ending' - masing-masing komposisi beda
+    (lihat GRAPHIC_DECO di atas), gak boleh reuse bentuk yang sama.
+    'content' dibungkus `.g-deco-behind` (z-index NEGATIF, biar otomatis
+    kalah tumpuk dari SEMUA jenis blok konten tanpa perlu utak-atik z-index
+    tiap jenis blok satu-satu) - 'cover'/'ending' dibungkus `.g-deco` biasa
+    (duduk di ANTARA layer foto & gradasi gelap dengan teks, lihat CSS di
+    shell-template.html). Balikin string kosong kalau style_id 'none'/gak
+    dikenal, atau kind itu kebetulan kosong buat gaya ini - konsisten sama
+    render_bg_image_layer() yang juga gak nyisain div percuma.
+    """
+    html = GRAPHIC_DECO.get(style_id or 'none', {}).get(kind, '')
+    if not html:
+        return ''
+    wrapper = 'g-deco-behind' if kind == 'content' else 'g-deco'
+    return f'<div class="{wrapper}" aria-hidden="true">{html}</div>'
+
+
+def render_slide_html(slide, graphic_style='none'):
+    # Sama persis di SETIAP slide konten (bukan diacak per-slide) - "unik cuma
+    # buat konteks itu sendiri" berarti satu treatment kecil/redup yang
+    # konsisten di semua slide isi, beda dari Sampul/Penutup yang masing-masing
+    # cuma sekali. `.g-deco-behind` di z-index NEGATIF, jadi otomatis kalah
+    # tumpuk dari blok apa pun (card/accordion/tabs/dst) tanpa perlu
+    # nyentuh CSS tiap jenis blok - lihat render_graphic_deco().
+    deco = render_graphic_deco(graphic_style, 'content')
     kicker = f'<div class="kicker"><span class="num">{slide["number"]}</span>{esc(slide.get("kickerLabel",""))}</div>'
     title = f'<h1 class="slide-title">{esc(slide.get("title",""))}</h1>'
     sub = f'<p class="slide-sub">{slide.get("subtitle","")}</p>' if slide.get('subtitle') else ''
@@ -492,7 +686,7 @@ def render_slide_html(slide):
     # Nutup float dari blok gambar "dampingi teks" biar tingginya kekurung di
     # dalam slide ini (gak bocor ke bawah/ke slide lain). Kosong + zero-height
     # kalau gak ada float sama sekali - aman selalu ditaruh.
-    return kicker + title + sub + body + '<div class="img-clear"></div>'
+    return deco + kicker + title + sub + body + '<div class="img-clear"></div>'
 
 
 # Kecepatan baca diam rata-rata orang dewasa: 238 kata/menit (Brysbaert 2019,
@@ -574,6 +768,11 @@ def generate_html(module):
     out = out.replace('__THEME_ACCENT__', theme_accent)
     out = out.replace('__THEME_NAVY__', theme_navy)
 
+    # Independen dari theme di atas - lihat render_graphic_deco(). 'none'
+    # (default/modul lama tanpa field ini) = tiga placeholder deco di bawah
+    # semua balik string kosong, render identik ke sebelum fitur ini ada.
+    graphic_style = module.get('graphicStyle') or 'none'
+
     # Default 100 (bukan 50 kayak slide penutup) - sampul udah punya
     # .cover-bg-gradient bawaan buat jamin judul putih kebaca, jadi slider
     # ini murni tambahan opsional buat MEREDAM LEBIH LANJUT di atas itu.
@@ -582,6 +781,7 @@ def generate_html(module):
     cover = module.get('coverImageDataUri', '')
     cover_brightness = clamp_brightness(module.get('coverImageBrightness'), 100)
     out = out.replace('__COVER_BG_IMG_HTML__', render_bg_image_layer('cover-bg-img', cover, cover_brightness))
+    out = out.replace('__COVER_DECO_HTML__', render_graphic_deco(graphic_style, 'cover'))
 
     slug = module.get('slug') or slugify(module.get('title', 'modul'))
     out = out.replace('__STORAGE_KEY__', f'pilar-{slug}-progress-v1')
@@ -599,7 +799,7 @@ def generate_html(module):
     titles = {}
     min_ms_per_slide = {}
     for s in slides:
-        html_body = render_slide_html(s)
+        html_body = render_slide_html(s, graphic_style)
         consts.append(f'const SLIDE_{s["number"]} = {js_str(html_body)};')
         titles[str(s['number'])] = s.get('title', '')
         min_ms_per_slide[str(s['number'])] = slide_min_read_ms(count_words(html_body))
@@ -739,6 +939,7 @@ def generate_html(module):
     ending_brightness = clamp_brightness(module.get('endingImageBrightness'), 50)
     out = out.replace('__ENDING_BG_CLASS__', ' ending-bg' if ending_image else '')
     out = out.replace('__ENDING_BG_IMG_HTML__', render_bg_image_layer('ending-bg-img', ending_image, ending_brightness))
+    out = out.replace('__ENDING_DECO_HTML__', render_graphic_deco(graphic_style, 'ending'))
 
     sidebar_eyebrow = esc(module.get('sidebarEyebrow') or 'Open Access')
     out = out.replace('__SIDEBAR_EYEBROW__', sidebar_eyebrow)

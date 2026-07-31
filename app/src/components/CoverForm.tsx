@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { ModuleData } from '../types';
 import { uploadImageToStorage, checkTrackingConfig } from '../api';
 import { THEME_PRESETS, findThemePresetId } from '../themes';
+import { GRAPHIC_STYLES } from '../graphicStyles';
 import SlidePreview from './SlidePreview';
 
 interface Props {
@@ -67,6 +68,13 @@ export default function CoverForm({ module, setModule }: Props) {
               );
             })}
           </div>
+          <label style={{ color: 'var(--text-dim)' }}>
+            Gaya Grafis <span className="hint" style={{ fontSize: 11 }}>(dekorasi di Sampul, tiap slide konten, dan slide penutup - independen dari warna di atas, bebas dikombinasikan)</span>
+            <select style={{ width: '100%', marginTop: 5 }} value={module.graphicStyle || 'none'}
+              onChange={e => setModule({ ...module, graphicStyle: e.target.value })}>
+              {GRAPHIC_STYLES.map(g => <option key={g.id} value={g.id}>{g.label}</option>)}
+            </select>
+          </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
             <input type="checkbox" checked={!!module.hideProgress}
               onChange={e => setModule({ ...module, hideProgress: e.target.checked })} />
