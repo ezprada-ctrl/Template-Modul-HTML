@@ -3,7 +3,6 @@ import type { ModuleData } from '../types';
 import { uploadImageToStorage, checkTrackingConfig } from '../api';
 import { THEME_PRESETS, findThemePresetId } from '../themes';
 import SlidePreview from './SlidePreview';
-import DecorationEditor from './DecorationEditor';
 
 interface Props {
   module: ModuleData;
@@ -177,10 +176,6 @@ export default function CoverForm({ module, setModule }: Props) {
             onUpload={url => setModule({ ...module, coverImageDataUri: url })}
             onBrightnessChange={n => setModule({ ...module, coverImageBrightness: n })}
             onRemove={() => setModule({ ...module, coverImageDataUri: '', coverImageBrightness: undefined })}
-          />
-          <DecorationEditor
-            decorations={module.coverDecorations || []}
-            onChange={coverDecorations => setModule({ ...module, coverDecorations })}
           />
         </div>
         <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>

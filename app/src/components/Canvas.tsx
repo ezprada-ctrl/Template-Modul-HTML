@@ -10,7 +10,6 @@ import type { ModuleData, Slide, Section } from '../types';
 import { uid, renumberModule } from '../types';
 import BlockEditor from './BlockEditor';
 import SlidePreview from './SlidePreview';
-import DecorationEditor from './DecorationEditor';
 import { uploadMediaToStorage } from '../api';
 
 interface Props {
@@ -418,7 +417,6 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
                 style={{ width: '100%', marginBottom: 8, minHeight: 40, resize: 'vertical' }} />
             </div>
             <SlideAudioField slide={slide} onUpdate={onUpdate} />
-            <DecorationEditor decorations={slide.decorations || []} onChange={decorations => onUpdate({ decorations })} />
             <BlockEditor blocks={slide.blocks} onChange={blocks => onUpdate({ blocks })} />
           </div>
           <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>

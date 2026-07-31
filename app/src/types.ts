@@ -98,28 +98,6 @@ export interface Section {
   color: string;
 }
 
-// Purely decorative graphic (mis. gambar dari Canva) yang ditaruh di salah
-// satu dari 8 titik jangkar di sekitar konten, BUKAN mengalir di antara blok
-// seperti blok "Gambar" biasa. Sengaja titik jangkar (bukan X/Y bebas) -
-// keputusan yang sama kayak blok Gambar (imgAlign/imgFloat): posisi bebas
-// piksel pernah dibahas & ditolak karena resiko rusak di layar sempit +
-// gak konsisten sama blueprint asli. Non-interaktif (gak nangkep klik) &
-// otomatis hilang di layar sempit (≤760px) supaya gak pernah menutupi
-// konten/tombol - lihat render_decorations() di generator.py.
-export type DecorAnchor =
-  | 'top-left' | 'top-center' | 'top-right'
-  | 'right-center' | 'left-center'
-  | 'bottom-left' | 'bottom-center' | 'bottom-right';
-
-export interface Decoration {
-  id: string;
-  src: string;
-  anchor: DecorAnchor;
-  // Lebar dalam piksel di desktop (bukan % seperti blok Gambar - elemen ini
-  // berdiri sendiri dengan ukuran tetap, bukan ngalir mengisi lebar kolom).
-  size?: number; // default 110
-}
-
 export interface Slide {
   id: string;
   number: number;
@@ -134,8 +112,6 @@ export interface Slide {
   // blocks autoplay), 'manual' just shows a player the learner may use.
   audioSrc?: string;
   audioMode?: 'auto' | 'manual';
-  // Dekorasi grafis opsional, khusus slide ini - lihat komentar Decoration.
-  decorations?: Decoration[];
 }
 
 export interface QuizQuestion {
@@ -172,10 +148,6 @@ export interface ModuleData {
   // udah punya coverImageDataUri render IDENTIK kayak sebelum field ini ada.
   // Geser slider di bawah 100 = REDAM LEBIH LANJUT di atas gradient itu.
   coverImageBrightness?: number;
-  // Dekorasi grafis opsional khusus layar sampul - sama mekanismenya kayak
-  // Slide.decorations, cuma taruhnya di module langsung karena Sampul bukan
-  // Slide.
-  coverDecorations?: Decoration[];
   // When true, the "Progres Belajar" card (percentage + bar) never shows to
   // learners in the exported HTML — for modules that are just one part of a
   // larger series, where "100%" on this module alone would be misleading.
