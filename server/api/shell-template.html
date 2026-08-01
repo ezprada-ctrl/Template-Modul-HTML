@@ -486,8 +486,20 @@ ul.tick li b, ol.tick li b{color:var(--text);}
    elemen lain di halaman). Isi di dalamnya cuma bentuk dekoratif murni CSS
    (blob/orb/dot/dst, lihat GRAPHIC_DECO di generator.py) - `pointer-events:
    none` di semua level biar gak pernah nyerobot klik. */
-.g-deco{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1;}
-.g-deco-behind{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;}
+/* `container-type:size` bikin unit cq* di dalam dekorasi (ditanam
+   generator.py, lihat _responsive_geometry) ngukur ke kotak pembungkus ini -
+   hasilnya dekorasi tampil dengan PROPORSI SAMA di ukuran render apa pun
+   (panel "Preview langsung" di builder ~626x295, layar penuh ~1320x810, Web
+   Object Storyline/KLC ukuran lain lagi). Aman dikasih size containment
+   karena dua-duanya `position:absolute;inset:0` - ukurannya datang dari
+   containing block, BUKAN dari isinya (semua anaknya absolute juga), jadi
+   gak ada risiko tinggi collapse ke 0 kayak kalau containment ini dipasang
+   di .slide-frame yang tingginya ngikutin isi. Browser tanpa dukungan
+   container query (Chrome <105/Safari <16) mengabaikan baris ini DAN semua
+   deklarasi ber-unit cq*, lalu jatuh ke fallback px yang ditulis generator.py
+   tepat sebelumnya - dekorasi tetap muncul, cuma gak ikut menyesuaikan. */
+.g-deco{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1;container-type:size;}
+.g-deco-behind{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;container-type:size;}
 .g-blob,.g-orb,.g-dotgrid,.g-bracket,.g-tri,.g-ring,.g-dot,.g-dash,.g-arcband,.g-rectstack{position:absolute;}
 .g-orb{border-radius:50%;background:radial-gradient(circle, var(--accent-glow), transparent 72%);}
 .g-dotgrid{background-image:radial-gradient(var(--accent) 1.2px, transparent 1.5px);background-size:12px 12px;}

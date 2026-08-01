@@ -4,15 +4,20 @@ export interface GraphicStylePreviewSet {
   ending: string;
 }
 
-// Preview-scale (illustrative, ~150-200px) decorative markup for the hover
-// preview in GraphicStyleSelect.tsx - NOT the same numbers as the real
-// production decoration in server/api/generator.py's GRAPHIC_DECO (those are
-// ~3.3x bigger, scaled for a full-viewport-size cover/slide). Both are
-// transcribed from the same source (the Artifact mockup reviewed & approved
-// by the user before this feature was coded) - if a style's composition
-// ever changes in one place, mirror the change in the other, they're
-// intentionally duplicated for zero-latency hover response (no backend
-// round-trip) rather than sharing one data source.
+// Markup dekorasi buat preview hover di GraphicStyleSelect.tsx, ditulis dalam
+// skala panel mockup (panel 158px lebar, rasio 4:3).
+//
+// Angka-angka di sini adalah ANGKA YANG SAMA PERSIS dengan GRAPHIC_DECO di
+// server/api/generator.py - generator mengonversinya ke unit relatif kontainer
+// (cqmin/cqw) pas export, jadi modul asli tampil dengan proporsi identik sama
+// preview ini di ukuran render apa pun. Kalau komposisi sebuah gaya diubah,
+// UBAH DI KEDUA FILE dengan angka yang sama; begitu angkanya beda, preview
+// hover berhenti mewakili hasil aslinya - itu persis bug yang pernah kejadian
+// (dulu generator pakai px tetap hasil skala 3.3x, hasilnya dekorasi kelihatan
+// raksasa di panel preview builder tapi kekecilan di layar penuh).
+//
+// Sengaja diduplikasi (bukan ambil dari satu sumber) supaya hover langsung
+// nampil tanpa round-trip ke backend tiap gerak mouse.
 // Every div is fully self-contained (position/shape/color all inline) - no
 // dependency on a shared CSS class - so this file has zero risk of colliding
 // with any existing builder-app styling.

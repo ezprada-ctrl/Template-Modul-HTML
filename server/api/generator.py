@@ -486,167 +486,222 @@ def render_bg_image_layer(css_class, src, brightness):
 
 # ---------------------------------------------------------------- graphic style decorations
 # 10 gaya dekorasi siap-pakai (ModuleData.graphicStyle, pilihan INDEPENDEN dari
-# theme/warna - lihat GRAPHIC_STYLES di app/src/graphicStyles.ts). Nilai
-# px/opacity di bawah adalah hasil skala ~3.3x dari prototipe Artifact yang
-# sudah direview & di-approve user (mockup pakai panel ilustratif ~270px,
-# kanvas modul asli jauh lebih besar - lihat memory
-# project_builder_bugfixes_theme_discussion_2026-07-31). Lebar/tinggi/posisi
-# ikut skala, opacity & ketebalan garis SENGAJA TIDAK diskalakan (garis tipis
-# harus tetap kerasa tipis di kanvas besar, bukan ikut menebal).
+# theme/warna - lihat GRAPHIC_STYLES di app/src/graphicStyles.ts).
 #
-# Tiap gaya wajib py 3 varian BEDA KOMPOSISI (bukan bentuk sama ditempel
-# ulang): 'cover' boleh paling besar TAPI tetap dijaga ringan (Sampul bisa
-# punya foto upload di belakangnya - lihat coverImageDataUri - motif
-# solid-fill/opacity-tinggi gampang tabrakan, ini pelajaran dari fix
-# diagonal-block/cover yang sempat kegedean+ketebalan), 'content' PALING
-# kecil/redup (jangan ganggu teks, dipakai SAMA di semua slide konten),
-# 'ending' sengaja beda dari cover (simetris 2 sisi atau dikalikan/disebar).
+# SEMUA angka px di GRAPHIC_DECO ditulis dalam SKALA PANEL MOCKUP
+# (app/src/graphicStylePreviews.ts, panel 158px lebar / rasio 4:3) - persis
+# angka yang sudah direview & di-approve user. Angka itu TIDAK dipakai apa
+# adanya: _responsive_geometry() di bawah mengubahnya jadi unit relatif
+# kontainer, jadi dekorasi tampil dengan PROPORSI YANG SAMA di ukuran render
+# apa pun. Ini penting karena ukuran render sangat bervariasi: panel "Preview
+# langsung" di builder cuma ~626x295, layar penuh ~1320x810, dan di dalam Web
+# Object Storyline/KLC bisa ukuran lain lagi. Versi sebelumnya pakai px tetap
+# (di-skala 3.3x sekali di muka) sehingga dekorasi yang sama kelihatan
+# raksasa di panel preview (tinggi blob 154% dari sampul) tapi kekecilan di
+# layar penuh (56%) - itu bug yang diperbaiki di sini.
+#
+# Tiap gaya wajib punya 3 varian BEDA KOMPOSISI (bukan bentuk sama ditempel
+# ulang): 'cover' paling bold TAPI tetap dijaga ringan (Sampul bisa punya foto
+# upload di belakangnya - lihat coverImageDataUri - motif solid-fill/opacity
+# tinggi gampang tabrakan, ini pelajaran dari fix diagonal-block/cover),
+# 'content' PALING kecil/redup (dipakai SAMA di semua slide konten, jangan
+# ganggu teks), 'ending' sengaja beda dari cover (simetris 2 sisi atau
+# dikalikan/disebar).
+
+# Ukuran panel mockup di GraphicStyleSelect.tsx - basis konversi di bawah.
+PREVIEW_PANEL_W = 158.0
+PREVIEW_PANEL_H = PREVIEW_PANEL_W * 3 / 4      # panel-nya aspect-ratio 4/3
+PREVIEW_PANEL_MIN = min(PREVIEW_PANEL_W, PREVIEW_PANEL_H)
+
+# Skala px yang dipakai SEBAGAI FALLBACK buat browser yang belum dukung
+# container query units (Chrome <105 / Safari <16). Nilainya = perilaku versi
+# sebelumnya, jadi browser lama dapat persis tampilan yang sudah pernah rilis,
+# bukan layar kosong. Browser modern selalu pakai deklarasi cq* sesudahnya.
+_LEGACY_PX_SCALE = 3.3
+
+# Cuma properti GEOMETRI yang diskalakan. Ketebalan garis (border), blur, dan
+# stroke SVG sengaja TIDAK ikut - garis tipis harus tetap kerasa tipis di
+# kanvas besar, bukan ikut menebal jadi batang.
+# Lookbehind `(?<![-\w])` mencegah `max-width`/`border-width`/dsb ikut kena.
+_GEOM_RE = re.compile(r'(?<![-\w])(width|height|top|right|bottom|left)\s*:\s*(-?[\d.]+)px')
+
+
+def _responsive_geometry(css_html, unit, basis):
+    """Ubah tiap `prop:Npx` (skala panel mockup) jadi dua deklarasi berurutan:
+    px fallback dulu, lalu nilai relatif kontainer. Browser lama membuang
+    deklarasi ber-unit cq* yang gak dikenal dan tetap memakai px-nya; browser
+    modern memakai yang belakangan. Pola progressive-enhancement biasa, cuma
+    ditulis di inline style."""
+    def repl(m):
+        prop, num = m.group(1), float(m.group(2))
+        legacy = round(num * _LEGACY_PX_SCALE)
+        rel = round(num / basis * 100, 2)
+        return f'{prop}:{legacy}px;{prop}:{rel}{unit}'
+    return _GEOM_RE.sub(repl, css_html)
+
+
+# Pola titik dot-grid ikut diskalakan supaya kerapatannya sama kayak mockup
+# (kalau ukuran areanya membesar tapi jarak titiknya tetap 12px, teksturnya
+# berubah total: dari ~13 titik selebar panel jadi ratusan titik renik).
+# Ditulis inline per-konteks karena unitnya beda (cover/ending pakai cqmin,
+# slide konten pakai cqw); class .g-dotgrid di shell-template.html tetap ada
+# sebagai fallback px buat browser lama.
+_DOTS_CQMIN = (
+    'background-image:radial-gradient(var(--accent) 1.01cqmin, transparent 1.27cqmin);'
+    'background-size:10.13cqmin 10.13cqmin;'
+)
+_DOTS_CQW = (
+    'background-image:radial-gradient(var(--accent) 0.76cqw, transparent 0.95cqw);'
+    'background-size:7.59cqw 7.59cqw;'
+)
+
 GRAPHIC_DECO = {
     'blob': {
         'cover': (
-            '<div class="g-blob" style="width:495px;height:455px;right:-152px;bottom:-132px;opacity:.35;background:var(--accent);border-radius:42% 58% 65% 35% / 45% 40% 60% 55%;"></div>'
-            '<div class="g-blob" style="width:257px;height:231px;left:-73px;top:-66px;opacity:.16;background:var(--navy);border-radius:58% 42% 35% 65% / 55% 60% 40% 45%;"></div>'
+            '<div class="g-blob" style="width:150px;height:138px;right:-46px;bottom:-40px;opacity:.35;background:var(--accent);border-radius:42% 58% 65% 35% / 45% 40% 60% 55%;"></div>'
+            '<div class="g-blob" style="width:78px;height:70px;left:-22px;top:-20px;opacity:.16;background:var(--navy);border-radius:58% 42% 35% 65% / 55% 60% 40% 45%;"></div>'
         ),
         'content': (
-            '<div class="g-blob" style="width:205px;height:185px;right:-53px;top:-46px;opacity:.10;background:var(--accent);border-radius:40% 60% 55% 45% / 55% 45% 60% 40%;"></div>'
+            '<div class="g-blob" style="width:62px;height:56px;right:-16px;top:-14px;opacity:.10;background:var(--accent);border-radius:40% 60% 55% 45% / 55% 45% 60% 40%;"></div>'
         ),
         'ending': (
-            '<div class="g-blob" style="width:317px;height:290px;left:-92px;top:-79px;opacity:.22;background:var(--accent);border-radius:48% 52% 40% 60% / 50% 45% 55% 50%;"></div>'
-            '<div class="g-blob" style="width:317px;height:290px;right:-92px;bottom:-79px;opacity:.22;background:var(--navy);border-radius:52% 48% 60% 40% / 50% 55% 45% 50%;"></div>'
+            '<div class="g-blob" style="width:96px;height:88px;left:-28px;top:-24px;opacity:.22;background:var(--accent);border-radius:48% 52% 40% 60% / 50% 45% 55% 50%;"></div>'
+            '<div class="g-blob" style="width:96px;height:88px;right:-28px;bottom:-24px;opacity:.22;background:var(--navy);border-radius:52% 48% 60% 40% / 50% 55% 45% 50%;"></div>'
         ),
     },
     'gradient-orb': {
-        'cover': '<div class="g-orb" style="width:627px;height:627px;right:-211px;top:-231px;"></div>',
-        'content': '<div class="g-orb" style="width:145px;height:145px;right:33px;top:20px;"></div>',
+        'cover': '<div class="g-orb" style="width:190px;height:190px;right:-64px;top:-70px;"></div>',
+        'content': '<div class="g-orb" style="width:44px;height:44px;right:10px;top:6px;"></div>',
         'ending': (
-            '<div class="g-orb" style="width:231px;height:231px;left:-59px;bottom:-86px;"></div>'
-            '<div class="g-orb" style="width:139px;height:139px;left:185px;bottom:-46px;"></div>'
-            '<div class="g-orb" style="width:178px;height:178px;right:46px;bottom:-66px;"></div>'
-            '<div class="g-orb" style="width:99px;height:99px;right:317px;bottom:13px;"></div>'
+            '<div class="g-orb" style="width:70px;height:70px;left:-18px;bottom:-26px;"></div>'
+            '<div class="g-orb" style="width:42px;height:42px;left:56px;bottom:-14px;"></div>'
+            '<div class="g-orb" style="width:54px;height:54px;right:14px;bottom:-20px;"></div>'
+            '<div class="g-orb" style="width:30px;height:30px;right:96px;bottom:4px;"></div>'
         ),
     },
     'dot-grid': {
         'cover': (
-            '<div class="g-dotgrid" style="width:495px;height:495px;right:-33px;bottom:-33px;opacity:.55;'
+            '<div class="g-dotgrid" style="width:150px;height:150px;right:-10px;bottom:-10px;opacity:.55;'
+            + _DOTS_CQMIN +
             '-webkit-mask-image:radial-gradient(circle at 100% 100%, black 0%, black 25%, transparent 72%);'
             'mask-image:radial-gradient(circle at 100% 100%, black 0%, black 25%, transparent 72%);"></div>'
         ),
         'content': (
-            '<div class="g-dotgrid" style="width:211px;height:211px;right:0;top:0;opacity:.35;'
+            '<div class="g-dotgrid" style="width:64px;height:64px;right:0;top:0;opacity:.35;'
+            + _DOTS_CQW +
             '-webkit-mask-image:radial-gradient(circle at 100% 0%, black 0%, black 15%, transparent 75%);'
             'mask-image:radial-gradient(circle at 100% 0%, black 0%, black 15%, transparent 75%);"></div>'
         ),
         'ending': (
-            '<div class="g-dotgrid" style="left:0;right:0;bottom:0;height:178px;opacity:.4;'
+            '<div class="g-dotgrid" style="left:0;right:0;bottom:0;height:54px;opacity:.4;'
+            + _DOTS_CQMIN +
             '-webkit-mask-image:linear-gradient(to top, black 0%, transparent 100%);'
             'mask-image:linear-gradient(to top, black 0%, transparent 100%);"></div>'
         ),
     },
     'corner-bracket': {
         'cover': (
-            '<div class="g-bracket" style="width:152px;height:152px;left:46px;top:46px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);opacity:.5;"></div>'
-            '<div class="g-bracket" style="width:152px;height:152px;right:46px;bottom:46px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.5;"></div>'
+            '<div class="g-bracket" style="width:46px;height:46px;left:14px;top:14px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);opacity:.5;"></div>'
+            '<div class="g-bracket" style="width:46px;height:46px;right:14px;bottom:14px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.5;"></div>'
         ),
         'content': (
-            '<div class="g-bracket" style="width:73px;height:73px;right:33px;top:33px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.3;"></div>'
+            '<div class="g-bracket" style="width:22px;height:22px;right:10px;top:10px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.3;"></div>'
         ),
         'ending': (
-            '<div class="g-bracket" style="width:99px;height:99px;left:40px;top:40px;border-top:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>'
-            '<div class="g-bracket" style="width:99px;height:99px;right:40px;top:40px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>'
-            '<div class="g-bracket" style="width:99px;height:99px;left:40px;bottom:40px;border-bottom:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>'
-            '<div class="g-bracket" style="width:99px;height:99px;right:40px;bottom:40px;border-bottom:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:30px;height:30px;left:12px;top:12px;border-top:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:30px;height:30px;right:12px;top:12px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:30px;height:30px;left:12px;bottom:12px;border-bottom:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:30px;height:30px;right:12px;bottom:12px;border-bottom:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>'
         ),
     },
     'diagonal-block': {
-        # cover SENGAJA kecil+redup (72x64 skala mockup -> 238x211, opacity .26)
-        # - lihat catatan skala di atas file, ini bukan angka asal, ini hasil
-        # fix eksplisit user (dulu 2 segitiga solid gede/tebal, tabrakan sama
-        # foto sampul upload-an).
-        'cover': '<div class="g-tri" style="width:238px;height:211px;right:-40px;bottom:-33px;opacity:.26;background:var(--accent);"></div>',
-        'content': '<div class="g-tri" style="width:172px;height:73px;right:-26px;top:-26px;opacity:.65;background:var(--accent);transform:rotate(8deg);"></div>',
+        # Cover SENGAJA kecil+redup - ini hasil fix eksplisit user (dulu 2
+        # segitiga solid gede/tebal, tabrakan sama foto sampul upload-an).
+        'cover': '<div class="g-tri" style="width:72px;height:64px;right:-12px;bottom:-10px;opacity:.26;background:var(--accent);"></div>',
+        'content': '<div class="g-tri" style="width:52px;height:22px;right:-8px;top:-8px;background:var(--accent);opacity:.65;transform:rotate(8deg);"></div>',
         'ending': (
-            '<div class="g-tri" style="width:231px;height:211px;left:-46px;top:-40px;opacity:.4;background:var(--navy);transform:rotate(180deg);"></div>'
-            '<div class="g-tri" style="width:231px;height:211px;right:-46px;bottom:-40px;opacity:.7;background:var(--accent);"></div>'
+            '<div class="g-tri" style="width:70px;height:64px;left:-14px;top:-12px;background:var(--navy);opacity:.4;transform:rotate(180deg);"></div>'
+            '<div class="g-tri" style="width:70px;height:64px;right:-14px;bottom:-12px;background:var(--accent);opacity:.7;"></div>'
         ),
     },
     'ring': {
-        'cover': '<div class="g-ring" style="width:660px;height:660px;border:2px solid var(--accent);right:-231px;top:-277px;opacity:.4;"></div>',
-        'content': '<div class="g-ring" style="width:132px;height:132px;border:1.5px solid var(--accent);right:26px;top:20px;opacity:.28;"></div>',
+        'cover': '<div class="g-ring" style="width:200px;height:200px;border:2px solid var(--accent);right:-70px;top:-84px;opacity:.4;"></div>',
+        'content': '<div class="g-ring" style="width:40px;height:40px;border:1.5px solid var(--accent);right:8px;top:6px;opacity:.28;"></div>',
         'ending': (
-            '<div class="g-ring" style="width:211px;height:211px;border:1.6px solid var(--accent);left:-66px;bottom:-79px;opacity:.4;"></div>'
-            '<div class="g-ring" style="width:132px;height:132px;border:1.6px solid var(--navy);left:99px;bottom:-33px;opacity:.35;"></div>'
-            '<div class="g-ring" style="width:165px;height:165px;border:1.6px solid var(--accent);right:-20px;bottom:-59px;opacity:.3;"></div>'
+            '<div class="g-ring" style="width:64px;height:64px;border:1.6px solid var(--accent);left:-20px;bottom:-24px;opacity:.4;"></div>'
+            '<div class="g-ring" style="width:40px;height:40px;border:1.6px solid var(--navy);left:30px;bottom:-10px;opacity:.35;"></div>'
+            '<div class="g-ring" style="width:50px;height:50px;border:1.6px solid var(--accent);right:-6px;bottom:-18px;opacity:.3;"></div>'
         ),
     },
     'layered-triangle': {
         'cover': (
-            '<div class="g-tri" style="width:363px;height:330px;right:-59px;bottom:-53px;opacity:.24;background:var(--accent);transform:rotate(-6deg);"></div>'
-            '<div class="g-tri" style="width:264px;height:244px;right:20px;bottom:-33px;opacity:.2;background:var(--navy);transform:rotate(10deg);"></div>'
+            '<div class="g-tri" style="width:110px;height:100px;right:-18px;bottom:-16px;background:var(--accent);opacity:.24;transform:rotate(-6deg);"></div>'
+            '<div class="g-tri" style="width:80px;height:74px;right:6px;bottom:-10px;background:var(--navy);opacity:.2;transform:rotate(10deg);"></div>'
         ),
         'content': (
-            '<svg viewBox="0 0 40 40" style="position:absolute;right:13px;top:13px;width:86px;height:86px;">'
+            '<svg viewBox="0 0 40 40" style="position:absolute;right:4px;top:4px;width:26px;height:26px;">'
             '<polygon points="20,4 4,34 36,34" style="stroke:var(--accent);" stroke-width="1.6" fill="none" opacity="0.4"/>'
             '</svg>'
         ),
         'ending': (
-            '<div class="g-tri" style="width:112px;height:99px;left:66px;bottom:20px;opacity:.3;background:var(--accent);transform:rotate(-14deg);"></div>'
-            '<div class="g-tri" style="width:86px;height:79px;left:264px;bottom:86px;opacity:.25;background:var(--navy);transform:rotate(20deg);"></div>'
-            '<div class="g-tri" style="width:99px;height:92px;right:79px;bottom:7px;opacity:.28;background:var(--accent);transform:rotate(8deg);"></div>'
+            '<div class="g-tri" style="width:34px;height:30px;left:20px;bottom:6px;background:var(--accent);opacity:.3;transform:rotate(-14deg);"></div>'
+            '<div class="g-tri" style="width:26px;height:24px;left:80px;bottom:26px;background:var(--navy);opacity:.25;transform:rotate(20deg);"></div>'
+            '<div class="g-tri" style="width:30px;height:28px;right:24px;bottom:2px;background:var(--accent);opacity:.28;transform:rotate(8deg);"></div>'
         ),
     },
     'confetti': {
         'cover': (
-            '<div class="g-dot" style="width:26px;height:26px;background:var(--accent);right:66px;bottom:198px;opacity:.6;"></div>'
-            '<div class="g-dot" style="width:17px;height:17px;background:var(--navy);right:185px;bottom:99px;opacity:.4;"></div>'
-            '<div class="g-dot" style="width:20px;height:20px;background:var(--accent);right:297px;bottom:231px;opacity:.5;"></div>'
-            '<div class="g-dash" style="width:40px;height:10px;background:var(--accent-2);right:132px;bottom:145px;opacity:.55;transform:rotate(-24deg);"></div>'
-            '<div class="g-dot" style="width:13px;height:13px;background:var(--navy);right:46px;bottom:66px;opacity:.45;"></div>'
-            '<div class="g-dash" style="width:33px;height:10px;background:var(--accent);right:363px;bottom:119px;opacity:.4;transform:rotate(18deg);"></div>'
-            '<div class="g-dot" style="width:20px;height:20px;background:var(--accent-2);right:231px;bottom:46px;opacity:.5;"></div>'
+            '<div class="g-dot" style="width:8px;height:8px;background:var(--accent);right:20px;bottom:60px;opacity:.6;"></div>'
+            '<div class="g-dot" style="width:5px;height:5px;background:var(--navy);right:56px;bottom:30px;opacity:.4;"></div>'
+            '<div class="g-dot" style="width:6px;height:6px;background:var(--accent);right:90px;bottom:70px;opacity:.5;"></div>'
+            '<div class="g-dash" style="width:12px;height:3px;background:var(--accent-2);right:40px;bottom:44px;opacity:.55;transform:rotate(-24deg);"></div>'
+            '<div class="g-dot" style="width:4px;height:4px;background:var(--navy);right:14px;bottom:20px;opacity:.45;"></div>'
+            '<div class="g-dash" style="width:10px;height:3px;background:var(--accent);right:110px;bottom:36px;opacity:.4;transform:rotate(18deg);"></div>'
+            '<div class="g-dot" style="width:6px;height:6px;background:var(--accent-2);right:70px;bottom:14px;opacity:.5;"></div>'
         ),
         'content': (
-            '<div class="g-dot" style="width:17px;height:17px;background:var(--accent);right:40px;top:26px;opacity:.5;"></div>'
-            '<div class="g-dot" style="width:12px;height:12px;background:var(--navy);right:86px;top:59px;opacity:.4;"></div>'
+            '<div class="g-dot" style="width:5px;height:5px;background:var(--accent);right:12px;top:8px;opacity:.5;"></div>'
+            '<div class="g-dot" style="width:3.5px;height:3.5px;background:var(--navy);right:26px;top:18px;opacity:.4;"></div>'
         ),
         'ending': (
-            '<div class="g-dot" style="width:20px;height:20px;background:var(--accent);left:53px;bottom:53px;opacity:.55;"></div>'
-            '<div class="g-dash" style="width:36px;height:10px;background:var(--navy);left:145px;bottom:33px;opacity:.4;transform:rotate(-16deg);"></div>'
-            '<div class="g-dot" style="width:13px;height:13px;background:var(--accent-2);left:264px;bottom:66px;opacity:.5;"></div>'
-            '<div class="g-dot" style="width:23px;height:23px;background:var(--accent);left:429px;bottom:26px;opacity:.5;"></div>'
-            '<div class="g-dash" style="width:40px;height:10px;background:var(--accent);left:554px;bottom:53px;opacity:.45;transform:rotate(20deg);"></div>'
-            '<div class="g-dot" style="width:17px;height:17px;background:var(--navy);right:79px;bottom:46px;opacity:.45;"></div>'
-            '<div class="g-dot" style="width:13px;height:13px;background:var(--accent-2);right:165px;bottom:73px;opacity:.4;"></div>'
+            '<div class="g-dot" style="width:6px;height:6px;background:var(--accent);left:16px;bottom:16px;opacity:.55;"></div>'
+            '<div class="g-dash" style="width:11px;height:3px;background:var(--navy);left:44px;bottom:10px;opacity:.4;transform:rotate(-16deg);"></div>'
+            '<div class="g-dot" style="width:4px;height:4px;background:var(--accent-2);left:80px;bottom:20px;opacity:.5;"></div>'
+            '<div class="g-dot" style="width:7px;height:7px;background:var(--accent);left:130px;bottom:8px;opacity:.5;"></div>'
+            '<div class="g-dash" style="width:12px;height:3px;background:var(--accent);left:168px;bottom:16px;opacity:.45;transform:rotate(20deg);"></div>'
+            '<div class="g-dot" style="width:5px;height:5px;background:var(--navy);right:24px;bottom:14px;opacity:.45;"></div>'
+            '<div class="g-dot" style="width:4px;height:4px;background:var(--accent-2);right:50px;bottom:22px;opacity:.4;"></div>'
         ),
     },
     'stacked-arc': {
         'cover': (
-            '<div class="g-arcband" style="width:660px;height:660px;right:-363px;bottom:-396px;background:var(--accent);opacity:.16;"></div>'
-            '<div class="g-arcband" style="width:495px;height:495px;right:-281px;bottom:-314px;background:var(--accent);opacity:.22;"></div>'
-            '<div class="g-arcband" style="width:330px;height:330px;right:-191px;bottom:-224px;background:var(--navy);opacity:.28;"></div>'
+            '<div class="g-arcband" style="width:200px;height:200px;right:-110px;bottom:-120px;background:var(--accent);opacity:.16;"></div>'
+            '<div class="g-arcband" style="width:150px;height:150px;right:-85px;bottom:-95px;background:var(--accent);opacity:.22;"></div>'
+            '<div class="g-arcband" style="width:100px;height:100px;right:-58px;bottom:-68px;background:var(--navy);opacity:.28;"></div>'
         ),
         'content': (
-            '<div class="g-arcband" style="width:185px;height:185px;right:-79px;top:-99px;background:var(--accent);opacity:.16;"></div>'
-            '<div class="g-arcband" style="width:112px;height:112px;right:-40px;top:-53px;background:var(--accent);opacity:.22;"></div>'
+            '<div class="g-arcband" style="width:56px;height:56px;right:-24px;top:-30px;background:var(--accent);opacity:.16;"></div>'
+            '<div class="g-arcband" style="width:34px;height:34px;right:-12px;top:-16px;background:var(--accent);opacity:.22;"></div>'
         ),
         'ending': (
-            '<div class="g-arcband" style="width:297px;height:297px;left:-165px;bottom:-185px;background:var(--accent);opacity:.18;"></div>'
-            '<div class="g-arcband" style="width:198px;height:198px;left:-106px;bottom:-125px;background:var(--navy);opacity:.24;"></div>'
-            '<div class="g-arcband" style="width:297px;height:297px;right:-165px;bottom:-185px;background:var(--navy);opacity:.18;"></div>'
-            '<div class="g-arcband" style="width:198px;height:198px;right:-106px;bottom:-125px;background:var(--accent);opacity:.24;"></div>'
+            '<div class="g-arcband" style="width:90px;height:90px;left:-50px;bottom:-56px;background:var(--accent);opacity:.18;"></div>'
+            '<div class="g-arcband" style="width:60px;height:60px;left:-32px;bottom:-38px;background:var(--navy);opacity:.24;"></div>'
+            '<div class="g-arcband" style="width:90px;height:90px;right:-50px;bottom:-56px;background:var(--navy);opacity:.18;"></div>'
+            '<div class="g-arcband" style="width:60px;height:60px;right:-32px;bottom:-38px;background:var(--accent);opacity:.24;"></div>'
         ),
     },
     'layered-rect': {
         'cover': (
-            '<div class="g-rectstack" style="width:297px;height:231px;border:1.6px solid var(--accent);right:-53px;bottom:-46px;opacity:.3;transform:rotate(-7deg);"></div>'
-            '<div class="g-rectstack" style="width:297px;height:231px;border:1.6px solid var(--accent);right:-20px;bottom:-26px;opacity:.45;transform:rotate(2deg);"></div>'
-            '<div class="g-rectstack" style="width:297px;height:231px;border:1.6px solid var(--navy);right:7px;bottom:-7px;opacity:.55;transform:rotate(9deg);"></div>'
+            '<div class="g-rectstack" style="width:90px;height:70px;border:1.6px solid var(--accent);right:-16px;bottom:-14px;opacity:.3;transform:rotate(-7deg);"></div>'
+            '<div class="g-rectstack" style="width:90px;height:70px;border:1.6px solid var(--accent);right:-6px;bottom:-8px;opacity:.45;transform:rotate(2deg);"></div>'
+            '<div class="g-rectstack" style="width:90px;height:70px;border:1.6px solid var(--navy);right:2px;bottom:-2px;opacity:.55;transform:rotate(9deg);"></div>'
         ),
-        'content': '<div class="g-rectstack" style="width:99px;height:79px;border:1.4px solid var(--accent);right:20px;top:20px;opacity:.32;"></div>',
+        'content': '<div class="g-rectstack" style="width:30px;height:24px;border:1.4px solid var(--accent);right:6px;top:6px;opacity:.32;"></div>',
         'ending': (
-            '<div class="g-rectstack" style="width:165px;height:132px;border:1.5px solid var(--accent);left:-33px;top:-26px;opacity:.3;transform:rotate(-6deg);"></div>'
-            '<div class="g-rectstack" style="width:165px;height:132px;border:1.5px solid var(--navy);left:-7px;top:-7px;opacity:.45;transform:rotate(4deg);"></div>'
-            '<div class="g-rectstack" style="width:165px;height:132px;border:1.5px solid var(--navy);right:-33px;bottom:-26px;opacity:.3;transform:rotate(6deg);"></div>'
-            '<div class="g-rectstack" style="width:165px;height:132px;border:1.5px solid var(--accent);right:-7px;bottom:-7px;opacity:.45;transform:rotate(-4deg);"></div>'
+            '<div class="g-rectstack" style="width:50px;height:40px;border:1.5px solid var(--accent);left:-10px;top:-8px;opacity:.3;transform:rotate(-6deg);"></div>'
+            '<div class="g-rectstack" style="width:50px;height:40px;border:1.5px solid var(--navy);left:-2px;top:-2px;opacity:.45;transform:rotate(4deg);"></div>'
+            '<div class="g-rectstack" style="width:50px;height:40px;border:1.5px solid var(--navy);right:-10px;bottom:-8px;opacity:.3;transform:rotate(6deg);"></div>'
+            '<div class="g-rectstack" style="width:50px;height:40px;border:1.5px solid var(--accent);right:-2px;bottom:-2px;opacity:.45;transform:rotate(-4deg);"></div>'
         ),
     },
 }
@@ -656,18 +711,37 @@ def render_graphic_deco(style_id, kind):
     """Dekorasi grafis opsional (ModuleData.graphicStyle) buat satu bagian
     modul. `kind`: 'cover'|'content'|'ending' - masing-masing komposisi beda
     (lihat GRAPHIC_DECO di atas), gak boleh reuse bentuk yang sama.
-    'content' dibungkus `.g-deco-behind` (z-index NEGATIF, biar otomatis
-    kalah tumpuk dari SEMUA jenis blok konten tanpa perlu utak-atik z-index
-    tiap jenis blok satu-satu) - 'cover'/'ending' dibungkus `.g-deco` biasa
-    (duduk di ANTARA layer foto & gradasi gelap dengan teks, lihat CSS di
-    shell-template.html). Balikin string kosong kalau style_id 'none'/gak
-    dikenal, atau kind itu kebetulan kosong buat gaya ini - konsisten sama
-    render_bg_image_layer() yang juga gak nyisain div percuma.
+
+    'content' dibungkus `.g-deco-behind` (z-index NEGATIF, biar otomatis kalah
+    tumpuk dari SEMUA jenis blok konten tanpa perlu utak-atik z-index tiap
+    jenis blok satu-satu); 'cover'/'ending' dibungkus `.g-deco` biasa (duduk di
+    ANTARA layer foto & gradasi gelap dengan teks). Dua-duanya `container-type:
+    size` di shell-template.html, jadi unit cq* di bawah mengacu ke kotak
+    pembungkusnya sendiri.
+
+    Basis unitnya beda per konteks, dan ini disengaja:
+    - cover/ending -> `cqmin` (sisi terpendek kontainer). Sampul/penutup
+      setinggi viewport, dan rasionya berubah-ubah (panel preview di builder
+      pendek-lebar, layar penuh lebih lega). Mengunci ke sisi terpendek bikin
+      dekorasi gak pernah membengkak melewati tinggi sampul di kontainer yang
+      pendek - persis keluhan yang memicu perbaikan ini.
+    - content -> `cqw` (lebar kontainer). Tinggi slide konten mengikuti panjang
+      isinya (bisa 500px, bisa 3000px), jadi `cqmin` bakal bikin ukuran
+      dekorasi ikut berubah-ubah cuma gara-gara slide-nya kepanjangan.
+
+    Balikin string kosong kalau style_id 'none'/gak dikenal, atau kind itu
+    kebetulan kosong buat gaya ini - konsisten sama render_bg_image_layer()
+    yang juga gak nyisain div percuma.
     """
     html = GRAPHIC_DECO.get(style_id or 'none', {}).get(kind, '')
     if not html:
         return ''
-    wrapper = 'g-deco-behind' if kind == 'content' else 'g-deco'
+    if kind == 'content':
+        html = _responsive_geometry(html, 'cqw', PREVIEW_PANEL_W)
+        wrapper = 'g-deco-behind'
+    else:
+        html = _responsive_geometry(html, 'cqmin', PREVIEW_PANEL_MIN)
+        wrapper = 'g-deco'
     return f'<div class="{wrapper}" aria-hidden="true">{html}</div>'
 
 
