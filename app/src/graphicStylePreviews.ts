@@ -53,15 +53,23 @@ export const GRAPHIC_STYLE_PREVIEWS: Record<string, GraphicStylePreviewSet> = {
       '-webkit-mask-image:linear-gradient(to top, black 0%, transparent 100%);mask-image:linear-gradient(to top, black 0%, transparent 100%);"></div>',
   },
   'corner-bracket': {
+    // Angka harus SAMA PERSIS dengan GRAPHIC_DECO di generator.py (lihat
+    // catatan di atas file). cover/ending dikecilin 2x (46px->20px->12px,
+    // 30px->16px->10px) - reach-nya ke tengah Sampul/Penutup tetap kena
+    // titik kritis di kontainer PENDEK BANGET (matematisnya gak bisa 100%
+    // dihindari lewat scaling doang, garis dikonten pendek dan posisi judul
+    // sama-sama menyusut seiring tinggi kontainer) - makanya generator.py
+    // juga nyembunyiin bracket total di kontainer di bawah 420px lewat
+    // @container query, bukan diperkecil selamanya.
     cover:
-      '<div style="position:absolute;width:46px;height:46px;left:14px;top:14px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);opacity:.5;"></div>' +
-      '<div style="position:absolute;width:46px;height:46px;right:14px;bottom:14px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.5;"></div>',
+      '<div style="position:absolute;width:12px;height:12px;left:10px;top:10px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);opacity:.5;"></div>' +
+      '<div style="position:absolute;width:12px;height:12px;right:10px;bottom:10px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.5;"></div>',
     content: '<div style="position:absolute;width:22px;height:22px;right:10px;top:10px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.3;"></div>',
     ending:
-      '<div style="position:absolute;width:30px;height:30px;left:12px;top:12px;border-top:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>' +
-      '<div style="position:absolute;width:30px;height:30px;right:12px;top:12px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>' +
-      '<div style="position:absolute;width:30px;height:30px;left:12px;bottom:12px;border-bottom:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>' +
-      '<div style="position:absolute;width:30px;height:30px;right:12px;bottom:12px;border-bottom:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>',
+      '<div style="position:absolute;width:10px;height:10px;left:8px;top:8px;border-top:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>' +
+      '<div style="position:absolute;width:10px;height:10px;right:8px;top:8px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>' +
+      '<div style="position:absolute;width:10px;height:10px;left:8px;bottom:8px;border-bottom:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>' +
+      '<div style="position:absolute;width:10px;height:10px;right:8px;bottom:8px;border-bottom:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>',
   },
   'diagonal-block': {
     cover: '<div style="position:absolute;clip-path:polygon(50% 0%, 0% 100%, 100% 100%);width:72px;height:64px;right:-12px;bottom:-10px;opacity:.26;background:var(--accent);"></div>',

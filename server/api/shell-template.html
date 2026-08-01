@@ -501,6 +501,17 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .g-deco{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1;container-type:size;}
 .g-deco-behind{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;container-type:size;}
 .g-blob,.g-orb,.g-dotgrid,.g-bracket,.g-tri,.g-ring,.g-dot,.g-dash,.g-arcband,.g-rectstack{position:absolute;}
+/* corner-bracket duduk PENUH DI DALAM sudut (offset positif, bukan bleed
+   negatif kayak blob/orb/tri) dan nunjuk lurus ke arah judul yang TERPUSAT -
+   satu-satunya gaya dengan geometri kayak gitu. Proporsinya udah dikecilin
+   supaya aman di kanvas pendek yang realistis (diverifikasi 50px jarak aman
+   di hero 550px - skenario asli laporan user), TAPI scaling proporsional
+   apa pun matematisnya selalu ada titik container makin pendek di mana
+   reach-nya == posisi mulai judul (keduanya sama-sama menyusut seiring
+   tinggi kontainer, gak ada margin px tetap yang bisa jamin nol tabrakan
+   selamanya). Jaring pengaman: di kontainer SANGAT pendek (Web
+   Object/embed mungil), garisnya disembunyikan aja daripada nabrak. */
+@container (max-height: 420px){ .g-bracket{display:none;} }
 .g-orb{border-radius:50%;background:radial-gradient(circle, var(--accent-glow), transparent 72%);}
 .g-dotgrid{background-image:radial-gradient(var(--accent) 1.2px, transparent 1.5px);background-size:12px 12px;}
 .g-tri{clip-path:polygon(50% 0%, 0% 100%, 100% 100%);}

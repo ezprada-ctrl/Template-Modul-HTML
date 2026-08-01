@@ -600,18 +600,27 @@ GRAPHIC_DECO = {
         ),
     },
     'corner-bracket': {
+        # Sampul & Penutup punya teks TERPUSAT (title di tengah layar, bukan
+        # rata kiri kayak slide konten) - lengan bracket yang kepanjangan
+        # gampang nabrak huruf pertama judul. Dulu 46px/offset14 di basis
+        # cqmin 118.5 = lengannya nyampe 50,6% jarak ke tengah (LEBIH DARI
+        # SETENGAH sisi terpendek Sampul) - ketauan dari laporan user (huruf
+        # "J" di "Judul" nempel garis). Diperkecil supaya jelas berhenti di
+        # zona sudut, jangan sampe nyerempet area teks di tengah manapun
+        # posisi/panjang judulnya. `content` gak kena masalah ini (teks
+        # slide konten rata kiri, bukan di tengah) jadi dibiarin.
         'cover': (
-            '<div class="g-bracket" style="width:46px;height:46px;left:14px;top:14px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);opacity:.5;"></div>'
-            '<div class="g-bracket" style="width:46px;height:46px;right:14px;bottom:14px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.5;"></div>'
+            '<div class="g-bracket" style="width:12px;height:12px;left:10px;top:10px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);opacity:.5;"></div>'
+            '<div class="g-bracket" style="width:12px;height:12px;right:10px;bottom:10px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);opacity:.5;"></div>'
         ),
         'content': (
             '<div class="g-bracket" style="width:22px;height:22px;right:10px;top:10px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.3;"></div>'
         ),
         'ending': (
-            '<div class="g-bracket" style="width:30px;height:30px;left:12px;top:12px;border-top:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>'
-            '<div class="g-bracket" style="width:30px;height:30px;right:12px;top:12px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>'
-            '<div class="g-bracket" style="width:30px;height:30px;left:12px;bottom:12px;border-bottom:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>'
-            '<div class="g-bracket" style="width:30px;height:30px;right:12px;bottom:12px;border-bottom:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:10px;height:10px;left:8px;top:8px;border-top:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:10px;height:10px;right:8px;top:8px;border-top:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:10px;height:10px;left:8px;bottom:8px;border-bottom:1.6px solid var(--accent);border-left:1.6px solid var(--accent);opacity:.45;"></div>'
+            '<div class="g-bracket" style="width:10px;height:10px;right:8px;bottom:8px;border-bottom:1.6px solid var(--accent);border-right:1.6px solid var(--accent);opacity:.45;"></div>'
         ),
     },
     'diagonal-block': {
