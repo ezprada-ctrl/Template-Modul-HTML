@@ -1398,7 +1398,7 @@ let actSessionT0 = 0;
    "Tatap layar" dari visibilitychange doang cuma nangkep pindah-tab/minimize.
    Peserta yang DUDUK DIAM ninggalin modul kebuka di layar (makan siang dll)
    lolos. Idle timer nutup celah ini: kalau gak ada mousemove/keydown/scroll/
-   touch selama > ACT_IDLE_MS, waktu tatap slide berhenti dihitung.
+   touch selama lebih dari ambangnya, waktu tatap slide berhenti dihitung.
 
    Ambang 4 menit — SENGAJA longgar. Riset (Chartbeat 5 detik utk situs berita
    yg scroll terus; alat produktivitas Hubstaff dkk 3-5 menit; studi baca:
@@ -1407,10 +1407,46 @@ let actSessionT0 = 0;
    (natap 1 slide), ambang detik-an bakal salah nge-flag pembaca serius. 4
    menit = tengah rentang alat produktivitas → aman dari false-flag. Ini
    ESTIMASI "ditinggal", bukan ukuran mutlak (presisi sejati mustahil tanpa
-   eye-tracking). Lihat memory project_idle_threshold_riset buat sumbernya. */
+   eye-tracking). Lihat memory project_idle_threshold_riset buat sumbernya.
+
+   Ambangnya BUKAN 4 menit rata di semua slide - itu 4 menit riset dipakai
+   sebagai TOLERANSI DI ATAS waktu baca minimum slide itu sendiri
+   (SLIDE_MIN_MS, dari jumlah kata / 238 wpm - Brysbaert, lihat
+   BRYSBAERT_WPM di generator.py), bukan gantiin/nyerobot angka riset itu.
+   Slide yang emang butuh 6 menit buat dibaca dikasih ambang 6+4=10 menit,
+   bukan dipotong di 4 menit kayak slide pendek. Alasannya: riset 4 menit di
+   atas jawab "berapa lama orang boleh diem sebelum dicurigai ninggalin
+   device" - itu pertanyaan soal DIEM DI DEPAN LAYAR secara umum, BUKAN
+   "berapa lama total termasuk waktu baca yang emang perlu diem". Dua hal
+   beda, jadi ditambahkan bukan salah satu doang.
+
+   BUG yang ditutup fitur ini (ditemukan 2026-08-02, dari pertanyaan user):
+   sebelum ada `actIdleThresholdMs()`, ambangnya rata 4 menit buat SEMUA
+   slide. Slide yang butuh dibaca >4 menit (>~950 kata di 238 wpm) bikin DUA
+   hal salah sekaligus - dan dua-duanya kena m.activeMs yang sama: (1) kolom
+   "Ditinggal" di Command Center nuduh peserta yang diem-khusyuk-baca sebagai
+   "ninggalin layar", padahal dia natap terus; (2) peringatan baca-kecepatan
+   (updateSlideRushed, ambang 50% SLIDE_MIN_MS) bisa salah nyala buat
+   pembaca yang beneran baca sampai tuntas tapi diem gak gerakin mouse -
+   activeMs-nya kepotong duluan di 4 menit sebelum sempat nyampe 50% dari
+   waktu baca yang sebenarnya dibutuhkan. Slide TANPA SLIDE_MIN_MS (Sampul/
+   Kuis/Ringkasan - gak punya konsep "dibaca") otomatis balik ke ambang 4
+   menit polos (0 + 4 menit), byte-identik ke perilaku lama - fitur ini
+   TIDAK mengubah apa pun buat slide-slide itu. */
 const ACT_IDLE_MS = 4 * 60 * 1000;
 let actLastActivity = 0;
 let actIdlePaused = false;
+
+/* Ambang idle buat SATU slide tertentu - lihat catatan panjang di atas.
+   `mark` = objek actSlideMark ({kind, num, ...}). Slide konten yang punya
+   SLIDE_MIN_MS dapat 4 menit + waktu baca minimumnya sendiri; slide lain
+   (hero/kuis/ringkasan, atau slide konten tanpa entry SLIDE_MIN_MS - modul
+   lama dari sebelum fitur peringatan baca ada) dapat 4 menit polos. */
+function actIdleThresholdMs(mark){
+  const readMs = (mark && mark.kind === 'slide' && mark.num != null)
+    ? (SLIDE_MIN_MS[mark.num] || 0) : 0;
+  return ACT_IDLE_MS + readMs;
+}
 
 /* ---------- identitas ---------- */
 /* SCORM biasanya nulis nama "Santoso, Budi" — dibalik biar kebaca wajar di
@@ -1803,9 +1839,10 @@ function actOnActivity(){
    + ambang — idle di atas itu dibuang) lalu tandai paused. */
 function actCheckIdle(){
   if(!TRACK_READY || !actSlideMark || actIdlePaused) return;
+  const threshold = actIdleThresholdMs(actSlideMark);
   const now = Date.now();
-  if(now - actLastActivity > ACT_IDLE_MS){
-    const segEnd = Math.min(now, actLastActivity + ACT_IDLE_MS);
+  if(now - actLastActivity > threshold){
+    const segEnd = Math.min(now, actLastActivity + threshold);
     actSlideMark.activeMs += Math.max(0, segEnd - actSlideMark.t0);
     actIdlePaused = true;
   }
@@ -1862,9 +1899,11 @@ function actCloseSlide(){
   if(!actIdlePaused){
     /* Segmen aktif masih jalan. Tambahin sampai sekarang, TAPI trailing idle
        dibatasi di ambang — kalau nutup slide (mis. tab disembunyiin) pas udah
-       lama gak ada aktivitas, jangan hitung waktu ditinggalnya. */
+       lama gak ada aktivitas, jangan hitung waktu ditinggalnya. Ambangnya
+       sama kayak actCheckIdle() - lihat actIdleThresholdMs(). */
+    const threshold = actIdleThresholdMs(m);
     const now = Date.now();
-    const segEnd = Math.min(now, actLastActivity + ACT_IDLE_MS);
+    const segEnd = Math.min(now, actLastActivity + threshold);
     ms += Math.max(0, segEnd - m.t0);
   }
   // Ditandai SEBELUM filter render-kilat di bawah - justru klik cepat
