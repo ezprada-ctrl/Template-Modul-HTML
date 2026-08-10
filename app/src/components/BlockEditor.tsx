@@ -10,6 +10,11 @@ import { uploadImageToStorage, uploadMediaToStorage } from '../api';
 interface Props {
   blocks: Block[];
   onChange: (blocks: Block[]) => void;
+  // Kalau diisi (dipakai GridFields buat ngedit sel Grid), blok-blok dirender
+  // BERDAMPINGAN sesuai jumlah kolom lewat CSS grid - bukan cuma ditumpuk ke
+  // bawah kayak biasa. Ini yang bikin "di mana sel gridnya" langsung kejawab
+  // secara visual pas lagi ngedit, gak cuma keliatan pas buka tab Preview.
+  columns?: 2 | 3;
 }
 
 const BLOCK_CARD_STYLES = `
@@ -37,7 +42,7 @@ function blockSummary(block: Block): string {
   return flat.length > 70 ? flat.slice(0, 70) + '…' : flat;
 }
 
-export default function BlockEditor({ blocks, onChange }: Props) {
+export default function BlockEditor({ blocks, onChange, columns }: Props) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   function toggleCollapse(id: string) {
     setCollapsed(prev => {
@@ -71,8 +76,12 @@ export default function BlockEditor({ blocks, onChange }: Props) {
     onChange([...blocks, newBlock(type)]);
   }
 
+  const listStyle: CSSProperties = columns
+    ? { display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: 10, alignItems: 'start' }
+    : { display: 'flex', flexDirection: 'column', gap: 10 };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={listStyle}>
       <style>{BLOCK_CARD_STYLES}</style>
       {blocks.map((b, i) => {
         const isCollapsed = collapsed.has(b.id);
@@ -117,7 +126,9 @@ export default function BlockEditor({ blocks, onChange }: Props) {
           </div>
         );
       })}
-      <BlockAddMenu onAdd={add} />
+      <div style={columns ? { gridColumn: `1 / -1` } : undefined}>
+        <BlockAddMenu onAdd={add} />
+      </div>
     </div>
   );
 }
@@ -438,9 +449,9 @@ function GridFields({ block, onChange }: { block: Block; onChange: (p: Partial<B
         <option value={3}>3 kolom</option>
       </select>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-        Isi tiap sel grid dengan blok (mis. Kartu) — mengalir otomatis mengisi kolom dari kiri ke kanan, baris baru begitu kolom terakhir penuh.
+        Tiap blok di bawah = 1 sel, disusun berdampingan sesuai jumlah kolom. Klik "+ Tambah blok…" buat isi sel berikutnya.
       </p>
-      <BlockEditor blocks={block.blocks || []} onChange={blocks => onChange({ blocks })} />
+      <BlockEditor blocks={block.blocks || []} onChange={blocks => onChange({ blocks })} columns={(block.columns as 2 | 3) || 2} />
     </>
   );
 }
