@@ -447,19 +447,63 @@ function ImageFields({ block, onChange, inp }: { block: Block; onChange: (p: Par
 // bisa ditaruh di dalam sel tanpa kerja tambahan.
 function GridFields({ block, onChange }: { block: Block; onChange: (p: Partial<Block>) => void }) {
   const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
+  const columns = (block.columns as 2 | 3) || 2;
   return (
     <>
       <label style={lbl}>Jumlah kolom</label>
-      <select style={{ width: '100%', fontSize: 13, marginBottom: 8 }} value={block.columns || 2}
+      <select style={{ width: '100%', fontSize: 13, marginBottom: 8 }} value={columns}
         onChange={e => onChange({ columns: parseInt(e.target.value, 10) as 2 | 3 })}>
         <option value={2}>2 kolom</option>
         <option value={3}>3 kolom</option>
       </select>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-        Tiap blok di bawah ini = 1 sel — label "Kolom N" nunjukin bakal nempati kolom keberapa (urutan blok = urutan mengisi kolom dari kiri ke kanan, baris baru begitu kolom terakhir penuh). Klik "+ Tambah blok…" buat isi sel berikutnya.
+        Susunan di bawah ini nunjukin persis posisi tiap sel — begitu kotak terakhir mentok ke kanan, sisanya otomatis pindah baris & ke tengah, sama persis kayak hasil akhirnya nanti.
       </p>
-      <BlockEditor blocks={block.blocks || []} onChange={blocks => onChange({ blocks })} columns={(block.columns as 2 | 3) || 2} />
+      <GridCellPreview blocks={block.blocks || []} columns={columns} />
+      <BlockEditor blocks={block.blocks || []} onChange={blocks => onChange({ blocks })} columns={columns} />
     </>
+  );
+}
+
+// Mini-canvas visual - dipasang LANGSUNG di panel Susun Modul (bukan cuma
+// keliatan pas buka tab Preview & Export), dan pakai rumus lebar+wrap PERSIS
+// sama kayak .grid2/.grid3 di shell-template.html (flex-wrap + justify-
+// content:center) - biar begitu diketik di form di bawah, kotaknya di sini
+// LANGSUNG kelihatan tersusun menyamping & baris sisa otomatis center, sama
+// persis perilaku modul jadinya, bukan cuma direpresentasikan lewat teks.
+function GridCellPreview({ blocks, columns }: { blocks: Block[]; columns: 2 | 3 }) {
+  const gap = columns === 3 ? 16 : 18;
+  if (!blocks.length) {
+    return (
+      <p className="hint" style={{ fontSize: 12, margin: '0 0 8px' }}>
+        Belum ada sel — klik "+ Tambah blok…" di bawah buat isi sel pertama.
+      </p>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap, marginBottom: 10 }}>
+      {blocks.map(b => {
+        const title = b.heading || extractBlockText(b) || '';
+        return (
+          <div key={b.id} style={{
+            flex: `1 1 calc((100% - ${(columns - 1) * gap}px) / ${columns})`,
+            maxWidth: `calc((100% - ${(columns - 1) * gap}px) / ${columns})`,
+            minWidth: 0, minHeight: 56, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+            padding: '9px 11px', background: 'var(--surface)',
+          }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 3 }}>
+              {BLOCK_LABELS[b.type]}
+            </div>
+            <div style={{
+              fontSize: 12.5, fontWeight: 600, color: title ? 'var(--text)' : 'var(--text-faint)',
+              overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
+            }}>
+              {title || '(kosong)'}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

@@ -350,9 +350,16 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .tick-stacked li b{font-size:14px;}
 .tick-stacked li span{color:var(--text-dim);font-size:13.5px;line-height:1.55;}
 
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px;}
-@media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr;}}
+/* flex-wrap (bukan CSS grid track tetap) supaya baris yang gak penuh (mis.
+   sisa 1-2 kotak) otomatis CENTER, bukan nempel kiri sendirian - lihat
+   justify-content:center. Lebar tiap sel dihitung manual via calc() biar
+   tetap sama besar kayak grid track N-kolom, cuma engine wrap-nya beda. */
+.grid2,.grid3{display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:18px;}
+.grid2{gap:18px;}
+.grid2>*{flex:1 1 calc((100% - 18px)/2);max-width:calc((100% - 18px)/2);}
+.grid3{gap:16px;}
+.grid3>*{flex:1 1 calc((100% - 32px)/3);max-width:calc((100% - 32px)/3);}
+@media(max-width:760px){.grid2>*,.grid3>*{flex:1 1 100%;max-width:100%;}}
 
 .chip{
   display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--text-dim);
@@ -731,7 +738,6 @@ ul.tick li b, ol.tick li b{color:var(--text);}
   #overlay.show{display:block;}
   #viewport{padding:30px 20px 100px;}
   #topbar,#bottomnav{padding:14px 18px;}
-  .grid3{grid-template-columns:1fr;}
 }
 
 /* modal popup (supplementary detail blocks, smooth scale/fade entrance) */
