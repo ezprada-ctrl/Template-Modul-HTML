@@ -10,10 +10,13 @@ import { uploadImageToStorage, uploadMediaToStorage } from '../api';
 interface Props {
   blocks: Block[];
   onChange: (blocks: Block[]) => void;
-  // Kalau diisi (dipakai GridFields buat ngedit sel Grid), blok-blok dirender
-  // BERDAMPINGAN sesuai jumlah kolom lewat CSS grid - bukan cuma ditumpuk ke
-  // bawah kayak biasa. Ini yang bikin "di mana sel gridnya" langsung kejawab
-  // secara visual pas lagi ngedit, gak cuma keliatan pas buka tab Preview.
+  // Kalau diisi (dipakai GridFields buat ngedit sel Grid), tiap blok dikasih
+  // label "Kolom N" di header-nya berdasar urutan (i % columns) - INI YANG
+  // dulu pernah dicoba dijawab dengan maksa form-nya jadi CSS grid literal
+  // berdampingan, tapi form blok (dropdown tipe + 3 tombol + macam-macam
+  // field) didesain buat lebar penuh; dipaksa ke kolom sempit bikin header-nya
+  // numpuk/kepotong. Label teks jauh lebih aman - form tetap lebar penuh
+  // (mudah diisi), tapi "bakal jadi sel kolom keberapa" tetap kejawab jelas.
   columns?: 2 | 3;
 }
 
@@ -76,19 +79,15 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
     onChange([...blocks, newBlock(type)]);
   }
 
-  const listStyle: CSSProperties = columns
-    ? { display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: 10, alignItems: 'start' }
-    : { display: 'flex', flexDirection: 'column', gap: 10 };
-
   return (
-    <div style={listStyle}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <style>{BLOCK_CARD_STYLES}</style>
       {blocks.map((b, i) => {
         const isCollapsed = collapsed.has(b.id);
         const summary = isCollapsed ? blockSummary(b) : '';
         return (
           <div key={b.id} className="block-card" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 11, background: 'var(--surface-2)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: isCollapsed ? 0 : 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: isCollapsed ? 0 : 8, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
                 <button
                   className="btn-icon btn-sm"
@@ -96,6 +95,15 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
                   onClick={() => toggleCollapse(b.id)}
                   style={{ flexShrink: 0, transform: isCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform var(--ease)' }}
                 >▾</button>
+                {columns && (
+                  <span title="Sel ini nempatin kolom keberapa di grid - urutan blok di bawah = urutan ngisi kolom dari kiri ke kanan"
+                    style={{
+                      fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', border: '1px solid var(--border-strong)',
+                      borderRadius: 999, padding: '1px 7px', flexShrink: 0, whiteSpace: 'nowrap',
+                    }}>
+                    Kolom {(i % columns) + 1}
+                  </span>
+                )}
                 <select
                   className="block-card-label"
                   value={b.type}
@@ -104,6 +112,7 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
                   style={{
                     fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
                     color: 'var(--text-faint)', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0,
+                    maxWidth: '100%',
                   }}
                 >
                   {Object.entries(BLOCK_LABELS).map(([type, label]) => (
@@ -126,9 +135,7 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
           </div>
         );
       })}
-      <div style={columns ? { gridColumn: `1 / -1` } : undefined}>
-        <BlockAddMenu onAdd={add} />
-      </div>
+      <BlockAddMenu onAdd={add} />
     </div>
   );
 }
@@ -449,7 +456,7 @@ function GridFields({ block, onChange }: { block: Block; onChange: (p: Partial<B
         <option value={3}>3 kolom</option>
       </select>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-        Tiap blok di bawah = 1 sel, disusun berdampingan sesuai jumlah kolom. Klik "+ Tambah blok…" buat isi sel berikutnya.
+        Tiap blok di bawah ini = 1 sel — label "Kolom N" nunjukin bakal nempati kolom keberapa (urutan blok = urutan mengisi kolom dari kiri ke kanan, baris baru begitu kolom terakhir penuh). Klik "+ Tambah blok…" buat isi sel berikutnya.
       </p>
       <BlockEditor blocks={block.blocks || []} onChange={blocks => onChange({ blocks })} columns={(block.columns as 2 | 3) || 2} />
     </>
