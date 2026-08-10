@@ -252,6 +252,8 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
         ))}
         <button onClick={() => onChange({ steps: [...(block.steps || []), { n: (block.steps?.length || 0) + 1, title: '', detail: '' }] })}>+ langkah</button>
       </>;
+    case 'grid':
+      return <GridFields block={block} onChange={onChange} />;
     case 'image':
       return <ImageFields block={block} onChange={onChange} inp={inp} />;
     case 'badgeref':
@@ -416,6 +418,29 @@ function ImageFields({ block, onChange, inp }: { block: Block; onChange: (p: Par
       <p className="hint" style={{ fontSize: 11, margin: '4px 0 0' }}>
         PNG transparan otomatis jadi mode "bersih" saat diupload. "Dampingi teks" bikin gambar berdiri di satu sisi &amp; materi mengalir di sebelahnya (di HP otomatis jadi atas-bawah).
       </p>
+    </>
+  );
+}
+
+// Grid cuma wadah - selnya sendiri adalah blok biasa (Kartu dkk) yang mengalir
+// otomatis ke N kolom (lihat render_grid di generator.py). Pakai lagi
+// BlockEditor secara rekursif buat ngedit isinya, bukan bikin UI field baru -
+// setiap tipe blok yang udah ada (termasuk Grid lagi, kalau mau) otomatis
+// bisa ditaruh di dalam sel tanpa kerja tambahan.
+function GridFields({ block, onChange }: { block: Block; onChange: (p: Partial<Block>) => void }) {
+  const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
+  return (
+    <>
+      <label style={lbl}>Jumlah kolom</label>
+      <select style={{ width: '100%', fontSize: 13, marginBottom: 8 }} value={block.columns || 2}
+        onChange={e => onChange({ columns: parseInt(e.target.value, 10) as 2 | 3 })}>
+        <option value={2}>2 kolom</option>
+        <option value={3}>3 kolom</option>
+      </select>
+      <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
+        Isi tiap sel grid dengan blok (mis. Kartu) — mengalir otomatis mengisi kolom dari kiri ke kanan, baris baru begitu kolom terakhir penuh.
+      </p>
+      <BlockEditor blocks={block.blocks || []} onChange={blocks => onChange({ blocks })} />
     </>
   );
 }
