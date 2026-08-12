@@ -360,10 +360,16 @@ def kc_items_for_slide(slide):
     can inject them straight into innerHTML without re-escaping.
 
     Two feedback modes per question (authored via `feedbackMode`, defaults to
-    'single'): 'single' keeps the one shared `feedback` text shown regardless
-    of which option was picked; 'perOption' instead carries `optFeedback` -
+    'single'): 'single' carries `feedbackCorrect`/`feedbackWrong` (split by
+    outcome, so an author can't write a verdict-specific text that then shows
+    under the opposite verdict); 'perOption' instead carries `optFeedback` -
     one entry per option, index-matched to `opts`, each optional. The shell
-    picks whichever mode applies at answer time (kcApply)."""
+    picks whichever mode applies at answer time (kcApply).
+
+    Drafts authored before the correct/wrong split only have the old shared
+    `feedback` field - it's folded into BOTH feedbackCorrect and
+    feedbackWrong here (whichever new field is empty) so those old questions
+    keep rendering exactly as before until someone edits them in the new UI."""
     out = []
     for b in slide.get('blocks', []):
         if b.get('type') != 'knowledge':
@@ -375,12 +381,14 @@ def kc_items_for_slide(slide):
                 continue  # skip malformed questions with no options
             mode = it.get('feedbackMode') or 'single'
             opt_feedback_raw = it.get('optFeedback') or []
+            legacy_feedback = it.get('feedback', '')
             item = {
                 'q': esc(it.get('q', '')),
                 'opts': [esc(o) for o in opts],
                 'correct': it.get('correct', 0),
                 'feedbackMode': mode,
-                'feedback': nl2br(it.get('feedback', '')),
+                'feedbackCorrect': nl2br(it.get('feedbackCorrect') or legacy_feedback),
+                'feedbackWrong': nl2br(it.get('feedbackWrong') or legacy_feedback),
                 # Index-matched to opts; missing/short entries just become ''.
                 'optFeedback': [nl2br(opt_feedback_raw[i]) if i < len(opt_feedback_raw) else '' for i in range(len(opts))],
             }

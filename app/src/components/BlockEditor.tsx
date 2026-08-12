@@ -596,7 +596,9 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
     <>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
         Cek pemahaman ringan — muncul sebagai <b>popup begitu peserta mau pindah dari slide ini</b> (klik Selanjutnya/Sebelumnya/menu sidebar).
-        Mode <b>"Satu feedback"</b>: peserta dikunci begitu menjawab sekali, benar atau salah dua-duanya boleh langsung lanjut.
+        Mode <b>"Feedback benar/salah"</b>: peserta dikunci begitu menjawab sekali (langsung boleh lanjut, benar atau salah), tapi
+        teks feedback-nya beda buat masing-masing hasil — supaya kamu gak salah tulis feedback yang cuma cocok buat satu hasil
+        tapi ketampil buat hasil satunya juga.
         Mode <b>"Feedback per pilihan"</b>: kalau salah, peserta dikasih tau + boleh coba opsi lain berkali-kali sampai benar — baru
         setelah itu boleh lanjut (jawab benar langsung di percobaan pertama juga boleh lanjut). Boleh 1 soal. Setiap percobaan
         direkam ke Command Center (kolom "Knowledge Check").
@@ -659,11 +661,20 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
           </div>
           <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '6px 0 3px' }}>Model feedback</label>
           <select style={inp} value={mode} onChange={e => patchItem(qi, { feedbackMode: e.target.value as 'single' | 'perOption' })}>
-            <option value="single">Satu feedback untuk semua jawaban</option>
+            <option value="single">Feedback benar/salah (1x kesempatan, langsung lanjut)</option>
             <option value="perOption">Feedback per pilihan jawaban (opsional per pilihan)</option>
           </select>
           {mode === 'single' ? (
-            <textarea style={ta} placeholder="Feedback (muncul setelah dijawab, baik benar maupun salah)" value={it.feedback || ''} onChange={e => patchItem(qi, { feedback: e.target.value })} />
+            <>
+              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, marginBottom: 3, color: 'var(--success, #2f9e6a)' }}>
+                ✓ Feedback kalau jawaban BENAR
+              </span>
+              <textarea style={ta} placeholder="Feedback (opsional)" value={it.feedbackCorrect || ''} onChange={e => patchItem(qi, { feedbackCorrect: e.target.value })} />
+              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, margin: '4px 0 3px', color: 'var(--danger, #c0392b)' }}>
+                ✕ Feedback kalau jawaban SALAH
+              </span>
+              <textarea style={ta} placeholder="Feedback (opsional)" value={it.feedbackWrong || ''} onChange={e => patchItem(qi, { feedbackWrong: e.target.value })} />
+            </>
           ) : (
             <p className="hint" style={{ fontSize: 11, margin: '0 0 4px' }}>
               Isi feedback langsung di bawah tiap pilihan di atas — boleh sebagian pilihan aja yang diisi, sisanya cukup tampil ✓/✕ tanpa penjelasan.

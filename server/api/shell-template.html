@@ -3299,11 +3299,12 @@ function kcApply(blockId, qi){
   if(fb){
     // 'perOption' (dipilih per soal saat authoring): feedback keyed ke opsi
     // yang BENERAN DIKLIK peserta (bisa beda-beda tiap opsi salah), bukan cuma
-    // "benar/salah" generik. 'single' (default): satu teks sama aja siapa pun
-    // yang diklik - perilaku lama. Keduanya optional; kosong = cuma label ✓/✕.
+    // "benar/salah" generik. 'single' (default): feedbackCorrect/feedbackWrong
+    // dipisah per hasil (generator.py yang udah nge-fold field lama `feedback`
+    // ke keduanya buat draft lawas). Semuanya optional; kosong = cuma label ✓/✕.
     const text = data.feedbackMode === 'perOption'
       ? ((data.optFeedback || [])[answered] || '')
-      : (data.feedback || '');
+      : (benar ? (data.feedbackCorrect || '') : (data.feedbackWrong || ''));
     fb.innerHTML = kcVerdictHtml(benar, text);
     fb.style.display = 'block';
   }

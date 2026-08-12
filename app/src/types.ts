@@ -9,8 +9,13 @@ export type BlockType =
 // QuizQuestion but no requirement of exactly 4 options — 2 options
 // (benar/salah) is valid. Two feedback modes, chosen per question by
 // whoever authors it:
-// - 'single' (default, feedbackMode unset): one shared `feedback` text shown
-//   after answering, same whether the pick was right or wrong.
+// - 'single' (default, feedbackMode unset): locks immediately after one
+//   pick, right or wrong (no retry). `feedbackCorrect`/`feedbackWrong` are
+//   shown depending on the outcome — split so authors can't accidentally
+//   write a verdict-specific text ("Kamu benar!") that then displays under
+//   the opposite verdict. Legacy `feedback` (pre-split, one shared text for
+//   both outcomes) is kept only as a fallback for data authored before this
+//   split existed — never written by the editor anymore.
 // - 'perOption': `optFeedback[i]` (parallel to opts[i]) shown instead, keyed
 //   to whichever option the learner actually picked — so a wrong pick can
 //   explain specifically why THAT option is wrong. Each entry is optional;
@@ -19,7 +24,10 @@ export interface KcQuestion {
   q: string;
   opts: string[];
   correct: number;
+  /** @deprecated pre-split shared feedback text — kept only as a read fallback, see feedbackCorrect/feedbackWrong */
   feedback?: string;
+  feedbackCorrect?: string;
+  feedbackWrong?: string;
   feedbackMode?: 'single' | 'perOption';
   optFeedback?: string[];
 }
