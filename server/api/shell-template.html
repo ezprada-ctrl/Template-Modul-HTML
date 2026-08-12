@@ -359,7 +359,12 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .grid2>*{flex:1 1 calc((100% - 18px)/2);max-width:calc((100% - 18px)/2);}
 .grid3{gap:16px;}
 .grid3>*{flex:1 1 calc((100% - 32px)/3);max-width:calc((100% - 32px)/3);}
-@media(max-width:760px){.grid2>*,.grid3>*{flex:1 1 100%;max-width:100%;}}
+/* grid3 jatuh ke 1 kolom lebih awal (900px) daripada grid2 (760px) - 3 kartu
+   sempit lebih dulu gak kebaca daripada 2. Ambang 900px ini SUDAH ADA sejak
+   awal (dulu ditulis di blok @media(max-width:900px) bareng aturan sidebar);
+   ditulis ulang di sini biar kedua ambang grid kebaca berdampingan. */
+@media(max-width:900px){.grid3>*{flex:1 1 100%;max-width:100%;}}
+@media(max-width:760px){.grid2>*{flex:1 1 100%;max-width:100%;}}
 
 .chip{
   display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--text-dim);
