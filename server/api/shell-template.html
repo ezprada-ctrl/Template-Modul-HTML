@@ -559,6 +559,10 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .ending-bg>*:not(.ending-bg-img):not(.g-deco){position:relative;z-index:1;}
 .ending-bg .hero-eyebrow{color:rgba(255,255,255,.85);}
 .ending-bg .hero-title{color:#ffffff;}
+/* Tanpa ini deskripsi penutup kepakai var(--text-dim) yang gelap - gak kebaca
+   di atas gambar latar yang memang sengaja diredupkan. Nilainya disamakan
+   dengan .cover-bg .hero-desc biar dua layar itu konsisten. */
+.ending-bg .hero-desc{color:rgba(255,255,255,.82);}
 
 /* bottom nav */
 #bottomnav{
@@ -2383,6 +2387,7 @@ function renderSummary(){
     __ENDING_DECO_HTML__
     <div class="hero-eyebrow">Selesai</div>
     <h1 class="hero-title" style="font-size:clamp(26px,4.2vw,40px);">__ENDING_TITLE_HTML__</h1>
+    __ENDING_DESC_HTML__
     ${recapBtn}
   </div>`;
 }

@@ -1021,6 +1021,16 @@ def generate_html(module):
     ending_title_html = nl2br(module.get('endingTitleHtml') or '') or default_ending
     out = out.replace('__ENDING_TITLE_HTML__', ending_title_html)
 
+    # Deskripsi singkat di bawah judul penutup - pasangan __HERO_DESC__ milik
+    # Sampul, lewat nl2br yang sama (jadi Enter = ganti baris, dan <span>
+    # highlight emas tetap bisa dipakai). BEDA dari sampul: seluruh <p>-nya
+    # baru dikeluarkan kalau diisi, bukan <p> kosong - modul lama yang gak
+    # punya field ini render byte-identical ke sebelum fitur ini ada, tanpa
+    # jarak nyasar di bawah judul dari elemen kosong.
+    ending_desc = nl2br(module.get('endingDesc', ''))
+    out = out.replace('__ENDING_DESC_HTML__',
+                      f'<p class="hero-desc">{ending_desc}</p>' if ending_desc else '')
+
     # Gambar latar opsional slide penutup, diredupkan lewat filter:brightness()
     # di LAYER GAMBARNYA SENDIRI (div terpisah di belakang teks) - bukan di
     # container yang sama dengan judul, soalnya filter di container bakal

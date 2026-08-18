@@ -211,6 +211,14 @@ export default function CoverForm({ module, setModule }: Props) {
             <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.endingTitleHtml || ''}
               onChange={e => setModule({ ...module, endingTitleHtml: e.target.value })} />
           </label>
+          <label style={{ color: 'var(--text-dim)' }}>
+            Deskripsi singkat di bawah judul penutup
+            <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
+              Opsional — dikosongkan berarti slide penutup cuma menampilkan judulnya saja, persis seperti sebelumnya.
+            </span>
+            <textarea style={{ width: '100%', minHeight: 50, marginTop: 5 }} value={module.endingDesc || ''}
+              onChange={e => setModule({ ...module, endingDesc: e.target.value })} />
+          </label>
           <BackgroundImageField
             label="Gambar latar slide penutup (opsional, disimpan di Supabase Storage)"
             imageUri={module.endingImageDataUri}

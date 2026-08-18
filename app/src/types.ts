@@ -139,6 +139,10 @@ export interface ModuleData {
   // dibuat sebelum field ini ada tetap dapet judul penutup yang masuk akal
   // (bukan sisa teks modul lain) tanpa penyusunnya perlu isi apa-apa.
   endingTitleHtml?: string;
+  // Deskripsi singkat di bawah judul penutup - pasangan `heroDesc` milik
+  // Sampul. Kosong = seluruh <p>-nya gak dikeluarkan sama sekali (bukan <p>
+  // kosong), jadi modul lama render persis seperti sebelum field ini ada.
+  endingDesc?: string;
   // Gambar latar opsional khusus slide penutup (beda dari coverImageDataUri,
   // itu punya Sampul). Kosong = slide penutup polos seperti sebelum field ini
   // ada. `endingImageBrightness` (0-100, default 50 = redup) ngatur
@@ -227,6 +231,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     heroTitleHtml: 'Modul Baru',
     heroDesc: '',
     endingTitleHtml: '',
+    endingDesc: '',
     sidebarEyebrow: 'Open Access',
     sidebarTitle: 'Modul Baru',
     coverImageDataUri: '',
