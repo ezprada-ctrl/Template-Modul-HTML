@@ -23,15 +23,14 @@ interface Props {
 const BLOCK_CARD_STYLES = `
 .block-card{position:relative;}
 
-/* Whenever a field ANYWHERE in the currently-open slide is focused (kicker,
-   subjudul, or any block - including ones added after this ran, since
-   they're all inside the same container), the WHOLE workspace gets framed
-   as one unit. This is the whole point: every block in this slide is
-   something the user will look at and edit while working on it, not just
-   whichever single field happens to have the cursor right now - so the
-   entire area is what should read as "active", not just one block. */
-.slide-workspace{transition: box-shadow var(--ease), background var(--ease); border-radius: var(--radius-sm);}
-.slide-workspace.has-focused-block{box-shadow: 0 0 0 2px var(--ink); background: var(--surface-2);}
+/* The whole workspace (kicker, subjudul, every block - including ones added
+   later, since they're all inside this same container) is framed as one
+   unit the moment the slide is expanded, not just whichever single field
+   happens to have the cursor. Unconditional (not gated behind a focus
+   listener) because Canvas.tsx only ever has ONE slide expanded at a time
+   (openSlideId) - this div only exists in the DOM while that slide is open,
+   so there's no other open workspace it could be confused with. */
+.slide-workspace{box-shadow: 0 0 0 2px var(--ink); background: var(--surface-2); border-radius: var(--radius-sm);}
 `;
 
 // Ringkasan satu baris buat header blok pas lagi collapsed - biar keliatan

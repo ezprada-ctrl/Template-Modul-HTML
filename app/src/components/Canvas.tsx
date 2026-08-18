@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
 } from '@dnd-kit/core';
@@ -338,34 +338,6 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: slide.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
-  const workspaceRef = useRef<HTMLDivElement>(null);
-
-  // Toggles a class on the whole workspace container whenever focus is
-  // anywhere inside it (kicker, subjudul, or any block - including ones
-  // added later, since they're all inside this same container) - the
-  // entire slide being edited gets framed as one unit, not just whichever
-  // single field currently has the cursor. Plain focusin/focusout listeners
-  // instead of a CSS :has() selector because :has()-based style invalidation
-  // turned out to be unreliable here (the selector matched via querySelector
-  // but computed style didn't update).
-  useEffect(() => {
-    if (!open) return;
-    const el = workspaceRef.current;
-    if (!el) return;
-    function updateFocusState() {
-      const focused = document.activeElement;
-      const within = !!(focused && el!.contains(focused));
-      el!.classList.toggle('has-focused-block', within);
-    }
-    function onFocusOut() { setTimeout(updateFocusState, 0); }
-    el.addEventListener('focusin', updateFocusState);
-    el.addEventListener('focusout', onFocusOut);
-    return () => {
-      el.removeEventListener('focusin', updateFocusState);
-      el.removeEventListener('focusout', onFocusOut);
-    };
-  }, [open]);
-
   return (
     <div ref={setNodeRef} style={{ ...style, border: `1px solid ${open ? 'var(--border-strong)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', boxShadow: open ? 'var(--shadow-sm)' : 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8 }}>
@@ -395,7 +367,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
         <button className="btn-danger btn-sm" onClick={onRemove}>Hapus</button>
       </div>
       {open && (
-        <div className="slide-workspace" ref={workspaceRef} style={{ padding: 14, borderTop: '1px solid var(--border)', display: 'flex', gap: 28 }}>
+        <div className="slide-workspace" style={{ padding: 14, borderTop: '1px solid var(--border)', display: 'flex', gap: 28 }}>
           <div style={{ flex: '1 1 50%', minWidth: 0 }}>
             {/* Urutan 3 field ini SENGAJA disamakan sama urutan tampilnya di
                 slide asli (lihat render_slide_html di generator.py: kicker →
