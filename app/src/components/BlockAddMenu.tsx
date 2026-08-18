@@ -27,9 +27,13 @@ const HOVER_DELAY_MS = 250;
 
 interface Props {
   onAdd: (type: BlockType) => void;
+  // Nested inside a Grid block calls this with "+ Tambah sub-blok…" so it
+  // reads distinctly from the top-level "+ Tambah blok…" - same button,
+  // same picker, just a wording cue about which level you're adding to.
+  label?: string;
 }
 
-export default function BlockAddMenu({ onAdd }: Props) {
+export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…' }: Props) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<BlockType | null>(null);
   const [tooltipTop, setTooltipTop] = useState(0);
@@ -108,7 +112,7 @@ export default function BlockAddMenu({ onAdd }: Props) {
         onClick={() => setOpen(o => !o)}
         style={{ width: '100%', textAlign: 'left', padding: '9px 12px', fontWeight: 600, color: 'var(--text-dim)' }}
       >
-        + Tambah blok…
+        {label}
       </button>
       {open && (
         <div

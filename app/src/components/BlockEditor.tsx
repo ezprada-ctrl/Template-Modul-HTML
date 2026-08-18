@@ -45,6 +45,13 @@ function blockSummary(block: Block): string {
 }
 
 export default function BlockEditor({ blocks, onChange, columns }: Props) {
+  // `columns` is ONLY ever passed by GridFields (top-level callers in
+  // Canvas.tsx/CoverForm.tsx never set it) - reused here as the "am I
+  // nested inside a Grid" signal instead of adding a second prop that
+  // would just duplicate it. Nested blocks get called "sub-blok" in the
+  // UI so they read as distinct from top-level blocks, not a new concept -
+  // same data shape, same editor, just which level you're adding to.
+  const nested = columns !== undefined;
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   function toggleCollapse(id: string) {
     setCollapsed(prev => {
@@ -59,7 +66,7 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
     onChange(next);
   }
   function remove(i: number) {
-    if (!isBlockEmpty(blocks[i]) && !confirm('Blok ini masih ada isinya, yakin mau dihapus?')) return;
+    if (!isBlockEmpty(blocks[i]) && !confirm(nested ? 'Sub-blok ini masih ada isinya, yakin mau dihapus?' : 'Blok ini masih ada isinya, yakin mau dihapus?')) return;
     onChange(blocks.filter((_, idx) => idx !== i));
   }
   function changeType(i: number, newType: BlockType) {
@@ -90,7 +97,7 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
                 <button
                   className="btn-icon btn-sm"
-                  title={isCollapsed ? 'Buka blok ini' : 'Tutup blok ini'}
+                  title={nested ? (isCollapsed ? 'Buka sub-blok ini' : 'Tutup sub-blok ini') : (isCollapsed ? 'Buka blok ini' : 'Tutup blok ini')}
                   onClick={() => toggleCollapse(b.id)}
                   style={{ flexShrink: 0, transform: isCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform var(--ease)' }}
                 >▾</button>
@@ -107,7 +114,7 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
                   className="block-card-label"
                   value={b.type}
                   onChange={e => changeType(i, e.target.value as BlockType)}
-                  title="Ganti tipe blok ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang"
+                  title={nested ? 'Ganti tipe sub-blok ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang' : 'Ganti tipe blok ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang'}
                   style={{
                     fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
                     color: 'var(--text-faint)', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0,
@@ -134,7 +141,7 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
           </div>
         );
       })}
-      <BlockAddMenu onAdd={add} />
+      <BlockAddMenu onAdd={add} label={nested ? '+ Tambah sub-blok…' : undefined} />
     </div>
   );
 }
