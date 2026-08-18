@@ -28,6 +28,13 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
   // Nomor ini dicek sebelum setHtml/setError - hasil yang bukan permintaan
   // TERAKHIR dibuang, gak peduli urutan baliknya.
   const requestIdRef = useRef(0);
+  // Latest known scroll offset of the iframe's #viewport - kept alive across
+  // reloads. Every edit swaps srcDoc, which is a full iframe navigation (a
+  // fresh document, scrollTop 0), and jumpToSlide()'s goTo() call explicitly
+  // resets scroll to 0 too (correct for a REAL slide change) - so without
+  // this, someone scrolled down to see a block they just added gets yanked
+  // back to the top on every single keystroke-triggered re-render.
+  const scrollTopRef = useRef(0);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -71,6 +78,15 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
         // (now non-dev) gating - not just the variable.
         if (devMode) toggleDevMode();
       `);
+      // Restore the scroll offset the PREVIOUS document had, then keep
+      // tracking it live on this fresh one so the next reload has something
+      // current to restore. Re-attached every load since srcDoc gives a
+      // brand new document (and thus a brand new #viewport) each time.
+      const viewport = win.document.getElementById('viewport');
+      if (viewport) {
+        viewport.scrollTop = scrollTopRef.current;
+        viewport.addEventListener('scroll', () => { scrollTopRef.current = viewport.scrollTop; });
+      }
     } catch {
       // iframe not ready yet, ignore
     }
