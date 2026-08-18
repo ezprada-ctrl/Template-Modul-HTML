@@ -321,12 +321,19 @@ h1.slide-title{font-size:clamp(23px,3.2vw,32px);font-weight:800;line-height:1.2;
 .pull-quote{margin:32px 0;padding:22px 10px;text-align:center;border-top:2px solid var(--accent);border-bottom:2px solid var(--accent);}
 .pull-quote .pq-num{display:block;font-size:clamp(32px,5vw,46px);font-weight:800;color:var(--accent-2);font-family:'Plus Jakarta Sans',sans-serif;line-height:1.05;letter-spacing:-.01em;}
 .pull-quote .pq-text{display:block;margin:8px auto 0;font-size:14px;color:var(--text-dim);max-width:540px;line-height:1.6;}
-.definition .tag{position:absolute;top:-11px;left:20px;background:var(--accent);color:var(--on-accent);font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:3px 11px;border-radius:20px;text-transform:uppercase;}
+/* white-space:nowrap+ellipsis (not the default wrap) because this pill is
+   position:absolute - unbounded text wraps to 2+ lines and reads as one big
+   floating badge instead of a small label, most visible when the parent is
+   narrow (e.g. one cell of a 3-column Grid). Truncating instead signals
+   "this field is for a short label" without silently swallowing content -
+   the full text still lives in the tag field, only the ON-SCREEN pill
+   is capped. */
+.definition .tag{position:absolute;top:-11px;left:20px;background:var(--accent);color:var(--on-accent);font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:3px 11px;border-radius:20px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 40px);}
 .definition b{color:#f6d998;}
 
 .callout{border-radius:var(--radius-md);padding:16px 19px;margin-bottom:14px;border:1px solid; font-size:13.5px;line-height:1.6;display:flex;gap:12px;}
 .callout .ic{font-size:17px;flex-shrink:0;line-height:1.4;}
-.callout .ic-badge{width:26px;height:26px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
+.callout .ic-badge{width:26px;height:26px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden;}
 .callout .ic-pill{padding:4px 10px;border-radius:20px;background:var(--navy);font-size:11px;font-weight:800;color:#fff;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;}
 .callout.amber{background:var(--amber-soft);border-color:var(--accent-glow);}
 .callout.rose{background:var(--rose-soft);border-color:rgba(192,74,68,.25);}
@@ -384,7 +391,10 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .flow-step .fs-num{width:24px;height:24px;border-radius:8px;background:var(--accent-soft);color:var(--accent-2);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
 .flow-step.new .fs-num{background:var(--violet-soft);color:var(--violet);}
 .flow-step .fs-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:4px;}
-.flow-step .fs-badge{position:absolute;top:-9px;right:10px;background:var(--violet);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.03em;}
+/* Same latent risk as .definition .tag above (position:absolute + no cap on
+   text length) - capped the same way so a long badge value degrades to a
+   truncated label instead of an oversized wrapped blob. */
+.flow-step .fs-badge{position:absolute;top:-9px;right:10px;background:var(--violet);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 20px);}
 .flow-arrow{flex:0 0 26px;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:16px;}
 .flow-detail{
   background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);

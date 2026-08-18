@@ -164,8 +164,8 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       </>;
     case 'definition':
       return <>
-        <input style={inp} placeholder="Label tag (mis. DEFINISI)" value={block.tag || ''} onChange={e => onChange({ tag: e.target.value })} />
-        <textarea style={ta} placeholder="Isi definisi" value={block.bodyHtml || ''} onChange={e => onChange({ bodyHtml: e.target.value })} />
+        <input style={inp} placeholder="Label singkat (mis. DEFINISI) - bukan tempat isi definisinya" value={block.tag || ''} onChange={e => onChange({ tag: e.target.value })} />
+        <textarea style={ta} placeholder="Isi definisi (kalimat lengkapnya taruh di sini)" value={block.bodyHtml || ''} onChange={e => onChange({ bodyHtml: e.target.value })} />
       </>;
     case 'pullquote':
       return <>
