@@ -241,19 +241,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
         <button onClick={() => onChange({ tlItems: [...(block.tlItems || []), { time: '', title: '', desc: '' }] })}>+ tahap</button>
       </>;
     case 'dtable':
-      return <>
-        <input style={inp} placeholder="Header, pisah dengan |" value={(block.headers || []).join(' | ')}
-          onChange={e => onChange({ headers: e.target.value.split('|').map(s => s.trim()) })} />
-        {(block.rows || []).map((row, i) => (
-          <div key={i} style={{ display: 'flex', gap: 4 }}>
-            <input style={inp} value={row.join(' | ')} onChange={e => {
-              const rows = [...(block.rows || [])]; rows[i] = e.target.value.split('|').map(s => s.trim()); onChange({ rows });
-            }} />
-            <button onClick={() => onChange({ rows: (block.rows || []).filter((_, x) => x !== i) })}>×</button>
-          </div>
-        ))}
-        <button onClick={() => onChange({ rows: [...(block.rows || []), (block.headers || []).map(() => '')] })}>+ baris</button>
-      </>;
+      return <DtableFields block={block} onChange={onChange} inp={inp} />;
     case 'flow':
       return <>
         {(block.steps || []).map((s, i) => (
@@ -507,6 +495,146 @@ function GridCellPreview({ blocks, columns }: { blocks: Block[]; columns: 2 | 3 
 }
 
 type FieldStyle = CSSProperties;
+
+// ------------------------------------------------------------------ Tabel Data
+// `rows` stays `string[][]` (unchanged from before this redesign) - only the
+// EDITING surface changed. It used to be one <input> per row holding every
+// cell joined by " | ", re-split on every keystroke; `.trim()` on that split
+// ate the trailing space the user had JUST typed before they could type the
+// next character, so words silently ran together. Real per-cell inputs below
+// fix that at the root (nothing gets joined/split while typing) and, as a
+// side effect of switching to a grid, made "some rows have fewer/merged
+// cells" a natural thing to expose instead of a bug to work around.
+//
+// A row's cell count may be LESS than headers.length - render_dtable()
+// (generator.py) then gives that row's LAST cell a colspan covering however
+// many columns are missing. "− gabung" merges the last two cells (joining
+// their text with a space) to shrink toward that; "+ pisah" appends one
+// blank cell to grow back out. Repeat "− gabung" to merge more than two -
+// e.g. on a 4-column row, two clicks turns [a,b,c,d] into [a, "b c d"],
+// matching a label column (a) next to one cell spanning the other 3.
+function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle }) {
+  const headers = block.headers || [];
+  const rows = block.rows || [];
+  const groups = block.dtableGroups || [];
+  const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
+  const cellInp: FieldStyle = { ...inp, flex: 1, minWidth: 0, marginBottom: 0 };
+
+  function setHeader(i: number, val: string) {
+    onChange({ headers: headers.map((h, x) => (x === i ? val : h)) });
+  }
+  function addColumn() {
+    // Only pad rows that were FULLY expanded (one cell per column already) -
+    // an already-merged row just ends up spanning one more column, which is
+    // the whole point of being merged, not something to silently undo.
+    const nextRows = rows.map(r => (r.length >= headers.length ? [...r, ''] : r));
+    onChange({ headers: [...headers, `Kolom ${headers.length + 1}`], rows: nextRows });
+  }
+  function removeColumn(i: number) {
+    // A merged row (row.length < headers.length) only loses a real cell if
+    // the removed column falls among its still-separate leading cells (i <
+    // row.length) - otherwise the column being removed was already inside
+    // that row's spanning cell, so there's nothing of ITS to delete; the
+    // colspan just covers one column fewer automatically once headers.length
+    // drops.
+    const nextRows = rows.map(r => (i < r.length ? r.filter((_, x) => x !== i) : r));
+    onChange({ headers: headers.filter((_, x) => x !== i), rows: nextRows });
+  }
+  function setCell(ri: number, ci: number, val: string) {
+    onChange({ rows: rows.map((r, x) => (x === ri ? r.map((c, y) => (y === ci ? val : c)) : r)) });
+  }
+  function addRow() {
+    onChange({ rows: [...rows, headers.map(() => '')] });
+  }
+  function removeRow(ri: number) {
+    onChange({ rows: rows.filter((_, x) => x !== ri) });
+  }
+  function growRow(ri: number) {
+    onChange({ rows: rows.map((r, x) => (x === ri ? [...r, ''] : r)) });
+  }
+  function shrinkRow(ri: number) {
+    onChange({
+      rows: rows.map((r, x) => {
+        if (x !== ri || r.length <= 1) return r;
+        const merged = r.slice(-2).filter(Boolean).join(' ');
+        return [...r.slice(0, -2), merged];
+      }),
+    });
+  }
+
+  function setGroup(i: number, patch: Partial<{ label: string; span: number }>) {
+    onChange({ dtableGroups: groups.map((g, x) => (x === i ? { ...g, ...patch } : g)) });
+  }
+  function addGroup() {
+    onChange({ dtableGroups: [...groups, { label: '', span: 1 }] });
+  }
+  function removeGroup(i: number) {
+    onChange({ dtableGroups: groups.filter((_, x) => x !== i) });
+  }
+
+  return (
+    <>
+      <label style={lbl}>Kolom</label>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 4, flexWrap: 'wrap' }}>
+        {headers.map((h, i) => (
+          <div key={i} style={{ display: 'flex', gap: 2, flex: '1 1 100px', minWidth: 90 }}>
+            <input style={cellInp} placeholder={`Kolom ${i + 1}`} value={h} onChange={e => setHeader(i, e.target.value)} />
+            {headers.length > 1 && <button title="Hapus kolom ini" onClick={() => removeColumn(i)}>×</button>}
+          </div>
+        ))}
+      </div>
+      <button onClick={addColumn} style={{ marginBottom: 10 }}>+ kolom</button>
+
+      <label style={lbl}>
+        Header grup (opsional)
+        <span style={{ display: 'block', fontWeight: 400, color: 'var(--text-faint)', marginTop: 2 }}>
+          Baris judul tambahan DI ATAS baris kolom di atas — buat menaungi beberapa kolom sekaligus (mis. "Mitra Transaksi" menaungi 3 kolom SPDN/SPLN di bawahnya). Kosongkan label + span 1 buat sel kosong (biasanya kolom paling kiri, yang isinya label baris).
+        </span>
+      </label>
+      {groups.map((g, i) => (
+        <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 4, alignItems: 'center' }}>
+          <input style={{ ...inp, flex: 1, marginBottom: 0 }} placeholder="Label grup (boleh kosong)" value={g.label}
+            onChange={e => setGroup(i, { label: e.target.value })} />
+          <input type="number" min={1} max={headers.length || 1} style={{ width: 50, fontSize: 13 }} value={g.span}
+            title="Jumlah kolom yang dinaungi label ini"
+            onChange={e => setGroup(i, { span: Math.max(1, parseInt(e.target.value, 10) || 1) })} />
+          <button title="Hapus grup ini" onClick={() => removeGroup(i)}>×</button>
+        </div>
+      ))}
+      <button onClick={addGroup} style={{ marginBottom: 10 }}>+ grup header</button>
+
+      <label style={lbl}>Baris</label>
+      {rows.map((row, ri) => {
+        const isMerged = row.length < headers.length;
+        return (
+          <div key={ri} style={{ display: 'flex', gap: 4, marginBottom: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+            {row.map((cell, ci) => (
+              <input
+                key={ci}
+                style={{
+                  ...cellInp,
+                  flex: isMerged && ci === row.length - 1 ? headers.length - row.length + 1 : 1,
+                  background: isMerged && ci === row.length - 1 ? 'var(--surface-2)' : undefined,
+                }}
+                placeholder={isMerged && ci === row.length - 1 ? `Melebar ${headers.length - row.length + 1} kolom` : `Kolom ${ci + 1}`}
+                value={cell}
+                onChange={e => setCell(ri, ci, e.target.value)}
+              />
+            ))}
+            {headers.length > 1 && (
+              <div style={{ display: 'flex', gap: 2 }}>
+                {row.length > 1 && <button title="Gabung 2 sel terakhir jadi 1 (melebar)" style={{ fontSize: 11 }} onClick={() => shrinkRow(ri)}>− gabung</button>}
+                {row.length < headers.length && <button title="Pisah lagi jadi kolom sendiri" style={{ fontSize: 11 }} onClick={() => growRow(ri)}>+ pisah</button>}
+              </div>
+            )}
+            <button title="Hapus baris" onClick={() => removeRow(ri)}>×</button>
+          </div>
+        );
+      })}
+      <button onClick={addRow}>+ baris</button>
+    </>
+  );
+}
 
 // --------------------------------------------------------------- Media block
 function MediaFields({ block, onChange, inp }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle }) {

@@ -418,6 +418,13 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .dtable td{padding:13px 14px;border-top:1px solid var(--border);color:var(--text-dim);line-height:1.55;vertical-align:top;}
 .dtable tr:hover td{background:var(--surface-2);}
 .dtable th:first-child{border-radius:0;}
+/* Optional group-header row (dtableGroups) sits ABOVE the normal .dtable th
+   row - e.g. one label spanning several sub-columns below it. Centered
+   (unlike normal left-aligned th) since it floats over multiple columns
+   rather than belonging to just one; the faint bottom border is the only
+   thing separating it from the column-header row below, since both share
+   the same navy background. */
+.dtable th.dtable-group{text-align:center;border-bottom:1px solid rgba(255,255,255,.15);}
 
 /* timeline */
 .timeline{display:flex;flex-direction:column;gap:0;margin:10px 0 18px;}

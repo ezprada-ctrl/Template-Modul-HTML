@@ -63,7 +63,17 @@ export interface Block {
   tlItems?: { time: string; title: string; desc: string }[];
   // dtable
   headers?: string[];
+  // Each row's cell count may be LESS than headers.length - the last cell in
+  // that row then spans the remaining columns (colspan), so a row can be one
+  // cell per column OR a single cell stretching across all of them, mixed
+  // freely row by row. Omitted/full-length rows render exactly as before
+  // this existed (colspan 1 everywhere) - purely additive.
   rows?: string[][];
+  // Optional group-header row rendered ABOVE `headers` (e.g. "Mitra
+  // Transaksi" spanning 3 sub-columns beneath it, like a merged super-header).
+  // Undefined/empty = no group row at all, table looks exactly like before
+  // this field existed.
+  dtableGroups?: { label: string; span: number }[];
   // flow
   steps?: { n: number; title: string; detail: string; badge?: string }[];
   // grid

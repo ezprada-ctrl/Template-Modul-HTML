@@ -138,11 +138,40 @@ def render_timeline(b):
 
 
 def render_dtable(b):
+    n_cols = len(b.get('headers', []))
+
+    # Optional group-header row ABOVE the normal header row (e.g. "Mitra
+    # Transaksi" spanning 3 sub-columns) - purely additive, blocks authored
+    # before this existed have no 'dtableGroups' key at all, so this whole
+    # <tr> is simply absent and the table looks byte-identical to before.
+    groups = b.get('dtableGroups') or []
+    group_row = ''
+    if groups:
+        cells = ''.join(
+            f'<th colspan="{max(1, int(g.get("span", 1)))}" class="dtable-group">{esc(g.get("label", ""))}</th>'
+            for g in groups
+        )
+        group_row = f'<tr>{cells}</tr>'
+
     headers = ''.join(f'<th>{esc(h)}</th>' for h in b.get('headers', []))
+
+    # A row with FEWER cells than there are columns gets its LAST cell
+    # stretched with colspan to cover the gap - so a row can be one cell per
+    # column, or a single cell spanning the whole row, mixed freely row by
+    # row (see DtableFields in BlockEditor.tsx, where "− gabung"/"+ pisah"
+    # shrink/grow a row to produce this). A full-length row's colspan is
+    # always 1, so tables authored before this existed render unchanged.
     rows = ''
     for row in b.get('rows', []):
-        rows += '<tr>' + ''.join(f'<td>{esc(cell)}</td>' for cell in row) + '</tr>'
-    return f'<table class="dtable"><thead><tr>{headers}</tr></thead><tbody>{rows}</tbody></table>'
+        cells = ''
+        last = len(row) - 1
+        for i, cell in enumerate(row):
+            span = n_cols - len(row) + 1 if i == last and len(row) < n_cols else 1
+            colspan_attr = f' colspan="{span}"' if span > 1 else ''
+            cells += f'<td{colspan_attr}>{esc(cell)}</td>'
+        rows += f'<tr>{cells}</tr>'
+
+    return f'<table class="dtable"><thead>{group_row}<tr>{headers}</tr></thead><tbody>{rows}</tbody></table>'
 
 
 FLOW_DATA = {}  # collected across the whole generation pass, flushed after SLIDES map
