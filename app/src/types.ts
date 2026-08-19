@@ -352,6 +352,7 @@ export function newBlock(type: BlockType): Block {
     case 'media': return { id, type, mediaSource: 'video', src: '', embedUrl: '', caption: '' };
     case 'knowledge': return { id, type, kcItems: [{ q: '', opts: ['', ''], correct: 0, feedback: '' }] };
     case 'modal': return { id, type, heading: 'Info Tambahan', bodyHtml: '', icon: '📝' };
+    case 'articulate': return { id, type, artRatio: '16:9', artLock: true, caption: '' };
     default: return { id, type: 'card', heading: '', bodyHtml: '' };
   }
 }
@@ -371,7 +372,7 @@ export function extractBlockText(block: Block): string {
       return block.refText || '';
     case 'image':
       return block.caption || '';
-    case 'media':
+    case 'media': case 'articulate':
       return block.caption || '';
     case 'knowledge':
       return (block.kcItems || [])
@@ -404,6 +405,11 @@ export function isBlockEmpty(block: Block): boolean {
   // Media has no free text — it's "empty" only when neither an uploaded
   // video nor an embed URL has been provided.
   if (block.type === 'media') return !block.src && !block.embedUrl;
+  // Sama seperti media: gak ada teks yang bisa dibaca sebagai "isi". Yang
+  // bikin blok ini berarti cuma paket ZIP-nya. Tanpa cabang ini, blok yang
+  // ZIP-nya UDAH keupload tetap kebaca kosong (extractBlockText balikin '')
+  // dan bakal kehapus tanpa konfirmasi.
+  if (block.type === 'articulate') return !block.artUrl;
   return !extractBlockText(block).trim();
 }
 
@@ -422,7 +428,7 @@ function applyBlockText(block: Block, text: string): Block {
       return { ...block, refText: text.split('\n')[0] };
     case 'image':
       return { ...block, caption: text };
-    case 'media':
+    case 'media': case 'articulate':
       return { ...block, caption: text };
     case 'knowledge':
       // Carry migrated text into the first question's prompt, keeping the
