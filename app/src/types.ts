@@ -3,7 +3,7 @@ import { DEFAULT_THEME } from './themes';
 export type BlockType =
   | 'card' | 'callout' | 'definition' | 'pullquote' | 'ticklist'
   | 'accordion' | 'tabs' | 'timeline' | 'dtable' | 'flow' | 'grid' | 'image' | 'badgeref' | 'html' | 'modal'
-  | 'media' | 'knowledge';
+  | 'media' | 'knowledge' | 'articulate';
 
 // One question inside a Knowledge Check block. Same shape idea as
 // QuizQuestion but no requirement of exactly 4 options — 2 options
@@ -106,6 +106,20 @@ export interface Block {
   videoRatio?: '16:9' | '4:3' | '1:1' | '9:16';
   // knowledge check (inline, non-gating quiz-like block)
   kcItems?: KcQuestion[];
+  // articulate — paket Articulate 360 (Storyline/Rise) yang dibungkus jadi
+  // bagian modul. ZIP-nya SENGAJA disimpan utuh di Supabase Storage (artUrl),
+  // bukan diekstrak ke sana per-file: file Articulate bisa ratusan-ribuan,
+  // dan yang butuh file lepas cuma satu saat — waktu paket SCORM dirakit di
+  // browser (Export SCORM). Menyimpan utuh = 1 objek storage, bukan ribuan.
+  artUrl?: string;      // URL publik ZIP-nya di Supabase Storage
+  artPath?: string;     // path storage-nya (buat hapus kalau bloknya dibuang)
+  artEntry?: string;    // file pembuka, dibaca dari imsmanifest.xml paket itu (mis. index_lms.html)
+  artName?: string;     // nama file asli, buat ditampilkan di builder & modul
+  artSize?: number;     // byte, buat peringatan ukuran paket akhir
+  artRatio?: '16:9' | '4:3' | 'tinggi';  // 'tinggi' = kotak 80vh, buat Rise yang isinya panjang ke bawah
+  // Default true (dikunci). Kalau false, peserta boleh lanjut walau kontennya
+  // belum kelar — statusnya tetap direkam.
+  artLock?: boolean;
 }
 
 export interface Section {

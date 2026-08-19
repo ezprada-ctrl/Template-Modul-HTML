@@ -1,0 +1,193 @@
+// Perakit paket SCORM (.zip) — dijalankan SEPENUHNYA DI BROWSER.
+//
+// Kenapa di browser, bukan di backend: paket Articulate gampang 50–150MB.
+// Fungsi serverless Vercel punya batas body request ~4.5MB dan batas memori
+// yang jauh di bawah itu, jadi merakit ZIP di sana bukan cuma mahal — memang
+// gak mungkin. Di browser, byte-nya cuma lewat sekali: ZIP asal dibaca
+// per-entri, langsung ditulis ke ZIP tujuan, gak pernah ada satu momen di mana
+// seluruh isi paket nongkrong bareng di memori.
+//
+// Kalau browser-nya dukung File System Access API (Chrome/Edge), hasilnya
+// DITULIS LANGSUNG KE FILE yang dipilih pengguna — pemakaian memori jadi rata
+// berapa pun besar paketnya. Firefox/Safari gak punya itu, jadi di sana ZIP-nya
+// dirakit sebagai Blob dulu (browser yang mutusin ditaruh di RAM atau disk).
+
+import type { Block, ModuleData } from './types';
+import { fetchArticulateZip, generateHtmlForZip } from './api';
+
+// Ekstensi yang isinya SUDAH terkompresi. Mendeflate ulang cuma bakar CPU
+// (dan waktu tunggu penyusun modul) buat hasil yang praktis gak menyusut.
+const SUDAH_TERKOMPRESI = /\.(mp4|m4a|m4v|mp3|ogg|oga|ogv|webm|webp|jpe?g|png|gif|woff2?|zip|swf|avif)$/i;
+
+export interface ZipProgress {
+  fase: 'html' | 'articulate' | 'manifest' | 'selesai';
+  pesan: string;
+  /** 0–100, atau null kalau fase ini gak bisa diukur. */
+  persen: number | null;
+}
+
+/** Semua blok articulate di modul, termasuk yang bersarang di dalam Grid. */
+export function articulateBlocks(module: ModuleData): Block[] {
+  const out: Block[] = [];
+  const walk = (blocks?: Block[]) => {
+    for (const b of blocks || []) {
+      if (b.type === 'articulate' && b.artUrl) out.push(b);
+      else if (b.type === 'grid') walk(b.blocks);
+    }
+  };
+  for (const s of module.slides || []) walk(s.blocks);
+  return out;
+}
+
+function xmlEsc(v: string) {
+  return v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Path di manifest harus URL-encoded per segmen (nama file Articulate sering
+// mengandung spasi/karakter non-ASCII). Slash-nya sendiri jangan ikut di-encode.
+function hrefEsc(path: string) {
+  return xmlEsc(path.split('/').map(encodeURIComponent).join('/'));
+}
+
+function buildManifest(slug: string, title: string, files: string[]) {
+  const id = `MANIFEST-${slug || 'modul'}`;
+  const fileTags = files.map(f => `      <file href="${hrefEsc(f)}"/>`).join('\n');
+  // SCORM 1.2, satu SCO. Sengaja bukan 2004: KLC menerima keduanya, dan 1.2
+  // punya dukungan paling luas di LMS lain kalau modulnya dipakai ulang.
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="${xmlEsc(id)}" version="1.0"
+  xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+  xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd
+                      http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+  <organizations default="ORG-1">
+    <organization identifier="ORG-1">
+      <title>${xmlEsc(title)}</title>
+      <item identifier="ITEM-1" identifierref="RES-1" isvisible="true">
+        <title>${xmlEsc(title)}</title>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="RES-1" type="webcontent" adlcp:scormtype="sco" href="index.html">
+${fileTags}
+    </resource>
+  </resources>
+</manifest>
+`;
+}
+
+async function bukaTujuan(namaFile: string) {
+  const anyWin = window as any;
+  if (anyWin.showSaveFilePicker) {
+    try {
+      const handle = await anyWin.showSaveFilePicker({
+        suggestedName: namaFile,
+        types: [{ description: 'Paket SCORM', accept: { 'application/zip': ['.zip'] } }],
+      });
+      const stream: WritableStream = await handle.createWritable();
+      return { stream, unduhSendiri: false as const };
+    } catch (e: any) {
+      // Pengguna menutup dialognya = batal beneran, bukan alasan buat
+      // diam-diam pindah ke jalur Blob yang boros memori.
+      if (e?.name === 'AbortError') throw e;
+    }
+  }
+  return { stream: null, unduhSendiri: true as const };
+}
+
+/**
+ * Rakit seluruh modul jadi satu paket SCORM .zip siap upload ke LMS:
+ *
+ *   index.html            <- modul hasil generator (iframe-nya nunjuk ke bawah)
+ *   articulate/<idBlok>/  <- isi paket Articulate, apa adanya
+ *   imsmanifest.xml
+ */
+export async function exportScormZip(
+  module: ModuleData,
+  onProgress: (p: ZipProgress) => void,
+): Promise<void> {
+  const zipjs = await import('@zip.js/zip.js');
+  const { ZipWriter, ZipReader, BlobReader, BlobWriter, TextReader } = zipjs;
+
+  onProgress({ fase: 'html', pesan: 'Menyusun HTML modul…', persen: null });
+  const html = await generateHtmlForZip(module);
+
+  const blocks = articulateBlocks(module);
+  const slug = module.slug || 'modul';
+  const namaFile = `${slug}-scorm.zip`;
+
+  const tujuan = await bukaTujuan(namaFile);
+  const blobWriter = tujuan.unduhSendiri ? new BlobWriter('application/zip') : null;
+  const writer = new ZipWriter(tujuan.stream ?? blobWriter!, { bufferedWrite: false });
+
+  const daftarFile: string[] = ['index.html'];
+  await writer.add('index.html', new TextReader(html));
+
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i];
+    const label = b.artName || `paket ${i + 1}`;
+    onProgress({
+      fase: 'articulate',
+      pesan: `Mengambil ${label} (${i + 1}/${blocks.length})…`,
+      persen: null,
+    });
+    const zipBlob = await fetchArticulateZip(b.artUrl!);
+    const reader = new ZipReader(new BlobReader(zipBlob));
+    try {
+      const entries = await reader.getEntries();
+      // Kalau paketnya dibungkus satu folder induk, folder itu DIBUANG dari
+      // path tujuan — biar `articulate/<id>/index_lms.html` selalu cocok sama
+      // yang ditulis generator, gak peduli cara publish-nya.
+      const entryFile = b.artEntry || 'index_lms.html';
+      const root = entryFile.includes('/') ? entryFile.slice(0, entryFile.lastIndexOf('/') + 1) : '';
+      let n = 0;
+      for (const e of entries) {
+        n++;
+        if (e.directory) continue;
+        if (root && !e.filename.startsWith(root)) continue;
+        const rel = root ? e.filename.slice(root.length) : e.filename;
+        if (!rel) continue;
+        const target = `articulate/${b.id}/${rel}`;
+        // Satu entri pada satu waktu — inilah yang bikin paket 150MB tetap
+        // muat: yang ada di memori cuma file terbesar di dalamnya, bukan
+        // seluruh paket.
+        const data: Blob = await e.getData!(new BlobWriter());
+        await writer.add(target, new BlobReader(data), {
+          level: SUDAH_TERKOMPRESI.test(rel) ? 0 : 1,
+        });
+        daftarFile.push(target);
+        if (n % 25 === 0) {
+          onProgress({
+            fase: 'articulate',
+            pesan: `Membungkus ${label}…`,
+            persen: Math.round((n / entries.length) * 100),
+          });
+        }
+      }
+    } finally {
+      await reader.close();
+    }
+  }
+
+  onProgress({ fase: 'manifest', pesan: 'Menulis imsmanifest.xml…', persen: null });
+  const manifest = buildManifest(slug, module.title || 'Modul E-Learning', daftarFile);
+  await writer.add('imsmanifest.xml', new TextReader(manifest));
+
+  const hasil = await writer.close();
+
+  if (tujuan.unduhSendiri) {
+    const url = URL.createObjectURL(hasil as Blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = namaFile;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  onProgress({ fase: 'selesai', pesan: `Paket SCORM siap: ${namaFile}`, persen: 100 });
+}

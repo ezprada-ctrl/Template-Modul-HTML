@@ -812,6 +812,23 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 #kc-popup-continue{display:none;width:100%;margin-top:6px;}
 .kc-item{margin-bottom:18px;}
 .kc-item:last-child{margin-bottom:0;}
+/* ---- Blok Articulate 360 ---- */
+.art-card{padding:14px;}
+.art-frame{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#000;}
+.art-iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;}
+.art-frame:fullscreen{padding-bottom:0!important;height:100%!important;border-radius:0;}
+.art-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px;flex-wrap:wrap;}
+.art-status{font-size:12px;color:var(--text-faint);font-weight:600;}
+.art-status.art-done{color:var(--green);}
+.art-full{
+  font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;
+  padding:6px 12px;border-radius:999px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);transition:.15s;
+}
+.art-full:hover{border-color:var(--accent);color:var(--accent);}
+.art-placeholder{display:flex;gap:14px;align-items:flex-start;padding:16px;border:1px dashed var(--border);border-radius:12px;background:var(--surface-2);}
+.art-ph-icon{font-size:26px;line-height:1;color:var(--text-faint);}
+.art-ph-sub{font-size:12px;color:var(--text-faint);margin-top:4px;line-height:1.55;}
 .kc-q{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px;line-height:1.5;}
 .kc-retry-hint{font-size:11px;color:var(--text-faint);margin:-8px 0 10px;font-style:italic;}
 .kc-opts{display:flex;flex-direction:column;gap:8px;}
@@ -1272,6 +1289,14 @@ const HAS_YOUTUBE = __HAS_YOUTUBE_JS__;
 // here when the learner tries to leave a slide that has one of these.
 const SLIDE_KC = __SLIDE_KC_JS__;
 
+/* Blok Articulate 360 per slide: {nomorSlide:[{block,entry,lock,nama}]}.
+   ART_PACKAGED = apakah file-file Articulate-nya benar-benar ikut di sebelah
+   HTML ini (cuma true di hasil Export SCORM .zip). Di Live Preview / export
+   HTML tunggal dia false, dan seluruh mesin di bawah ini diam total. */
+const SLIDE_ART = __SLIDE_ART_JS__;
+const ART_PACKAGED = __ART_PACKAGED_JS__;
+const HAS_ART = ART_PACKAGED && Object.keys(SLIDE_ART).length > 0;
+
 /* ---------------- Quiz data ---------------- */
 const QUIZZES = __QUIZZES_JS__;
 
@@ -1286,8 +1311,13 @@ let scorm = {api:null, version:null, inited:false};
 function scormFindAPI(win){
   let attempts = 0;
   while(win && attempts < 500){
-    if(win.API) return {api:win.API, version:'1.2'};
-    if(win.API_1484_11) return {api:win.API_1484_11, version:'2004'};
+    /* !__modulShim: mulai dari ART_PACKAGED, modul ini MEMASANG API/
+       API_1484_11 palsu di window-nya sendiri buat ditemukan konten
+       Articulate di dalam iframe (lihat ARTICULATE di bawah). Tanpa
+       pengecualian ini, pencarian di bawah bakal nemu shim buatan sendiri
+       duluan dan modul ini gak akan pernah nyambung ke LMS beneran. */
+    if(win.API && !win.API.__modulShim) return {api:win.API, version:'1.2'};
+    if(win.API_1484_11 && !win.API_1484_11.__modulShim) return {api:win.API_1484_11, version:'2004'};
     if(win.parent && win.parent !== win) win = win.parent; else break;
     attempts++;
   }
@@ -1329,6 +1359,172 @@ function scormFinish(){
 }
 window.addEventListener('beforeunload', ()=>{ scormCommit(); scormFinish(); });
 
+/* ============================ ARTICULATE 360 ============================
+   Paket Articulate (Storyline/Rise) yang di-upload penyusun modul ikut
+   dibungkus ke dalam paket SCORM ini, di folder articulate/<idBlok>/, dan
+   dijalankan lewat <iframe> di dalam slide.
+
+   Kenapa butuh SHIM di sini: konten Articulate itu SCORM juga. Begitu jalan,
+   dia nyari API SCORM dengan manjat window.parent - dan yang pertama dia
+   temuin adalah window kita. Kalau kita gak sediakan apa-apa, dia manjat
+   terus sampai ketemu API LMS ASLI, lalu nulis lesson_status/score/
+   suspend_data ke situ. Akibatnya dua-duanya rebutan satu rekaman yang sama:
+   Storyline bilang "completed" begitu slide terakhirnya kelewat, dan modul
+   kita ikut ketulis selesai walau pesertanya baru di bagian awal.
+
+   Jadi shim ini SENGAJA jadi tembok: semua panggilan dari Articulate berhenti
+   di sini, dipakai buat urusan kita sendiri (kunci slide + rekam aktivitas),
+   dan TIDAK diteruskan ke LMS. Satu-satunya yang nembus dari LMS ke dalam
+   cuma nama & ID peserta (dibaca, bukan ditulis) - biar Storyline yang
+   nampilin nama peserta tetap benar.
+
+   Skor kuis Storyline juga berhenti di sini, sesuai keputusan: yang dilapor
+   ke LMS tetap kuis bawaan modul ini.
+
+   suspend_data punya Articulate BISA puluhan KB (jauh di atas batas ~4096
+   karakter SCORM 1.2). Makanya dia disimpan di localStorage TERPISAH, gak
+   ikut nebeng state modul yang dikirim ke cmi.suspend_data LMS. Konsekuensi
+   yang disadari: posisi terakhir DI DALAM konten Articulate cuma pulih di
+   perangkat/browser yang sama. Status "sudah selesai"-nya sendiri ikut state
+   modul, jadi itu tetap pulih lintas perangkat lewat LMS. */
+
+function artStoreKey(blockId){ return STORAGE_KEY + ':art:' + blockId; }
+
+function artLoadCmi(blockId){
+  try{
+    const raw = localStorage.getItem(artStoreKey(blockId));
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return {};
+}
+function artSaveCmi(blockId, cmi){
+  try{ localStorage.setItem(artStoreKey(blockId), JSON.stringify(cmi)); }
+  catch(e){ /* kuota localStorage penuh - kontennya tetap jalan, cuma gak resume */ }
+}
+
+/* Blok Articulate yang lagi kepasang di layar (diisi ulang tiap render). */
+let artActive = [];
+/* iframe yang paling terakhir dianggap "yang lagi manggil". Satu slide
+   praktis selalu cuma punya satu paket Articulate, tapi kalau ada dua,
+   ini yang mutusin panggilan barusan punya siapa. */
+let artCallerBlock = null;
+
+function artMarkDone(blockId, status){
+  if(!blockId || state.artDone[blockId]) return;
+  state.artDone[blockId] = true;
+  saveState();
+  artApplyStatus();
+  try{ actEvent('articulate_selesai', {blok: blockId, status: status || 'completed'}); }catch(e){}
+}
+
+function artResolveBlock(){
+  if(artCallerBlock) return artCallerBlock;
+  return artActive.length ? artActive[0].block : null;
+}
+
+function artMakeShim(version){
+  function getValue(name){
+    const blockId = artResolveBlock();
+    const cmi = blockId ? artLoadCmi(blockId) : {};
+    if(name in cmi) return cmi[name];
+    /* Nama & ID peserta diambil dari LMS asli - dibaca doang, gak pernah
+       ditulis balik. Ini satu-satunya data yang nembus shim. */
+    if(/student_name|learner_name/.test(name)) return scormGetValue(version==='1.2'?'cmi.core.student_name':'cmi.learner_name') || '';
+    if(/student_id|learner_id/.test(name)) return scormGetValue(version==='1.2'?'cmi.core.student_id':'cmi.learner_id') || '';
+    if(/lesson_status|completion_status/.test(name)) return (blockId && state.artDone[blockId]) ? 'completed' : 'incomplete';
+    if(/success_status/.test(name)) return 'unknown';
+    if(/lesson_mode/.test(name)) return 'normal';
+    if(/\bentry\b/.test(name)) return (blockId && artLoadCmi(blockId)['__started']) ? 'resume' : 'ab-initio';
+    if(/credit/.test(name)) return 'credit';
+    return '';
+  }
+  function setValue(name, value){
+    const blockId = artResolveBlock();
+    if(!blockId) return 'true';
+    const cmi = artLoadCmi(blockId);
+    cmi[name] = String(value);
+    cmi['__started'] = '1';
+    artSaveCmi(blockId, cmi);
+    const v = String(value).toLowerCase();
+    if(/lesson_status|completion_status|success_status/.test(name) && (v === 'completed' || v === 'passed')){
+      artMarkDone(blockId, v);
+    }
+    return 'true';
+  }
+  return {
+    __modulShim: true,
+    LMSInitialize: function(){ return 'true'; },
+    LMSFinish: function(){ return 'true'; },
+    LMSGetValue: getValue,
+    LMSSetValue: setValue,
+    LMSCommit: function(){ return 'true'; },
+    LMSGetLastError: function(){ return '0'; },
+    LMSGetErrorString: function(){ return 'No error'; },
+    LMSGetDiagnostic: function(){ return ''; },
+    Initialize: function(){ return 'true'; },
+    Terminate: function(){ return 'true'; },
+    GetValue: getValue,
+    SetValue: setValue,
+    Commit: function(){ return 'true'; },
+    GetLastError: function(){ return '0'; },
+    GetErrorString: function(){ return 'No error'; },
+    GetDiagnostic: function(){ return ''; },
+  };
+}
+
+/* Dipasang cuma kalau modul ini beneran bawa konten Articulate. Kalau enggak,
+   window.API tetap kosong persis seperti sebelum fitur ini ada - penting,
+   karena modul yang gak butuh apa-apa gak boleh tiba-tiba punya objek SCORM
+   palsu nempel di window-nya. */
+if(HAS_ART){
+  window.API = artMakeShim('1.2');
+  window.API_1484_11 = artMakeShim('2004');
+}
+
+function artBindSlide(item){
+  artActive = (item && item.kind==='slide' && SLIDE_ART[item.num]) ? SLIDE_ART[item.num] : [];
+  artCallerBlock = artActive.length ? artActive[0].block : null;
+  if(!artActive.length) return;
+  artActive.forEach(function(a){
+    const frame = document.getElementById('artframe-'+a.block);
+    const fr = frame && frame.querySelector('iframe');
+    if(!fr) return;
+    /* Begitu iframe-nya dimuat / disentuh peserta, dia yang dianggap pemanggil
+       berikutnya. Baru relevan kalau satu slide punya lebih dari satu paket. */
+    fr.addEventListener('load', function(){ artCallerBlock = a.block; });
+    frame.addEventListener('mouseenter', function(){ artCallerBlock = a.block; });
+  });
+  artApplyStatus();
+}
+
+function artApplyStatus(){
+  artActive.forEach(function(a){
+    const el = document.getElementById('artstatus-'+a.block);
+    if(!el) return;
+    const done = !!state.artDone[a.block];
+    el.textContent = done ? '\u2713 Sudah selesai'
+                          : (a.lock ? 'Belum selesai \u2014 selesaikan dulu untuk bisa lanjut' : 'Belum selesai');
+    el.classList.toggle('art-done', done);
+  });
+}
+
+function artFullscreen(blockId){
+  const el = document.getElementById('artframe-'+blockId);
+  if(!el) return;
+  if(document.fullscreenElement){ document.exitFullscreen(); return; }
+  if(el.requestFullscreen) el.requestFullscreen();
+}
+
+/* Blok Articulate wajib di slide ini yang belum kelar, atau null kalau aman. */
+function artPendingOnSlide(num){
+  const arts = SLIDE_ART[num];
+  if(!arts) return null;
+  for(const a of arts){
+    if(a.lock && !state.artDone[a.block]) return a;
+  }
+  return null;
+}
+
 /* ============================= STATE ============================= */
 const STORAGE_KEY = '__STORAGE_KEY__';
 const MODULE_TITLE = '__MODULE_TITLE__';
@@ -1336,7 +1532,7 @@ const MODULE_TITLE = '__MODULE_TITLE__';
    resolveReadingWarning) - tetap disimpen di state biasa (bukan cuma
    activity buffer) karena harus tahan lintas sesi/reload, gak cuma
    sekali jalan. */
-let state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}};
+let state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}, artDone:{}};
 
 function loadState(){
   scormInit();
@@ -1360,6 +1556,7 @@ function loadState(){
   if(!state.quizWarnShown) state.quizWarnShown = {};
   if(!state.kcAnswers) state.kcAnswers = {};
   if(!state.kcAttempts) state.kcAttempts = {};
+  if(!state.artDone) state.artDone = {};
 }
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
@@ -2729,6 +2926,7 @@ function render(opts){
   // inline presence to restore here — it only ever appears as the leaving-
   // slide popup, gated in goTo().
   applySlideAudio(item);
+  artBindSlide(item);
   if(HAS_INSTAGRAM && window.instgrm && window.instgrm.Embeds){
     try{ window.instgrm.Embeds.process(); }catch(e){}
   }
@@ -2980,6 +3178,20 @@ function goTo(idx){
      SLIDE_KC[cur.num] && !kcAllAnsweredForSlide(cur.num)){
     kcOpenPopup(cur.num, idx);
     return;
+  }
+
+  /* Konten Articulate yang dicentang "kunci": peserta ditahan di slide ini
+     sampai kontennya lapor completed/passed lewat shim. Sama polanya dengan
+     gerbang knowledge-check di atas - yang dicek slide yang lagi DITINGGAL,
+     bukan yang dituju, jadi peserta gak bisa kabur lewat menu samping. Balik
+     ke slide sebelumnya tetap dibolehin: mundur baca ulang bukan pelanggaran,
+     yang dijaga cuma jangan sampai maju melewatinya. */
+  if(!devMode && cur && cur.kind==='slide' && idx > currentIdx){
+    const pending = artPendingOnSlide(cur.num);
+    if(pending){
+      showLockNotice('Selesaikan dulu "'+pending.nama+'" di slide ini sebelum lanjut.');
+      return;
+    }
   }
 
   /* Sebelumnya gak ada yang nahan peserta klik balik ke materi (hero/slide)

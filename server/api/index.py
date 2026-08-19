@@ -135,6 +135,19 @@ def api_save_draft(name):
     return jsonify({'ok': True})
 
 
+@app.post('/api/drafts/<name>/rename')
+def api_rename_draft(name):
+    body = request.get_json(force=True) or {}
+    new_name = (body.get('new_name') or '').strip()
+    if not new_name:
+        return jsonify({'error': 'Nama baru gak boleh kosong'}), 400
+    try:
+        slug = draft_store.rename_draft(name, new_name)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 409
+    return jsonify({'ok': True, 'slug': slug})
+
+
 @app.get('/api/health')
 def api_health():
     return jsonify({'ok': True, 'storage': 'supabase' if draft_store.USE_SUPABASE else 'local-file'})

@@ -5,6 +5,7 @@ import { newBlock, changeBlockType, isBlockEmpty, extractBlockText } from '../ty
 import type { KcQuestion } from '../types';
 import EmojiPicker from './EmojiPicker';
 import BlockAddMenu, { BLOCK_LABELS } from './BlockAddMenu';
+import { uploadArticulate, deleteArticulate } from '../api';
 import { uploadImageToStorage, uploadMediaToStorage } from '../api';
 
 interface Props {
@@ -276,6 +277,8 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       return <MediaFields block={block} onChange={onChange} inp={inp} />;
     case 'knowledge':
       return <KnowledgeFields block={block} onChange={onChange} inp={inp} ta={ta} />;
+    case 'articulate':
+      return <ArticulateFields block={block} onChange={onChange} inp={inp} />;
     case 'modal':
       return <>
         <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
@@ -644,6 +647,85 @@ function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Pa
 }
 
 // --------------------------------------------------------------- Media block
+function ArticulateFields({ block, onChange, inp }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
+  const terkunci = block.artLock !== false;
+
+  async function pilihFile(f: File | undefined) {
+    if (!f) return;
+    setErr('');
+    setBusy(true);
+    try {
+      const info = await uploadArticulate(f);
+      // Paket lama dibuang setelah yang baru berhasil naik — bukan sebelumnya,
+      // biar blok ini gak pernah ada di keadaan "paket lama sudah hilang tapi
+      // yang baru gagal upload".
+      const lama = block.artPath;
+      onChange({
+        artUrl: info.url, artPath: info.path, artEntry: info.entry,
+        artName: info.name, artSize: info.size,
+        // Output Web (tanpa imsmanifest) gak akan pernah lapor selesai, jadi
+        // menguncinya = peserta terjebak. Dimatikan otomatis, bukan dibiarkan
+        // jadi jebakan yang baru ketahuan pas modulnya dipakai.
+        artLock: info.scorm ? block.artLock !== false : false,
+      });
+      if (lama) deleteArticulate(lama);
+      if (!info.scorm) {
+        setErr('Paket ini gak punya imsmanifest.xml (kemungkinan hasil publish "Web", bukan SCORM/LMS). Kontennya tetap jalan penuh, tapi gak bisa lapor selesai — jadi opsi kunci dimatikan. Publish ulang sebagai LMS/SCORM 1.2 kalau mau dikunci.');
+      }
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
+        Upload ZIP hasil <strong>Publish &rarr; LMS &rarr; SCORM 1.2</strong> dari Articulate 360 (Storyline atau Rise).
+        Semua interaksinya jalan apa adanya di dalam slide ini, dan ikut dibungkus waktu <strong>Export SCORM (.zip)</strong>.
+      </p>
+
+      <input type="file" accept=".zip" disabled={busy}
+        onChange={e => pilihFile(e.target.files?.[0])} />
+      {busy && <p className="hint" style={{ fontSize: 11 }}>Membaca &amp; mengunggah paket… (file besar bisa beberapa menit)</p>}
+      {err && <p style={{ color: 'var(--danger, #c0392b)', fontSize: 11.5, lineHeight: 1.5 }}>{err}</p>}
+
+      {block.artUrl && (
+        <div style={{ fontSize: 11.5, background: 'var(--surface-2, #f4f4f5)', borderRadius: 8, padding: '8px 10px', margin: '8px 0' }}>
+          <div><strong>{block.artName}</strong> · {((block.artSize || 0) / 1024 / 1024).toFixed(1)}MB</div>
+          <div style={{ color: 'var(--text-dim)' }}>File pembuka: <code>{block.artEntry}</code></div>
+        </div>
+      )}
+
+      <label style={lbl}>Tinggi kotak</label>
+      <select style={inp} value={block.artRatio || '16:9'}
+        onChange={e => onChange({ artRatio: e.target.value as any })}>
+        <option value="16:9">16:9 — Storyline (paling umum)</option>
+        <option value="4:3">4:3 — Storyline lama</option>
+        <option value="tinggi">Tinggi (80% layar) — Rise, isinya panjang ke bawah</option>
+      </select>
+
+      <label style={{ display: 'flex', gap: 7, alignItems: 'flex-start', fontSize: 12, margin: '10px 0 0', cursor: 'pointer' }}>
+        <input type="checkbox" checked={terkunci}
+          onChange={e => onChange({ artLock: e.target.checked })} style={{ marginTop: 2 }} />
+        <span>
+          Kunci sampai selesai
+          <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
+            Peserta gak bisa maju ke slide berikutnya sebelum konten ini lapor selesai.
+            Butuh paket SCORM (ada imsmanifest.xml) — paket hasil publish "Web" gak pernah lapor apa-apa.
+          </span>
+        </span>
+      </label>
+
+      <input style={{ ...inp, marginTop: 8 }} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
+    </>
+  );
+}
+
 function MediaFields({ block, onChange, inp }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle }) {
   const source = block.mediaSource || 'video';
   const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };

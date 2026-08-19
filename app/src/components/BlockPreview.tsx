@@ -337,6 +337,18 @@ export default function BlockPreviewCard({ type }: { type: BlockType }) {
           </div>
         </div>
       );
+    case 'articulate':
+      return (
+        <div className="pbp-scope">
+          <div className="media-demo">
+            <div className="frame">
+              <span className="tag">Articulate</span>
+              <span className="play">▣</span>
+            </div>
+            <p className="cap">Paket Storyline/Rise jalan penuh di dalam slide — ikut dibungkus waktu Export SCORM.</p>
+          </div>
+        </div>
+      );
     default:
       return null;
   }

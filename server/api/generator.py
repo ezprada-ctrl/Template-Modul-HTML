@@ -180,7 +180,12 @@ FLOW_DATA = {}  # collected across the whole generation pass, flushed after SLID
 # drives whether the shell loads Instagram's embed.js (a <script> the block
 # itself can't run, because slide HTML is injected via innerHTML which never
 # executes injected <script> tags). Reset at the start of generate_html.
-GEN_FLAGS = {'has_instagram': False, 'has_youtube': False}
+GEN_FLAGS = {'has_instagram': False, 'has_youtube': False, 'has_articulate': False,
+             # true cuma kalau HTML ini digenerate buat dibungkus jadi paket
+             # SCORM .zip (Export SCORM). Di export HTML tunggal / Live
+             # Preview, folder articulate/ gak ada di sebelah file ini, jadi
+             # iframe-nya SENGAJA gak dipasang - lihat render_articulate().
+             'art_packaged': False}
 
 
 def render_flow(b):
@@ -427,6 +432,71 @@ def kc_items_for_slide(slide):
     return out
 
 
+ART_RATIOS = {'16:9': '56.25%', '4:3': '75%'}
+
+
+def render_articulate(b):
+    """Konten Articulate 360 (Storyline/Rise) yang dibungkus jadi bagian modul.
+
+    Yang dirender di sini cuma KERANGKANYA (kotak + tombol layar penuh +
+    label status). Isi aslinya jalan di dalam <iframe> yang nunjuk ke
+    `articulate/<id>/<entry>` - file-file itu baru ada kalau modulnya
+    di-export sebagai paket SCORM .zip (Export SCORM), bukan HTML tunggal.
+    Makanya src-nya cuma dipasang kalau art_packaged nyala; kalau enggak,
+    yang tampil pesan jujur "baru hidup di paket SCORM", bukan iframe kosong
+    atau 404 yang bikin bingung.
+
+    Kenapa iframe biasa dan bukan embed lain: paket Articulate itu situs
+    kecil (ratusan file) yang HARUS dilayani apa adanya. Karena dia satu
+    origin sama modul ini (sama-sama di dalam paket SCORM yang sama), dia
+    bisa manjat window.parent dan nemu SCORM API - yang dia temuin adalah
+    SHIM punya kita (lihat artShim* di shell-template.html), bukan API LMS
+    langsung. Itu yang bikin lapor "completed"-nya sampai ke kita buat kunci
+    slide, tanpa nabrak status modul di LMS.
+    """
+    block_id = esc(b.get('id', 'art'))
+    entry = (b.get('artEntry') or 'index_lms.html').lstrip('/')
+    caption = _caption_html(b)
+    GEN_FLAGS['has_articulate'] = True
+
+    if not b.get('artUrl'):
+        return ('<div class="card"><p style="color:var(--text-faint);font-size:12.5px;">'
+                '&#9888; Blok Articulate belum ada file ZIP-nya.</p></div>')
+
+    ratio = b.get('artRatio') or '16:9'
+    if ratio == 'tinggi':
+        frame_style = 'height:80vh;'
+    else:
+        frame_style = f'padding-bottom:{ART_RATIOS.get(ratio, "56.25%")};height:0;'
+
+    if not GEN_FLAGS['art_packaged']:
+        return (
+            '<div class="card art-card">'
+            '<div class="art-placeholder">'
+            '<div class="art-ph-icon">&#9635;</div>'
+            '<div><strong>Konten Articulate 360</strong>'
+            f'<div class="art-ph-sub">{esc(b.get("artName") or "paket Articulate")}</div>'
+            '<div class="art-ph-sub">Baru hidup di hasil <strong>Export SCORM (.zip)</strong> &mdash; '
+            'di Live Preview dan Export HTML tunggal, file-nya belum ikut dibawa.</div>'
+            '</div></div>'
+            f'{caption}</div>'
+        )
+
+    return (
+        f'<div class="card art-card" data-art="{block_id}">'
+        f'<div class="art-frame" id="artframe-{block_id}" style="{frame_style}">'
+        f'<iframe class="art-iframe" src="articulate/{block_id}/{esc(entry)}" '
+        f'title="Konten Articulate" allowfullscreen '
+        f'allow="autoplay; fullscreen; encrypted-media; microphone; camera"></iframe>'
+        '</div>'
+        '<div class="art-bar">'
+        f'<span class="art-status" id="artstatus-{block_id}">Belum selesai</span>'
+        f'<button type="button" class="art-full" onclick="artFullscreen(&#39;{block_id}&#39;)">&#9974; Layar penuh</button>'
+        '</div>'
+        f'{caption}</div>'
+    )
+
+
 def render_modal(b):
     modal_id = b.get('id', 'modal')
     title = esc(b.get('heading', 'Info Tambahan'))
@@ -459,6 +529,7 @@ BLOCK_RENDERERS = {
     'html': render_html,
     'media': render_media,
     'knowledge': render_knowledge,
+    'articulate': render_articulate,
 }
 
 
@@ -871,6 +942,11 @@ def generate_html(module):
     FLOW_DATA.clear()
     GEN_FLAGS['has_instagram'] = False
     GEN_FLAGS['has_youtube'] = False
+    GEN_FLAGS['has_articulate'] = False
+    # Dikirim frontend CUMA lewat jalur "Export SCORM (.zip)". Bukan field
+    # yang diisi penyusun modul, jadi sengaja gak masuk ModuleData/draft -
+    # dia sifat dari CARA generate-nya, bukan sifat modulnya.
+    GEN_FLAGS['art_packaged'] = bool(module.get('artPackaged'))
 
     out = SHELL
 
@@ -949,6 +1025,34 @@ def generate_html(module):
         if kc:
             slide_kc[str(s['number'])] = kc
     out = out.replace('__SLIDE_KC_JS__', js_str(slide_kc))
+
+    # Blok Articulate per slide: {nomorSlide: [{block, entry, lock}]}. Dipakai
+    # shell buat (a) nyalain shim SCORM cuma kalau modulnya emang punya blok
+    # ini, dan (b) nahan peserta pindah slide selama konten Articulate-nya
+    # belum lapor selesai (lock). Blok di dalam Grid ikut kejaring - kalau
+    # enggak, blok yang kebetulan ditaruh di dalam grid bakal diam-diam gak
+    # ngunci apa-apa padahal penyusunnya nyentang "kunci".
+    def _art_in(blocks):
+        found = []
+        for b in blocks or []:
+            if b.get('type') == 'articulate' and b.get('artUrl'):
+                found.append({
+                    'block': b.get('id', 'art'),
+                    'entry': (b.get('artEntry') or 'index_lms.html').lstrip('/'),
+                    'lock': b.get('artLock', True) is not False,
+                    'nama': b.get('artName') or 'Konten Articulate',
+                })
+            elif b.get('type') == 'grid':
+                found.extend(_art_in(b.get('blocks', [])))
+        return found
+
+    slide_art = {}
+    for s in slides:
+        arts = _art_in(s.get('blocks', []))
+        if arts:
+            slide_art[str(s['number'])] = arts
+    out = out.replace('__SLIDE_ART_JS__', js_str(slide_art))
+    out = out.replace('__ART_PACKAGED_JS__', js_str(GEN_FLAGS['art_packaged']))
 
     # Whether any block is an Instagram embed → shell conditionally loads
     # embed.js. Set during the render_slide_html loop above (render_media flips

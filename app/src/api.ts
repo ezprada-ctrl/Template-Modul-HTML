@@ -80,6 +80,34 @@ export async function saveDraft(name: string, module: ModuleData): Promise<void>
   });
 }
 
+// Changes an EXISTING draft's slug in place (slug is the Supabase primary
+// key - see draft_store.rename_draft). Rejects if newName is already taken
+// by a different draft, so this can't silently clobber someone else's work
+// the way saveDraft's own upsert-by-slug would if reused for this. Returns
+// the actual slug used - draft_store sanitizes the name server-side
+// (_safe_name), so what the caller typed may not survive unchanged.
+export async function renameDraft(name: string, newName: string): Promise<string> {
+  const res = await fetch(`${BASE}/api/drafts/${encodeURIComponent(name)}/rename`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ new_name: newName }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Gagal ganti nama draft');
+  return data.slug;
+}
+
+// Duplicates a draft under a new name - no dedicated backend endpoint,
+// just load the source + save under the new slug, both existing routes.
+// The existence check comes first so a typo'd/colliding name fails loudly
+// instead of silently overwriting whatever draft already had that slug.
+export async function copyDraft(name: string, newName: string): Promise<void> {
+  const check = await fetch(`${BASE}/api/drafts/${encodeURIComponent(newName)}`);
+  if (check.ok) throw new Error(`Nama "${newName}" sudah dipakai draft lain`);
+  const data = await loadDraft(name);
+  await saveDraft(newName, data);
+}
+
 // ---------------------------------------------------------- Command Center
 // Semua panggilan di bawah lewat BACKEND, bukan langsung ke Supabase: data
 // aktivitas cuma bisa dibaca pakai service_role key, dan key itu wajib tetap
@@ -393,4 +421,109 @@ export function compressImageToDataUri(file: File, maxDim = 1600, quality = 0.82
     };
     img.src = objectUrl;
   });
+}
+
+// ------------------------------------------------- Articulate 360 (paket ZIP)
+// ZIP-nya diupload UTUH ke Storage, gak diekstrak jadi ribuan objek di sana.
+// Alasannya: satu-satunya saat file lepasnya dibutuhkan adalah waktu paket
+// SCORM dirakit di browser (lihat scormZip.ts) — dan di titik itu kita bisa
+// baca isi ZIP-nya langsung. Simpan utuh = 1 objek storage per paket + gak ada
+// biaya request per-file, dan kuota Storage gratis gak habis buat metadata.
+const ART_PREFIX = 'articulate/';
+
+// 300MB. Bukan batas platform (upload-nya langsung ke Storage, gak lewat
+// Vercel) — ini pagar kuota: tier gratis Supabase Storage cuma 1GB TOTAL buat
+// SEMUA modul, jadi satu paket raksasa bisa menghabiskan jatah semua orang.
+const MAX_ART_BYTES = 300 * 1024 * 1024;
+
+export interface ArticulateInfo {
+  url: string;
+  path: string;
+  entry: string;
+  name: string;
+  size: number;
+  /** true = ZIP-nya punya imsmanifest.xml, jadi kontennya bisa lapor "selesai".
+   *  false = output Web/HTML biasa: tetap jalan & bisa diklik, tapi gak pernah
+   *  lapor apa-apa, jadi opsi "kunci sampai selesai" gak bisa dipakai. */
+  scorm: boolean;
+}
+
+// Cari file pembuka paket Articulate DARI imsmanifest.xml-nya, bukan nebak
+// nama file. Storyline pakai index_lms.html, Rise index.html, dan publish lama
+// kadang story.html — nebak berarti suatu saat salah tanpa gejala sampai
+// modulnya dibuka peserta.
+async function readArticulateEntry(file: File): Promise<{ entry: string; scorm: boolean }> {
+  const { ZipReader, BlobReader, TextWriter } = await import('@zip.js/zip.js');
+  const reader = new ZipReader(new BlobReader(file));
+  try {
+    const entries = await reader.getEntries();
+    const names = entries.map(e => e.filename);
+    // Paket Articulate kadang dibungkus satu folder induk (mis. "modul/"),
+    // kadang isinya langsung di akar ZIP. Root dideteksi dari letak
+    // imsmanifest.xml, bukan diasumsikan.
+    const manifest = entries.find(e => /(^|\/)imsmanifest\.xml$/i.test(e.filename));
+    if (manifest) {
+      const root = manifest.filename.replace(/imsmanifest\.xml$/i, '');
+      const xml = await (manifest as any).getData(new TextWriter()) as string;
+      // <resource ... adlcp:scormtype="sco" ... href="index_lms.html">
+      const sco = xml.match(/<resource\b[^>]*scormtype\s*=\s*"sco"[^>]*>/i)?.[0];
+      const href = (sco || xml).match(/\bhref\s*=\s*"([^"]+)"/i)?.[1];
+      if (href) return { entry: root + decodeURIComponent(href), scorm: true };
+    }
+    for (const guess of ['index_lms.html', 'index.html', 'story.html', 'story_html5.html']) {
+      const hit = names.find(n => n.toLowerCase().endsWith('/' + guess) || n.toLowerCase() === guess);
+      if (hit) return { entry: hit, scorm: !!manifest };
+    }
+    throw new Error('ZIP ini gak punya file pembuka HTML (index_lms.html / index.html). Pastikan yang diupload hasil Publish Articulate, bukan file .story mentah.');
+  } finally {
+    await reader.close();
+  }
+}
+
+export async function uploadArticulate(file: File): Promise<ArticulateInfo> {
+  if (!/\.zip$/i.test(file.name)) {
+    throw new Error('File harus .zip hasil Publish dari Articulate 360.');
+  }
+  if (file.size > MAX_ART_BYTES) {
+    throw new Error(`Paket maksimal 300MB (file ini ${(file.size / 1024 / 1024).toFixed(0)}MB).`);
+  }
+  // Dibaca DULU sebelum diupload: kalau ZIP-nya ternyata bukan paket yang
+  // valid, gak ada gunanya ngabisin kuota Storage buat menyimpannya.
+  const { entry, scorm } = await readArticulateEntry(file);
+  const { url, path } = await uploadFileToStorage(file, MEDIA_BUCKET, ART_PREFIX);
+  return { url, path, entry, name: file.name, size: file.size, scorm };
+}
+
+// Best-effort: paket yang bloknya dihapus gak perlu terus makan kuota. Gagal
+// hapus sengaja gak dilempar sebagai error — objek nyangkut itu cuma berantakan,
+// bukan bikin modulnya rusak.
+export async function deleteArticulate(path: string): Promise<void> {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !path) return;
+  try {
+    await fetch(`${SUPABASE_URL}/storage/v1/object/${MEDIA_BUCKET}/${path}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    });
+  } catch { /* ignore */ }
+}
+
+// Dipakai perakit paket SCORM (scormZip.ts) buat narik ZIP-nya balik dari
+// Storage saat export.
+export async function fetchArticulateZip(url: string): Promise<Blob> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Gagal ambil paket Articulate dari Storage (${res.status}).`);
+  return res.blob();
+}
+
+// Sama seperti generateHtml, tapi menandai bahwa HTML ini bakal dibungkus jadi
+// paket SCORM .zip — itu yang bikin generator memasang <iframe> Articulate
+// (folder articulate/ cuma ada di dalam ZIP, gak ada di export HTML tunggal).
+export async function generateHtmlForZip(module: ModuleData): Promise<string> {
+  const res = await fetch(`${BASE}/api/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...module, artPackaged: true }),
+  });
+  if (!res.ok) throw new Error('Gagal generate HTML');
+  return res.text();
 }

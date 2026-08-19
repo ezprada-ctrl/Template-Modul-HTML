@@ -112,3 +112,39 @@ def save_draft(name, data):
     path = os.path.join(LOCAL_DRAFTS_DIR, slug + '.json')
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def rename_draft(old_name, new_name):
+    """Renames a draft in place - `slug` IS the primary key (modul_drafts
+    table, see server/supabase_setup.sql), so this changes that key rather
+    than copying+deleting. Raises ValueError if new_name is already taken by
+    a DIFFERENT draft, so a rename can never silently clobber someone else's
+    draft the way save_draft's upsert-by-slug normally would (that upsert is
+    fine for autosave, which always targets its OWN slug - it's specifically
+    wrong here, where the whole point is landing on a name that might belong
+    to something else). Returns the actual slug used (name after
+    _safe_name() sanitizing), since what the caller typed may not survive
+    unchanged."""
+    old_slug = _safe_name(old_name)
+    new_slug = _safe_name(new_name)
+    if old_slug == new_slug:
+        return new_slug
+    if load_draft(new_slug) is not None:
+        raise ValueError(f'Nama "{new_slug}" sudah dipakai draft lain')
+
+    if USE_SUPABASE:
+        res = requests.patch(
+            f'{SUPABASE_URL}/rest/v1/modul_drafts',
+            params={'slug': f'eq.{old_slug}'},
+            headers=_headers(),
+            json={'slug': new_slug},
+            timeout=10,
+        )
+        res.raise_for_status()
+        return new_slug
+
+    old_path = os.path.join(LOCAL_DRAFTS_DIR, old_slug + '.json')
+    new_path = os.path.join(LOCAL_DRAFTS_DIR, new_slug + '.json')
+    if os.path.exists(old_path):
+        os.rename(old_path, new_path)
+    return new_slug
