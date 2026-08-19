@@ -439,6 +439,14 @@ const MAX_ART_BYTES = 300 * 1024 * 1024;
 export interface ArticulateInfo {
   url: string;
   path: string;
+  /** Folder di dalam ZIP yang jadi AKAR paket (tempat imsmanifest.xml duduk),
+   *  berakhiran '/' atau '' kalau isinya langsung di akar ZIP. Perakit paket
+   *  membuang awalan ini waktu menyalin, jadi isi paket selalu mendarat rata
+   *  di `articulate/<idBlok>/`. */
+  root: string;
+  /** File pembuka, RELATIF terhadap `root` — persis seperti yang nanti ditulis
+   *  jadi src iframe. Harus relatif: kalau dia bawa-bawa nama folder induk,
+   *  src-nya nunjuk ke folder yang sudah dibuang perakit → iframe 404. */
   entry: string;
   name: string;
   size: number;
@@ -452,7 +460,7 @@ export interface ArticulateInfo {
 // nama file. Storyline pakai index_lms.html, Rise index.html, dan publish lama
 // kadang story.html — nebak berarti suatu saat salah tanpa gejala sampai
 // modulnya dibuka peserta.
-async function readArticulateEntry(file: File): Promise<{ entry: string; scorm: boolean }> {
+async function readArticulateEntry(file: File): Promise<{ root: string; entry: string; scorm: boolean }> {
   const { ZipReader, BlobReader, TextWriter } = await import('@zip.js/zip.js');
   const reader = new ZipReader(new BlobReader(file));
   try {
@@ -468,11 +476,14 @@ async function readArticulateEntry(file: File): Promise<{ entry: string; scorm: 
       // <resource ... adlcp:scormtype="sco" ... href="index_lms.html">
       const sco = xml.match(/<resource\b[^>]*scormtype\s*=\s*"sco"[^>]*>/i)?.[0];
       const href = (sco || xml).match(/\bhref\s*=\s*"([^"]+)"/i)?.[1];
-      if (href) return { entry: root + decodeURIComponent(href), scorm: true };
+      if (href) return { root, entry: decodeURIComponent(href), scorm: true };
     }
     for (const guess of ['index_lms.html', 'index.html', 'story.html', 'story_html5.html']) {
       const hit = names.find(n => n.toLowerCase().endsWith('/' + guess) || n.toLowerCase() === guess);
-      if (hit) return { entry: hit, scorm: !!manifest };
+      if (hit) {
+        const i = hit.lastIndexOf('/');
+        return { root: i < 0 ? '' : hit.slice(0, i + 1), entry: hit.slice(i + 1), scorm: !!manifest };
+      }
     }
     throw new Error('ZIP ini gak punya file pembuka HTML (index_lms.html / index.html). Pastikan yang diupload hasil Publish Articulate, bukan file .story mentah.');
   } finally {
@@ -489,9 +500,9 @@ export async function uploadArticulate(file: File): Promise<ArticulateInfo> {
   }
   // Dibaca DULU sebelum diupload: kalau ZIP-nya ternyata bukan paket yang
   // valid, gak ada gunanya ngabisin kuota Storage buat menyimpannya.
-  const { entry, scorm } = await readArticulateEntry(file);
+  const { root, entry, scorm } = await readArticulateEntry(file);
   const { url, path } = await uploadFileToStorage(file, MEDIA_BUCKET, ART_PREFIX);
-  return { url, path, entry, name: file.name, size: file.size, scorm };
+  return { url, path, root, entry, name: file.name, size: file.size, scorm };
 }
 
 // Best-effort: paket yang bloknya dihapus gak perlu terus makan kuota. Gagal

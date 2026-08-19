@@ -432,6 +432,26 @@ def kc_items_for_slide(slide):
     return out
 
 
+def art_entry(b):
+    """File pembuka paket Articulate, RELATIF terhadap folder tujuan
+    `articulate/<idBlok>/`.
+
+    Perakit paket (scormZip.ts) membuang folder akar paket waktu menyalin,
+    jadi isinya selalu mendarat rata di `articulate/<idBlok>/`. Kalau src
+    iframe di sini masih bawa-bawa nama folder induk, dia nunjuk ke folder
+    yang sudah dibuang itu - iframe 404 dan kontennya gak pernah muncul.
+
+    Blok yang diupload SEBELUM artRoot ada menyimpan path lengkap (termasuk
+    folder induk) di artEntry; buat blok itu nama folder diturunkan di sini,
+    persis seperti yang dilakukan perakit, biar draft lama tetap cocok tanpa
+    perlu upload ulang.
+    """
+    raw = (b.get('artEntry') or 'index_lms.html').lstrip('/')
+    if b.get('artRoot') is not None:
+        return raw
+    return raw.rsplit('/', 1)[-1]
+
+
 ART_RATIOS = {'16:9': '56.25%', '4:3': '75%'}
 
 
@@ -455,7 +475,7 @@ def render_articulate(b):
     slide, tanpa nabrak status modul di LMS.
     """
     block_id = esc(b.get('id', 'art'))
-    entry = (b.get('artEntry') or 'index_lms.html').lstrip('/')
+    entry = art_entry(b)
     caption = _caption_html(b)
     GEN_FLAGS['has_articulate'] = True
 
@@ -1038,7 +1058,7 @@ def generate_html(module):
             if b.get('type') == 'articulate' and b.get('artUrl'):
                 found.append({
                     'block': b.get('id', 'art'),
-                    'entry': (b.get('artEntry') or 'index_lms.html').lstrip('/'),
+                    'entry': art_entry(b),
                     'lock': b.get('artLock', True) is not False,
                     'nama': b.get('artName') or 'Konten Articulate',
                 })

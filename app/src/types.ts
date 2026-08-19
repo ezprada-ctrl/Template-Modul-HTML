@@ -113,7 +113,15 @@ export interface Block {
   // browser (Export SCORM). Menyimpan utuh = 1 objek storage, bukan ribuan.
   artUrl?: string;      // URL publik ZIP-nya di Supabase Storage
   artPath?: string;     // path storage-nya (buat hapus kalau bloknya dibuang)
-  artEntry?: string;    // file pembuka, dibaca dari imsmanifest.xml paket itu (mis. index_lms.html)
+  // Folder akar paket DI DALAM ZIP (tempat imsmanifest.xml duduk). Dibuang
+  // perakit waktu menyalin, jadi isi paket selalu mendarat rata di
+  // `articulate/<idBlok>/`. Kosong = isinya memang langsung di akar ZIP.
+  artRoot?: string;
+  // File pembuka RELATIF terhadap artRoot (mis. index_lms.html) — ini yang
+  // jadi src iframe. Blok yang diupload sebelum artRoot ada menyimpan path
+  // lengkap termasuk folder induk di sini; generator & perakit sama-sama
+  // menurunkannya kembali jadi root+relatif, jadi draft lama tetap jalan.
+  artEntry?: string;
   artName?: string;     // nama file asli, buat ditampilkan di builder & modul
   artSize?: number;     // byte, buat peringatan ukuran paket akhir
   artRatio?: '16:9' | '4:3' | 'tinggi';  // 'tinggi' = kotak 80vh, buat Rise yang isinya panjang ke bawah

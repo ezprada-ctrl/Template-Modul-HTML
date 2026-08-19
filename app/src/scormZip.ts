@@ -39,6 +39,17 @@ export function articulateBlocks(module: ModuleData): Block[] {
   return out;
 }
 
+// Turunkan (root, entry) dari blok. Blok yang diupload SEBELUM artRoot ada
+// menyimpan path lengkap di artEntry (termasuk folder induk); di situ root
+// diturunkan dari path itu sendiri, supaya draft lama tetap terakit benar
+// tanpa perlu upload ulang.
+function artPaths(b: Block): { root: string; entry: string } {
+  const raw = (b.artEntry || 'index_lms.html').replace(/^\/+/, '');
+  if (b.artRoot !== undefined) return { root: b.artRoot, entry: raw };
+  const i = raw.lastIndexOf('/');
+  return i < 0 ? { root: '', entry: raw } : { root: raw.slice(0, i + 1), entry: raw.slice(i + 1) };
+}
+
 function xmlEsc(v: string) {
   return v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -139,13 +150,13 @@ export async function exportScormZip(
     });
     const zipBlob = await fetchArticulateZip(b.artUrl!);
     const reader = new ZipReader(new BlobReader(zipBlob));
+    let entryKetemu = false;
     try {
       const entries = await reader.getEntries();
       // Kalau paketnya dibungkus satu folder induk, folder itu DIBUANG dari
-      // path tujuan — biar `articulate/<id>/index_lms.html` selalu cocok sama
-      // yang ditulis generator, gak peduli cara publish-nya.
-      const entryFile = b.artEntry || 'index_lms.html';
-      const root = entryFile.includes('/') ? entryFile.slice(0, entryFile.lastIndexOf('/') + 1) : '';
+      // path tujuan — biar `articulate/<id>/<entry>` selalu cocok sama yang
+      // ditulis generator, gak peduli cara publish-nya.
+      const { root, entry } = artPaths(b);
       let n = 0;
       for (const e of entries) {
         n++;
@@ -162,6 +173,7 @@ export async function exportScormZip(
           level: SUDAH_TERKOMPRESI.test(rel) ? 0 : 1,
         });
         daftarFile.push(target);
+        if (rel === entry) entryKetemu = true;
         if (n % 25 === 0) {
           onProgress({
             fase: 'articulate',
@@ -172,6 +184,15 @@ export async function exportScormZip(
       }
     } finally {
       await reader.close();
+    }
+    // Sabuk pengaman: kalau file pembukanya gak ikut kesalin, paketnya bakal
+    // keluar "sukses" tapi iframe-nya 404 di dalam LMS — kegagalan yang baru
+    // ketahuan setelah diupload. Lebih baik gagal keras di sini.
+    if (!entryKetemu) {
+      throw new Error(
+        `File pembuka "${artPaths(b).entry}" gak ketemu di dalam ${label}. ` +
+        'Upload ulang ZIP-nya di blok Articulate itu (paket lama disimpan dengan struktur path yang berbeda).'
+      );
     }
   }
 

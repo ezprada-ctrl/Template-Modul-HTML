@@ -664,7 +664,7 @@ function ArticulateFields({ block, onChange, inp }: { block: Block; onChange: (p
       // yang baru gagal upload".
       const lama = block.artPath;
       onChange({
-        artUrl: info.url, artPath: info.path, artEntry: info.entry,
+        artUrl: info.url, artPath: info.path, artRoot: info.root, artEntry: info.entry,
         artName: info.name, artSize: info.size,
         // Output Web (tanpa imsmanifest) gak akan pernah lapor selesai, jadi
         // menguncinya = peserta terjebak. Dimatikan otomatis, bukan dibiarkan
