@@ -19,6 +19,16 @@ import { fetchArticulateZip, generateHtmlForZip } from './api';
 // (dan waktu tunggu penyusun modul) buat hasil yang praktis gak menyusut.
 const SUDAH_TERKOMPRESI = /\.(mp4|m4a|m4v|mp3|ogg|oga|ogv|webm|webp|jpe?g|png|gif|woff2?|zip|swf|avif)$/i;
 
+// Tanpa ini, tiap entri ditulis pakai "data descriptor" (ukuran & CRC ditaruh
+// SESUDAH datanya, karena penulis stream belum tau ukurannya waktu header
+// dibuat). Formatnya sah, tapi itu bentuk yang paling sering bikin unzip lawas
+// di sisi server rewel — dan LMS membongkar paketnya di server, bukan di
+// browser. Kita gak butuh itu: tiap entri sudah utuh di memori sebelum
+// ditulis, jadi ukuran & CRC-nya memang sudah diketahui di muka. Diuji: dengan
+// opsi ini, 0 dari sekian entri pakai data descriptor, dan hasilnya sedikit
+// lebih kecil.
+const OPSI_ENTRI = { dataDescriptor: false } as const;
+
 export interface ZipProgress {
   fase: 'html' | 'articulate' | 'manifest' | 'selesai';
   pesan: string;
@@ -138,7 +148,7 @@ export async function exportScormZip(
   const writer = new ZipWriter(tujuan.stream ?? blobWriter!, { bufferedWrite: false });
 
   const daftarFile: string[] = ['index.html'];
-  await writer.add('index.html', new TextReader(html));
+  await writer.add('index.html', new TextReader(html), OPSI_ENTRI);
 
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i];
@@ -157,9 +167,12 @@ export async function exportScormZip(
       // path tujuan — biar `articulate/<id>/<entry>` selalu cocok sama yang
       // ditulis generator, gak peduli cara publish-nya.
       const { root, entry } = artPaths(b);
+      // Penyebutnya file yang benar-benar bakal disalin - kalau pakai
+      // entries.length mentah, entri direktori & file di luar root ikut
+      // kehitung dan persennya gak pernah nyampe 100.
+      const totalSalin = entries.filter(e => !e.directory && (!root || e.filename.startsWith(root))).length;
       let n = 0;
       for (const e of entries) {
-        n++;
         if (e.directory) continue;
         if (root && !e.filename.startsWith(root)) continue;
         const rel = root ? e.filename.slice(root.length) : e.filename;
@@ -170,15 +183,17 @@ export async function exportScormZip(
         // seluruh paket.
         const data: Blob = await e.getData!(new BlobWriter());
         await writer.add(target, new BlobReader(data), {
+          ...OPSI_ENTRI,
           level: SUDAH_TERKOMPRESI.test(rel) ? 0 : 1,
         });
         daftarFile.push(target);
         if (rel === entry) entryKetemu = true;
+        n++;
         if (n % 25 === 0) {
           onProgress({
             fase: 'articulate',
             pesan: `Membungkus ${label}…`,
-            persen: Math.round((n / entries.length) * 100),
+            persen: Math.round((n / totalSalin) * 100),
           });
         }
       }
@@ -198,7 +213,7 @@ export async function exportScormZip(
 
   onProgress({ fase: 'manifest', pesan: 'Menulis imsmanifest.xml…', persen: null });
   const manifest = buildManifest(slug, module.title || 'Modul E-Learning', daftarFile);
-  await writer.add('imsmanifest.xml', new TextReader(manifest));
+  await writer.add('imsmanifest.xml', new TextReader(manifest), OPSI_ENTRI);
 
   const hasil = await writer.close();
 
