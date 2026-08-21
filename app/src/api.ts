@@ -534,9 +534,10 @@ export async function uploadArticulate(
     const mb = (file.size / 1024 / 1024).toFixed(0);
     throw new Error(keR2
       ? `Paket maksimal ${batas / 1024 / 1024}MB (file ini ${mb}MB).`
-      : `Paket ini ${mb}MB, sedangkan penyimpanan cadangan (Supabase) mematok 50MB `
-        + `dan itu batas keras paket gratisnya. Pasang kredensial Cloudflare R2 di `
-        + `backend supaya paket sampai 300MB bisa diupload.`);
+      : `Paket ini ${mb}MB, lewat batas 50MB per file. Kecilkan paketnya waktu `
+        + `Publish di Articulate: turunkan kualitas video/audio, dan pilih `
+        + `kompresi gambar yang lebih rapat. Kalau tetap gak muat, pecah `
+        + `materinya jadi beberapa paket dan pasang sebagai blok terpisah.`);
   }
 
   // Dibaca DULU sebelum diupload: kalau ZIP-nya ternyata bukan paket yang
