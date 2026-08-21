@@ -431,13 +431,42 @@ export function compressImageToDataUri(file: File, maxDim = 1600, quality = 0.82
 // biaya request per-file, dan kuota Storage gratis gak habis buat metadata.
 const ART_PREFIX = 'articulate/';
 
-// 300MB. Bukan batas platform (upload-nya langsung ke Storage, gak lewat
-// Vercel) — ini pagar kuota: tier gratis Supabase Storage cuma 1GB TOTAL buat
-// SEMUA modul, jadi satu paket raksasa bisa menghabiskan jatah semua orang.
-const MAX_ART_BYTES = 300 * 1024 * 1024;
+// Batas ukuran paket Articulate, beda per tempat simpan karena sifat batasnya
+// memang beda:
+//  - R2       : 300MB. R2 gak mematok ukuran per-file dan kuotanya 10GB, jadi
+//               ini murni pagar kewarasan supaya satu paket keliru gak
+//               menghabiskan sepertiga kuota dalam sekali upload.
+//  - Supabase : 50MB. Ini batas KERAS paket gratis Supabase, bukan pilihan
+//               kita - gak bisa dinaikkan dari dashboard sama sekali.
+//               Menaikkan angka di sini cuma memindahkan kegagalan ke tengah
+//               upload, bukan menghilangkannya.
+const MAX_ART_BYTES_R2 = 300 * 1024 * 1024;
+const MAX_ART_BYTES_SUPABASE = 50 * 1024 * 1024;
+
+// Jawaban backend di-cache: ditanya tiap kali pengguna milih file, dan
+// jawabannya gak berubah selama halaman kebuka.
+let _r2Ready: boolean | null = null;
+async function r2Tersedia(): Promise<boolean> {
+  if (_r2Ready !== null) return _r2Ready;
+  try {
+    const res = await fetch(`${BASE}/api/r2/configured`);
+    _r2Ready = res.ok ? !!(await res.json()).configured : false;
+  } catch {
+    _r2Ready = false;
+  }
+  return _r2Ready;
+}
 
 export interface ArticulateInfo {
+  /** Tempat paket ini benar-benar disimpan. 'r2' = Cloudflare R2 (jalur baru,
+   *  batas 300MB, kuota 10GB terpisah). 'supabase' = jalur lama, dipakai hanya
+   *  kalau kredensial R2 belum dipasang di backend. Blok yang diupload sebelum
+   *  R2 ada tidak punya field ini dan diperlakukan sebagai 'supabase'. */
+  storage: 'r2' | 'supabase';
+  /** URL publik - HANYA terisi untuk 'supabase'. Bucket R2 sengaja tertutup,
+   *  jadi paket R2 dibaca lewat URL bertanda tangan yang diminta saat perlu. */
   url: string;
+  /** Alamat objek di penyimpanannya: path Supabase, atau key R2. */
   path: string;
   /** Folder di dalam ZIP yang jadi AKAR paket (tempat imsmanifest.xml duduk),
    *  berakhiran '/' atau '' kalau isinya langsung di akar ZIP. Perakit paket
@@ -491,26 +520,92 @@ async function readArticulateEntry(file: File): Promise<{ root: string; entry: s
   }
 }
 
-export async function uploadArticulate(file: File): Promise<ArticulateInfo> {
+export async function uploadArticulate(
+  file: File,
+  onProgress?: (persen: number) => void,
+): Promise<ArticulateInfo> {
   if (!/\.zip$/i.test(file.name)) {
     throw new Error('File harus .zip hasil Publish dari Articulate 360.');
   }
-  if (file.size > MAX_ART_BYTES) {
-    throw new Error(`Paket maksimal 300MB (file ini ${(file.size / 1024 / 1024).toFixed(0)}MB).`);
+
+  const keR2 = await r2Tersedia();
+  const batas = keR2 ? MAX_ART_BYTES_R2 : MAX_ART_BYTES_SUPABASE;
+  if (file.size > batas) {
+    const mb = (file.size / 1024 / 1024).toFixed(0);
+    throw new Error(keR2
+      ? `Paket maksimal ${batas / 1024 / 1024}MB (file ini ${mb}MB).`
+      : `Paket ini ${mb}MB, sedangkan penyimpanan cadangan (Supabase) mematok 50MB `
+        + `dan itu batas keras paket gratisnya. Pasang kredensial Cloudflare R2 di `
+        + `backend supaya paket sampai 300MB bisa diupload.`);
   }
+
   // Dibaca DULU sebelum diupload: kalau ZIP-nya ternyata bukan paket yang
-  // valid, gak ada gunanya ngabisin kuota Storage buat menyimpannya.
+  // valid, gak ada gunanya ngabisin kuota penyimpanan buat menyimpannya.
   const { root, entry, scorm } = await readArticulateEntry(file);
+
+  if (keR2) {
+    const key = await unggahKeR2(file, onProgress);
+    return { storage: 'r2', url: '', path: key, root, entry, name: file.name, size: file.size, scorm };
+  }
   const { url, path } = await uploadFileToStorage(file, MEDIA_BUCKET, ART_PREFIX);
-  return { url, path, root, entry, name: file.name, size: file.size, scorm };
+  return { storage: 'supabase', url, path, root, entry, name: file.name, size: file.size, scorm };
+}
+
+// Upload langsung browser -> R2 pakai URL bertanda tangan dari backend. Byte
+// filenya gak pernah lewat backend, jadi paket 100MB gak kena batas request
+// apa pun. Sengaja pakai XHR, bukan fetch, supaya ada progres upload - buat
+// file 100MB di jaringan kantor, layar diam tanpa kabar gak bisa dibedakan
+// dari aplikasi yang hang.
+async function unggahKeR2(file: File, onProgress?: (persen: number) => void): Promise<string> {
+  const res = await fetch(`${BASE}/api/r2/upload-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename: file.name }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Gagal minta izin upload (${res.status})`);
+
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', data.uploadUrl, true);
+    xhr.setRequestHeader('Content-Type', 'application/zip');
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) { resolve(); return; }
+      // 403 di sini hampir selalu berarti CORS bucket R2 belum mengizinkan
+      // origin builder - kredensial yang salah sudah gagal lebih dulu waktu
+      // minta URL ke backend, bukan di sini.
+      reject(new Error(`R2 menolak upload (${xhr.status}). ` + (xhr.status === 403
+        ? 'Cek pengaturan CORS bucket R2 - origin builder harus diizinkan buat PUT.'
+        : String(xhr.responseText || '').slice(0, 200))));
+    };
+    xhr.onerror = () => reject(new Error(
+      'Upload ke R2 putus. Cek koneksi, atau CORS bucket R2 belum mengizinkan origin ini.'));
+    xhr.send(file);
+  });
+
+  return data.key as string;
 }
 
 // Best-effort: paket yang bloknya dihapus gak perlu terus makan kuota. Gagal
 // hapus sengaja gak dilempar sebagai error — objek nyangkut itu cuma berantakan,
 // bukan bikin modulnya rusak.
-export async function deleteArticulate(path: string): Promise<void> {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !path) return;
+export async function deleteArticulate(path: string, storage?: 'r2' | 'supabase'): Promise<void> {
+  if (!path) return;
   try {
+    if (storage === 'r2') {
+      const res = await fetch(`${BASE}/api/r2/delete-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: path }),
+      });
+      if (!res.ok) return;
+      await fetch((await res.json()).deleteUrl, { method: 'DELETE' });
+      return;
+    }
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
     await fetch(`${SUPABASE_URL}/storage/v1/object/${MEDIA_BUCKET}/${path}`, {
       method: 'DELETE',
       headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
@@ -520,9 +615,26 @@ export async function deleteArticulate(path: string): Promise<void> {
 
 // Dipakai perakit paket SCORM (scormZip.ts) buat narik ZIP-nya balik dari
 // Storage saat export.
-export async function fetchArticulateZip(url: string): Promise<Blob> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Gagal ambil paket Articulate dari Storage (${res.status}).`);
+export async function fetchArticulateZip(
+  url: string,
+  opts?: { storage?: 'r2' | 'supabase'; key?: string },
+): Promise<Blob> {
+  let alamat = url;
+  if (opts?.storage === 'r2') {
+    // Bucket R2 tertutup, jadi tiap penarikan minta URL bertanda tangan yang
+    // berumur pendek. Sengaja diminta SAAT dibutuhkan, bukan disimpan di
+    // draft: URL yang disimpan pasti sudah kedaluwarsa saat dipakai lagi.
+    const res = await fetch(`${BASE}/api/r2/download-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: opts.key }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Gagal minta izin unduh paket (${res.status}).`);
+    alamat = data.downloadUrl;
+  }
+  const res = await fetch(alamat);
+  if (!res.ok) throw new Error(`Gagal ambil paket Articulate dari penyimpanan (${res.status}).`);
   return res.blob();
 }
 

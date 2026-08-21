@@ -649,6 +649,7 @@ function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Pa
 // --------------------------------------------------------------- Media block
 function ArticulateFields({ block, onChange, inp }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle }) {
   const [busy, setBusy] = useState(false);
+  const [persen, setPersen] = useState<number | null>(null);
   const [err, setErr] = useState('');
   const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
   const terkunci = block.artLock !== false;
@@ -658,12 +659,14 @@ function ArticulateFields({ block, onChange, inp }: { block: Block; onChange: (p
     setErr('');
     setBusy(true);
     try {
-      const info = await uploadArticulate(f);
+      const info = await uploadArticulate(f, setPersen);
       // Paket lama dibuang setelah yang baru berhasil naik — bukan sebelumnya,
       // biar blok ini gak pernah ada di keadaan "paket lama sudah hilang tapi
       // yang baru gagal upload".
       const lama = block.artPath;
+      const lamaStorage = block.artStorage;
       onChange({
+        artStorage: info.storage,
         artUrl: info.url, artPath: info.path, artRoot: info.root, artEntry: info.entry,
         artName: info.name, artSize: info.size,
         // Output Web (tanpa imsmanifest) gak akan pernah lapor selesai, jadi
@@ -671,7 +674,7 @@ function ArticulateFields({ block, onChange, inp }: { block: Block; onChange: (p
         // jadi jebakan yang baru ketahuan pas modulnya dipakai.
         artLock: info.scorm ? block.artLock !== false : false,
       });
-      if (lama) deleteArticulate(lama);
+      if (lama) deleteArticulate(lama, lamaStorage);
       if (!info.scorm) {
         setErr('Paket ini gak punya imsmanifest.xml (kemungkinan hasil publish "Web", bukan SCORM/LMS). Kontennya tetap jalan penuh, tapi gak bisa lapor selesai — jadi opsi kunci dimatikan. Publish ulang sebagai LMS/SCORM 1.2 kalau mau dikunci.');
       }
@@ -679,6 +682,7 @@ function ArticulateFields({ block, onChange, inp }: { block: Block; onChange: (p
       setErr(e.message);
     } finally {
       setBusy(false);
+      setPersen(null);
     }
   }
 
@@ -691,12 +695,28 @@ function ArticulateFields({ block, onChange, inp }: { block: Block; onChange: (p
 
       <input type="file" accept=".zip" disabled={busy}
         onChange={e => pilihFile(e.target.files?.[0])} />
-      {busy && <p className="hint" style={{ fontSize: 11 }}>Membaca &amp; mengunggah paket… (file besar bisa beberapa menit)</p>}
+      {busy && (
+        <p className="hint" style={{ fontSize: 11 }}>
+          {persen === null
+            ? 'Membaca paket…'
+            : `Mengunggah… ${persen}%`}
+          {persen !== null && (
+            <span style={{ display: 'block', height: 3, background: 'var(--border)', borderRadius: 2, marginTop: 5 }}>
+              <span style={{ display: 'block', height: '100%', width: `${persen}%`, background: 'var(--success, #16a34a)', borderRadius: 2 }} />
+            </span>
+          )}
+        </p>
+      )}
       {err && <p style={{ color: 'var(--danger, #c0392b)', fontSize: 11.5, lineHeight: 1.5 }}>{err}</p>}
 
       {block.artUrl && (
         <div style={{ fontSize: 11.5, background: 'var(--surface-2, #f4f4f5)', borderRadius: 8, padding: '8px 10px', margin: '8px 0' }}>
-          <div><strong>{block.artName}</strong> · {((block.artSize || 0) / 1024 / 1024).toFixed(1)}MB</div>
+          <div>
+            <strong>{block.artName}</strong> · {((block.artSize || 0) / 1024 / 1024).toFixed(1)}MB
+            <span style={{ color: 'var(--text-dim)' }}>
+              {' · '}{block.artStorage === 'r2' ? 'Cloudflare R2' : 'Supabase'}
+            </span>
+          </div>
           <div style={{ color: 'var(--text-dim)' }}>File pembuka: <code>{block.artEntry}</code></div>
         </div>
       )}

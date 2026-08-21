@@ -52,7 +52,7 @@ export function articulateBlocks(module: ModuleData): Block[] {
   const out: Block[] = [];
   const walk = (blocks?: Block[]) => {
     for (const b of blocks || []) {
-      if (b.type === 'articulate' && b.artUrl) out.push(b);
+      if (b.type === 'articulate' && (b.artUrl || b.artPath)) out.push(b);
       else if (b.type === 'grid') walk(b.blocks);
     }
   };
@@ -215,7 +215,10 @@ export async function exportScormZip(
       pesan: `Mengambil ${label} (${i + 1}/${blocks.length})…`,
       persen: null,
     });
-    const zipBlob = await fetchArticulateZip(b.artUrl!);
+    const zipBlob = await fetchArticulateZip(b.artUrl || '', {
+      storage: b.artStorage,
+      key: b.artPath,
+    });
     const reader = new ZipReader(new BlobReader(zipBlob));
     let entryKetemu = false;
     try {

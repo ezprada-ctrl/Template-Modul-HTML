@@ -12,3 +12,15 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
+      # Cloudflare R2 - penyimpanan paket Articulate. Sengaja HANYA di backend:
+      # kunci ini punya izin tulis+hapus penuh atas bucket, jadi tidak boleh
+      # sampai ke browser. Kalau keempatnya kosong, aplikasi otomatis jatuh ke
+      # Supabase (dengan batas keras 50MB per paket).
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false

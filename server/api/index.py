@@ -1,6 +1,7 @@
 import io
 import os
 import sys
+import uuid
 
 # Vercel's Python runtime imports this file dynamically (not via a normal
 # `python index.py` invocation), so this directory isn't automatically on
@@ -17,6 +18,7 @@ import generator
 import pptx_extract
 import draft_store
 import activity_store
+import r2
 
 app = Flask(__name__)
 
@@ -113,6 +115,85 @@ def api_extract_pptx():
     finally:
         _storage_delete(PPTX_BUCKET, path)
     return jsonify({'slides': slides})
+
+
+# ------------------------------------------------------------- Cloudflare R2
+# Paket Articulate disimpan di R2, bukan Supabase Storage. Alasannya ada di
+# server/api/r2.py - ringkasnya: Supabase gratis mematok 50MB/file (gak bisa
+# dinaikkan) dan kuota 1GB-nya dipakai barengan semua modul, sementara R2
+# kasih 10GB gratis + egress gratis.
+#
+# Endpoint di bawah CUMA membagikan URL bertanda tangan berumur pendek. Byte
+# file-nya sendiri gak pernah lewat sini, jadi paket 100MB gak kena batas
+# request backend sama sekali.
+
+# Umur URL upload. Dibuat longgar karena upload 100MB lewat jaringan kantor
+# bisa lama; kalau kependekan, upload yang jalannya benar bisa gagal di tengah.
+R2_UPLOAD_TTL = 3600
+# Umur URL unduh. Dipakai perakit paket SCORM di browser, sekali tarik lalu
+# selesai - gak perlu berumur panjang.
+R2_DOWNLOAD_TTL = 900
+
+
+@app.get('/api/r2/configured')
+def api_r2_configured():
+    """Apakah backend punya kredensial R2? Frontend menanyakan ini SEBELUM
+    pengguna milih file, biar bisa jatuh ke jalur Supabase (dengan batas 50MB)
+    secara sadar alih-alih gagal misterius di tengah upload."""
+    return jsonify({'configured': r2.is_configured()})
+
+
+@app.post('/api/r2/upload-url')
+def api_r2_upload_url():
+    """URL sementara buat browser meng-upload satu paket Articulate langsung
+    ke R2. Nama objek DIBUAT DI SINI, bukan diterima dari klien - kalau klien
+    yang menentukan, dia bisa menimpa objek milik modul lain."""
+    if not r2.is_configured():
+        return jsonify({'error': 'Kredensial R2 belum diset di backend.'}), 503
+    data = request.get_json(silent=True) or {}
+    nama = (data.get('filename') or 'paket.zip').strip()
+    # Cuma ekstensi yang dipertahankan dari nama asli; sisanya dibuang supaya
+    # nama file aneh dari pengguna gak pernah jadi bagian dari path objek.
+    ext = 'zip' if nama.lower().endswith('.zip') else 'bin'
+    key = f"articulate/{uuid.uuid4().hex}.{ext}"
+    try:
+        url = r2.presign('PUT', key, expires=R2_UPLOAD_TTL)
+    except Exception as e:
+        return jsonify({'error': f'Gagal membuat URL upload: {e}'}), 500
+    return jsonify({'uploadUrl': url, 'key': key, 'expiresIn': R2_UPLOAD_TTL})
+
+
+@app.post('/api/r2/download-url')
+def api_r2_download_url():
+    """URL sementara buat menarik balik paket saat Export SCORM."""
+    if not r2.is_configured():
+        return jsonify({'error': 'Kredensial R2 belum diset di backend.'}), 503
+    key = ((request.get_json(silent=True) or {}).get('key') or '').strip()
+    # Bucket ini cuma dipakai buat paket Articulate. Menolak key di luar
+    # prefix itu bikin endpoint ini gak bisa dipakai memancing objek lain
+    # kalau suatu saat bucket-nya dipakai buat hal lain juga.
+    if not key.startswith('articulate/'):
+        return jsonify({'error': 'key tidak valid'}), 400
+    try:
+        return jsonify({'downloadUrl': r2.presign('GET', key, expires=R2_DOWNLOAD_TTL)})
+    except Exception as e:
+        return jsonify({'error': f'Gagal membuat URL unduh: {e}'}), 500
+
+
+@app.post('/api/r2/delete-url')
+def api_r2_delete_url():
+    """URL sementara buat menghapus paket yang bloknya dibuang/diganti. Tanpa
+    ini, tiap penggantian file bakal meninggalkan objek yatim yang terus makan
+    kuota 10GB."""
+    if not r2.is_configured():
+        return jsonify({'error': 'Kredensial R2 belum diset di backend.'}), 503
+    key = ((request.get_json(silent=True) or {}).get('key') or '').strip()
+    if not key.startswith('articulate/'):
+        return jsonify({'error': 'key tidak valid'}), 400
+    try:
+        return jsonify({'deleteUrl': r2.presign('DELETE', key, expires=300)})
+    except Exception as e:
+        return jsonify({'error': f'Gagal membuat URL hapus: {e}'}), 500
 
 
 @app.get('/api/drafts')

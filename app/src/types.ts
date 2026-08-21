@@ -111,7 +111,14 @@ export interface Block {
   // bukan diekstrak ke sana per-file: file Articulate bisa ratusan-ribuan,
   // dan yang butuh file lepas cuma satu saat — waktu paket SCORM dirakit di
   // browser (Export SCORM). Menyimpan utuh = 1 objek storage, bukan ribuan.
-  artUrl?: string;      // URL publik ZIP-nya di Supabase Storage
+  // Tempat paket ini disimpan. Blok yang diupload SEBELUM Cloudflare R2 dipakai
+  // tidak punya field ini — dianggap 'supabase', jadi draft lama tetap jalan
+  // tanpa perlu upload ulang.
+  artStorage?: 'r2' | 'supabase';
+  // URL publik ZIP-nya. Hanya terisi untuk penyimpanan Supabase; bucket R2
+  // tertutup, jadi paket R2 dibaca lewat URL bertanda tangan yang diminta
+  // saat perlu (URL yang disimpan pasti sudah kedaluwarsa waktu dipakai lagi).
+  artUrl?: string;
   artPath?: string;     // path storage-nya (buat hapus kalau bloknya dibuang)
   // Folder akar paket DI DALAM ZIP (tempat imsmanifest.xml duduk). Dibuang
   // perakit waktu menyalin, jadi isi paket selalu mendarat rata di
