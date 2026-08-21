@@ -27,7 +27,18 @@ const SUDAH_TERKOMPRESI = /\.(mp4|m4a|m4v|mp3|ogg|oga|ogv|webm|webp|jpe?g|png|gi
 // ditulis, jadi ukuran & CRC-nya memang sudah diketahui di muka. Diuji: dengan
 // opsi ini, 0 dari sekian entri pakai data descriptor, dan hasilnya sedikit
 // lebih kecil.
-const OPSI_ENTRI = { dataDescriptor: false } as const;
+const OPSI_ENTRI = {
+  dataDescriptor: false,
+  // Tanpa ini, tiap entri bawa extra field Unix ("UT" timestamp + UID/GID) -
+  // sesuatu yang gak pernah ada di ZIP buatan Windows/Articulate biasa.
+  // Dicurigai jadi biang KLC menolak paket dengan pesan "Zip file doesn't
+  // contain index.html" padahal index.html ada persis di posisi pertama:
+  // kalau pengurai ZIP di sisi KLC itu bikinan sendiri (bukan pustaka ZIP
+  // standar) dan gak menangani extra field asing dengan benar, dia bisa
+  // salah hitung offset lalu gagal membaca entri berikutnya sama sekali.
+  // Dimatikan biar hasilnya sedekat mungkin ke ZIP paling polos.
+  extendedTimestamp: false,
+} as const;
 
 export interface ZipProgress {
   fase: 'html' | 'articulate' | 'manifest' | 'selesai';
