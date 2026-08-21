@@ -14,6 +14,9 @@
 
 import type { Block, ModuleData } from './types';
 import { fetchArticulateZip, generateHtmlForZip } from './api';
+// Kenapa gambar harus ikut dibungkus & bukan tetap nunjuk Storage: lihat
+// komentar pembuka assetEmbed.ts.
+import { namaAset, urlGambar } from './assetEmbed';
 
 // Ekstensi yang isinya SUDAH terkompresi. Mendeflate ulang cuma bakar CPU
 // (dan waktu tunggu penyusun modul) buat hasil yang praktis gak menyusut.
@@ -112,42 +115,6 @@ ${fileTags}
   </resources>
 </manifest>
 `;
-}
-
-// ---------------------------------------------------------------- aset gambar
-//
-// Gambar (sampul & blok gambar) disimpan di Supabase Storage, jadi HTML hasil
-// generator menunjuk ke URL absolut https://<proyek>.supabase.co/... Itu jalan
-// waktu modulnya dibuka dari browser penyusun, tapi TIDAK di dalam LMS: paket
-// SCORM dibongkar dan disajikan dari server KLC, di jaringan yang memblokir
-// host luar - hasilnya sampul polos abu-abu dan blok gambar kosong (persis
-// gejala yang dilaporkan). Paket SCORM harus mandiri: setiap gambar ditarik
-// sekali di sini, ditulis ke `assets/` di dalam ZIP, dan URL-nya di HTML
-// ditukar jadi path relatif.
-//
-// Cuma gambar. Video/audio sengaja dibiarkan menunjuk ke Storage: ukurannya
-// bisa ratusan MB dan ikut membengkakkan paket lewat batas upload LMS.
-const EKSTENSI_GAMBAR = /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i;
-
-/** Semua URL gambar absolut yang dipakai HTML, unik, urut kemunculan. */
-function urlGambar(html: string): string[] {
-  const out = new Set<string>();
-  // Ditangkap dari src="..." maupun background-image:url('...') sekaligus -
-  // keduanya berhenti di kutip/kurung/spasi, jadi satu pola cukup.
-  const re = /https?:\/\/[^"'()\s\\]+/g;
-  for (const m of html.match(re) || []) {
-    if (EKSTENSI_GAMBAR.test(m)) out.add(m);
-  }
-  return [...out];
-}
-
-function namaAset(url: string, i: number): string {
-  const bersih = url.split(/[?#]/)[0];
-  const ext = (bersih.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase();
-  // Nama sengaja diseragamkan (bukan nama asli file): nama unggahan pengguna
-  // sering panjang & mengandung spasi/karakter non-ASCII, dan panjang path
-  // adalah hal yang justru bikin KLC menolak paket (lihat BATAS_PATH).
-  return `assets/img${i + 1}.${ext}`;
 }
 
 async function bukaTujuan(namaFile: string) {

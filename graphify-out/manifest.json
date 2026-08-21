@@ -335,9 +335,9 @@
     "semantic_hash": "8a6643a420fdad6bfb583523bc6cef16"
   },
   "app/src/scormZip.ts": {
-    "mtime": 1787280550.3188684,
-    "seen": 1787280592.2296576,
-    "ast_hash": "ff76e4c1a6858d5aaad2f8a2e89827a3",
+    "mtime": 1787299995.8020217,
+    "seen": 1787300108.6915584,
+    "ast_hash": "9406e7115cdcf2df1a36548f0ca062db",
     "semantic_hash": ""
   },
   "server/api/r2.py": {

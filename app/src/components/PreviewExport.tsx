@@ -3,6 +3,7 @@ import type { ModuleData } from '../types';
 import { normalizeModule } from '../types';
 import { generateHtml, listDrafts, loadDraft, saveDraft, renameDraft, copyDraft } from '../api';
 import { articulateBlocks, exportScormZip, type ZipProgress } from '../scormZip';
+import { sematkanGambarDataUri } from '../assetEmbed';
 
 interface Props {
   module: ModuleData;
@@ -28,8 +29,27 @@ export default function PreviewExport({ module, setModule }: Props) {
 
   async function doExport() {
     setError('');
+    setStatus('');
     try {
-      const out = await generateHtml(module);
+      const mentah = await generateHtml(module);
+      // Gambar disematkan jadi data URI dulu. Tanpa ini file HTML-nya cuma
+      // MENUNJUK ke Supabase Storage: kelihatan normal waktu dibuka di laptop
+      // sendiri, tapi gambarnya hilang begitu diupload ke KLC (halamannya
+      // disajikan dari server LMS yang gak menjangkau host luar).
+      setStatus('Menyematkan gambar…');
+      const { html: out, gagal, jumlah } = await sematkanGambarDataUri(
+        mentah,
+        (i, total) => setStatus(`Menyematkan gambar (${i}/${total})…`),
+      );
+      // Baris status di bawah tombol warnanya hijau (sukses), jadi kabar
+      // "ada yang gagal" gak boleh nebeng di situ - itu masuk baris error.
+      setStatus(jumlah ? `${jumlah} gambar ikut tersemat di file HTML.` : '');
+      if (gagal.length) {
+        setError(
+          `${gagal.length} gambar gagal ditarik dan cuma jadi tautan — gambar itu bakal kosong di LMS. ` +
+          `Coba export ulang; kalau tetap gagal, upload ulang gambarnya di modul.`,
+        );
+      }
       const blob = new Blob([out], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

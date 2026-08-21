@@ -2925,7 +2925,7 @@
       "file_type": "code",
       "norm_label": "fetcharticulatezip()",
       "source_file": "app/src/api.ts",
-      "source_location": "L618"
+      "source_location": "L619"
     },
     {
       "id": "app_src_api_generatehtmlforzip",
@@ -2937,7 +2937,7 @@
       "file_type": "code",
       "norm_label": "generatehtmlforzip()",
       "source_file": "app/src/api.ts",
-      "source_location": "L644"
+      "source_location": "L645"
     },
     {
       "id": "app_src_components_previewexport_previewexport_doexportscorm",
@@ -3429,7 +3429,7 @@
       "file_type": "code",
       "norm_label": "deletearticulate()",
       "source_file": "app/src/api.ts",
-      "source_location": "L595"
+      "source_location": "L596"
     },
     {
       "id": "app_src_api_extractpptx",
@@ -3489,7 +3489,7 @@
       "file_type": "code",
       "norm_label": "unggahker2()",
       "source_file": "app/src/api.ts",
-      "source_location": "L559"
+      "source_location": "L560"
     },
     {
       "id": "app_src_api_uploadarticulate",
@@ -9220,7 +9220,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/api.ts",
-      "source_location": "L544",
+      "source_location": "L545",
       "weight": 1.0
     },
     {
@@ -9232,7 +9232,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/api.ts",
-      "source_location": "L547",
+      "source_location": "L548",
       "weight": 1.0
     },
     {
@@ -9244,7 +9244,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/api.ts",
-      "source_location": "L550",
+      "source_location": "L551",
       "weight": 1.0
     },
     {
@@ -15298,7 +15298,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/api.ts",
-      "source_location": "L559",
+      "source_location": "L560",
       "weight": 1.0
     },
     {
@@ -15309,7 +15309,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/api.ts",
-      "source_location": "L595",
+      "source_location": "L596",
       "weight": 1.0
     },
     {
@@ -15320,7 +15320,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/api.ts",
-      "source_location": "L618",
+      "source_location": "L619",
       "weight": 1.0
     },
     {
@@ -15342,7 +15342,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/api.ts",
-      "source_location": "L644",
+      "source_location": "L645",
       "weight": 1.0
     },
     {
@@ -23321,5 +23321,5 @@
       "source_file": "Panduan-Fitur-Template-Modul-Ikram.html"
     }
   ],
-  "built_at_commit": "902e3bfe0addacff943f9964fcb9553d19c6e187"
+  "built_at_commit": "2cf74338f022948f5a01aca4c4d959fbfa873734"
 }
