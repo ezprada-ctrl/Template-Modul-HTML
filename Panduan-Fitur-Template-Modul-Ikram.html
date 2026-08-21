@@ -1,0 +1,916 @@
+<meta charset="utf-8">
+<title>Panduan Fitur — Template Modul Ikram</title>
+<style>
+  :root{
+    --paper: #faf6ec;
+    --paper-2: #f2ead9;
+    --ink: #1e2a3b;
+    --ink-dim: #4a5568;
+    --navy: #1b2a4a;
+    --navy-2: #2a3d63;
+    --gold: #a8792e;
+    --gold-soft: rgba(168,121,46,0.14);
+    --gold-line: rgba(168,121,46,0.35);
+    --muted: #8b7f68;
+    --border: rgba(30,42,59,0.13);
+    --card: #ffffff;
+    --danger: #b3432f;
+    --danger-soft: rgba(179,67,47,0.10);
+    --shadow: 0 1px 2px rgba(30,42,59,0.04), 0 8px 24px -12px rgba(30,42,59,0.10);
+    --radius: 10px;
+  }
+  :root[data-theme="dark"]{
+    --paper: #11151f;
+    --paper-2: #171d2b;
+    --ink: #e9e3d3;
+    --ink-dim: #aba894;
+    --navy: #cdd6ea;
+    --navy-2: #9fb0d4;
+    --gold: #d3a25a;
+    --gold-soft: rgba(211,162,90,0.13);
+    --gold-line: rgba(211,162,90,0.32);
+    --muted: #8f8a76;
+    --border: rgba(233,227,211,0.12);
+    --card: #161c29;
+    --danger: #e0836c;
+    --danger-soft: rgba(224,131,108,0.12);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper: #11151f;
+      --paper-2: #171d2b;
+      --ink: #e9e3d3;
+      --ink-dim: #aba894;
+      --navy: #cdd6ea;
+      --navy-2: #9fb0d4;
+      --gold: #d3a25a;
+      --gold-soft: rgba(211,162,90,0.13);
+      --gold-line: rgba(211,162,90,0.32);
+      --muted: #8f8a76;
+      --border: rgba(233,227,211,0.12);
+      --card: #161c29;
+      --danger: #e0836c;
+      --danger-soft: rgba(224,131,108,0.12);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection{ background: var(--gold-soft); }
+
+  .serif{ font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif; }
+  .mono{ font-family: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace; }
+
+  a{ color: var(--gold); }
+
+  /* ---------- top masthead ---------- */
+  .masthead{
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 64px 28px 40px;
+  }
+  .eyebrow{
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 0 0 14px;
+  }
+  .masthead h1{
+    font-size: clamp(32px, 5vw, 44px);
+    line-height: 1.15;
+    margin: 0 0 18px;
+    color: var(--navy);
+    text-wrap: balance;
+    font-weight: 600;
+  }
+  .masthead .lede{
+    font-size: 17.5px;
+    color: var(--ink-dim);
+    max-width: 62ch;
+    margin: 0;
+  }
+  .masthead .lede + .lede{ margin-top: 12px; }
+
+  /* ---------- sticky stage nav ---------- */
+  .stagenav-wrap{
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border);
+  }
+  .stagenav{
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 12px 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .stagenav a{
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-dim);
+    text-decoration: none;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    transition: border-color .15s, color .15s;
+  }
+  .stagenav a:hover{ border-color: var(--gold-line); color: var(--gold); }
+  .stagenav .n{
+    display: flex; align-items: center; justify-content: center;
+    width: 17px; height: 17px; border-radius: 50%;
+    background: var(--navy); color: var(--paper);
+    font-size: 10px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- main column ---------- */
+  main{
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 12px 28px 100px;
+  }
+
+  section.stage{
+    padding-top: 56px;
+    scroll-margin-top: 70px;
+  }
+  section.stage:first-of-type{ padding-top: 40px; }
+
+  .stage-head{
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 6px;
+  }
+  .stage-num{
+    flex: 0 0 auto;
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--paper);
+    background: var(--navy);
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .stage-num.alt{ background: var(--gold); }
+  .stage-titles{ min-width: 0; }
+  .stage-eyebrow{
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 3px;
+  }
+  .stage h2{
+    font-size: 25px;
+    margin: 0;
+    color: var(--navy);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .stage-intro{
+    margin: 16px 0 22px 50px;
+    color: var(--ink-dim);
+    font-size: 15.5px;
+    max-width: 58ch;
+  }
+
+  .subhead{
+    margin: 26px 0 10px 50px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .feature-list:first-of-type,
+  .subhead + .feature-list{ margin-top: 0; }
+
+  .feature-list{
+    list-style: none;
+    margin: 0 0 0 50px;
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+  .feature-list > li{
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .feature-list h3{
+    margin: 0;
+    font-size: 15.5px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .feature-list p{
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--ink-dim);
+    max-width: 58ch;
+  }
+  .tag-row{
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 6px;
+  }
+  .tag{
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 5px;
+    background: var(--paper-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .pill{
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--gold-soft);
+    color: var(--gold);
+    letter-spacing: 0.02em;
+  }
+  .pill.new{ background: color-mix(in srgb, var(--navy) 12%, transparent); color: var(--navy-2); }
+
+  .callout{
+    margin: 18px 0 0 50px;
+    padding: 14px 16px;
+    background: var(--gold-soft);
+    border: 1px solid var(--gold-line);
+    border-radius: var(--radius);
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .callout b{ color: var(--gold); }
+  .callout .k{
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 5px;
+  }
+  .callout.warn{ background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
+  .callout.warn .k{ color: var(--danger); }
+
+  .block-grid{
+    margin: 16px 0 0 50px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  .block-chip{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: var(--shadow);
+  }
+  .block-chip .name{
+    font-size: 13.5px; font-weight: 600; color: var(--ink);
+    display: block; margin-bottom: 2px;
+  }
+  .block-chip .desc{
+    font-size: 12px; color: var(--muted); line-height: 1.4;
+  }
+
+  /* ---------- kolom Command Center: tabel referensi ---------- */
+  .col-ref{
+    margin: 16px 0 0 50px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  .col-ref-row{
+    display: grid;
+    grid-template-columns: 148px 1fr;
+    gap: 14px;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .col-ref-row:last-child{ border-bottom: none; }
+  .col-ref-name{
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--navy);
+    padding-top: 1px;
+  }
+  .col-ref-desc{ font-size: 13.5px; color: var(--ink-dim); }
+  .col-ref-desc b{ color: var(--ink); font-weight: 600; }
+  @media (max-width: 620px){
+    .col-ref-row{ grid-template-columns: 1fr; gap: 3px; }
+  }
+
+  .divider-stage{
+    margin: 56px 0 0 50px;
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ---------- riset ---------- */
+  .riset-topic{
+    margin: 22px 0 0 50px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  .riset-topic-head{
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--paper-2);
+  }
+  .riset-topic-head h4{
+    margin: 0 0 4px;
+    font-size: 16px;
+    color: var(--navy);
+    font-weight: 600;
+  }
+  .riset-topic-head p{
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ink-dim);
+  }
+  .riset-study{
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .riset-study:last-of-type{ border-bottom: none; }
+  .riset-study-meta{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .riset-study-author{ font-weight: 700; font-size: 14px; color: var(--ink); }
+  .riset-study-year{
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 11.5px; color: var(--gold); font-weight: 700;
+  }
+  .riset-study-type{
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--muted); background: var(--paper-2); border: 1px solid var(--border);
+    border-radius: 5px; padding: 1px 7px;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  a.riset-study-type{ cursor: pointer; }
+  a.riset-study-type:hover{
+    color: var(--gold); border-color: var(--gold-line); background: var(--gold-soft);
+  }
+  a.riset-study-type::after{
+    content: "↗"; font-size: 9px; opacity: 0.7;
+  }
+  .riset-study-concl{ font-size: 13.5px; color: var(--ink-dim); margin: 0; }
+  .riset-study-concl b{ color: var(--ink); font-weight: 600; }
+  .riset-decision{
+    margin: 0;
+    padding: 15px 18px;
+    background: var(--gold-soft);
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+  .riset-decision .k{
+    display: block;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 5px;
+  }
+  .riset-sources{
+    margin: 10px 0 0 50px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .riset-sources a{ color: var(--muted); text-decoration: underline; text-decoration-color: var(--gold-line); }
+
+  /* ---------- closing / aside ---------- */
+  .aside{
+    margin-top: 64px;
+    padding: 22px 24px;
+    background: var(--paper-2);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  .aside h4{
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .aside ul{ margin: 0; padding-left: 18px; }
+  .aside li{ font-size: 14px; color: var(--ink-dim); margin-bottom: 6px; }
+  .aside li:last-child{ margin-bottom: 0; }
+
+  .closing{
+    max-width: 780px;
+    margin: 56px auto 0;
+    padding: 0 28px 40px;
+    text-align: center;
+  }
+  .closing p{
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  @media (max-width: 560px){
+    .stage-intro, .feature-list, .callout, .block-grid, .divider-stage, .col-ref, .riset-topic, .riset-sources, .subhead{ margin-left: 0; }
+    .stage-head{ gap: 12px; }
+  }
+</style>
+
+<div class="stagenav-wrap">
+  <nav class="stagenav">
+    <a href="#tahap1"><span class="n">1</span> Import PPTX</a>
+    <a href="#tahap2"><span class="n">2</span> Susun Modul</a>
+    <a href="#tahap3"><span class="n">3</span> Sampul</a>
+    <a href="#tahap4"><span class="n">4</span> Kuis</a>
+    <a href="#tahap5"><span class="n">5</span> Preview &amp; Export</a>
+    <a href="#tahap6"><span class="n">6</span> Sisi Peserta</a>
+    <a href="#tahap7"><span class="n">7</span> Command Center</a>
+    <a href="#tahap8"><span class="n">8</span> Dasar Riset</a>
+  </nav>
+</div>
+
+<div class="masthead">
+  <p class="eyebrow">Template Modul Ikram — Panduan Fitur</p>
+  <h1 class="serif">Semua yang bisa dihasilkan aplikasi builder, dari PPTX sampai laporan aktivitas peserta</h1>
+  <p class="lede">Aplikasi ini mengubah file PowerPoint biasa jadi modul e-learning berbentuk halaman web interaktif — tanpa siapa pun di tim perlu menulis kode. Halaman ini merangkum apa saja yang bisa dilakukan di tiap tahap, ditulis untuk dibaca siapa saja, bukan cuma yang paham teknis.</p>
+  <p class="lede">Alurnya mengikuti enam tab di aplikasi, ditambah dua bagian yang terjadi di luar aplikasi builder-nya sendiri: apa yang peserta alami saat membuka modul, apa yang bisa dilihat tim setelah pelatihan selesai, dan riset ilmiah di balik beberapa keputusan angka yang dipakai.</p>
+</div>
+
+<main>
+
+  <section class="stage" id="tahap1">
+    <div class="stage-head">
+      <span class="stage-num">1</span>
+      <div class="stage-titles">
+        <p class="stage-eyebrow">Bahan mentah</p>
+        <h2 class="serif">Import PPTX</h2>
+      </div>
+    </div>
+    <p class="stage-intro">Titik awal semua modul: satu file PowerPoint yang sudah ada, diunggah apa adanya.</p>
+    <ul class="feature-list">
+      <li>
+        <h3>Unggah file PPTX asli</h3>
+        <p>Tidak perlu menata ulang atau menyalin-ulang materi — file presentasi yang sudah dipakai untuk mengajar langsung bisa dipakai sebagai sumber.</p>
+      </li>
+      <li>
+        <h3>Teks, gambar, dan tabel diambil otomatis</h3>
+        <p>Aplikasi membaca isi tiap slide sendiri — tim tidak perlu mengetik ulang satu per satu.</p>
+      </li>
+      <li>
+        <h3>Nomor slide asli tetap dipertahankan</h3>
+        <p>Tiap slide di aplikasi tetap menyimpan nomor aslinya di PPTX, jadi mudah dicocokkan kembali ke file sumber kalau perlu cek ulang.</p>
+      </li>
+    </ul>
+  </section>
+
+  <hr class="divider-stage" />
+
+  <section class="stage" id="tahap2">
+    <div class="stage-head">
+      <span class="stage-num">2</span>
+      <div class="stage-titles">
+        <p class="stage-eyebrow">Inti aplikasi</p>
+        <h2 class="serif">Susun Modul</h2>
+      </div>
+    </div>
+    <p class="stage-intro">Di sinilah materi dari PPTX disusun ulang jadi tampilan yang enak dibaca — dengan cara menyeret (drag) dan mengisi form, bukan menulis HTML.</p>
+    <ul class="feature-list">
+      <li>
+        <h3>Susun slide dengan menyeret (drag-and-drop)</h3>
+        <p>Urutan dan pengelompokan slide diatur cukup dengan menarik-lepas, seperti menata kartu di atas meja.</p>
+      </li>
+      <li>
+        <h3>Satu slide bisa berisi banyak jenis konten sekaligus</h3>
+        <p>Bukan "satu slide satu gaya" — dalam satu slide bisa digabung bebas beberapa jenis blok, misalnya Kartu diikuti Kutipan lalu Daftar Centang, persis seperti variasi tampilan di modul-modul yang sudah ada.</p>
+        <div class="tag-row">
+          <span class="tag">tambah blok</span>
+          <span class="tag">hapus blok</span>
+          <span class="tag">urutkan ulang</span>
+        </div>
+      </li>
+      <li>
+        <h3>14 jenis blok konten siap pakai</h3>
+        <p>Tinggal pilih jenisnya, isi teksnya — tampilannya sudah jadi.</p>
+      </li>
+    </ul>
+
+    <div class="block-grid">
+      <div class="block-chip"><span class="name">Kartu</span><span class="desc">Blok konten standar berisi judul + teks</span></div>
+      <div class="block-chip"><span class="name">Callout</span><span class="desc">Kotak penekanan untuk info penting</span></div>
+      <div class="block-chip"><span class="name">Definisi</span><span class="desc">Istilah dan penjelasannya</span></div>
+      <div class="block-chip"><span class="name">Kutipan</span><span class="desc">Kutipan bergaya besar</span></div>
+      <div class="block-chip"><span class="name">Daftar Centang</span><span class="desc">Poin-poin bernomor atau bertanda</span></div>
+      <div class="block-chip"><span class="name">Akordeon</span><span class="desc">Konten yang dibuka-tutup peserta</span></div>
+      <div class="block-chip"><span class="name">Tab</span><span class="desc">Beberapa isi bergantian di satu tempat</span></div>
+      <div class="block-chip"><span class="name">Garis Waktu</span><span class="desc">Urutan kronologis / tahapan</span></div>
+      <div class="block-chip"><span class="name">Tabel Data</span><span class="desc">Data terstruktur baris-kolom</span></div>
+      <div class="block-chip"><span class="name">Diagram Alur</span><span class="desc">Langkah proses yang diklik satu-satu</span></div>
+      <div class="block-chip"><span class="name">Gambar</span><span class="desc">Gambar tunggal dengan keterangan</span></div>
+      <div class="block-chip"><span class="name">Grid Referensi</span><span class="desc">Kumpulan item ringkas berjajar</span></div>
+      <div class="block-chip"><span class="name">Blok Bebas</span><span class="desc">Konten khusus di luar 13 jenis lain</span></div>
+      <div class="block-chip"><span class="name">Modal Popup</span><span class="desc">Info tambahan yang muncul di jendela kecil</span></div>
+    </div>
+
+    <ul class="feature-list" style="margin-top: 18px;">
+      <li>
+        <h3>Pratinjau langsung per slide</h3>
+        <p>Setiap kali diedit, tampilan aslinya (persis seperti yang akan dilihat peserta) langsung terlihat — tidak perlu export dulu untuk tahu hasilnya.</p>
+      </li>
+      <li>
+        <h3>Blok yang sedang diedit disorot otomatis</h3>
+        <p>Kalau satu slide punya banyak blok yang mirip, blok yang sedang diklik akan langsung menonjol, jadi tidak salah edit blok yang lain.</p>
+      </li>
+      <li>
+        <h3>Pemilih emoji &amp; simbol</h3>
+        <p>Menambahkan ikon kecil ke judul atau poin tanpa perlu cari-cari gambar terpisah.</p>
+      </li>
+      <li>
+        <h3>Kelompokkan beberapa slide jadi satu "bundel" di sidebar</h3>
+        <p>Beberapa slide yang berurutan bisa digabung jadi satu judul yang bisa dibuka-tutup di menu samping peserta — berguna untuk sub-topik yang isinya banyak. Ada pratinjau animasi yang menunjukkan persis bagaimana bentuknya nanti sebelum disimpan.</p>
+      </li>
+    </ul>
+  </section>
+
+  <hr class="divider-stage" />
+
+  <section class="stage" id="tahap3">
+    <div class="stage-head">
+      <span class="stage-num">3</span>
+      <div class="stage-titles">
+        <p class="stage-eyebrow">Halaman muka</p>
+        <h2 class="serif">Sampul</h2>
+      </div>
+    </div>
+    <p class="stage-intro">Halaman pertama yang dilihat peserta begitu membuka modul, plus pengaturan yang berlaku untuk seluruh modul.</p>
+    <ul class="feature-list">
+      <li>
+        <h3>Judul, deskripsi, dan gambar sampul</h3>
+        <p>Bisa ditulis bebas, termasuk memilih bagian judul mana yang ditebalkan atau diwarnai emas.</p>
+      </li>
+      <li>
+        <h3>Pilihan tema warna</h3>
+        <p>Warna aksen modul (emas/navy khas, atau kombinasi lain) dipilih dari palet yang sudah disiapkan.</p>
+      </li>
+      <li>
+        <h3>Sembunyikan indikator progres</h3>
+        <p>Untuk modul yang cuma bagian dari rangkaian lebih besar — supaya tidak aneh menampilkan "100% selesai" padahal masih ada modul lain yang harus dikerjakan.</p>
+      </li>
+      <li>
+        <h3>Aktifkan rekam aktivitas peserta</h3>
+        <p>Satu centang untuk menghidupkan seluruh sistem pencatatan kebiasaan belajar peserta (dijelaskan lengkap di bagian Command Center). Kalau tidak dicentang, modul tidak mengirim data apa pun ke mana pun.</p>
+      </li>
+      <li>
+        <h3>Cek kesiapan sistem rekam <span class="pill new">baru</span></h3>
+        <p>Begitu "rekam aktivitas" dicentang, aplikasi otomatis memberi tahu apakah sistem pencatatannya sudah siap dipakai — hijau kalau siap, merah kalau ada yang belum terpasang di server. Tim tidak perlu menebak-nebak apakah fitur ini benar-benar aktif sebelum modul diunggah.</p>
+      </li>
+    </ul>
+  </section>
+
+  <hr class="divider-stage" />
+
+  <section class="stage" id="tahap4">
+    <div class="stage-head">
+      <span class="stage-num">4</span>
+      <div class="stage-titles">
+        <p class="stage-eyebrow">Evaluasi</p>
+        <h2 class="serif">Kuis</h2>
+      </div>
+    </div>
+    <p class="stage-intro">Soal pilihan ganda untuk menguji pemahaman peserta di tiap bagian modul.</p>
+    <ul class="feature-list">
+      <li>
+        <h3>Kuis per bagian</h3>
+        <p>Tiap bagian besar modul bisa punya kuisnya sendiri, bukan cuma satu kuis besar di akhir. Peserta harus lulus sempurna (semua soal benar) untuk lanjut ke bagian berikutnya.</p>
+      </li>
+      <li>
+        <h3>Jawaban benar disebar otomatis</h3>
+        <p>Supaya jawaban benar tidak menumpuk di opsi A atau selalu di posisi yang sama, aplikasi otomatis mengacak posisi jawaban benar di antara pilihan A/B/C/D.</p>
+      </li>
+    </ul>
+  </section>
+
+  <hr class="divider-stage" />
+
+  <section class="stage" id="tahap5">
+    <div class="stage-head">
+      <span class="stage-num">5</span>
+      <div class="stage-titles">
+        <p class="stage-eyebrow">Penyelesaian</p>
+        <h2 class="serif">Preview &amp; Export</h2>
+      </div>
+    </div>
+    <p class="stage-intro">Tahap terakhir sebelum modul diunggah ke LMS — melihat hasil akhir, lalu mengunduhnya jadi satu file siap pakai.</p>
+    <ul class="feature-list">
+      <li>
+        <h3>Pratinjau penuh sebelum diunduh</h3>
+        <p>Melihat modul persis seperti yang nanti dilihat peserta, lengkap dengan navigasi dan kuisnya — semua di dalam aplikasi, tanpa perlu export dulu.</p>
+      </li>
+      <li>
+        <h3>Export jadi satu file HTML mandiri</h3>
+        <p>Hasil akhirnya satu file yang bisa langsung dijalankan di mana saja, tanpa perlu koneksi internet ataupun server tambahan — siap dibungkus jadi paket SCORM dan diunggah ke LMS.</p>
+      </li>
+      <li>
+        <h3>Tersimpan otomatis selama bekerja</h3>
+        <p>Progres pekerjaan tersimpan sendiri sambil mengetik, jadi aman kalau tab tidak sengaja tertutup. Ada juga tombol "Simpan" manual untuk kepastian tambahan — sekadar ingin lihat konfirmasi hijau dengan mata sendiri.</p>
+      </li>
+      <li>
+        <h3>Banyak project berjalan sekaligus</h3>
+        <p>Setiap orang bisa mengerjakan beberapa modul yang berbeda tanpa saling menimpa, cukup mulai project baru untuk tiap modul baru.</p>
+      </li>
+    </ul>
+  </section>
+
+  <hr class="divider-stage" />
+
+  <section class="stage" id="tahap6">
+    <div class="stage-head">
+      <span class="stage-num">6</span>
+      <div class="stage-titles">
+        <p class="stage-eyebrow">Di luar aplikasi builder</p>
+        <h2 class="serif">Yang dialami peserta saat belajar</h2>
+      </div>
+    </div>
+    <p class="stage-intro">Modul yang sudah diunggah ke LMS punya kemampuannya sendiri, terpisah dari aplikasi builder — ini yang dilihat dan dirasakan peserta.</p>
+
+    <p class="subhead">Progres &amp; identitas</p>
+    <ul class="feature-list">
+      <li>
+        <h3>Progres tersimpan &amp; bisa dilanjut kapan saja</h3>
+        <p>Peserta bisa menutup modul di tengah jalan dan melanjutkan dari titik terakhir, karena progresnya tersambung ke sistem LMS.</p>
+      </li>
+      <li>
+        <h3>Identitas peserta dicatat sekali, terpakai di modul lainnya</h3>
+        <p>Kalau satu pelatihan terdiri dari beberapa modul, peserta cukup mengisi Nama dan NIP sekali di modul pertama — modul berikutnya (di komputer yang sama) otomatis mengenali tanpa mengetik ulang. Ada langkah konfirmasi sebelum lanjut, supaya salah ketik NIP tertangkap sejak awal — sekali NIP salah ketik, rekaman satu orang bisa terpecah jadi dua "orang" berbeda tanpa disadari.</p>
+      </li>
+      <li>
+        <h3>Ambil identitas otomatis dari LMS (kalau tersedia)</h3>
+        <p>Kalau LMS bisa menyediakan nama/NIP peserta langsung, modul memakainya secara otomatis dan form isian tidak akan muncul sama sekali. Kalau LMS cuma kasih nama tanpa NIP, form tetap muncul tapi nama sudah terisi otomatis — peserta cukup melengkapi NIP-nya saja.</p>
+      </li>
+    </ul>
+
+    <p class="subhead">Keandalan pencatatan data <span class="pill new">baru</span></p>
+    <ul class="feature-list">
+      <li>
+        <h3>Data tidak hilang saat jaringan sempat putus</h3>
+        <p>Kalau koneksi internet putus sesaat, catatan aktivitas yang gagal terkirim disimpan dulu di komputer peserta dan otomatis dicoba kirim lagi belakangan — bahkan bisa menyusul terkirim saat peserta membuka modul berikutnya. Ini penting karena satu pelatihan biasanya cuma berjalan sekali; peserta yang sudah selesai tidak akan membuka modulnya lagi untuk mengulang pencatatan yang hilang.</p>
+      </li>
+    </ul>
+
+    <p class="subhead">Peringatan kecepatan baca <span class="pill new">baru</span></p>
+    <ul class="feature-list">
+      <li>
+        <h3>Deteksi materi yang dilewati terlalu cepat</h3>
+        <p>Sebelum peserta mengerjakan kuis pertama di satu bagian, modul memeriksa apakah ada slide yang dibuka jauh lebih cepat daripada waktu baca yang wajar (dihitung dari jumlah kata di slide itu — dasar risetnya di bagian Dasar Riset). Kalau terdeteksi, muncul jendela konfirmasi: <i>"Kami lihat beberapa halaman terbuka cukup cepat. Kamu yakin mau langsung masuk kuis atau pelajari kembali?"</i></p>
+      </li>
+      <li>
+        <h3>Dua pilihan, satu kali saja</h3>
+        <p>Peserta bisa pilih <b>Yakin</b> (lanjut ke kuis) atau <b>Kembali</b> (dibawa balik ke slide pertama yang terlewat cepat, dan slide itu otomatis dianggap "belum dibaca" lagi sehingga kuis terkunci sampai dibuka ulang). Peringatan ini cuma muncul sekali per bagian per peserta — begitu pernah tampil, tidak akan muncul lagi walau peserta mengulang kuis berkali-kali.</p>
+      </li>
+    </ul>
+  </section>
+
+  <hr class="divider-stage" />
+
+  <section class="stage" id="tahap7">
+    <div class="stage-head">
+      <span class="stage-num">7</span>
+      <div class="stage-titles">
+        <p class="stage-eyebrow">Setelah pelatihan selesai</p>
+        <h2 class="serif">Command Center — rekam aktivitas &amp; analitik</h2>
+      </div>
+    </div>
+    <p class="stage-intro">Kalau "Rekam aktivitas peserta" dicentang di tahap Sampul, tim bisa membuka ruang khusus terkunci-password ini untuk melihat kebiasaan belajar seluruh peserta setelah pelatihan berjalan.</p>
+
+    <ul class="feature-list">
+      <li>
+        <h3>Terkunci password, dicek di server</h3>
+        <p>Karena isinya data pribadi peserta, ruangan ini tidak bisa dibuka sembarang orang. Passwordnya divalidasi di server, bukan cuma di layar — jadi tidak bisa diakali dengan cara teknis dari luar.</p>
+      </li>
+      <li>
+        <h3>Tampilan "Per Modul"</h3>
+        <p>Lihat semua peserta yang mengerjakan satu modul tertentu: siapa saja, berapa lama, sampai sejauh mana, dan hasil kuisnya.</p>
+      </li>
+      <li>
+        <h3>Tampilan "Per Peserta"</h3>
+        <p>Kalau satu pelatihan dipecah jadi beberapa modul, tampilan ini merangkum satu orang sekaligus lintas semua modul yang dia kerjakan — tidak perlu buka satu-satu lalu menggabungkan sendiri di Excel.</p>
+      </li>
+    </ul>
+
+    <p class="subhead">Arti tiap kolom, dan cara datanya didapat</p>
+    <div class="col-ref">
+      <div class="col-ref-row">
+        <div class="col-ref-name">Tatap Layar</div>
+        <div class="col-ref-desc"><b>Waktu yang benar-benar dipakai membaca</b>, bukan sekadar "berapa lama modul terbuka". Berhenti dihitung otomatis begitu peserta pindah tab/minimize, atau diam total tanpa menyentuh apa pun (mouse, keyboard, scroll) lebih dari 4 menit — dasar risetnya di bagian Dasar Riset.</div>
+      </div>
+      <div class="col-ref-row">
+        <div class="col-ref-name">Ditinggal</div>
+        <div class="col-ref-desc">Selisih antara waktu modul terbuka total dan waktu Tatap Layar di atas. Angka besar berarti modul dibiarkan menyala sementara peserta pergi — ditandai ⚠ kalau di atas 10 menit.</div>
+      </div>
+      <div class="col-ref-row">
+        <div class="col-ref-name">Slide</div>
+        <div class="col-ref-desc">
+          Dua angka digabung jadi satu, contoh: <span class="tag" style="font-size:12px;">52 (48/50)</span>
+          <ul style="margin: 9px 0 0; padding-left: 18px; line-height: 1.55;">
+            <li style="margin-bottom: 6px;"><b>52</b> — total kunjungan ke slide mana pun, termasuk kalau peserta balik lagi ke slide yang sama. Bolak-balik itu sinyal berguna (biasanya tanda ada bagian yang bikin bingung), bukan gangguan yang perlu dibuang dari hitungan.</li>
+            <li><b>(48/50)</b> — dari 50 slide yang ada di modul ini, cuma 48 yang tercatat <b>dibuka cukup lama untuk dianggap kunjungan sungguhan</b> (di bawah sepersekian detik dianggap kepencet nggak sengaja, jadi tidak dihitung). Kalau angka pertama di kurung lebih kecil dari angka kedua — dalam contoh ini 2 slide — <b>datanya tidak bisa memastikan</b> apakah 2 slide itu benar-benar dilewati (lompat lewat menu samping) atau cuma diklik sekejap lebih cepat dari batas pencatatan. Cek kolom Peringatan di baris yang sama: kalau ada isinya, itu petunjuk cenderung diklik-lewat cepat, bukan dilewati begitu saja.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-ref-row">
+        <div class="col-ref-name">Interaksi</div>
+        <div class="col-ref-desc">Berapa kali peserta membuka konten yang memang harus diklik sendiri untuk dilihat (akordeon, tab, diagram alur, dsb). Konten yang sudah otomatis terbuka dari awal tidak dihitung di sini — tujuannya mengukur seberapa jauh peserta menggali materi ekstra.</div>
+      </div>
+      <div class="col-ref-row">
+        <div class="col-ref-name">Kuis</div>
+        <div class="col-ref-desc">Jumlah submit kuis yang <b>gagal</b> (bukan skor gabungan dari semua percobaan, yang justru membingungkan karena tidak jelas apakah akhirnya lulus atau tidak). Dihitung dari setiap kali submit ditekan dan gagal — termasuk peserta yang gagal lalu berhenti tanpa pernah mengulang, bukan cuma yang menekan tombol "Ulangi".</div>
+      </div>
+      <div class="col-ref-row">
+        <div class="col-ref-name">Peringatan</div>
+        <div class="col-ref-desc">Berapa kali peserta kena peringatan kecepatan baca (lihat bagian sebelumnya). Ditandai ⚠ kalau ada yang tetap memilih "Yakin, lanjut ke kuis" walau sudah diperingatkan.</div>
+      </div>
+    </div>
+
+    <p class="subhead">Mengunduh data</p>
+    <ul class="feature-list">
+      <li>
+        <h3>Tiga bentuk CSV, siap dibuka di Excel</h3>
+        <p>Ringkasan per sesi belajar (satu modul), rekap per peserta (lintas semua modul, kolom menit per modul otomatis melebar), atau data mentah tiap kejadian untuk analisis paling detail.</p>
+      </li>
+    </ul>
+
+    <p class="subhead">Deteksi otomatis kalau ada yang janggal</p>
+    <ul class="feature-list">
+      <li>
+        <h3>Satu NIP, nama beda-beda</h3>
+        <p>Kalau satu NIP tercatat dengan beberapa nama yang jauh berbeda, sistem menandainya ⚠ — biasanya cuma beda cara mengetik, tapi bisa juga tanda NIP salah ketik atau dipakai berdua.</p>
+      </li>
+      <li>
+        <h3>Satu modul, ternyata beberapa judul berbeda</h3>
+        <p>Kalau sebuah project di aplikasi builder pernah didaur ulang jadi modul lain, datanya bisa tercampur di bawah identitas modul yang sama. Sistem mendeteksi dan menandainya, plus menampilkan kolom tambahan supaya datanya masih bisa dipisahkan.</p>
+      </li>
+      <li>
+        <h3>Data terlalu banyak, ditandai bukan disembunyikan</h3>
+        <p>Kalau jumlah data sudah sangat besar (data menumpuk lintas pelatihan tanpa batas waktu), sistem punya batas aman pengambilan data — dan kalau batas itu tersentuh, muncul peringatan jelas bahwa rekap yang ditampilkan cuma sebagian, bukan diam-diam menampilkan data yang kurang lengkap.</p>
+      </li>
+    </ul>
+
+    <p class="subhead">Sebelum modul dibagikan ke ratusan peserta</p>
+    <ul class="feature-list">
+      <li>
+        <h3>Alat "Cek Rekam Aktivitas"</h3>
+        <p>Tersedia di menu pengembang pada modul yang sudah diunggah ke LMS. Mengirim satu data uji langsung dari tempat modul itu dibuka, jadi tim bisa memastikan sistem pencatatan benar-benar berfungsi dari lokasi dan jaringan sesungguhnya — bukan cuma menebak dari aplikasi builder.</p>
+      </li>
+    </ul>
+
+    <div class="aside">
+      <h4>Kenapa keandalan data ini penting</h4>
+      <ul>
+        <li>Satu pelatihan biasanya hanya berjalan sekali — peserta yang sudah selesai tidak akan membuka modulnya lagi untuk mengulang pencatatan yang gagal.</li>
+        <li>Semua data ini murni untuk riset kebiasaan belajar tim — membantu memahami bagian modul mana yang paling menarik perhatian, dan mana yang perlu diperbaiki di modul berikutnya.</li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider-stage" />
+
+  <section class="stage" id="tahap8">
+    <div class="stage-head">
+      <span class="stage-num alt">8</span>
+      <div class="stage-titles">
+        <p class="stage-eyebrow">Kenapa angkanya begini, bukan asal pilih</p>
+        <h2 class="serif">Dasar Riset</h2>
+      </div>
+    </div>
+    <p class="stage-intro">Dua ambang batas di aplikasi ini — "kapan dianggap ditinggal" dan "kapan dianggap dibaca" — diputuskan berdasarkan riset yang sudah diverifikasi, bukan tebakan.</p>
+
+    <div class="riset-topic">
+      <div class="riset-topic-head">
+        <h4>Ambang "Ditinggal" — 4 menit</h4>
+        <p>Kapan waktu Tatap Layar berhenti dihitung karena peserta diam tanpa menyentuh apa pun, walau modulnya masih menyala di layar.</p>
+      </div>
+
+      <div class="riset-study">
+        <div class="riset-study-meta">
+          <span class="riset-study-author">Chartbeat</span>
+          <a class="riset-study-type" href="https://help.chartbeat.com/hc/en-us/articles/360045890913-User-Engagement-Tracking-Methodology" target="_blank" rel="noopener">Dokumen metodologi produk, terus diperbarui — tanpa tahun terbit tetap</a>
+        </div>
+        <p class="riset-study-concl">Idle lebih dari <b>5 detik</b> dianggap "tidak sedang melihat layar". Dirancang untuk situs berita yang peserta terus-menerus menggulir — <b>tidak cocok</b> untuk konteks membaca satu halaman statis seperti modul e-learning.</p>
+      </div>
+
+      <div class="riset-study">
+        <div class="riset-study-meta">
+          <span class="riset-study-author">Huang, White &amp; Buscher</span>
+          <span class="riset-study-year">2012</span>
+          <a class="riset-study-type" href="https://jeffhuang.com/papers/GazeCursor_CHI12.pdf" target="_blank" rel="noopener">Studi empiris (CHI / ACM)</a>
+        </div>
+        <p class="riset-study-concl">Saat membaca fokus, gerakan mouse <b>sering diam total</b> walau mata tetap bergerak membaca — korelasi mouse dan pandangan mata melemah signifikan dalam mode membaca dibanding mode mencari.</p>
+      </div>
+
+      <div class="riset-study">
+        <div class="riset-study-meta">
+          <span class="riset-study-author">Google Research</span>
+          <span class="riset-study-year">2013</span>
+          <a class="riset-study-type" href="https://research.google.com/pubs/archive/40760.pdf" target="_blank" rel="noopener">Studi empiris (WWW Conference / ACM)</a>
+        </div>
+        <p class="riset-study-concl">Perilaku mata dan mouse (<i>eye-mouse behavior</i>) tidak selalu selaras — mendukung temuan bahwa diamnya mouse bukan bukti peserta tidak sedang membaca.</p>
+      </div>
+
+      <div class="riset-study">
+        <div class="riset-study-meta">
+          <span class="riset-study-author">Flowace</span>
+          <span class="riset-study-year">2026</span>
+          <a class="riset-study-type" href="https://flowace.ai/blog/keystroke-mouse-activity-tracking/" target="_blank" rel="noopener">Artikel blog perusahaan (observasi praktik, bukan studi akademik)</a>
+        </div>
+        <p class="riset-study-concl">Dari 10 menit membaca sungguhan, interaksi mouse/keyboard yang tercatat cuma sekitar <b>20–30 detik</b> total — sisanya "diam" padahal sedang membaca.</p>
+      </div>
+
+      <div class="riset-study">
+        <div class="riset-study-meta">
+          <span class="riset-study-author">Hubstaff</span>
+          <a class="riset-study-type" href="https://support.hubstaff.com/how-are-activity-levels-calculated/" target="_blank" rel="noopener">Dokumen standar produk, terus diperbarui — tanpa tahun terbit tetap</a>
+        </div>
+        <p class="riset-study-concl">Alat pemantau produktivitas kerja sengaja memakai ambang idle <b>3–5 menit</b> (bukan hitungan detik), karena membaca dan berpikir kerap tampak seperti idle padahal sedang produktif.</p>
+      </div>
+
+      <p class="riset-decision">
+        <span class="k">Keputusan yang diambil</span>
+        Ambang detik-an (seperti Chartbeat) dinilai akan salah menandai peserta yang justru sedang fokus membaca. Angka <b>4 menit</b> dipilih — berada di tengah rentang praktik alat pemantauan kerja (3–5 menit) yang memang dirancang untuk membedakan "diam karena berpikir" dari "benar-benar pergi". Ini estimasi yang wajar, bukan ukuran mutlak — presisi sempurna cuma mungkin dengan alat pelacak mata sungguhan.
+      </p>
+    </div>
+
+    <div class="riset-topic" style="margin-top: 22px;">
+      <div class="riset-topic-head">
+        <h4>Ambang "Dibaca" — 238 kata/menit, gagal di bawah 50%</h4>
+        <p>Berapa lama minimal seharusnya peserta berada di satu slide sebelum dianggap benar-benar membacanya, bukan sekadar mengklik lewat.</p>
+      </div>
+
+      <div class="riset-study">
+        <div class="riset-study-meta">
+          <span class="riset-study-author">Marc Brysbaert</span>
+          <span class="riset-study-year">2019</span>
+          <a class="riset-study-type" href="https://www.sciencedirect.com/science/article/abs/pii/S0749596X19300786" target="_blank" rel="noopener">Meta-analisis (Reading Research Quarterly)</a>
+        </div>
+        <p class="riset-study-concl">Menggabungkan <b>190 studi dan 18.573 partisipan</b> — salah satu kajian kecepatan baca terbesar yang pernah dilakukan. Kesimpulan: kecepatan baca diam (silent reading) rata-rata orang dewasa untuk teks bahasa Inggris adalah <b>238 kata per menit</b>, bukan 250–300 kata/menit seperti yang sering dikutip — angka lama itu masih mencampurkan skimming (mata lewat tanpa paham) dengan membaca yang benar-benar dipahami.</p>
+      </div>
+
+      <p class="riset-decision">
+        <span class="k">Keputusan yang diambil</span>
+        Waktu baca minimum tiap slide dihitung dari rumus <span class="mono">(jumlah kata ÷ 238) × 60 detik</span>, dihitung otomatis per slide saat modul di-export — slide pendek dapat ambang rendah, slide panjang dapat ambang tinggi, adil untuk keduanya. Slide yang dibuka di bawah <b>50%</b> dari waktu minimum itu ditandai "kemungkinan cuma diklik lewat". Angka 50% dipilih supaya pembaca cepat asli (riset yang sama mencatat sekitar sepertiga orang dewasa membaca di atas 298 kata/menit) tidak salah tertandai sebagai buru-buru.
+      </p>
+    </div>
+
+    <p class="riset-sources">
+      Sumber: <a href="https://help.chartbeat.com/hc/en-us/articles/360045890913-User-Engagement-Tracking-Methodology">Chartbeat — User Engagement Tracking Methodology</a> ·
+      <a href="https://jeffhuang.com/papers/GazeCursor_CHI12.pdf">Huang, White &amp; Buscher (CHI 2012)</a> ·
+      <a href="https://research.google.com/pubs/archive/40760.pdf">Google Research — Eye-mouse Behavior</a> ·
+      <a href="https://flowace.ai/blog/keystroke-mouse-activity-tracking/">Flowace — Keystroke &amp; Mouse Tracking</a> ·
+      <a href="https://support.hubstaff.com/how-are-activity-levels-calculated/">Hubstaff — Activity Levels</a> ·
+      <a href="https://www.sciencedirect.com/science/article/abs/pii/S0749596X19300786">Brysbaert (2019) — Reading Research Quarterly</a>
+    </p>
+  </section>
+
+</main>
+
+<div class="closing">
+  <p>Template Modul Ikram — disusun untuk tim penyusun modul, tanpa perlu menulis satu baris kode pun.</p>
+</div>

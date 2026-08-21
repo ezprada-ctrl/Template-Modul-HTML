@@ -1,0 +1,282 @@
+{
+  "app/.oxlintrc.json": {
+    "mtime": 1783565359.4360569,
+    "ast_hash": "029f4905006c1fffd96bc863e2d98d3e",
+    "semantic_hash": "029f4905006c1fffd96bc863e2d98d3e"
+  },
+  "app/package.json": {
+    "mtime": 1783565377.993757,
+    "ast_hash": "9d12463a1736546d704a8c665da66e47",
+    "semantic_hash": "9d12463a1736546d704a8c665da66e47"
+  },
+  "app/src/App.tsx": {
+    "mtime": 1785510185.6147995,
+    "ast_hash": "0a33c5d155c9a857f31fb0c1d19bb38d",
+    "semantic_hash": "0a33c5d155c9a857f31fb0c1d19bb38d"
+  },
+  "app/src/api.ts": {
+    "mtime": 1784867640.311887,
+    "ast_hash": "b5f25faa3812264af0faf61c9f826b45",
+    "semantic_hash": "b5f25faa3812264af0faf61c9f826b45"
+  },
+  "app/src/components/BlockAddMenu.tsx": {
+    "mtime": 1784696606.5976677,
+    "ast_hash": "c482e0fd269a56503d746999fa84ceda",
+    "semantic_hash": "c482e0fd269a56503d746999fa84ceda"
+  },
+  "app/src/components/BlockEditor.tsx": {
+    "mtime": 1787021786.212621,
+    "ast_hash": "4f3a63041c88a78aebab0b1ccf69a7bc",
+    "semantic_hash": "4f3a63041c88a78aebab0b1ccf69a7bc"
+  },
+  "app/src/components/BlockPreview.tsx": {
+    "mtime": 1784699494.816859,
+    "ast_hash": "6e5ff095a75fd2a4e652ab2152e4c86e",
+    "semantic_hash": "6e5ff095a75fd2a4e652ab2152e4c86e"
+  },
+  "app/src/components/Canvas.tsx": {
+    "mtime": 1787018573.983861,
+    "ast_hash": "09eb10beff11d76612e6e9b464474aa6",
+    "semantic_hash": "09eb10beff11d76612e6e9b464474aa6"
+  },
+  "app/src/components/CommandCenter.tsx": {
+    "mtime": 1784880389.7856786,
+    "ast_hash": "c9d64cf5af47ebfc76fe808fb2a30e74",
+    "semantic_hash": "c9d64cf5af47ebfc76fe808fb2a30e74"
+  },
+  "app/src/components/CoverForm.tsx": {
+    "mtime": 1787016950.5802107,
+    "ast_hash": "31de546f3f77845feeedd81a5fc39695",
+    "semantic_hash": "31de546f3f77845feeedd81a5fc39695"
+  },
+  "app/src/components/EmojiPicker.tsx": {
+    "mtime": 1784091584.112843,
+    "ast_hash": "8dd92df60e4a3aec64a7fcbc3b9f4666",
+    "semantic_hash": "8dd92df60e4a3aec64a7fcbc3b9f4666"
+  },
+  "app/src/components/GraphicStyleSelect.tsx": {
+    "mtime": 1785599707.430141,
+    "ast_hash": "eed7df3598eec0c886ba0a162ed69b13",
+    "semantic_hash": "eed7df3598eec0c886ba0a162ed69b13"
+  },
+  "app/src/components/PreviewExport.tsx": {
+    "mtime": 1785142713.9199617,
+    "ast_hash": "d2be4db926471612ceb75c89f83336b1",
+    "semantic_hash": "d2be4db926471612ceb75c89f83336b1"
+  },
+  "app/src/components/QuizBuilder.tsx": {
+    "mtime": 1784110180.8656423,
+    "ast_hash": "28359141ec3eaf5c8dbdd617c8b1a3dd",
+    "semantic_hash": "28359141ec3eaf5c8dbdd617c8b1a3dd"
+  },
+  "app/src/components/SlideBank.tsx": {
+    "mtime": 1784706189.7854185,
+    "ast_hash": "68b8a18250f5278018144ae103d791e1",
+    "semantic_hash": "68b8a18250f5278018144ae103d791e1"
+  },
+  "app/src/components/SlidePreview.tsx": {
+    "mtime": 1787019784.94853,
+    "ast_hash": "154985b231b3e67d76659a7392e832ff",
+    "semantic_hash": "154985b231b3e67d76659a7392e832ff"
+  },
+  "app/src/demoActivityData.ts": {
+    "mtime": 1784880317.3551095,
+    "ast_hash": "78271a88e19b7a25211371bf585fe784",
+    "semantic_hash": "78271a88e19b7a25211371bf585fe784"
+  },
+  "app/src/emojiData.ts": {
+    "mtime": 1783578383.4461286,
+    "ast_hash": "b7ddc58bc5082e76bdab038d53b325ae",
+    "semantic_hash": "b7ddc58bc5082e76bdab038d53b325ae"
+  },
+  "app/src/graphicStylePreviews.ts": {
+    "mtime": 1785627970.0109117,
+    "ast_hash": "7ebe54b74d97fe01b7967d30c4fe5b37",
+    "semantic_hash": "7ebe54b74d97fe01b7967d30c4fe5b37"
+  },
+  "app/src/graphicStyles.ts": {
+    "mtime": 1785508459.9872077,
+    "ast_hash": "8942aaf406b02610f4974342a6757f63",
+    "semantic_hash": "8942aaf406b02610f4974342a6757f63"
+  },
+  "app/src/main.tsx": {
+    "mtime": 1783565359.7078938,
+    "ast_hash": "787e5a07efeb2bf6209d5937195f2f68",
+    "semantic_hash": "787e5a07efeb2bf6209d5937195f2f68"
+  },
+  "app/src/themes.ts": {
+    "mtime": 1783998039.2708385,
+    "ast_hash": "0c2e9d7860102cadd11a3c82a33979b5",
+    "semantic_hash": "0c2e9d7860102cadd11a3c82a33979b5"
+  },
+  "app/src/types.ts": {
+    "mtime": 1787020377.974941,
+    "ast_hash": "f240bfc3e5c90050d27ffe85e7f5640d",
+    "semantic_hash": "f240bfc3e5c90050d27ffe85e7f5640d"
+  },
+  "app/src/vite-env.d.ts": {
+    "mtime": 1783668816.7578378,
+    "ast_hash": "27f715e9db83fe01ae79e80a1eca8a5b",
+    "semantic_hash": "27f715e9db83fe01ae79e80a1eca8a5b"
+  },
+  "app/tsconfig.app.json": {
+    "mtime": 1783565359.470003,
+    "ast_hash": "5f2dafd737dea8a4ddcbb10f5113ac5a",
+    "semantic_hash": "5f2dafd737dea8a4ddcbb10f5113ac5a"
+  },
+  "app/tsconfig.json": {
+    "mtime": 1783565359.4782665,
+    "ast_hash": "a3d39fa780ebff65444de257f291ce6c",
+    "semantic_hash": "a3d39fa780ebff65444de257f291ce6c"
+  },
+  "app/tsconfig.node.json": {
+    "mtime": 1783565359.4852705,
+    "ast_hash": "f9cb81ddcea69ffdab672fc8c48dca66",
+    "semantic_hash": "f9cb81ddcea69ffdab672fc8c48dca66"
+  },
+  "app/vite.config.ts": {
+    "mtime": 1783577977.8458798,
+    "ast_hash": "6ba274d800e7f354da38fdf4e21466e7",
+    "semantic_hash": "6ba274d800e7f354da38fdf4e21466e7"
+  },
+  "server/api/activity_store.py": {
+    "mtime": 1785116249.3861148,
+    "ast_hash": "6b51ef81ed4cc3f9d320ee66fbe6bc62",
+    "semantic_hash": "6b51ef81ed4cc3f9d320ee66fbe6bc62"
+  },
+  "server/api/draft_store.py": {
+    "mtime": 1784214989.637189,
+    "ast_hash": "3fe83d45f2fb3ccbe8bbb40ea452a992",
+    "semantic_hash": "3fe83d45f2fb3ccbe8bbb40ea452a992"
+  },
+  "server/api/generator.py": {
+    "mtime": 1787020554.2082477,
+    "ast_hash": "04b8ff1095af8cdd79526301e58a06e1",
+    "semantic_hash": "04b8ff1095af8cdd79526301e58a06e1"
+  },
+  "server/api/index.py": {
+    "mtime": 1785394568.8011098,
+    "ast_hash": "f05b9b2f974f9c4be5b27b74668105c6",
+    "semantic_hash": "f05b9b2f974f9c4be5b27b74668105c6"
+  },
+  "server/api/pptx_extract.py": {
+    "mtime": 1783565934.0491054,
+    "ast_hash": "44d787600ad6f341e14d0517c014bb52",
+    "semantic_hash": "44d787600ad6f341e14d0517c014bb52"
+  },
+  "server/make_template.py": {
+    "mtime": 1783568379.7248938,
+    "ast_hash": "18fea58ba8bd37db511d7e09b5fab9af",
+    "semantic_hash": "18fea58ba8bd37db511d7e09b5fab9af"
+  },
+  "server/supabase_activity_setup.sql": {
+    "mtime": 1784216272.286982,
+    "ast_hash": "f91dc8e5e73fe2f656b3e06c895121ef",
+    "semantic_hash": "f91dc8e5e73fe2f656b3e06c895121ef"
+  },
+  "server/supabase_setup.sql": {
+    "mtime": 1783579132.5509658,
+    "ast_hash": "c45dd26699b9c6b630b10558927a79b1",
+    "semantic_hash": "c45dd26699b9c6b630b10558927a79b1"
+  },
+  "server/supabase_storage_media_setup.sql": {
+    "mtime": 1784699899.7000816,
+    "ast_hash": "f7fa88a4b3064ea186fb80bde6557d6b",
+    "semantic_hash": "f7fa88a4b3064ea186fb80bde6557d6b"
+  },
+  "server/supabase_storage_setup.sql": {
+    "mtime": 1783912209.682091,
+    "ast_hash": "cc82c00073e75b17892a0115d6a4c953",
+    "semantic_hash": "cc82c00073e75b17892a0115d6a4c953"
+  },
+  "server/test_gen.py": {
+    "mtime": 1783567799.2296002,
+    "ast_hash": "5190a658ebff9dfcd5e6217f00d94a4f",
+    "semantic_hash": "5190a658ebff9dfcd5e6217f00d94a4f"
+  },
+  "server/vercel.json": {
+    "mtime": 1785394560.484781,
+    "ast_hash": "7f2cdb60eabbffaabf1373d7c40446b7",
+    "semantic_hash": "7f2cdb60eabbffaabf1373d7c40446b7"
+  },
+  "Panduan-Fitur-Template-Modul-Ikram.html": {
+    "mtime": 1784597491.714511,
+    "ast_hash": "6db385e8397d1a83df0f7742f1fb1f65",
+    "semantic_hash": "6db385e8397d1a83df0f7742f1fb1f65"
+  },
+  "Template-Modul-Ikram-Source-Code.html": {
+    "mtime": 1784102074.99225,
+    "ast_hash": "e3549a7dab8843e361eab37e453e0541",
+    "semantic_hash": "e3549a7dab8843e361eab37e453e0541"
+  },
+  "app/README.md": {
+    "mtime": 1783565359.5047007,
+    "ast_hash": "10495bfcc6c568eca4dab6dd5df795d3",
+    "semantic_hash": "10495bfcc6c568eca4dab6dd5df795d3"
+  },
+  "app/index.html": {
+    "mtime": 1783565359.8863878,
+    "ast_hash": "538a18c4be79552173a543eb1cbc9fe0",
+    "semantic_hash": "538a18c4be79552173a543eb1cbc9fe0"
+  },
+  "lms-probe/README.md": {
+    "mtime": 1784216449.059958,
+    "ast_hash": "b25005b75eeaa86d196112a62f73364a",
+    "semantic_hash": "b25005b75eeaa86d196112a62f73364a"
+  },
+  "lms-probe/index.html": {
+    "mtime": 1784216360.3101544,
+    "ast_hash": "5cb4ab30db789846a50f7aff6a473b08",
+    "semantic_hash": "5cb4ab30db789846a50f7aff6a473b08"
+  },
+  "render.yaml": {
+    "mtime": 1783579091.7469077,
+    "ast_hash": "696466b1a31fd45e02e96bb88c8037c7",
+    "semantic_hash": "696466b1a31fd45e02e96bb88c8037c7"
+  },
+  "server/api/shell-template.html": {
+    "mtime": 1787021768.5796404,
+    "ast_hash": "88c456243b00e1c6aecc5eebbdf929d4",
+    "semantic_hash": "88c456243b00e1c6aecc5eebbdf929d4"
+  },
+  "server/requirements.txt": {
+    "mtime": 1783582737.117113,
+    "ast_hash": "0afaaad183dedb2af26d019aa77dd489",
+    "semantic_hash": "0afaaad183dedb2af26d019aa77dd489"
+  },
+  "app/public/favicon.svg": {
+    "mtime": 1783565359.5751362,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": "7e840862161341271697daa99a40d76b"
+  },
+  "app/public/icons.svg": {
+    "mtime": 1783565359.6049745,
+    "ast_hash": "3b4fcfcf393eca4d264dca4a4663bc37",
+    "semantic_hash": "3b4fcfcf393eca4d264dca4a4663bc37"
+  },
+  "app/src/assets/hero.png": {
+    "mtime": 1783565359.5326064,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": "aead493361b27e7510691c5d7072dfc1"
+  },
+  "app/src/assets/react.svg": {
+    "mtime": 1783565359.634747,
+    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
+    "semantic_hash": "f0402b67b6ce880f65666bb49e841696"
+  },
+  "app/src/assets/vite.svg": {
+    "mtime": 1783565359.6609418,
+    "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": "9960a24288958394ac50e57ff638b036"
+  },
+  ".claude/settings.json": {
+    "mtime": 1787022108.759704,
+    "ast_hash": "095c71e3ebb04d33915f4e0bbdb50ded",
+    "semantic_hash": "095c71e3ebb04d33915f4e0bbdb50ded"
+  },
+  "CLAUDE.md": {
+    "mtime": 1787022108.757722,
+    "ast_hash": "8a6643a420fdad6bfb583523bc6cef16",
+    "semantic_hash": "8a6643a420fdad6bfb583523bc6cef16"
+  }
+}

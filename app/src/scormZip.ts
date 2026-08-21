@@ -41,7 +41,7 @@ const OPSI_ENTRI = {
 } as const;
 
 export interface ZipProgress {
-  fase: 'html' | 'articulate' | 'manifest' | 'selesai';
+  fase: 'html' | 'aset' | 'articulate' | 'manifest' | 'selesai';
   pesan: string;
   /** 0–100, atau null kalau fase ini gak bisa diukur. */
   persen: number | null;
@@ -112,6 +112,42 @@ ${fileTags}
   </resources>
 </manifest>
 `;
+}
+
+// ---------------------------------------------------------------- aset gambar
+//
+// Gambar (sampul & blok gambar) disimpan di Supabase Storage, jadi HTML hasil
+// generator menunjuk ke URL absolut https://<proyek>.supabase.co/... Itu jalan
+// waktu modulnya dibuka dari browser penyusun, tapi TIDAK di dalam LMS: paket
+// SCORM dibongkar dan disajikan dari server KLC, di jaringan yang memblokir
+// host luar - hasilnya sampul polos abu-abu dan blok gambar kosong (persis
+// gejala yang dilaporkan). Paket SCORM harus mandiri: setiap gambar ditarik
+// sekali di sini, ditulis ke `assets/` di dalam ZIP, dan URL-nya di HTML
+// ditukar jadi path relatif.
+//
+// Cuma gambar. Video/audio sengaja dibiarkan menunjuk ke Storage: ukurannya
+// bisa ratusan MB dan ikut membengkakkan paket lewat batas upload LMS.
+const EKSTENSI_GAMBAR = /\.(png|jpe?g|gif|webp|avif|svg)(\?|#|$)/i;
+
+/** Semua URL gambar absolut yang dipakai HTML, unik, urut kemunculan. */
+function urlGambar(html: string): string[] {
+  const out = new Set<string>();
+  // Ditangkap dari src="..." maupun background-image:url('...') sekaligus -
+  // keduanya berhenti di kutip/kurung/spasi, jadi satu pola cukup.
+  const re = /https?:\/\/[^"'()\s\\]+/g;
+  for (const m of html.match(re) || []) {
+    if (EKSTENSI_GAMBAR.test(m)) out.add(m);
+  }
+  return [...out];
+}
+
+function namaAset(url: string, i: number): string {
+  const bersih = url.split(/[?#]/)[0];
+  const ext = (bersih.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase();
+  // Nama sengaja diseragamkan (bukan nama asli file): nama unggahan pengguna
+  // sering panjang & mengandung spasi/karakter non-ASCII, dan panjang path
+  // adalah hal yang justru bikin KLC menolak paket (lihat BATAS_PATH).
+  return `assets/img${i + 1}.${ext}`;
 }
 
 async function bukaTujuan(namaFile: string) {
@@ -203,9 +239,44 @@ export async function exportScormZip(
 
   // Path di imsmanifest.xml RELATIF terhadap folder induk (manifest ikut
   // tinggal di dalamnya), jadi daftarnya tetap tanpa awalan AKAR.
+  // Gambar dulu, baru index.html: HTML-nya ikut berubah (URL absolut ditukar
+  // path relatif), jadi harus final sebelum ditulis.
   const daftarFile: string[] = ['index.html'];
+  const gambar = urlGambar(html);
+  let htmlFinal = html;
+  const gagalGambar: string[] = [];
+  for (let i = 0; i < gambar.length; i++) {
+    const url = gambar[i];
+    onProgress({
+      fase: 'aset',
+      pesan: `Menyematkan gambar (${i + 1}/${gambar.length})…`,
+      persen: Math.round(((i + 1) / gambar.length) * 100),
+    });
+    let data: Blob;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(String(res.status));
+      data = await res.blob();
+    } catch {
+      // Satu gambar gagal ditarik bukan alasan membatalkan seluruh paket -
+      // URL-nya dibiarkan apa adanya (paling buruk: sama seperti sebelum ini)
+      // dan penyusun modul diberi tahu di akhir, saat masih bisa memperbaiki.
+      gagalGambar.push(url);
+      continue;
+    }
+    const target = namaAset(url, i);
+    await pastikanFolder(AKAR + target);
+    await writer.add(AKAR + target, new BlobReader(data), { ...OPSI_ENTRI, level: 0 });
+    daftarFile.push(target);
+    // Ganti SEMUA kemunculan: satu gambar bisa dipakai di beberapa slide.
+    htmlFinal = htmlFinal.split(url).join(target);
+  }
+  if (gagalGambar.length) {
+    console.warn('[scorm] gambar gagal disematkan:', gagalGambar);
+  }
+
   await pastikanFolder(`${AKAR}index.html`);
-  await writer.add(`${AKAR}index.html`, new TextReader(html), OPSI_ENTRI);
+  await writer.add(`${AKAR}index.html`, new TextReader(htmlFinal), OPSI_ENTRI);
 
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i];
