@@ -136,9 +136,19 @@ async function bukaTujuan(namaFile: string) {
 /**
  * Rakit seluruh modul jadi satu paket SCORM .zip siap upload ke LMS:
  *
- *   index.html            <- modul hasil generator (iframe-nya nunjuk ke bawah)
- *   articulate/<idBlok>/  <- isi paket Articulate, apa adanya
- *   imsmanifest.xml
+ *   <slug>/                     <- SATU folder induk membungkus semuanya
+ *   <slug>/index.html           <- modul hasil generator (iframe-nya nunjuk ke bawah)
+ *   <slug>/articulate/<idBlok>/ <- isi paket Articulate, apa adanya
+ *   <slug>/imsmanifest.xml
+ *
+ * Kenapa dibungkus folder induk, bukan ditaruh rata di akar ZIP: validator
+ * SCORM di KLC MENOLAK paket yang isinya langsung di akar, dengan pesan
+ * "Zip file doesn't contain `index.html` or `story[?].html`" - padahal
+ * index.html ADA persis di akar sebagai entri pertama. Dibuktikan langsung
+ * lewat uji upload ke KLC: paket yang sama, satu-satunya beda dibungkus
+ * folder induk + entri direktori eksplisit, langsung diterima ("Data
+ * pelatihan berhasil disimpan"). Pola ini juga persis yang dipakai paket
+ * hasil publish Articulate sendiri - yang memang selama ini selalu lolos.
  */
 export async function exportScormZip(
   module: ModuleData,
@@ -158,8 +168,30 @@ export async function exportScormZip(
   const blobWriter = tujuan.unduhSendiri ? new BlobWriter('application/zip') : null;
   const writer = new ZipWriter(tujuan.stream ?? blobWriter!, { bufferedWrite: false });
 
+  // Folder induk pembungkus. Nama folder = slug modul, jadi kalau paketnya
+  // dibuka manual isinya langsung kelihatan milik modul yang mana.
+  const AKAR = `${slug}/`;
+
+  // Entri direktori eksplisit. Paket Articulate yang diterima KLC punya ini
+  // (17 entri direktori), paket kita dulu nol - dan pembongkar ZIP yang naif
+  // memang ada yang mengandalkan entri direktori untuk membentuk pohon folder,
+  // bukan menyimpulkannya dari path file.
+  const folderDitulis = new Set<string>();
+  async function pastikanFolder(pathFile: string) {
+    const bagian = pathFile.split('/').slice(0, -1);
+    for (let i = 1; i <= bagian.length; i++) {
+      const dir = bagian.slice(0, i).join('/') + '/';
+      if (folderDitulis.has(dir)) continue;
+      folderDitulis.add(dir);
+      await writer.add(dir, undefined, { ...OPSI_ENTRI, directory: true });
+    }
+  }
+
+  // Path di imsmanifest.xml RELATIF terhadap folder induk (manifest ikut
+  // tinggal di dalamnya), jadi daftarnya tetap tanpa awalan AKAR.
   const daftarFile: string[] = ['index.html'];
-  await writer.add('index.html', new TextReader(html), OPSI_ENTRI);
+  await pastikanFolder(`${AKAR}index.html`);
+  await writer.add(`${AKAR}index.html`, new TextReader(html), OPSI_ENTRI);
 
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i];
@@ -189,11 +221,12 @@ export async function exportScormZip(
         const rel = root ? e.filename.slice(root.length) : e.filename;
         if (!rel) continue;
         const target = `articulate/${b.id}/${rel}`;
+        await pastikanFolder(AKAR + target);
         // Satu entri pada satu waktu — inilah yang bikin paket 150MB tetap
         // muat: yang ada di memori cuma file terbesar di dalamnya, bukan
         // seluruh paket.
         const data: Blob = await e.getData!(new BlobWriter());
-        await writer.add(target, new BlobReader(data), {
+        await writer.add(AKAR + target, new BlobReader(data), {
           ...OPSI_ENTRI,
           level: SUDAH_TERKOMPRESI.test(rel) ? 0 : 1,
         });
@@ -224,7 +257,7 @@ export async function exportScormZip(
 
   onProgress({ fase: 'manifest', pesan: 'Menulis imsmanifest.xml…', persen: null });
   const manifest = buildManifest(slug, module.title || 'Modul E-Learning', daftarFile);
-  await writer.add('imsmanifest.xml', new TextReader(manifest), OPSI_ENTRI);
+  await writer.add(`${AKAR}imsmanifest.xml`, new TextReader(manifest), OPSI_ENTRI);
 
   const hasil = await writer.close();
 
