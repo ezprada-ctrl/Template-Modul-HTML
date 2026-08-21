@@ -168,9 +168,23 @@ export async function exportScormZip(
   const blobWriter = tujuan.unduhSendiri ? new BlobWriter('application/zip') : null;
   const writer = new ZipWriter(tujuan.stream ?? blobWriter!, { bufferedWrite: false });
 
-  // Folder induk pembungkus. Nama folder = slug modul, jadi kalau paketnya
-  // dibuka manual isinya langsung kelihatan milik modul yang mana.
-  const AKAR = `${slug}/`;
+  // Folder induk pembungkus. SENGAJA nama tetap yang pendek, BUKAN slug modul:
+  // slug bisa 45+ karakter ("ikram-betatester_testing-modul-a-1-mru5ljtd-5"),
+  // dan itu mendorong path terdalam melewati batas panjang yang diterima KLC.
+  // Dibuktikan lewat uji upload berpasangan - paket yang sama persis, cuma beda
+  // nama folder induk: 46 char (path terdalam 137) DITOLAK, 12 char (path
+  // terdalam 103) DITERIMA. Nama pendek ini memangkas ~40 karakter dari SEMUA
+  // path sekaligus.
+  const AKAR = 'modul/';
+
+  // Ambang konservatif. Bukti yang kita punya: 103 lolos, 137 ditolak - jadi
+  // batas asli KLC ada di antaranya (kemungkinan 128). Dijaga di 120 supaya
+  // masih ada ruang. Paket Articulate dengan struktur folder yang sangat dalam
+  // masih bisa menembusnya, dan kalau itu terjadi kita mau ketahuan DI SINI -
+  // bukan setelah penyusun modul menunggu paket jadi lalu ditolak LMS dengan
+  // pesan menyesatkan ("Zip file doesn't contain index.html").
+  const BATAS_PATH = 120;
+  const pathKepanjangan: string[] = [];
 
   // Entri direktori eksplisit. Paket Articulate yang diterima KLC punya ini
   // (17 entri direktori), paket kita dulu nol - dan pembongkar ZIP yang naif
@@ -221,6 +235,7 @@ export async function exportScormZip(
         const rel = root ? e.filename.slice(root.length) : e.filename;
         if (!rel) continue;
         const target = `articulate/${b.id}/${rel}`;
+        if ((AKAR + target).length > BATAS_PATH) pathKepanjangan.push(AKAR + target);
         await pastikanFolder(AKAR + target);
         // Satu entri pada satu waktu — inilah yang bikin paket 150MB tetap
         // muat: yang ada di memori cuma file terbesar di dalamnya, bukan
@@ -253,6 +268,16 @@ export async function exportScormZip(
         'Upload ulang ZIP-nya di blok Articulate itu (paket lama disimpan dengan struktur path yang berbeda).'
       );
     }
+  }
+
+  if (pathKepanjangan.length) {
+    const contoh = pathKepanjangan.sort((a, b2) => b2.length - a.length)[0];
+    throw new Error(
+      `${pathKepanjangan.length} file di dalam paket punya path lebih dari ${BATAS_PATH} karakter, ` +
+      `dan KLC menolak paket seperti itu dengan pesan yang menyesatkan ("Zip file doesn't contain index.html"). ` +
+      `Terpanjang (${contoh.length} karakter): ${contoh}. ` +
+      `Perpendek nama file/folder di dalam paket Articulate-nya, lalu publish & upload ulang.`
+    );
   }
 
   onProgress({ fase: 'manifest', pesan: 'Menulis imsmanifest.xml…', persen: null });
