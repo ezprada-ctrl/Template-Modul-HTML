@@ -14,7 +14,7 @@ export const BLOCK_PREVIEW_STYLES = `
   --border:rgba(22,33,62,.10);--border-strong:rgba(22,33,62,.18);
   --text:#16213e;--text-dim:#4d5876;--text-faint:#8891a8;
   --accent:#c99a3d;--accent-2:#b3822a;--accent-soft:rgba(201,154,61,.14);
-  --accent-glow:rgba(201,154,61,.45);--on-accent:#2a1c04;--navy:#1b2a4a;
+  --accent-glow:rgba(201,154,61,.45);--on-accent:#2a1c04;--navy:#1b2a4a;--navy-2:#2d3c5c;
   --amber-soft:rgba(201,154,61,.14);--rose:#c04a44;--rose-soft:rgba(192,74,68,.10);
   --blue-soft:rgba(47,102,144,.10);--violet:#2f7d70;--violet-soft:rgba(47,125,112,.18);
   --green:#2f9e6a;--green-soft:rgba(47,158,106,.14);
@@ -29,10 +29,13 @@ export const BLOCK_PREVIEW_STYLES = `
 .pbp-scope .card h3 .ic{width:24px;height:24px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:var(--accent-soft);color:var(--accent-2);}
 .pbp-scope .card p{margin:0;line-height:1.55;color:var(--text-dim);font-size:12.5px;}
 
-.pbp-scope .definition{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;position:relative;margin-top:10px;box-shadow:var(--shadow-md);}
-.pbp-scope .definition .tag{position:absolute;top:-10px;left:16px;background:var(--accent);color:var(--on-accent);font-size:9.5px;font-weight:800;letter-spacing:.06em;padding:3px 10px;border-radius:20px;text-transform:uppercase;}
-.pbp-scope .definition p{margin:6px 0 0;line-height:1.55;color:var(--text-dim);font-size:12.5px;}
-.pbp-scope .definition b{color:var(--accent-2);}
+.pbp-scope .definition{background:linear-gradient(135deg,var(--navy),var(--navy-2));border-radius:var(--radius-md);padding:16px;position:relative;margin-top:10px;color:#eef1f7;box-shadow:var(--shadow-md);}
+/* nowrap+ellipsis persis kayak aslinya: pil ini position:absolute, jadi teks
+   panjang bakal ngelipat jadi 2-3 baris dan berubah jadi gumpalan melayang -
+   paling kentara pas kotaknya sempit (mis. satu sel Grid 3 kolom). */
+.pbp-scope .definition .tag{position:absolute;top:-10px;left:16px;background:var(--accent);color:var(--on-accent);font-size:9.5px;font-weight:800;letter-spacing:.06em;padding:3px 10px;border-radius:20px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 32px);}
+.pbp-scope .definition p{margin:6px 0 0;line-height:1.55;color:#dbe2ef;font-size:12.5px;}
+.pbp-scope .definition b{color:#f6d998;}
 
 .pbp-scope .pull-quote{margin:10px 0;padding:16px 8px;text-align:center;border-top:2px solid var(--accent);border-bottom:2px solid var(--accent);}
 .pbp-scope .pull-quote .pq-num{display:block;font-size:32px;font-weight:800;color:var(--accent-2);line-height:1.05;}
@@ -74,7 +77,7 @@ export const BLOCK_PREVIEW_STYLES = `
 /* margin-top bawaan .definition buat ngasih ruang tag-nya yang nongol ke atas;
    di dalam sel grid itu bikin kolom ini turun sendiri, jadi ruangnya dipindah
    ke padding-atas biar sejajar sama tetangganya. */
-.pbp-grid-demo .definition{margin-top:0;padding:14px 11px 11px;border-radius:12px;}
+.pbp-grid-demo .definition{margin-top:0;padding:12px 11px;border-radius:12px;}
 .pbp-grid-demo .definition .tag{font-size:8px;padding:2px 7px;left:11px;top:-8px;}
 .pbp-grid-demo .definition p{font-size:10.5px;margin:2px 0 0;line-height:1.45;}
 .pbp-grid-demo .pull-quote{margin:0;padding:10px 4px;}
@@ -86,7 +89,7 @@ export const BLOCK_PREVIEW_STYLES = `
 /* Label tipe blok di tiap sel. Tanpa ini contohnya cuma "enam kotak cakep" -
    yang mau ditunjukkan justru bahwa tiap kotak itu JENIS BLOK YANG BEDA. */
 .pbp-grid-demo .sel-label{font-size:8.5px;font-weight:800;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--text-faint);margin:0 0 4px 2px;}
+  text-transform:uppercase;color:var(--text-faint);margin:0 0 15px 2px;}
 
 .pbp-scope .flow{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:4px 2px 10px;}
 .pbp-scope .flow-step{flex:1;min-width:84px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px;position:relative;transition:.25s;cursor:default;}

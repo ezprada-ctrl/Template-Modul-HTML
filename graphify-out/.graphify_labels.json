@@ -35,10 +35,10 @@
   "33": "SVG donut chart renderer",
   "34": "Open the mobile sidebar drawer",
   "35": "plugins",
-  "36": "Canvas",
+  "36": "Articulate 360 Block Runtime",
   "37": "BlockEditor",
   "38": "EmojiPicker.tsx",
-  "39": "Reading-Speed & Idle Detection",
+  "39": "Persist learner progress state to localStorage and SCORM",
   "40": "uploadImageToStorage",
   "41": "Learning Recap Popup ('Ringkasan Belajarmu')",
   "42": "Render the current NAV item into the viewport",
@@ -47,9 +47,11 @@
   "45": "supabase_activity_setup.sql",
   "46": "supabase_storage_media_setup.sql",
   "47": "supabase_storage_setup.sql",
-  "48": "scormZip.ts",
-  "49": "Send a live preflight event to verify activity recording works",
+  "48": "PreviewExport.tsx",
+  "49": "Knowledge Check Gate",
   "50": "r2.py",
-  "51": "Record a quiz option selection",
-  "52": "Dev Mode Panel"
+  "51": "Submit a section quiz for grading",
+  "52": "Send a live preflight event to verify activity recording works",
+  "53": "checkNetwork",
+  "54": "Record a content-interaction event (accordion/tabs/modal/flow)"
 }

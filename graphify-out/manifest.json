@@ -30,16 +30,16 @@
     "semantic_hash": "c07ee7e47afb9b045f2501bc40a9e09e"
   },
   "app/src/components/BlockEditor.tsx": {
-    "mtime": 1787280550.3208723,
-    "seen": 1787280592.228618,
-    "ast_hash": "150a997b9a3f35a79ed4b829993b6ec6",
+    "mtime": 1787543281.6887834,
+    "seen": 1787543306.9155025,
+    "ast_hash": "da430eff973453babdbdc900a3480062",
     "semantic_hash": ""
   },
   "app/src/components/BlockPreview.tsx": {
-    "mtime": 1787114334.3186283,
-    "seen": 1787222015.9428298,
-    "ast_hash": "777cade107777555b57b4fa6de0ba6ab",
-    "semantic_hash": "777cade107777555b57b4fa6de0ba6ab"
+    "mtime": 1787543115.0325198,
+    "seen": 1787543306.9155042,
+    "ast_hash": "acf898a33d3d7ceacf0d5f65d2680216",
+    "semantic_hash": ""
   },
   "app/src/components/Canvas.tsx": {
     "mtime": 1787018573.983861,
