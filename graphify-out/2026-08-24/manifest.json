@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "app/src/components/BlockPreview.tsx": {
-    "mtime": 1787543115.0325198,
-    "seen": 1787543306.9155042,
-    "ast_hash": "acf898a33d3d7ceacf0d5f65d2680216",
+    "mtime": 1787543645.6772847,
+    "seen": 1787543827.7735417,
+    "ast_hash": "63d29466fd737d0e39267e0666f46aea",
     "semantic_hash": ""
   },
   "app/src/components/Canvas.tsx": {

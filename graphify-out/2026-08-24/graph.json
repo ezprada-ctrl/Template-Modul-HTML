@@ -1618,7 +1618,7 @@
       "file_type": "code",
       "norm_label": "accordiondemo()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L384"
+      "source_location": "L387"
     },
     {
       "id": "app_src_components_blockpreview_blockpreviewcard",
@@ -1630,7 +1630,7 @@
       "file_type": "code",
       "norm_label": "blockpreviewcard()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L232"
+      "source_location": "L235"
     },
     {
       "id": "app_src_components_blockpreview_clickcursor",
@@ -1642,7 +1642,7 @@
       "file_type": "code",
       "norm_label": "clickcursor()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L218"
+      "source_location": "L221"
     },
     {
       "id": "app_src_components_blockpreview_flowdemo",
@@ -1654,7 +1654,7 @@
       "file_type": "code",
       "norm_label": "flowdemo()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L431"
+      "source_location": "L434"
     },
     {
       "id": "app_src_components_blockpreview_griddemo",
@@ -1666,7 +1666,7 @@
       "file_type": "code",
       "norm_label": "griddemo()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L470"
+      "source_location": "L473"
     },
     {
       "id": "app_src_components_blockpreview_modaldemo",
@@ -1678,7 +1678,7 @@
       "file_type": "code",
       "norm_label": "modaldemo()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L538"
+      "source_location": "L541"
     },
     {
       "id": "app_src_components_blockpreview_tabsdemo",
@@ -1690,7 +1690,7 @@
       "file_type": "code",
       "norm_label": "tabsdemo()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L410"
+      "source_location": "L413"
     },
     {
       "id": "app_src_components_blockpreview_useblinkwithclick",
@@ -1702,7 +1702,7 @@
       "file_type": "code",
       "norm_label": "useblinkwithclick()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L193"
+      "source_location": "L196"
     },
     {
       "id": "app_src_components_blockpreview_usecyclewithclick",
@@ -1714,7 +1714,7 @@
       "file_type": "code",
       "norm_label": "usecyclewithclick()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L176"
+      "source_location": "L179"
     },
     {
       "id": "server_api_generator_art_entry",
@@ -4441,7 +4441,7 @@
       "file_type": "code",
       "norm_label": "lorem",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L163"
+      "source_location": "L166"
     },
     {
       "id": "server_vercel",
@@ -7284,13 +7284,28 @@
       "source_url": null
     },
     {
+      "id": "server_api_shell_template_applyslideaudio",
+      "label": "Inject/play per-slide voiceover audio",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Render the current NAV item into the viewport",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "inject/play per-slide voiceover audio",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2957",
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template_loadstate",
       "label": "Load learner progress state from SCORM or localStorage",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
       "file_type": "code",
       "norm_label": "load learner progress state from scorm or localstorage",
@@ -7299,18 +7314,108 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_openreadingwarning",
-      "label": "Show the reading-speed warning overlay",
+      "id": "server_api_shell_template_render",
+      "label": "Render the current NAV item into the viewport",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "show the reading-speed warning overlay",
+      "norm_label": "render the current nav item into the viewport",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3259",
+      "source_location": "line 2908",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_renderbottomnav",
+      "label": "Render bottom prev/next nav and slide dots",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Render the current NAV item into the viewport",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render bottom prev/next nav and slide dots",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3140",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_rendercrumb",
+      "label": "Render the top breadcrumb for the current item",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Render the current NAV item into the viewport",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render the top breadcrumb for the current item",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2503",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_renderhero",
+      "label": "Render the cover/hero slide HTML",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Render the current NAV item into the viewport",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render the cover/hero slide html",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2514",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_rendersummary",
+      "label": "Render the closing summary slide",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Render the current NAV item into the viewport",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render the closing summary slide",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2591",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_resetprogress",
+      "label": "Reset all learner progress, keep identity",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Render the current NAV item into the viewport",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "reset all learner progress, keep identity",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3561",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_retryquiz",
+      "label": "Reset a section quiz for a retry",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Render the current NAV item into the viewport",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "reset a section quiz for a retry",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3378",
       "source_url": null
     },
     {
@@ -7320,7 +7425,7 @@
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
       "file_type": "code",
       "norm_label": "persist learner progress state to localstorage and scorm",
@@ -7335,7 +7440,7 @@
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
       "file_type": "code",
       "norm_label": "scorm lmscommit/commit wrapper",
@@ -7350,7 +7455,7 @@
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
       "file_type": "code",
       "norm_label": "walk window/parent chain to find scorm api",
@@ -7365,7 +7470,7 @@
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
       "file_type": "code",
       "norm_label": "scorm lmsfinish/terminate wrapper",
@@ -7380,7 +7485,7 @@
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
       "file_type": "code",
       "norm_label": "resolve scorm api via window or opener",
@@ -7395,7 +7500,7 @@
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
       "file_type": "code",
       "norm_label": "initialize scorm session",
@@ -7410,7 +7515,7 @@
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
       "file_type": "code",
       "norm_label": "scorm lmssetvalue/setvalue wrapper",
@@ -7419,33 +7524,18 @@
       "source_url": null
     },
     {
-      "id": "panduan_fitur_template_modul_ikram_peringatan_kecepatan_baca",
-      "label": "Peringatan Kecepatan Baca",
+      "id": "server_api_shell_template_updateprogress",
+      "label": "Recompute and render overall progress percentage",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
-      "file_type": "concept",
-      "norm_label": "peringatan kecepatan baca",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_sisi_peserta",
-      "label": "Sisi Peserta \u2014 Yang Dialami Peserta (Tahap 6)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "sisi peserta \u2014 yang dialami peserta (tahap 6)",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
+      "file_type": "code",
+      "norm_label": "recompute and render overall progress percentage",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2482",
       "source_url": null
     },
     {
@@ -7455,27 +7545,12 @@
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
+      "community_name": "Render the current NAV item into the viewport",
       "contributor": null,
       "file_type": "concept",
       "norm_label": "scorm api wrapper",
       "rationale": "Auto-detects SCORM 1.2 (window.API) or SCORM 2004 (window.API_1484_11) by walking the window/parent/opener chain. Explicitly skips any API object flagged __modulShim so that once the Articulate shim (artMakeShim) is installed on window.API, this module's own scormFindAPI does not mistake its own shim for the real LMS API and fail to find the genuine one further up the chain.",
       "source_file": "server/api/shell-template.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_keandalan_pencatatan",
-      "label": "Keandalan Pencatatan Data (Outbox Offline)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 39,
-      "community_name": "Persist learner progress state to localStorage and SCORM",
-      "contributor": null,
-      "file_type": "rationale",
-      "norm_label": "keandalan pencatatan data (outbox offline)",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
       "source_location": null,
       "source_url": null
     },
@@ -7615,6 +7690,21 @@
       "source_url": null
     },
     {
+      "id": "server_api_shell_template_actnewsessionid",
+      "label": "Generate a new activity session id",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "generate a new activity session id",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1865",
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template_actonactivity",
       "label": "Handle a user-activity signal, resume from idle",
       "_origin": "semantic",
@@ -7675,6 +7765,21 @@
       "source_url": null
     },
     {
+      "id": "server_api_shell_template_loadoutbox",
+      "label": "Load queued failed activity batches from localStorage",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "load queued failed activity batches from localstorage",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1915",
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template_outboxpush",
       "label": "Push failed activity rows back into the outbox queue",
       "_origin": "semantic",
@@ -7705,8 +7810,8 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_retryquiz",
-      "label": "Reset a section quiz for a retry",
+      "id": "server_api_shell_template_runtrackcheck",
+      "label": "Send a live preflight event to verify activity recording works",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -7714,9 +7819,9 @@
       "community_name": "Buffer an activity tracking event",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "reset a section quiz for a retry",
+      "norm_label": "send a live preflight event to verify activity recording works",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3378",
+      "source_location": "line 2238",
       "source_url": null
     },
     {
@@ -8009,123 +8114,78 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_applyslideaudio",
-      "label": "Inject/play per-slide voiceover audio",
+      "id": "server_api_shell_template_openreadingwarning",
+      "label": "Show the reading-speed warning overlay",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 42,
-      "community_name": "Render the current NAV item into the viewport",
+      "community_name": "Show the reading-speed warning overlay",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "inject/play per-slide voiceover audio",
+      "norm_label": "show the reading-speed warning overlay",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2957",
+      "source_location": "line 3259",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_render",
-      "label": "Render the current NAV item into the viewport",
+      "id": "panduan_fitur_template_modul_ikram_identitas_peserta",
+      "label": "Identitas Peserta Lintas Modul",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 42,
-      "community_name": "Render the current NAV item into the viewport",
+      "community_name": "Show the reading-speed warning overlay",
       "contributor": null,
-      "file_type": "code",
-      "norm_label": "render the current nav item into the viewport",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 2908",
+      "file_type": "concept",
+      "norm_label": "identitas peserta lintas modul",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_renderbottomnav",
-      "label": "Render bottom prev/next nav and slide dots",
+      "id": "panduan_fitur_template_modul_ikram_peringatan_kecepatan_baca",
+      "label": "Peringatan Kecepatan Baca",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 42,
-      "community_name": "Render the current NAV item into the viewport",
+      "community_name": "Show the reading-speed warning overlay",
       "contributor": null,
-      "file_type": "code",
-      "norm_label": "render bottom prev/next nav and slide dots",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3140",
+      "file_type": "concept",
+      "norm_label": "peringatan kecepatan baca",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_rendercrumb",
-      "label": "Render the top breadcrumb for the current item",
+      "id": "panduan_fitur_template_modul_ikram_sisi_peserta",
+      "label": "Sisi Peserta \u2014 Yang Dialami Peserta (Tahap 6)",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 42,
-      "community_name": "Render the current NAV item into the viewport",
+      "community_name": "Show the reading-speed warning overlay",
       "contributor": null,
-      "file_type": "code",
-      "norm_label": "render the top breadcrumb for the current item",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 2503",
+      "file_type": "concept",
+      "norm_label": "sisi peserta \u2014 yang dialami peserta (tahap 6)",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_renderhero",
-      "label": "Render the cover/hero slide HTML",
+      "id": "panduan_fitur_template_modul_ikram_keandalan_pencatatan",
+      "label": "Keandalan Pencatatan Data (Outbox Offline)",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 42,
-      "community_name": "Render the current NAV item into the viewport",
+      "community_name": "Show the reading-speed warning overlay",
       "contributor": null,
-      "file_type": "code",
-      "norm_label": "render the cover/hero slide html",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 2514",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_rendersummary",
-      "label": "Render the closing summary slide",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 42,
-      "community_name": "Render the current NAV item into the viewport",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "render the closing summary slide",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 2591",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_resetprogress",
-      "label": "Reset all learner progress, keep identity",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 42,
-      "community_name": "Render the current NAV item into the viewport",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "reset all learner progress, keep identity",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3561",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_updateprogress",
-      "label": "Recompute and render overall progress percentage",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 42,
-      "community_name": "Render the current NAV item into the viewport",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "recompute and render overall progress percentage",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 2482",
+      "file_type": "rationale",
+      "norm_label": "keandalan pencatatan data (outbox offline)",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
       "source_url": null
     },
     {
@@ -8534,28 +8594,13 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_actnewsessionid",
-      "label": "Generate a new activity session id",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "generate a new activity session id",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1865",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_applyprogressvisibility",
       "label": "Show/hide the progress block per HIDE_PROGRESS",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
+      "community_name": "Dev Mode Panel",
       "contributor": null,
       "file_type": "code",
       "norm_label": "show/hide the progress block per hide_progress",
@@ -8570,27 +8615,12 @@
       "author": null,
       "captured_at": null,
       "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
+      "community_name": "Dev Mode Panel",
       "contributor": null,
       "file_type": "code",
       "norm_label": "hide the dev-mode password modal",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 2334",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_loadoutbox",
-      "label": "Load queued failed activity batches from localStorage",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "load queued failed activity batches from localstorage",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1915",
       "source_url": null
     },
     {
@@ -8600,27 +8630,12 @@
       "author": null,
       "captured_at": null,
       "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
+      "community_name": "Dev Mode Panel",
       "contributor": null,
       "file_type": "code",
       "norm_label": "show the dev-mode password modal",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 2326",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_runtrackcheck",
-      "label": "Send a live preflight event to verify activity recording works",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "send a live preflight event to verify activity recording works",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 2238",
       "source_url": null
     },
     {
@@ -8630,7 +8645,7 @@
       "author": null,
       "captured_at": null,
       "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
+      "community_name": "Dev Mode Panel",
       "contributor": null,
       "file_type": "code",
       "norm_label": "validate dev-mode password and enable dev mode",
@@ -8645,7 +8660,7 @@
       "author": null,
       "captured_at": null,
       "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
+      "community_name": "Dev Mode Panel",
       "contributor": null,
       "file_type": "code",
       "norm_label": "toggle developer mode on/off",
@@ -8660,57 +8675,12 @@
       "author": null,
       "captured_at": null,
       "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
+      "community_name": "Dev Mode Panel",
       "contributor": null,
       "file_type": "code",
       "norm_label": "dev-mode preview toggle for hidden progress",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1583",
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_alat_cek_rekam_aktivitas",
-      "label": "Alat \"Cek Rekam Aktivitas\"",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "alat \"cek rekam aktivitas\"",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_command_center",
-      "label": "Command Center \u2014 Rekam Aktivitas & Analitik (Tahap 7)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "command center \u2014 rekam aktivitas & analitik (tahap 7)",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_deteksi_anomali",
-      "label": "Deteksi Otomatis Data Janggal",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "deteksi otomatis data janggal",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
       "source_url": null
     },
     {
@@ -8720,7 +8690,7 @@
       "author": null,
       "captured_at": null,
       "community": 52,
-      "community_name": "Send a live preflight event to verify activity recording works",
+      "community_name": "Dev Mode Panel",
       "contributor": null,
       "file_type": "concept",
       "norm_label": "dev mode panel",
@@ -8969,6 +8939,51 @@
       "source_url": null
     },
     {
+      "id": "panduan_fitur_template_modul_ikram_alat_cek_rekam_aktivitas",
+      "label": "Alat \"Cek Rekam Aktivitas\"",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 55,
+      "community_name": "Alat \"Cek Rekam Aktivitas\"",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "alat \"cek rekam aktivitas\"",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_command_center",
+      "label": "Command Center \u2014 Rekam Aktivitas & Analitik (Tahap 7)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 55,
+      "community_name": "Alat \"Cek Rekam Aktivitas\"",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "command center \u2014 rekam aktivitas & analitik (tahap 7)",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_deteksi_anomali",
+      "label": "Deteksi Otomatis Data Janggal",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 55,
+      "community_name": "Alat \"Cek Rekam Aktivitas\"",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "deteksi otomatis data janggal",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template_backtoidentityform",
       "label": "Return from identity confirmation to the entry form",
       "_origin": "semantic",
@@ -9176,21 +9191,6 @@
       "norm_label": "validate and stage manually entered identity for confirmation",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1826",
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_identitas_peserta",
-      "label": "Identitas Peserta Lintas Modul",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 8,
-      "community_name": "Identity Resolution & NIP Capture",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "identitas peserta lintas modul",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
       "source_url": null
     },
     {
@@ -9760,7 +9760,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L385",
+      "source_location": "L388",
       "weight": 1.0
     },
     {
@@ -9772,7 +9772,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L432",
+      "source_location": "L435",
       "weight": 1.0
     },
     {
@@ -9784,7 +9784,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L539",
+      "source_location": "L542",
       "weight": 1.0
     },
     {
@@ -9796,7 +9796,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L411",
+      "source_location": "L414",
       "weight": 1.0
     },
     {
@@ -16142,7 +16142,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L163",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -16153,7 +16153,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L176",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -16164,7 +16164,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L193",
+      "source_location": "L196",
       "weight": 1.0
     },
     {
@@ -16175,7 +16175,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L218",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -16186,7 +16186,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L232",
+      "source_location": "L235",
       "weight": 1.0
     },
     {
@@ -16197,7 +16197,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L384",
+      "source_location": "L387",
       "weight": 1.0
     },
     {
@@ -16208,7 +16208,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L410",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -16219,7 +16219,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L431",
+      "source_location": "L434",
       "weight": 1.0
     },
     {
@@ -16230,7 +16230,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L470",
+      "source_location": "L473",
       "weight": 1.0
     },
     {
@@ -16241,7 +16241,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L538",
+      "source_location": "L541",
       "weight": 1.0
     },
     {
@@ -23615,5 +23615,5 @@
       "source_file": "Panduan-Fitur-Template-Modul-Ikram.html"
     }
   ],
-  "built_at_commit": "33cbed8ac540db09495fc6e439a1441ae52766ef"
+  "built_at_commit": "a93bd6f7020148c420c32e6dc94d8d75bdeb3fe1"
 }

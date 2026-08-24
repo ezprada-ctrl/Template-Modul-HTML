@@ -38,10 +38,10 @@
   "36": "Articulate 360 Block Runtime",
   "37": "BlockEditor",
   "38": "EmojiPicker.tsx",
-  "39": "Persist learner progress state to localStorage and SCORM",
+  "39": "Render the current NAV item into the viewport",
   "40": "uploadImageToStorage",
   "41": "Learning Recap Popup ('Ringkasan Belajarmu')",
-  "42": "Render the current NAV item into the viewport",
+  "42": "Show the reading-speed warning overlay",
   "43": "QuizBuilder",
   "44": "supabase_setup.sql",
   "45": "supabase_activity_setup.sql",
@@ -51,7 +51,8 @@
   "49": "Knowledge Check Gate",
   "50": "r2.py",
   "51": "Submit a section quiz for grading",
-  "52": "Send a live preflight event to verify activity recording works",
+  "52": "Dev Mode Panel",
   "53": "checkNetwork",
-  "54": "Record a content-interaction event (accordion/tabs/modal/flow)"
+  "54": "Record a content-interaction event (accordion/tabs/modal/flow)",
+  "55": "Alat \"Cek Rekam Aktivitas\""
 }

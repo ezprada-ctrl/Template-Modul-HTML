@@ -776,11 +776,20 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .modal-trigger:hover{border-color:var(--accent);}
 .modal-trigger .ic{width:28px;height:28px;border-radius:9px;background:var(--accent-soft);color:var(--accent-2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
 .modal-trigger .chevron{margin-left:auto;color:var(--text-faint);font-size:12px;}
+/* left:314px = lebar #sidebar, BUKAN 0.
+   Sidebar itu rel tetap yang selalu kelihatan di desktop, jadi overlay yang
+   membentang dari tepi kiri layar bikin popup-nya ketengah di tengah LAYAR -
+   yang artinya kelewat ke kiri dari kolom isi yang lagi dibaca. Dengan digeser
+   selebar sidebar, titik tengahnya jadi titik tengah kolom isi, persis di
+   depan mata. Di bawah 900px sidebar-nya jadi panel geser (off-canvas) dan
+   kolom isi memenuhi layar, jadi offset-nya dibalikin ke 0 di media query
+   mobile di bawah. */
 .modal-overlay{
-  position:fixed;inset:0;background:rgba(15,18,26,.55);backdrop-filter:blur(2px);
+  position:fixed;inset:0 0 0 314px;background:rgba(15,18,26,.55);backdrop-filter:blur(2px);
   display:flex;align-items:center;justify-content:center;padding:24px;
   opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:300;
 }
+@media(max-width:900px){.modal-overlay{inset:0;}}
 .modal-overlay.open{opacity:1;pointer-events:auto;}
 .modal-box{
   background:var(--surface);border-radius:var(--radius-lg);max-width:720px;width:100%;

@@ -1,16 +1,16 @@
 # Graph Report - Template Modul Ikram  (2026-08-24)
 
 ## Corpus Check
-- 47 files · ~95,494 words
+- 47 files · ~95,527 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 723 nodes · 1258 edges · 55 communities (41 shown, 14 thin omitted)
+- 723 nodes · 1258 edges · 56 communities (42 shown, 14 thin omitted)
 - Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 155 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `33cbed8a`
+- Built from commit: `a93bd6f7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -52,10 +52,10 @@
 - Articulate 360 Block Runtime
 - BlockEditor
 - EmojiPicker.tsx
-- Persist learner progress state to localStorage and SCORM
+- Render the current NAV item into the viewport
 - uploadImageToStorage
 - Learning Recap Popup ('Ringkasan Belajarmu')
-- Render the current NAV item into the viewport
+- Show the reading-speed warning overlay
 - QuizBuilder
 - supabase_setup.sql
 - supabase_activity_setup.sql
@@ -63,9 +63,10 @@
 - Knowledge Check Gate
 - r2.py
 - Submit a section quiz for grading
-- Send a live preflight event to verify activity recording works
+- Dev Mode Panel
 - checkNetwork
 - Record a content-interaction event (accordion/tabs/modal/flow)
+- Alat "Cek Rekam Aktivitas"
 
 ## God Nodes (most connected - your core abstractions)
 1. `App()` - 25 edges
@@ -88,7 +89,7 @@
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/pptx_extract.py
 - `Render Service: modul-builder-backend` --semantically_similar_to--> `server/vercel.json`  [INFERRED] [semantically similar]
   render.yaml → Template-Modul-Ikram-Source-Code.html
-- `Identitas Peserta Lintas Modul` --references--> `Resolve learner identity from state/SCORM/shared cache`  [INFERRED]
+- `Alat "Cek Rekam Aktivitas"` --references--> `Send a live preflight event to verify activity recording works`  [INFERRED]
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/shell-template.html
 
 ## Import Cycles
@@ -101,7 +102,7 @@
 - **Articulate SCORM-in-SCORM containment** — server_api_shell_template_artmakeshim, server_api_shell_template_scormfindapi, server_api_shell_template_concept_articulate_runtime [INFERRED 0.85]
 - **Research Basis for Idle/Reading-speed Thresholds** — panduan_fitur_template_modul_ikram_ambang_ditinggal_4_menit, panduan_fitur_template_modul_ikram_ambang_dibaca_238wpm, server_api_shell_template_actidlethresholdms, server_api_generator [INFERRED 0.85]
 
-## Communities (55 total, 14 thin omitted)
+## Communities (56 total, 14 thin omitted)
 
 ### Community 0 - "App.tsx"
 Cohesion: 0.05
@@ -120,8 +121,8 @@ Cohesion: 0.06
 Nodes (53): get, Import PPTX (Tahap 1), post, Render Service: modul-builder-backend, _headers(), list_drafts(), load_draft(), ping() (+45 more)
 
 ### Community 4 - "Buffer an activity tracking event"
-Cohesion: 0.20
-Nodes (21): Bind global activity listeners for idle detection, Boot activity tracking: resume outbox, resolve identity, start/gate, Check elapsed time against idle threshold, pause segment, Close out timing for the previous slide and emit slide_view, End the activity session and flush final events, Buffer an activity tracking event, Flush buffered + outboxed activity events to the server, Compute idle threshold for the current slide mark (+13 more)
+Cohesion: 0.19
+Nodes (23): Bind global activity listeners for idle detection, Boot activity tracking: resume outbox, resolve identity, start/gate, Check elapsed time against idle threshold, pause segment, Close out timing for the previous slide and emit slide_view, End the activity session and flush final events, Buffer an activity tracking event, Flush buffered + outboxed activity events to the server, Compute idle threshold for the current slide mark (+15 more)
 
 ### Community 5 - "BlockEditor.tsx"
 Cohesion: 0.14
@@ -136,8 +137,8 @@ Cohesion: 0.08
 Nodes (35): ActivityLearner, ActivityModule, ActivitySession, ArticulateInfo, ccListLearners(), ccListModules(), ccListSessions(), ccPost() (+27 more)
 
 ### Community 8 - "Identity Resolution & NIP Capture"
-Cohesion: 0.20
-Nodes (16): Identitas Peserta Lintas Modul, Return from identity confirmation to the entry form, Identity Resolution & NIP Capture, Confirm and commit pending identity, start activity session, Group NIP digits per PNS NIP structure, Live-format the NIP input field while preserving caret, Read learner name/id from the SCORM API, Load cross-module cached learner identity (+8 more)
+Cohesion: 0.22
+Nodes (15): Return from identity confirmation to the entry form, Identity Resolution & NIP Capture, Confirm and commit pending identity, start activity session, Group NIP digits per PNS NIP structure, Live-format the NIP input field while preserving caret, Read learner name/id from the SCORM API, Load cross-module cached learner identity, Strip non-digit characters from a NIP string (+7 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.08
@@ -199,9 +200,9 @@ Nodes (12): BlockEditor(), add(), changeType(), remove(), toggleCollapse(), bloc
 Cohesion: 0.33
 Nodes (3): EmojiPicker(), Props, EMOJI_CATEGORIES
 
-### Community 39 - "Persist learner progress state to localStorage and SCORM"
-Cohesion: 0.21
-Nodes (13): Keandalan Pencatatan Data (Outbox Offline), Peringatan Kecepatan Baca, Sisi Peserta — Yang Dialami Peserta (Tahap 6), SCORM API Wrapper, Load learner progress state from SCORM or localStorage, Show the reading-speed warning overlay, Persist learner progress state to localStorage and SCORM, SCORM LMSCommit/Commit wrapper (+5 more)
+### Community 39 - "Render the current NAV item into the viewport"
+Cohesion: 0.15
+Nodes (18): Inject/play per-slide voiceover audio, SCORM API Wrapper, Load learner progress state from SCORM or localStorage, Render the current NAV item into the viewport, Render bottom prev/next nav and slide dots, Render the top breadcrumb for the current item, Render the cover/hero slide HTML, Render the closing summary slide (+10 more)
 
 ### Community 40 - "uploadImageToStorage"
 Cohesion: 0.50
@@ -211,9 +212,9 @@ Nodes (5): uploadImageToStorage(), detectPngTransparency(), ImageUploadField(), 
 Cohesion: 0.25
 Nodes (14): SVG bar chart renderer, Learning Recap Popup ('Ringkasan Belajarmu'), Render the recap bar chart of engagement signals, Close the learner recap popup, HTML-escape a value for the recap popup, Join a list of strings with Indonesian 'dan' conjunction, Build the per-signal narration text builders for recap, Open the learner recap popup, fetching data if needed (+6 more)
 
-### Community 42 - "Render the current NAV item into the viewport"
-Cohesion: 0.25
-Nodes (8): Inject/play per-slide voiceover audio, Render the current NAV item into the viewport, Render bottom prev/next nav and slide dots, Render the top breadcrumb for the current item, Render the cover/hero slide HTML, Render the closing summary slide, Reset all learner progress, keep identity, Recompute and render overall progress percentage
+### Community 42 - "Show the reading-speed warning overlay"
+Cohesion: 0.40
+Nodes (5): Identitas Peserta Lintas Modul, Keandalan Pencatatan Data (Outbox Offline), Peringatan Kecepatan Baca, Sisi Peserta — Yang Dialami Peserta (Tahap 6), Show the reading-speed warning overlay
 
 ### Community 43 - "QuizBuilder"
 Cohesion: 0.52
@@ -239,9 +240,9 @@ Nodes (10): _creds(), is_configured(), presign(), _quote(), Cloudflare R2 — pe
 Cohesion: 0.29
 Nodes (13): Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Section Quiz Checkpoint, Check whether a section's quiz is unlocked, Check whether a section's quiz has been passed, Play the correct-answer chime, Play the quiz-failed tone (+5 more)
 
-### Community 52 - "Send a live preflight event to verify activity recording works"
-Cohesion: 0.17
-Nodes (13): Alat "Cek Rekam Aktivitas", Command Center — Rekam Aktivitas & Analitik (Tahap 7), Deteksi Otomatis Data Janggal, Generate a new activity session id, Show/hide the progress block per HIDE_PROGRESS, Hide the dev-mode password modal, Dev Mode Panel, Load queued failed activity batches from localStorage (+5 more)
+### Community 52 - "Dev Mode Panel"
+Cohesion: 0.33
+Nodes (7): Show/hide the progress block per HIDE_PROGRESS, Hide the dev-mode password modal, Dev Mode Panel, Show the dev-mode password modal, Validate dev-mode password and enable dev mode, Toggle developer mode on/off, Dev-mode preview toggle for hidden progress
 
 ### Community 53 - "checkNetwork"
 Cohesion: 0.29
@@ -250,6 +251,10 @@ Nodes (6): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-pr
 ### Community 54 - "Record a content-interaction event (accordion/tabs/modal/flow)"
 Cohesion: 0.25
 Nodes (8): Accordion block renderer, Record a content-interaction event (accordion/tabs/modal/flow), Flow diagram block renderer, Open modal block, Tabs block switch handler, Tabs block renderer, Accordion item toggle, Flow diagram step toggle
+
+### Community 55 - "Alat "Cek Rekam Aktivitas""
+Cohesion: 0.67
+Nodes (3): Alat "Cek Rekam Aktivitas", Command Center — Rekam Aktivitas & Analitik (Tahap 7), Deteksi Otomatis Data Janggal
 
 ## Knowledge Gaps
 - **128 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+123 more)

@@ -91,6 +91,40 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
     setZoom(z => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, (z ?? skalaPas) * kali)));
   }
 
+  // Skala dibaca juga dari dalam listener yang dipasang ke dokumen iframe.
+  // Listener itu dipasang sekali per pemuatan iframe, jadi kalau dia menutup
+  // nilai `skala` langsung, yang kebaca bakal nilai LAMA setiap kali zoom
+  // berubah tanpa iframe dimuat ulang. Ref-nya selalu mutakhir.
+  const skalaRef = useRef(skala);
+  skalaRef.current = skala;
+
+  // Popup blok itu overlay position:fixed - dia menutupi SELURUH layar
+  // simulasi (1280x800), bukan cuma bagian yang lagi kelihatan di panel.
+  // Waktu preview di-zoom melewati lebar panel, sebagian layar simulasi ada di
+  // luar pandangan, dan popup yang muncul di sana kelihatan cuma separuh -
+  // persis keluhan "popupnya setengah". Begitu popup kebuka, panelnya digeser
+  // supaya kotak popup-nya ketengah; kalau semuanya udah kelihatan, gak ada
+  // yang digeser.
+  function bawaPopupKeLayar() {
+    const wadah = wadahRef.current;
+    const doc = iframeRef.current?.contentDocument;
+    if (!wadah || !doc) return;
+    const box = doc.querySelector('.modal-overlay.open .modal-box') as HTMLElement | null;
+    if (!box) return;
+    const s = skalaRef.current;
+    const r = box.getBoundingClientRect();
+    const tengahX = (r.left + r.width / 2) * s;
+    const tengahY = (r.top + r.height / 2) * s;
+    wadah.scrollTo({
+      left: tengahX - wadah.clientWidth / 2,
+      top: tengahY - wadah.clientHeight / 2,
+      // Langsung, bukan smooth: popup itu muncul seketika, dan menggeser panel
+      // pelan-pelan bikin sekejap pertama tetap nampak popup separuh - keluhan
+      // yang justru mau dihilangkan.
+      behavior: 'auto',
+    });
+  }
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setLoading(true);
@@ -142,6 +176,13 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
         viewport.scrollTop = scrollTopRef.current;
         viewport.addEventListener('scroll', () => { scrollTopRef.current = viewport.scrollTop; });
       }
+      // Popup dibuka/ditutup lewat class .open, bukan lewat event yang bisa
+      // didengarkan - jadi perubahan class-nya yang diamati. Dipasang ulang
+      // tiap iframe dimuat karena srcDoc bikin dokumen yang benar-benar baru.
+      const pengamat = new win.MutationObserver(() => bawaPopupKeLayar());
+      pengamat.observe(win.document.body, {
+        subtree: true, attributes: true, attributeFilter: ['class'],
+      });
     } catch {
       // iframe not ready yet, ignore
     }
