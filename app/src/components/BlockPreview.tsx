@@ -3,9 +3,17 @@ import type { BlockType } from '../types';
 
 /**
  * Scoped, self-contained copy of the learner-facing block CSS (from
- * server/api/shell-template.html) so the dropdown preview looks 1:1 like
- * the real generated output. Kept isolated under .pbp-scope so it never
- * leaks into the rest of the editor UI.
+ * server/api/shell-template.html) so the dropdown preview shows the real
+ * BENTUK tiap blok. Kept isolated under .pbp-scope so it never leaks into
+ * the rest of the editor UI.
+ *
+ * Paletnya sengaja SATU KELUARGA BIRU, bukan emas+navy seperti tema bawaan
+ * modul. Alasannya: preview ini cuma buat mengenali bentuk blok, dan tema
+ * modul yang sebenarnya bisa diganti sendiri di tab Tema - jadi warna apa
+ * pun yang dipatok di sini bakal salah buat sebagian orang. Emas+navy bikin
+ * deretan preview kelihatan campur dua tema sekaligus; satu keluarga warna
+ * bikin bentuknya yang menonjol, bukan warnanya. Warna modul yang asli
+ * tetap kelihatan di Preview Langsung, yang memang render beneran.
  */
 export const BLOCK_PREVIEW_STYLES = `
 .pbp-scope, .pbp-scope *{box-sizing:border-box;}
@@ -13,9 +21,9 @@ export const BLOCK_PREVIEW_STYLES = `
   --bg:#ffffff;--bg-soft:#f6f7fa;--surface:#ffffff;--surface-2:#f1f3f7;
   --border:rgba(22,33,62,.10);--border-strong:rgba(22,33,62,.18);
   --text:#16213e;--text-dim:#4d5876;--text-faint:#8891a8;
-  --accent:#c99a3d;--accent-2:#b3822a;--accent-soft:rgba(201,154,61,.14);
-  --accent-glow:rgba(201,154,61,.45);--on-accent:#2a1c04;--navy:#1b2a4a;--navy-2:#2d3c5c;
-  --amber-soft:rgba(201,154,61,.14);--rose:#c04a44;--rose-soft:rgba(192,74,68,.10);
+  --accent:#2f6690;--accent-2:#245273;--accent-soft:rgba(47,102,144,.14);
+  --accent-glow:rgba(47,102,144,.45);--on-accent:#ffffff;--navy:#1b2a4a;--navy-2:#2d3c5c;
+  --amber-soft:rgba(47,102,144,.10);--rose:#c04a44;--rose-soft:rgba(192,74,68,.10);
   --blue-soft:rgba(47,102,144,.10);--violet:#2f7d70;--violet-soft:rgba(47,125,112,.18);
   --green:#2f9e6a;--green-soft:rgba(47,158,106,.14);
   --radius-lg:22px;--radius-md:16px;--radius-sm:10px;
@@ -35,7 +43,7 @@ export const BLOCK_PREVIEW_STYLES = `
    paling kentara pas kotaknya sempit (mis. satu sel Grid 3 kolom). */
 .pbp-scope .definition .tag{position:absolute;top:-10px;left:16px;background:var(--accent);color:var(--on-accent);font-size:9.5px;font-weight:800;letter-spacing:.06em;padding:3px 10px;border-radius:20px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 32px);}
 .pbp-scope .definition p{margin:6px 0 0;line-height:1.55;color:#dbe2ef;font-size:12.5px;}
-.pbp-scope .definition b{color:#f6d998;}
+.pbp-scope .definition b{color:#9ec6e4;}
 
 .pbp-scope .pull-quote{margin:10px 0;padding:16px 8px;text-align:center;border-top:2px solid var(--accent);border-bottom:2px solid var(--accent);}
 .pbp-scope .pull-quote .pq-num{display:block;font-size:32px;font-weight:800;color:var(--accent-2);line-height:1.05;}
@@ -44,7 +52,7 @@ export const BLOCK_PREVIEW_STYLES = `
 .pbp-scope .callout{border-radius:var(--radius-md);padding:12px 14px;border:1px solid;font-size:12.5px;line-height:1.55;display:flex;gap:10px;}
 .pbp-scope .callout .ic{font-size:15px;flex-shrink:0;}
 .pbp-scope .callout .ic-badge{width:22px;height:22px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;}
-.pbp-scope .callout.amber{background:var(--amber-soft);border-color:rgba(201,154,61,.3);}
+.pbp-scope .callout.amber{background:var(--amber-soft);border-color:rgba(47,102,144,.28);}
 .pbp-scope .callout p{margin:0;color:var(--text-dim);}
 .pbp-scope .callout b{color:var(--text);}
 
@@ -102,12 +110,12 @@ export const BLOCK_PREVIEW_STYLES = `
 
 .pbp-scope .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
 .pbp-scope .tab-btn{padding:6px 12px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-faint);font-size:11.5px;font-weight:700;transition:.2s;}
-.pbp-scope .tab-btn.active{background:var(--navy);border-color:var(--navy);color:#f6d998;}
+.pbp-scope .tab-btn.active{background:var(--navy);border-color:var(--navy);color:#cfe1f0;}
 .pbp-scope .tab-panel{display:none;font-size:12px;line-height:1.55;color:var(--text-dim);}
 .pbp-scope .tab-panel.active{display:block;animation:pbpRiseIn .3s ease;}
 
 .pbp-scope .dtable{width:100%;border-collapse:collapse;font-size:11.5px;}
-.pbp-scope .dtable th{background:var(--navy);color:#f6d998;font-weight:700;text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;}
+.pbp-scope .dtable th{background:var(--navy);color:#cfe1f0;font-weight:700;text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;}
 .pbp-scope .dtable td{padding:8px 10px;border-top:1px solid var(--border);color:var(--text-dim);}
 
 .pbp-scope .timeline{display:flex;flex-direction:column;gap:0;margin:4px 0;}
