@@ -19,6 +19,21 @@ interface Props {
 // jadi bentuk asli modul, cuma lebih kecil - bukan versi mobile-nya.
 const LEBAR_LOGIS = 1280;
 
+// Tinggi "layar" yang disimulasikan. DIPATOK, bukan ngikut tinggi panel:
+// modulnya pakai layout setinggi layar dengan area isi yang scroll sendiri,
+// jadi kalau tinggi logisnya ikut berubah tiap panel di-resize, proporsi
+// sampul & kartu ikut goyang dan preview berhenti mewakili layar beneran.
+const TINGGI_LOGIS = 800;
+
+// Batas zoom manual. Di bawah 25% teks modulnya udah gak kebaca sama sekali;
+// di atas 300% yang kelihatan cuma piksel yang direntang - dua-duanya bukan
+// sesuatu yang berguna buat ngecek tata letak.
+const ZOOM_MIN = 0.25;
+const ZOOM_MAX = 3;
+// Kelipatan per klik. 1.25 cukup kecil buat ngintip detail tanpa kelewat,
+// tapi tetap kerasa gerak dalam sekali klik.
+const LANGKAH = 1.25;
+
 // Live preview of a single slide (or the cover/hero screen), rendered by
 // generating the full module HTML and jumping the embedded page straight to
 // that slide (bypassing section gating via devMode) — so editors see the
@@ -46,26 +61,35 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
   // back to the top on every single keystroke-triggered re-render.
   const scrollTopRef = useRef(0);
   // Panel preview ikut melar/menyusut (layout editor, jendela di-resize), jadi
-  // faktor perkecilnya diukur ulang - bukan konstanta.
+  // ukurannya diukur ulang - bukan konstanta.
   const wadahRef = useRef<HTMLDivElement>(null);
-  const [skala, setSkala] = useState(1);
+  const [panel, setPanel] = useState({ w: 0, h: 0 });
+  // null = ikut "Pas" (otomatis muat panel). Angka = zoom yang dipilih sendiri,
+  // dan sengaja BERTAHAN waktu panelnya di-resize: kalau ikut dihitung ulang,
+  // zoom yang barusan dipilih bakal hilang sendiri tiap layout editor bergeser.
+  const [zoom, setZoom] = useState<number | null>(null);
 
   useLayoutEffect(() => {
     const el = wadahRef.current;
     if (!el) return;
-    const ukur = () => {
-      const w = el.clientWidth;
-      if (!w) return;
-      // Gak pernah DIPERBESAR: kalau panelnya kebetulan lebih lebar dari
-      // LEBAR_LOGIS, membesarkan cuma bikin teks buram tanpa nunjukin apa pun
-      // yang baru.
-      setSkala(Math.min(1, w / LEBAR_LOGIS));
-    };
+    const ukur = () => setPanel({ w: el.clientWidth, h: el.clientHeight });
     ukur();
     const ro = new ResizeObserver(ukur);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Skala yang bikin seluruh "layar" simulasi muat di panel. Gak pernah
+  // DIPERBESAR lewat 1: kalau panelnya kebetulan lebih lebar dari LEBAR_LOGIS,
+  // membesarkan cuma bikin teks buram tanpa nunjukin apa pun yang baru.
+  const skalaPas = panel.w && panel.h
+    ? Math.min(1, panel.w / LEBAR_LOGIS, panel.h / TINGGI_LOGIS)
+    : 1;
+  const skala = zoom ?? skalaPas;
+
+  function ubahZoom(kali: number) {
+    setZoom(z => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, (z ?? skalaPas) * kali)));
+  }
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -131,30 +155,73 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
           : target === 'summary' ? 'Preview langsung — slide penutup'
           : `Preview langsung — slide #${slideNumber}`
         )}</span>
-        {loading && <span>memperbarui…</span>}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {loading && <span>memperbarui…</span>}
+          {/* Zoom ini SENGAJA cuma nyentuh iframe preview - bukan zoom browser -
+              supaya editor di sebelahnya tetap ukuran normal waktu penyusun
+              modul lagi ngintip detail satu blok. */}
+          <button
+            className="btn-icon btn-sm btn-ghost"
+            onClick={() => ubahZoom(1 / LANGKAH)}
+            disabled={skala <= ZOOM_MIN + 0.001}
+            title="Perkecil preview"
+          >&minus;</button>
+          {/* Persennya sekaligus tombol balik ke "Pas" - tempat yang paling
+              gampang dituju setelah kejauhan zoom, tanpa nambah tombol lagi. */}
+          <button
+            className="btn-sm btn-ghost"
+            onClick={() => setZoom(null)}
+            disabled={zoom === null}
+            title={zoom === null ? 'Sudah pas dengan panel' : 'Kembalikan supaya pas dengan panel'}
+            style={{ minWidth: 52, fontVariantNumeric: 'tabular-nums', letterSpacing: 0 }}
+          >{Math.round(skala * 100)}%</button>
+          <button
+            className="btn-icon btn-sm btn-ghost"
+            onClick={() => ubahZoom(LANGKAH)}
+            disabled={skala >= ZOOM_MAX - 0.001}
+            title="Perbesar preview"
+          >+</button>
+        </span>
       </div>
       {error && <p style={{ color: 'var(--danger)', fontSize: 12, padding: 10 }}>{error}</p>}
-      <div ref={wadahRef} style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+      <div
+        ref={wadahRef}
+        style={{
+          flex: 1,
+          // Begitu di-zoom melewati ukuran panel, isinya digeser-geser di sini.
+          overflow: 'auto',
+          // "safe" centering: pas preview lebih kecil dari panel dia ketengah,
+          // tapi pas lebih besar dia balik nempel ke kiri-atas - tanpa itu, sisi
+          // kiri & atas kepotong dan gak bisa di-scroll balik.
+          display: 'grid',
+          justifyContent: 'safe center',
+          alignContent: 'safe center',
+        }}
+      >
         {html && (
-          <iframe
-            ref={iframeRef}
-            srcDoc={html}
-            onLoad={jumpToSlide}
-            allow="autoplay; encrypted-media; picture-in-picture; clipboard-write"
-            style={{
-              border: 'none',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              // Lebar & tinggi dipasang dalam satuan SEBELUM diperkecil: setelah
-              // di-scale, hasilnya pas menutupi panel. Tanpa membagi tingginya,
-              // isi bagian bawah panel bakal kosong seukuran sisa penyusutan.
-              width: LEBAR_LOGIS,
-              height: `${100 / skala}%`,
-              transform: `scale(${skala})`,
-              transformOrigin: '0 0',
-            }}
-          />
+          // transform:scale() gak mengubah ukuran yang DIHITUNG layout, jadi
+          // wadah scroll-nya gak bakal tau preview-nya membesar. Kotak ini yang
+          // memegang ukuran hasil-perkecilan itu, supaya scrollbar-nya muncul.
+          <div style={{ width: LEBAR_LOGIS * skala, height: TINGGI_LOGIS * skala, position: 'relative' }}>
+            <iframe
+              ref={iframeRef}
+              srcDoc={html}
+              onLoad={jumpToSlide}
+              allow="autoplay; encrypted-media; picture-in-picture; clipboard-write"
+              style={{
+                border: 'none',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                // Ukuran dipasang dalam satuan SEBELUM diperkecil - inilah
+                // "layar" yang disimulasikan; transform-nya yang mengecilkan.
+                width: LEBAR_LOGIS,
+                height: TINGGI_LOGIS,
+                transform: `scale(${skala})`,
+                transformOrigin: '0 0',
+              }}
+            />
+          </div>
         )}
       </div>
     </div>
