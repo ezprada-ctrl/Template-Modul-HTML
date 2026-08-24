@@ -161,6 +161,27 @@ a{color:inherit;}
 .nsh-chevron{font-size:10px;color:var(--text-faint);transition:transform .2s;}
 .nav-section.open .nsh-chevron{transform:rotate(90deg);}
 
+/* Sampul duduk DI LUAR semua section, jadi dia dibentuk sebagai SESAMA
+   section head (padding & ukuran ikon yang sama), bukan sebagai
+   .nav-item-btn yang menjorok ke dalam - bentuk yang menjorok itu justru
+   yang bikin dia kebaca sebagai anak section pertama. */
+.nav-cover-btn{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:11px 12px;border-radius:var(--radius-md);border:1px solid transparent;
+  background:transparent;cursor:pointer;color:var(--text-dim);flex-shrink:0;
+  font-size:13px;font-weight:600;
+  transition:background .18s,border-color .18s,color .18s;
+}
+.nav-cover-btn:hover{background:var(--surface-2);color:var(--text);}
+.nav-cover-btn.current{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--accent-2);}
+.nav-cover-icon{
+  width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:12px;background:var(--navy-soft);color:var(--navy);
+}
+.nav-cover-btn.current .nav-cover-icon{background:var(--accent);color:var(--on-accent);}
+.nav-cover-btn .dot{width:6px;height:6px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);flex-shrink:0;margin-left:auto;}
+.nav-cover-btn.visited .dot{background:var(--accent);border-color:var(--accent);}
+
 .nav-section-body{max-height:0;overflow:hidden;transition:max-height .3s ease;}
 .nav-section.open .nav-section-body{max-height:1400px;}
 .nav-item-btn{
@@ -2404,10 +2425,37 @@ function buildNavGroups(sectionId, items){
 function renderSidebar(){
   const wrap = document.getElementById('nav-sections');
   wrap.innerHTML = '';
+  const currentItem = NAV[currentIdx];
+
+  /* Section yang gak punya satu pun item gak dirender sama sekali. Ini jadi
+     perlu begitu Sampul dilepas dari section pertama: modul yang section
+     pembukanya cuma berisi Sampul (pola yang lumrah - "Pendahuluan") bakal
+     nyisa jadi kotak kosong 0/0 yang gak bisa diapa-apain. */
+  const sectionHasItems = sec => NAV.some(it=>it.section===sec.id && it.kind!=='summary');
+  const firstLiveSection = SECTIONS.find(sectionHasItems);
+
+  /* Sampul: sejajar section, di atas semuanya. */
+  const heroItem = NAV.find(it=>it.kind==='hero');
+  if(heroItem){
+    const heroIdx = NAV.indexOf(heroItem);
+    const heroVisited = !!state.visited[itemKey(heroItem)];
+    const btn = document.createElement('button');
+    btn.className = 'nav-cover-btn'+(heroVisited?' visited':'')+(heroIdx===currentIdx?' current':'');
+    btn.setAttribute('onclick', 'goTo('+heroIdx+')');
+    btn.innerHTML = '<span class="nav-cover-icon">◆</span><span>Sampul</span><span class="dot"></span>';
+    wrap.appendChild(btn);
+  }
+
   SECTIONS.forEach((sec, secIdx)=>{
     const items = NAV.filter(it=>it.section===sec.id && it.kind!=='summary');
-    const currentItem = NAV[currentIdx];
-    const isActiveSection = currentItem.section === sec.id;
+    if(!items.length) return;
+    /* Selagi peserta di Sampul gak ada section yang "aktif" - dulu section
+       pertama kebuka sendiri karena Sampul dianggap ada di dalamnya. Biar
+       langkah berikutnya tetap kelihatan (bukan deretan section tertutup
+       semua), section hidup pertama yang dibukain. */
+    const isActiveSection = currentItem.kind==='hero'
+      ? (firstLiveSection && firstLiveSection.id === sec.id)
+      : currentItem.section === sec.id;
     const unlocked = isSectionUnlocked(secIdx);
     const sectionEl = document.createElement('div');
     sectionEl.className = 'nav-section'+(isActiveSection&&unlocked?' open':'')+(unlocked?'':' locked');
@@ -2521,7 +2569,14 @@ function renderCrumb(item){
     crumb.innerHTML = `<b>Ringkasan Akhir</b>`;
     return;
   }
-  const label = item.kind==='quiz' ? 'Kuis Section' : item.kind==='hero' ? 'Sampul' : SLIDE_TITLES[item.num];
+  /* Sampul gak berada di section mana pun, jadi gak ada induk yang bisa
+     ditulis di depannya - `<span></span> / <b>Sampul</b>` cuma ninggalin
+     garis miring menggantung. */
+  if(item.kind==='hero'){
+    crumb.innerHTML = `<b>Sampul</b>`;
+    return;
+  }
+  const label = item.kind==='quiz' ? 'Kuis Section' : SLIDE_TITLES[item.num];
   crumb.innerHTML = `<span>${sec?sec.title:''}</span><span class="sep">/</span><b>${label}</b>`;
 }
 
@@ -3213,8 +3268,11 @@ function goTo(idx){
      section-nya kan udah kebuka, jadi gerbang isSectionUnlocked/
      isQuizAccessible di bawah gak pernah kesentuh buat kasus ini. Dikunci
      eksplisit di sini. devMode dilewatin, sama kayak gerbang lain. */
+  /* Sampul dicek TERPISAH dari slide: section-nya null, jadi dia gak akan
+     pernah cocok sama cur.section dan bakal jadi pintu kabur dari halaman
+     kuis kalau cuma diandelin ke perbandingan section. */
   if(!devMode && cur && cur.kind==='quiz' &&
-     (target.kind==='slide' || target.kind==='hero') && target.section===cur.section){
+     (target.kind==='hero' || (target.kind==='slide' && target.section===cur.section))){
     showLockNotice('Kamu sedang mengerjakan kuis. Selesaikan dulu sebelum balik ke materi.');
     return;
   }

@@ -960,8 +960,13 @@ def build_nav(module):
         slides_by_section[sid].sort(key=lambda s: s['number'])
 
     nav = []
-    first_section_id = sections[0]['id'] if sections else None
-    nav.append({'kind': 'hero', 'section': first_section_id, 'num': 1})
+    # Sampul SENGAJA gak punya section. Dia pintu masuk modul, bukan bagian
+    # dari materi mana pun - dulu dititipkan ke section pertama dan akibatnya
+    # muncul MENJOROK DI DALAM section itu di menu samping, seolah-olah
+    # Sampul salah satu slide "Pendahuluan". section=None bikin dia lolos
+    # dari filter per-section di renderSidebar, jadi dia dirender sendiri di
+    # paling atas, sejajar dengan section - bukan anaknya.
+    nav.append({'kind': 'hero', 'section': None, 'num': 1})
     for sec in sections:
         for s in slides_by_section.get(sec['id'], []):
             nav.append({'kind': 'slide', 'section': sec['id'], 'num': s['number']})
