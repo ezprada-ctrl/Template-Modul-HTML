@@ -181,6 +181,12 @@ export interface ActivitySession {
   // paling rendah duluan — dipakai buat lihat video MANA yang jarang
   // ditonton, bukan cuma rata-rata gabungan semuanya.
   video_detail: VideoDetail[];
+  // Blok Articulate 360 yang dilaporkan SELESAI (paketnya sendiri yang bilang
+  // completed/passed lewat shim SCORM kita), dan berapa paket yang terpasang
+  // di modul ini. total_articulate null = modul di-export sebelum angka ini
+  // ditanam - beda dari "modul ini gak punya paket Articulate" (0).
+  articulate_selesai: number;
+  total_articulate: number | null;
   mulai: string;
   selesai: string;
   durasi_total_ms: number;
@@ -229,7 +235,7 @@ export interface ActivityLearner {
   nama_varian: string[];
   nama_bervariasi: boolean;
   identity_sources: string[];
-  modul: Record<string, { sesi: number; durasi_ms: number; total_slide: number | null; total_video: number | null }>;
+  modul: Record<string, { sesi: number; durasi_ms: number; total_slide: number | null; total_video: number | null; total_articulate: number | null }>;
   modul_slugs: string[];
   jumlah_modul: number;
   jumlah_sesi: number;
@@ -241,6 +247,10 @@ export interface ActivityLearner {
   total_slide_program: number | null;
   // Sama seperti ActivitySession, dijumlah/digabung lintas semua modul.
   total_video_program: number | null;
+  // Paket Articulate 360 yang dilaporkan selesai di SELURUH modul peserta ini,
+  // dan totalnya. null = semua modulnya di-export sebelum angka ini ditanam.
+  articulate_selesai: number;
+  total_articulate_program: number | null;
   video_dimulai: number;
   video_rata_persen: number | null;
   // Rincian per video (slide + persen masing-masing), diurutkan dari yang

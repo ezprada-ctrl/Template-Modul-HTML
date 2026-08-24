@@ -90,9 +90,9 @@
     "semantic_hash": "68b8a18250f5278018144ae103d791e1"
   },
   "app/src/components/SlidePreview.tsx": {
-    "mtime": 1787542655.6009872,
-    "seen": 1787542758.9882302,
-    "ast_hash": "2f14b5738eea155fdc16b1fb71e76296",
+    "mtime": 1787544987.1009018,
+    "seen": 1787545222.8691933,
+    "ast_hash": "63f1c656716084983360680a3fd71974",
     "semantic_hash": ""
   },
   "app/src/demoActivityData.ts": {
@@ -282,10 +282,10 @@
     "semantic_hash": ""
   },
   "server/api/shell-template.html": {
-    "mtime": 1787114143.3064444,
-    "seen": 1787222015.9428556,
-    "ast_hash": "3cd54ac357694287e27bcfc87dc20c36",
-    "semantic_hash": "3cd54ac357694287e27bcfc87dc20c36"
+    "mtime": 1787544652.8412383,
+    "seen": 1787545222.8717363,
+    "ast_hash": "b0d75054222331ca2384f18ad473689c",
+    "semantic_hash": ""
   },
   "server/requirements.txt": {
     "mtime": 1783582737.117113,

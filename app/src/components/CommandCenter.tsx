@@ -258,6 +258,8 @@ ${ref.current.outerHTML}
         video_dimulai: l.video_dimulai,
         video_total: l.total_video_program ?? '',
         video_rata_persen_ditonton: l.video_rata_persen ?? '',
+        articulate_selesai: l.articulate_selesai,
+        articulate_total: l.total_articulate_program ?? '',
         pertama: l.pertama,
         terakhir: l.terakhir,
       };
@@ -429,7 +431,7 @@ ${ref.current.outerHTML}
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
-                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Peringatan', 'Modul yang dibuka'].map(h => (
+                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Peringatan', 'Modul yang dibuka'].map(h => (
                         <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
                       ))}
                     </tr>
@@ -533,6 +535,14 @@ ${ref.current.outerHTML}
                             <>0/{l.total_video_program} diklik</>
                           )}
                         </td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                            title="Paket Articulate 360 yang dilaporkan SELESAI oleh paketnya sendiri / total paket di semua modulnya">
+                          {!l.total_articulate_program ? (
+                            <span style={{ color: 'var(--text-faint)' }}>—</span>
+                          ) : (
+                            <>{l.articulate_selesai}/{l.total_articulate_program} selesai</>
+                          )}
+                        </td>
                         {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
                             sebelum kuis, dijumlah lintas semua modul. Angka utama = total
                             peringatan yang MUNCUL (termasuk yang ditindaklanjuti dengan baca
@@ -614,8 +624,8 @@ ${ref.current.outerHTML}
             // ini cuma nambah kebisingan.
             const bentrok = !!modules.find(m => m.module_slug === activeSlug)?.kemungkinan_bentrok;
             const kolom = bentrok
-              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Peringatan']
-              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Peringatan'];
+              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Peringatan']
+              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Peringatan'];
             return (
             <div ref={sessionsTableRef} style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
@@ -721,6 +731,14 @@ ${ref.current.outerHTML}
                           </button>
                         ) : (
                           <>0/{s.total_video} diklik</>
+                        )}
+                      </td>
+                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                          title="Paket Articulate 360 yang dilaporkan SELESAI oleh paketnya sendiri / total paket di modul ini">
+                        {!s.total_articulate ? (
+                          <span style={{ color: 'var(--text-faint)' }}>—</span>
+                        ) : (
+                          <>{s.articulate_selesai}/{s.total_articulate} selesai</>
                         )}
                       </td>
                       {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat

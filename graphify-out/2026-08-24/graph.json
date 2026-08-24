@@ -1618,7 +1618,7 @@
       "file_type": "code",
       "norm_label": "accordiondemo()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L387"
+      "source_location": "L395"
     },
     {
       "id": "app_src_components_blockpreview_blockpreviewcard",
@@ -1630,7 +1630,7 @@
       "file_type": "code",
       "norm_label": "blockpreviewcard()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L235"
+      "source_location": "L243"
     },
     {
       "id": "app_src_components_blockpreview_clickcursor",
@@ -1642,7 +1642,7 @@
       "file_type": "code",
       "norm_label": "clickcursor()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L221"
+      "source_location": "L229"
     },
     {
       "id": "app_src_components_blockpreview_flowdemo",
@@ -1654,7 +1654,7 @@
       "file_type": "code",
       "norm_label": "flowdemo()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L434"
+      "source_location": "L442"
     },
     {
       "id": "app_src_components_blockpreview_griddemo",
@@ -1666,7 +1666,7 @@
       "file_type": "code",
       "norm_label": "griddemo()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L473"
+      "source_location": "L481"
     },
     {
       "id": "app_src_components_blockpreview_modaldemo",
@@ -1678,7 +1678,7 @@
       "file_type": "code",
       "norm_label": "modaldemo()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L541"
+      "source_location": "L549"
     },
     {
       "id": "app_src_components_blockpreview_tabsdemo",
@@ -1690,7 +1690,7 @@
       "file_type": "code",
       "norm_label": "tabsdemo()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L413"
+      "source_location": "L421"
     },
     {
       "id": "app_src_components_blockpreview_useblinkwithclick",
@@ -1702,7 +1702,7 @@
       "file_type": "code",
       "norm_label": "useblinkwithclick()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L196"
+      "source_location": "L204"
     },
     {
       "id": "app_src_components_blockpreview_usecyclewithclick",
@@ -1714,7 +1714,7 @@
       "file_type": "code",
       "norm_label": "usecyclewithclick()",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L179"
+      "source_location": "L187"
     },
     {
       "id": "server_api_generator_art_entry",
@@ -4430,7 +4430,7 @@
       "file_type": "code",
       "norm_label": "block_preview_styles",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L10"
+      "source_location": "L18"
     },
     {
       "id": "app_src_components_blockpreview_lorem",
@@ -4441,7 +4441,7 @@
       "file_type": "code",
       "norm_label": "lorem",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L166"
+      "source_location": "L174"
     },
     {
       "id": "server_vercel",
@@ -6143,6 +6143,21 @@
       "source_url": null
     },
     {
+      "id": "server_api_shell_template_choosereadingwarningyakin",
+      "label": "Handle 'proceed anyway' from reading warning",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "handle 'proceed anyway' from reading warning",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3268",
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template_closesidebar",
       "label": "Close the mobile sidebar drawer",
       "_origin": "semantic",
@@ -6263,6 +6278,21 @@
       "source_url": null
     },
     {
+      "id": "server_api_shell_template_renderbottomnav",
+      "label": "Render bottom prev/next nav and slide dots",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render bottom prev/next nav and slide dots",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3140",
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template_rendersidebar",
       "label": "Render the full sidebar navigation tree",
       "_origin": "semantic",
@@ -6335,6 +6365,37 @@
       "norm_label": "expand/collapse a sidebar section",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 2474",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_updatesliderushed",
+      "label": "Flag/unflag a slide as read too quickly",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "flag/unflag a slide as read too quickly",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2111",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_concept_reading_speed_warning",
+      "label": "Reading-Speed & Idle Detection",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "reading-speed & idle detection",
+      "rationale": "The 4-minute idle threshold (ACT_IDLE_MS) is a deliberately loose estimate of 'learner stepped away', chosen as a middle ground between productivity-tool defaults (~3-5 min) and news-site scroll-tracking thresholds (~5s); it is added ON TOP OF each slide's own Brysbaert-derived minimum reading time (238 wpm, SLIDE_MIN_MS) via actIdleThresholdMs(), not used in place of it. Bug fixed 2026-08-02: before actIdleThresholdMs() existed, every slide used a flat 4-minute idle cap, which could both mislabel an attentive reader on a long slide as 'abandoned' in Command Center and falsely trigger the rushed-reading warning (which compares active time against 50% of SLIDE_MIN_MS) because activeMs was cut off before the real reading time was reached.",
+      "source_file": "server/api/shell-template.html",
+      "source_location": null,
       "source_url": null
     },
     {
@@ -7329,21 +7390,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_renderbottomnav",
-      "label": "Render bottom prev/next nav and slide dots",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 39,
-      "community_name": "Render the current NAV item into the viewport",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "render bottom prev/next nav and slide dots",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3140",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_rendercrumb",
       "label": "Render the top breadcrumb for the current item",
       "_origin": "semantic",
@@ -7491,6 +7537,21 @@
       "norm_label": "resolve scorm api via window or opener",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1326",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_scormgetvalue",
+      "label": "SCORM LMSGetValue/GetValue wrapper",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Render the current NAV item into the viewport",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "scorm lmsgetvalue/getvalue wrapper",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1341",
       "source_url": null
     },
     {
@@ -7750,21 +7811,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_choosereadingwarningyakin",
-      "label": "Handle 'proceed anyway' from reading warning",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "handle 'proceed anyway' from reading warning",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3268",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_loadoutbox",
       "label": "Load queued failed activity batches from localStorage",
       "_origin": "semantic",
@@ -7840,21 +7886,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_updatesliderushed",
-      "label": "Flag/unflag a slide as read too quickly",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "flag/unflag a slide as read too quickly",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 2111",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_concept_activity_tracking",
       "label": "Learner Activity Tracking",
       "_origin": "semantic",
@@ -7882,22 +7913,6 @@
       "file_type": "concept",
       "norm_label": "activity outbox retry queue",
       "rationale": "A training runs once: a learner who has finished won't reopen the module, so a lost activity batch never gets a second chance to send. Failed batches persist to localStorage (not memory, since the most common failure mode is the tab being closed) and are retried on the next flush - including from a different module opened later, since all modules share one browser origin. HTTP 4xx responses are treated as a permanent rejection (schema/RLS misconfiguration) and the batch is dropped; 429/5xx are treated as transient and requeued.",
-      "source_file": "server/api/shell-template.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_concept_reading_speed_warning",
-      "label": "Reading-Speed & Idle Detection",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "reading-speed & idle detection",
-      "rationale": "The 4-minute idle threshold (ACT_IDLE_MS) is a deliberately loose estimate of 'learner stepped away', chosen as a middle ground between productivity-tool defaults (~3-5 min) and news-site scroll-tracking thresholds (~5s); it is added ON TOP OF each slide's own Brysbaert-derived minimum reading time (238 wpm, SLIDE_MIN_MS) via actIdleThresholdMs(), not used in place of it. Bug fixed 2026-08-02: before actIdleThresholdMs() existed, every slide used a flat 4-minute idle cap, which could both mislabel an attentive reader on a long slide as 'abandoned' in Command Center and falsely trigger the rushed-reading warning (which compares active time against 50% of SLIDE_MIN_MS) because activeMs was cut off before the real reading time was reached.",
       "source_file": "server/api/shell-template.html",
       "source_location": null,
       "source_url": null
@@ -8126,21 +8141,6 @@
       "norm_label": "show the reading-speed warning overlay",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 3259",
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_identitas_peserta",
-      "label": "Identitas Peserta Lintas Modul",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 42,
-      "community_name": "Show the reading-speed warning overlay",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "identitas peserta lintas modul",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
       "source_url": null
     },
     {
@@ -9134,21 +9134,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_scormgetvalue",
-      "label": "SCORM LMSGetValue/GetValue wrapper",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 8,
-      "community_name": "Identity Resolution & NIP Capture",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "scorm lmsgetvalue/getvalue wrapper",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1341",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_scormnametonatural",
       "label": "Reformat 'Last, First' SCORM name to natural order",
       "_origin": "semantic",
@@ -9191,6 +9176,21 @@
       "norm_label": "validate and stage manually entered identity for confirmation",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1826",
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_identitas_peserta",
+      "label": "Identitas Peserta Lintas Modul",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Identity Resolution & NIP Capture",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "identitas peserta lintas modul",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
       "source_url": null
     },
     {
@@ -9760,7 +9760,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L388",
+      "source_location": "L396",
       "weight": 1.0
     },
     {
@@ -9772,7 +9772,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L435",
+      "source_location": "L443",
       "weight": 1.0
     },
     {
@@ -9784,7 +9784,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L542",
+      "source_location": "L550",
       "weight": 1.0
     },
     {
@@ -9796,7 +9796,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L414",
+      "source_location": "L422",
       "weight": 1.0
     },
     {
@@ -16125,24 +16125,24 @@
     },
     {
       "source": "app_src_components_blockpreview",
-      "target": "app_src_components_blockpreview_block_preview_styles",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L10",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_components_blockpreview",
       "target": "app_src_components_blockpreview_lorem",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L166",
+      "source_location": "L174",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_components_blockpreview",
+      "target": "app_src_components_blockpreview_block_preview_styles",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/components/BlockPreview.tsx",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -16153,7 +16153,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L179",
+      "source_location": "L187",
       "weight": 1.0
     },
     {
@@ -16164,7 +16164,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L196",
+      "source_location": "L204",
       "weight": 1.0
     },
     {
@@ -16175,7 +16175,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L221",
+      "source_location": "L229",
       "weight": 1.0
     },
     {
@@ -16186,7 +16186,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L235",
+      "source_location": "L243",
       "weight": 1.0
     },
     {
@@ -16197,7 +16197,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L387",
+      "source_location": "L395",
       "weight": 1.0
     },
     {
@@ -16208,7 +16208,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L413",
+      "source_location": "L421",
       "weight": 1.0
     },
     {
@@ -16219,7 +16219,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L434",
+      "source_location": "L442",
       "weight": 1.0
     },
     {
@@ -16230,7 +16230,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L473",
+      "source_location": "L481",
       "weight": 1.0
     },
     {
@@ -16241,7 +16241,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockPreview.tsx",
-      "source_location": "L541",
+      "source_location": "L549",
       "weight": 1.0
     },
     {
@@ -23615,5 +23615,5 @@
       "source_file": "Panduan-Fitur-Template-Modul-Ikram.html"
     }
   ],
-  "built_at_commit": "a93bd6f7020148c420c32e6dc94d8d75bdeb3fe1"
+  "built_at_commit": "bce735c28425da8341cd075e724c08bf62388b80"
 }

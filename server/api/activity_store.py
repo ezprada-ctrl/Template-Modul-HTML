@@ -201,6 +201,10 @@ def summarize_sessions(module_slug):
             # lihat catatan di generator.py). None = modul lama sebelum fitur
             # ini ada, bukan "gak punya video".
             'total_video': None,
+            # Total blok Articulate terpasang di modul ini (ditanam saat
+            # export). None = modul lama sebelum fitur ini ada, BUKAN "gak
+            # punya paket" - dibedain biar kolomnya bisa jujur nampilin "-".
+            'total_articulate': None,
             'mulai': r['created_at'], 'selesai': r['created_at'],
             'durasi_total_ms': 0, 'durasi_terekam_ms': 0,
             'jumlah_slide_dilihat': 0, 'jumlah_interaksi': 0,
@@ -225,6 +229,11 @@ def summarize_sessions(module_slug):
             # "Slide N" di rincian per-video Command Center, bukan cuma
             # rata-rata gabungan semua video.
             '_video_slide': {},
+            # blockId paket Articulate yang PERNAH dilaporkan selesai. Pakai
+            # set, bukan penghitung: satu paket bisa nembak completed berkali-
+            # kali (peserta buka ulang, atau SCORM di dalamnya ngirim status
+            # dua kali) dan itu tetap satu paket yang sama.
+            '_articulate_selesai': set(),
             # Rincian tiap kejadian reading_warning (section + nomor slide
             # persis yang ketangkap + pilihan peserta) - beda dari
             # peringatan_baca_cepat/peringatan_diabaikan yang cuma angka
@@ -253,6 +262,7 @@ def summarize_sessions(module_slug):
             s['module_title'] = p.get('module_title')
             s['total_slide'] = p.get('total_slide')
             s['total_video'] = p.get('total_video')
+            s['total_articulate'] = p.get('total_articulate')
         elif t == 'video_progress':
             block = p.get('block')
             persen = p.get('persen')
@@ -306,6 +316,15 @@ def summarize_sessions(module_slug):
             s['kc_dijawab'] += 1
             if p.get('benar'):
                 s['kc_benar'] += 1
+        elif t == 'articulate_selesai':
+            # Paket Articulate ngasih tau "completed/passed" lewat SHIM SCORM
+            # kita (lihat artMarkDone di shell-template.html). Sebelum ini
+            # event-nya kerekam di tabel tapi gak pernah dibaca siapa pun -
+            # jadi paket Articulate, satu-satunya blok yang isinya kita gak
+            # bisa amati sama sekali dari luar, malah jadi blok yang paling
+            # gak kelihatan di Command Center.
+            if p.get('blok'):
+                s['_articulate_selesai'].add(p['blok'])
 
     out = list(sessions.values())
     for s in out:
@@ -328,6 +347,7 @@ def summarize_sessions(module_slug):
         s['video_detail'] = sorted(
             [{'slide': video_slide.get(b), 'persen': p} for b, p in video_max.items()],
             key=lambda d: d['persen'])
+        s['articulate_selesai'] = len(s.pop('_articulate_selesai'))
         s['peringatan_detail'] = s.pop('_peringatan_detail')
         # Kalau sesi ditutup paksa (tab dibunuh HP), session_end gak pernah
         # terkirim -> total_ms 0. Pakai jumlah durasi slide sebagai gantinya
@@ -397,6 +417,8 @@ def summarize_learners():
         kc_dijawab = 0
         kc_benar = 0
         total_video_modul = None
+        total_articulate_modul = None
+        articulate_sesi = set()
         video_max_sesi = {}
         video_slide_sesi = {}
         total_slide_modul = None
@@ -415,6 +437,7 @@ def summarize_learners():
                 source = p.get('identity_source')
                 total_slide_modul = p.get('total_slide')
                 total_video_modul = p.get('total_video')
+                total_articulate_modul = p.get('total_articulate')
             elif t == 'video_progress':
                 block = p.get('block')
                 persen = p.get('persen')
@@ -452,6 +475,9 @@ def summarize_learners():
                 kc_dijawab += 1
                 if p.get('benar'):
                     kc_benar += 1
+            elif t == 'articulate_selesai':
+                if p.get('blok'):
+                    articulate_sesi.add(p['blok'])
         if not total_ms:
             total_ms = terekam_ms
 
@@ -495,12 +521,15 @@ def summarize_learners():
             # (slug, block) -> nomor slide, dipasangkan sama _video_max buat
             # bangun video_detail (rincian per video, bukan cuma rata-rata).
             '_video_slide': {},
+            # (slug, block) - block id yang kebetulan sama di modul BEDA gak
+            # boleh ketuker jadi satu paket, sama alasannya kayak _video_max.
+            '_articulate_selesai': set(),
         })
         if nama and nama not in L['nama_varian']:
             L['nama_varian'].append(nama)
         if source and source not in L['identity_sources']:
             L['identity_sources'].append(source)
-        m = L['modul'].setdefault(slug, {'sesi': 0, 'durasi_ms': 0, 'total_slide': None, 'total_video': None})
+        m = L['modul'].setdefault(slug, {'sesi': 0, 'durasi_ms': 0, 'total_slide': None, 'total_video': None, 'total_articulate': None})
         m['sesi'] += 1
         m['durasi_ms'] += total_ms
         # total_slide/total_video sama di semua sesi modul ini (baked saat
@@ -509,6 +538,10 @@ def summarize_learners():
             m['total_slide'] = total_slide_modul
         if total_video_modul is not None:
             m['total_video'] = total_video_modul
+        if total_articulate_modul is not None:
+            m['total_articulate'] = total_articulate_modul
+        for blok in articulate_sesi:
+            L['_articulate_selesai'].add((slug, blok))
         for num in slide_unik_sesi:
             L['_slide_unik'].add((slug, num))
         for block, persen in video_max_sesi.items():
@@ -556,6 +589,9 @@ def summarize_learners():
         L['total_slide_program'] = sum(totals) if totals else None
         video_totals = [m['total_video'] for m in L['modul'].values() if m['total_video'] is not None]
         L['total_video_program'] = sum(video_totals) if video_totals else None
+        art_totals = [m['total_articulate'] for m in L['modul'].values() if m['total_articulate'] is not None]
+        L['total_articulate_program'] = sum(art_totals) if art_totals else None
+        L['articulate_selesai'] = len(L.pop('_articulate_selesai'))
         video_max = L.pop('_video_max')
         video_slide = L.pop('_video_slide')
         L['video_dimulai'] = len(video_max)

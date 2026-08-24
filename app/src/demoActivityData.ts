@@ -19,6 +19,9 @@ const SLUG = 'demo-modul-contoh';
 const TITLE = 'Modul Contoh (Data Demo)';
 const TOTAL_SLIDE = 95;
 const TOTAL_VIDEO = 4;
+// Modul contoh ini punya satu paket Articulate 360 - biar kolom Articulate
+// di Command Center kelihatan terisi waktu mode contoh, bukan cuma garis '-'.
+const TOTAL_ARTICULATE = 1;
 
 export const DEMO_MODULES: ActivityModule[] = [
   {
@@ -44,7 +47,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     jumlah_slide_dilihat: 96, jumlah_interaksi: 21,
     kuis_dijawab: 8, kuis_benar: 8, kuis_diulang: 0, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
-    kc_dijawab: 0, kc_benar: 0, perangkat: 'desktop',
+    kc_dijawab: 0, kc_benar: 0, articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
+    perangkat: 'desktop',
   },
   {
     session_id: 'demo-rahmat', module_slug: SLUG, learner_name: 'Rahmat Wijaya', learner_id: '199203152015031005',
@@ -57,7 +61,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     kuis_dijawab: 9, kuis_benar: 7, kuis_diulang: 1, kuis_gagal: 1,
     peringatan_baca_cepat: 1, peringatan_diabaikan: 0,
     peringatan_detail: [{ section: 'b', slides: [14], choice: 'kembali' }],
-    kc_dijawab: 12, kc_benar: 7, perangkat: 'desktop',
+    kc_dijawab: 12, kc_benar: 7, articulate_selesai: 0, total_articulate: TOTAL_ARTICULATE,
+    perangkat: 'desktop',
   },
   {
     session_id: 'demo-dewi', module_slug: SLUG, learner_name: 'Dewi Anggraini', learner_id: '198611202010012002',
@@ -73,7 +78,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
       { section: 'b', slides: [9, 11], choice: 'kembali' },
       { section: 'c', slides: [21], choice: 'yakin' },
     ],
-    kc_dijawab: 9, kc_benar: 9, perangkat: 'mobile',
+    kc_dijawab: 9, kc_benar: 9, articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
+    perangkat: 'mobile',
   },
   {
     session_id: 'demo-fajar-1', module_slug: SLUG, learner_name: 'Fajar Nugroho', learner_id: '199507112019031103',
@@ -84,7 +90,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     jumlah_slide_dilihat: 15, jumlah_interaksi: 2,
     kuis_dijawab: 3, kuis_benar: 2, kuis_diulang: 1, kuis_gagal: 1,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
-    kc_dijawab: 1, kc_benar: 1, perangkat: 'desktop',
+    kc_dijawab: 1, kc_benar: 1, articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
+    perangkat: 'desktop',
   },
   {
     // Sesi KEDUA Fajar, tab-nya ditutup paksa (HP) - session_end gak pernah
@@ -98,7 +105,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     jumlah_slide_dilihat: 7, jumlah_interaksi: 1,
     kuis_dijawab: 0, kuis_benar: 0, kuis_diulang: 0, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
-    kc_dijawab: 2, kc_benar: 1, perangkat: 'mobile',
+    kc_dijawab: 2, kc_benar: 1, articulate_selesai: 0, total_articulate: TOTAL_ARTICULATE,
+    perangkat: 'mobile',
   },
   {
     session_id: 'demo-yulianti', module_slug: SLUG, learner_name: 'Yulianti Putri', learner_id: '199009222014032207',
@@ -110,7 +118,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     jumlah_slide_dilihat: 95, jumlah_interaksi: 26,
     kuis_dijawab: 10, kuis_benar: 10, kuis_diulang: 0, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
-    kc_dijawab: 0, kc_benar: 0, perangkat: 'desktop',
+    kc_dijawab: 0, kc_benar: 0, articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
+    perangkat: 'desktop',
   },
   {
     session_id: 'demo-budi-1', module_slug: SLUG, learner_name: 'Budi Santoso', learner_id: '198501012001011001',
@@ -126,7 +135,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
       { section: 'a', slides: [8], choice: 'yakin' },
       { section: 'c', slides: [44], choice: 'kembali' },
     ],
-    kc_dijawab: 6, kc_benar: 3, perangkat: 'desktop',
+    kc_dijawab: 6, kc_benar: 3, articulate_selesai: 0, total_articulate: TOTAL_ARTICULATE,
+    perangkat: 'desktop',
   },
   {
     // Sesi KEDUA Budi, tab-nya ditutup paksa juga - tapi sesi PERTAMA-nya
@@ -140,7 +150,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     jumlah_slide_dilihat: 10, jumlah_interaksi: 3,
     kuis_dijawab: 0, kuis_benar: 0, kuis_diulang: 0, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
-    kc_dijawab: 0, kc_benar: 0, perangkat: 'mobile',
+    kc_dijawab: 0, kc_benar: 0, articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
+    perangkat: 'mobile',
   },
 ];
 
@@ -148,7 +159,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
   {
     learner_id: '198801052012052411', nama: 'Siti Amara', nama_varian: ['Siti Amara'], nama_bervariasi: false,
     identity_sources: ['manual'],
-    modul: { [SLUG]: { sesi: 1, durasi_ms: 56 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO } },
+    modul: { [SLUG]: { sesi: 1, durasi_ms: 56 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO, total_articulate: TOTAL_ARTICULATE } },
     modul_slugs: [SLUG], jumlah_modul: 1, jumlah_sesi: 1,
     jumlah_slide_unik: 94, total_slide_program: TOTAL_SLIDE, total_video_program: TOTAL_VIDEO,
     video_dimulai: 4, video_rata_persen: 88,
@@ -161,12 +172,13 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
     kuis_dijawab: 8, kuis_benar: 8, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
     kc_dijawab: 0, kc_benar: 0,
+    articulate_selesai: 1, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T01:00:00.000Z', terakhir: '2026-07-20T01:56:00.000Z',
   },
   {
     learner_id: '199203152015031005', nama: 'Rahmat Wijaya', nama_varian: ['Rahmat Wijaya'], nama_bervariasi: false,
     identity_sources: ['manual'],
-    modul: { [SLUG]: { sesi: 1, durasi_ms: 75 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO } },
+    modul: { [SLUG]: { sesi: 1, durasi_ms: 75 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO, total_articulate: TOTAL_ARTICULATE } },
     modul_slugs: [SLUG], jumlah_modul: 1, jumlah_sesi: 1,
     jumlah_slide_unik: 80, total_slide_program: TOTAL_SLIDE, total_video_program: TOTAL_VIDEO,
     video_dimulai: 4, video_rata_persen: 14,
@@ -180,13 +192,14 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
     peringatan_baca_cepat: 1, peringatan_diabaikan: 0,
     peringatan_detail: [{ modul: SLUG, section: 'b', slides: [14], choice: 'kembali' }],
     kc_dijawab: 12, kc_benar: 7,
+    articulate_selesai: 0, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T02:00:00.000Z', terakhir: '2026-07-20T03:15:00.000Z',
   },
   {
     learner_id: '198611202010012002', nama: 'Dewi Anggraini',
     nama_varian: ['Dewi Anggraini', 'dewi anggraeni', 'Dewi A.'], nama_bervariasi: true,
     identity_sources: ['manual'],
-    modul: { [SLUG]: { sesi: 1, durasi_ms: 39 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO } },
+    modul: { [SLUG]: { sesi: 1, durasi_ms: 39 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO, total_articulate: TOTAL_ARTICULATE } },
     modul_slugs: [SLUG], jumlah_modul: 1, jumlah_sesi: 1,
     jumlah_slide_unik: 60, total_slide_program: TOTAL_SLIDE, total_video_program: TOTAL_VIDEO,
     video_dimulai: 0, video_rata_persen: null, video_detail: [],
@@ -200,6 +213,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
       { modul: SLUG, section: 'c', slides: [21], choice: 'yakin' },
     ],
     kc_dijawab: 9, kc_benar: 9,
+    articulate_selesai: 1, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T03:00:00.000Z', terakhir: '2026-07-20T03:39:00.000Z',
   },
   {
@@ -207,7 +221,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
     // learner-level null TOTAL, bukan cuma sebagian.
     learner_id: '199507112019031103', nama: 'Fajar Nugroho', nama_varian: ['Fajar Nugroho'], nama_bervariasi: false,
     identity_sources: ['manual'],
-    modul: { [SLUG]: { sesi: 2, durasi_ms: 17 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO } },
+    modul: { [SLUG]: { sesi: 2, durasi_ms: 17 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO, total_articulate: TOTAL_ARTICULATE } },
     modul_slugs: [SLUG], jumlah_modul: 1, jumlah_sesi: 2,
     jumlah_slide_unik: 20, total_slide_program: TOTAL_SLIDE, total_video_program: TOTAL_VIDEO,
     video_dimulai: 0, video_rata_persen: null, video_detail: [],
@@ -216,12 +230,13 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
     kuis_dijawab: 3, kuis_benar: 2, kuis_gagal: 1,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
     kc_dijawab: 5, kc_benar: 2,
+    articulate_selesai: 1, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T04:00:00.000Z', terakhir: '2026-07-20T05:07:00.000Z',
   },
   {
     learner_id: '199009222014032207', nama: 'Yulianti Putri', nama_varian: ['Yulianti Putri'], nama_bervariasi: false,
     identity_sources: ['scorm'],
-    modul: { [SLUG]: { sesi: 1, durasi_ms: 78 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO } },
+    modul: { [SLUG]: { sesi: 1, durasi_ms: 78 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO, total_articulate: TOTAL_ARTICULATE } },
     modul_slugs: [SLUG], jumlah_modul: 1, jumlah_sesi: 1,
     jumlah_slide_unik: 95, total_slide_program: TOTAL_SLIDE, total_video_program: TOTAL_VIDEO,
     video_dimulai: 4, video_rata_persen: 96,
@@ -234,6 +249,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
     kuis_dijawab: 10, kuis_benar: 10, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
     kc_dijawab: 0, kc_benar: 0,
+    articulate_selesai: 0, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T06:00:00.000Z', terakhir: '2026-07-20T07:18:00.000Z',
   },
   {
@@ -242,7 +258,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
     // (beda dari Fajar yang totalnya null - ini masih ada angka, ditandai *).
     learner_id: '198501012001011001', nama: 'Budi Santoso', nama_varian: ['Budi Santoso'], nama_bervariasi: false,
     identity_sources: ['manual'],
-    modul: { [SLUG]: { sesi: 2, durasi_ms: 80 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO } },
+    modul: { [SLUG]: { sesi: 2, durasi_ms: 80 * 60000, total_slide: TOTAL_SLIDE, total_video: TOTAL_VIDEO, total_articulate: TOTAL_ARTICULATE } },
     modul_slugs: [SLUG], jumlah_modul: 1, jumlah_sesi: 2,
     jumlah_slide_unik: 70, total_slide_program: TOTAL_SLIDE, total_video_program: TOTAL_VIDEO,
     video_dimulai: 4, video_rata_persen: 9,
@@ -259,6 +275,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
       { modul: SLUG, section: 'c', slides: [44], choice: 'kembali' },
     ],
     kc_dijawab: 6, kc_benar: 3,
+    articulate_selesai: 1, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T08:00:00.000Z', terakhir: '2026-07-20T09:42:00.000Z',
   },
 ];

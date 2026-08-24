@@ -560,6 +560,24 @@ def render_block(b):
     return fn(b)
 
 
+def count_articulate(blocks):
+    """Berapa blok Articulate di modul ini, termasuk yang bersarang di Grid.
+
+    Penyebut buat kolom Articulate di Command Center. Yang dihitung cuma blok
+    yang BENERAN punya paket terpasang - blok Articulate kosong (baru ditambah,
+    ZIP-nya belum diupload) gak akan pernah bisa "selesai", jadi kalau ikut
+    dihitung penyebutnya selamanya gak bakal ketutup.
+    """
+    total = 0
+    for b in blocks or []:
+        t = b.get('type')
+        if t == 'articulate' and (b.get('artUrl') or b.get('artPath')):
+            total += 1
+        elif t == 'grid':
+            total += count_articulate(b.get('blocks', []))
+    return total
+
+
 def count_interaktif(blocks):
     """Berapa banyak "menu tersembunyi" yang HARUS diklik peserta buat kebuka.
 
@@ -1103,6 +1121,13 @@ def generate_html(module):
     # dan modul yang punya 20.
     out = out.replace('__TOTAL_INTERAKTIF_JS__', js_str(
         sum(count_interaktif(s.get('blocks', [])) for s in slides)))
+    # Penyebut buat "berapa paket Articulate yang diselesaikan". Sama alasannya
+    # kayak total_video: tanpa angka total, "0 paket selesai" gak bisa dibedain
+    # antara peserta yang gak nyentuh sama sekali dan modul yang emang gak
+    # punya paket Articulate. Ditelusuri sampai ke dalam Grid - blok Articulate
+    # boleh nangkring di dalam sel grid (lihat articulateBlocks di scormZip.ts).
+    out = out.replace('__TOTAL_ARTICULATE_JS__', js_str(
+        sum(count_articulate(s.get('blocks', [])) for s in slides)))
     # Waktu baca minimum per slide (ms), dari jumlah kata / 238 wpm (Brysbaert
     # 2019). Dipakai modul buat deteksi slide yang di-klik-lewat terlalu
     # cepat sebelum kuis bagian itu - lihat resolveReadingWarning() di

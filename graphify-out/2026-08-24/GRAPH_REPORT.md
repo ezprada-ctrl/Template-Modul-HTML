@@ -1,7 +1,7 @@
 # Graph Report - Template Modul Ikram  (2026-08-24)
 
 ## Corpus Check
-- 47 files · ~95,527 words
+- 47 files · ~95,609 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a93bd6f7`
+- Built from commit: `bce735c2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -109,8 +109,8 @@ Cohesion: 0.05
 Nodes (58): checkTrackingConfig(), listDrafts(), loadDraft(), saveDraft(), App(), handleCreateProject(), handleOpenExistingDraft(), AutosaveIndicator() (+50 more)
 
 ### Community 1 - "Navigate to a NAV index, enforcing all gating rules"
-Cohesion: 0.23
-Nodes (16): Group a section's NAV items into singles/bundles/quiz, Handle 'go back and reread' from reading warning, Close the mobile sidebar drawer, Sidebar & Slide Navigation, Navigate to the next NAV item, Navigate to the previous NAV item, Navigate to a NAV index, enforcing all gating rules, Check whether a section is unlocked (+8 more)
+Cohesion: 0.17
+Nodes (20): Group a section's NAV items into singles/bundles/quiz, Handle 'go back and reread' from reading warning, Handle 'proceed anyway' from reading warning, Close the mobile sidebar drawer, Reading-Speed & Idle Detection, Sidebar & Slide Navigation, Navigate to the next NAV item, Navigate to the previous NAV item (+12 more)
 
 ### Community 2 - "generator.py"
 Cohesion: 0.07
@@ -121,8 +121,8 @@ Cohesion: 0.06
 Nodes (53): get, Import PPTX (Tahap 1), post, Render Service: modul-builder-backend, _headers(), list_drafts(), load_draft(), ping() (+45 more)
 
 ### Community 4 - "Buffer an activity tracking event"
-Cohesion: 0.19
-Nodes (23): Bind global activity listeners for idle detection, Boot activity tracking: resume outbox, resolve identity, start/gate, Check elapsed time against idle threshold, pause segment, Close out timing for the previous slide and emit slide_view, End the activity session and flush final events, Buffer an activity tracking event, Flush buffered + outboxed activity events to the server, Compute idle threshold for the current slide mark (+15 more)
+Cohesion: 0.22
+Nodes (20): Bind global activity listeners for idle detection, Boot activity tracking: resume outbox, resolve identity, start/gate, Check elapsed time against idle threshold, pause segment, Close out timing for the previous slide and emit slide_view, End the activity session and flush final events, Buffer an activity tracking event, Flush buffered + outboxed activity events to the server, Compute idle threshold for the current slide mark (+12 more)
 
 ### Community 5 - "BlockEditor.tsx"
 Cohesion: 0.14
@@ -138,7 +138,7 @@ Nodes (35): ActivityLearner, ActivityModule, ActivitySession, ArticulateInfo, cc
 
 ### Community 8 - "Identity Resolution & NIP Capture"
 Cohesion: 0.22
-Nodes (15): Return from identity confirmation to the entry form, Identity Resolution & NIP Capture, Confirm and commit pending identity, start activity session, Group NIP digits per PNS NIP structure, Live-format the NIP input field while preserving caret, Read learner name/id from the SCORM API, Load cross-module cached learner identity, Strip non-digit characters from a NIP string (+7 more)
+Nodes (15): Identitas Peserta Lintas Modul, Return from identity confirmation to the entry form, Identity Resolution & NIP Capture, Confirm and commit pending identity, start activity session, Group NIP digits per PNS NIP structure, Live-format the NIP input field while preserving caret, Read learner name/id from the SCORM API, Load cross-module cached learner identity (+7 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.08
@@ -201,8 +201,8 @@ Cohesion: 0.33
 Nodes (3): EmojiPicker(), Props, EMOJI_CATEGORIES
 
 ### Community 39 - "Render the current NAV item into the viewport"
-Cohesion: 0.15
-Nodes (18): Inject/play per-slide voiceover audio, SCORM API Wrapper, Load learner progress state from SCORM or localStorage, Render the current NAV item into the viewport, Render bottom prev/next nav and slide dots, Render the top breadcrumb for the current item, Render the cover/hero slide HTML, Render the closing summary slide (+10 more)
+Cohesion: 0.16
+Nodes (18): Inject/play per-slide voiceover audio, SCORM API Wrapper, Load learner progress state from SCORM or localStorage, Render the current NAV item into the viewport, Render the top breadcrumb for the current item, Render the cover/hero slide HTML, Render the closing summary slide, Reset all learner progress, keep identity (+10 more)
 
 ### Community 40 - "uploadImageToStorage"
 Cohesion: 0.50
@@ -213,8 +213,8 @@ Cohesion: 0.25
 Nodes (14): SVG bar chart renderer, Learning Recap Popup ('Ringkasan Belajarmu'), Render the recap bar chart of engagement signals, Close the learner recap popup, HTML-escape a value for the recap popup, Join a list of strings with Indonesian 'dan' conjunction, Build the per-signal narration text builders for recap, Open the learner recap popup, fetching data if needed (+6 more)
 
 ### Community 42 - "Show the reading-speed warning overlay"
-Cohesion: 0.40
-Nodes (5): Identitas Peserta Lintas Modul, Keandalan Pencatatan Data (Outbox Offline), Peringatan Kecepatan Baca, Sisi Peserta — Yang Dialami Peserta (Tahap 6), Show the reading-speed warning overlay
+Cohesion: 0.50
+Nodes (4): Keandalan Pencatatan Data (Outbox Offline), Peringatan Kecepatan Baca, Sisi Peserta — Yang Dialami Peserta (Tahap 6), Show the reading-speed warning overlay
 
 ### Community 43 - "QuizBuilder"
 Cohesion: 0.52

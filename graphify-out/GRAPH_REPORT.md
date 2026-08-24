@@ -1,16 +1,16 @@
 # Graph Report - Template Modul Ikram  (2026-08-24)
 
 ## Corpus Check
-- 47 files · ~95,609 words
+- 47 files · ~95,966 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 723 nodes · 1258 edges · 56 communities (42 shown, 14 thin omitted)
+- 724 nodes · 1260 edges · 43 communities (30 shown, 13 thin omitted)
 - Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 155 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bce735c2`
+- Built from commit: `0f258116`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -20,7 +20,7 @@
 - generator.py
 - index.py
 - Buffer an activity tracking event
-- BlockEditor.tsx
+- Canvas
 - devDependencies
 - api.ts
 - Identity Resolution & NIP Capture
@@ -28,7 +28,6 @@
 - activity_store.py
 - compilerOptions
 - GraphicStyleSelect.tsx
-- DtableFields
 - Video Progress Tracking
 - Ambang "Ditinggal" — 4 Menit
 - icons.svg (SVG sprite sheet)
@@ -49,24 +48,12 @@
 - SVG donut chart renderer
 - Open the mobile sidebar drawer
 - plugins
-- Articulate 360 Block Runtime
-- BlockEditor
-- EmojiPicker.tsx
-- Render the current NAV item into the viewport
-- uploadImageToStorage
-- Learning Recap Popup ('Ringkasan Belajarmu')
-- Show the reading-speed warning overlay
+- BlockEditor.tsx
 - QuizBuilder
 - supabase_setup.sql
 - supabase_activity_setup.sql
 - PreviewExport.tsx
-- Knowledge Check Gate
 - r2.py
-- Submit a section quiz for grading
-- Dev Mode Panel
-- checkNetwork
-- Record a content-interaction event (accordion/tabs/modal/flow)
-- Alat "Cek Rekam Aktivitas"
 
 ## God Nodes (most connected - your core abstractions)
 1. `App()` - 25 edges
@@ -89,7 +76,7 @@
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/pptx_extract.py
 - `Render Service: modul-builder-backend` --semantically_similar_to--> `server/vercel.json`  [INFERRED] [semantically similar]
   render.yaml → Template-Modul-Ikram-Source-Code.html
-- `Alat "Cek Rekam Aktivitas"` --references--> `Send a live preflight event to verify activity recording works`  [INFERRED]
+- `Identitas Peserta Lintas Modul` --references--> `Resolve learner identity from state/SCORM/shared cache`  [INFERRED]
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/shell-template.html
 
 ## Import Cycles
@@ -102,15 +89,15 @@
 - **Articulate SCORM-in-SCORM containment** — server_api_shell_template_artmakeshim, server_api_shell_template_scormfindapi, server_api_shell_template_concept_articulate_runtime [INFERRED 0.85]
 - **Research Basis for Idle/Reading-speed Thresholds** — panduan_fitur_template_modul_ikram_ambang_ditinggal_4_menit, panduan_fitur_template_modul_ikram_ambang_dibaca_238wpm, server_api_shell_template_actidlethresholdms, server_api_generator [INFERRED 0.85]
 
-## Communities (56 total, 14 thin omitted)
+## Communities (43 total, 13 thin omitted)
 
 ### Community 0 - "App.tsx"
-Cohesion: 0.05
-Nodes (58): checkTrackingConfig(), listDrafts(), loadDraft(), saveDraft(), App(), handleCreateProject(), handleOpenExistingDraft(), AutosaveIndicator() (+50 more)
+Cohesion: 0.06
+Nodes (46): checkTrackingConfig(), listDrafts(), loadDraft(), saveDraft(), uploadMediaToStorage(), App(), handleCreateProject(), handleOpenExistingDraft() (+38 more)
 
 ### Community 1 - "Navigate to a NAV index, enforcing all gating rules"
-Cohesion: 0.17
-Nodes (20): Group a section's NAV items into singles/bundles/quiz, Handle 'go back and reread' from reading warning, Handle 'proceed anyway' from reading warning, Close the mobile sidebar drawer, Reading-Speed & Idle Detection, Sidebar & Slide Navigation, Navigate to the next NAV item, Navigate to the previous NAV item (+12 more)
+Cohesion: 0.07
+Nodes (56): Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Show/hide the progress block per HIDE_PROGRESS, Inject/play per-slide voiceover audio, Group a section's NAV items into singles/bundles/quiz, Hide the dev-mode password modal, Close the mobile sidebar drawer (+48 more)
 
 ### Community 2 - "generator.py"
 Cohesion: 0.07
@@ -121,12 +108,12 @@ Cohesion: 0.06
 Nodes (53): get, Import PPTX (Tahap 1), post, Render Service: modul-builder-backend, _headers(), list_drafts(), load_draft(), ping() (+45 more)
 
 ### Community 4 - "Buffer an activity tracking event"
-Cohesion: 0.22
-Nodes (20): Bind global activity listeners for idle detection, Boot activity tracking: resume outbox, resolve identity, start/gate, Check elapsed time against idle threshold, pause segment, Close out timing for the previous slide and emit slide_view, End the activity session and flush final events, Buffer an activity tracking event, Flush buffered + outboxed activity events to the server, Compute idle threshold for the current slide mark (+12 more)
+Cohesion: 0.06
+Nodes (56): Alat "Cek Rekam Aktivitas", Command Center — Rekam Aktivitas & Analitik (Tahap 7), Deteksi Otomatis Data Janggal, Identitas Peserta Lintas Modul, Keandalan Pencatatan Data (Outbox Offline), Peringatan Kecepatan Baca, Sisi Peserta — Yang Dialami Peserta (Tahap 6), Accordion block renderer (+48 more)
 
-### Community 5 - "BlockEditor.tsx"
-Cohesion: 0.14
-Nodes (10): uploadMediaToStorage(), FieldStyle, KnowledgeFields(), Props, VideoUploadField(), SlideAudioField(), Block, KcQuestion (+2 more)
+### Community 5 - "Canvas"
+Cohesion: 0.16
+Nodes (17): Canvas(), addBlankSlide(), addBundle(), addSection(), bundlesFor(), onDragEnd(), removeBundle(), removeSlide() (+9 more)
 
 ### Community 6 - "devDependencies"
 Cohesion: 0.05
@@ -137,8 +124,8 @@ Cohesion: 0.08
 Nodes (35): ActivityLearner, ActivityModule, ActivitySession, ArticulateInfo, ccListLearners(), ccListModules(), ccListSessions(), ccPost() (+27 more)
 
 ### Community 8 - "Identity Resolution & NIP Capture"
-Cohesion: 0.22
-Nodes (15): Identitas Peserta Lintas Modul, Return from identity confirmation to the entry form, Identity Resolution & NIP Capture, Confirm and commit pending identity, start activity session, Group NIP digits per PNS NIP structure, Live-format the NIP input field while preserving caret, Read learner name/id from the SCORM API, Load cross-module cached learner identity (+7 more)
+Cohesion: 0.08
+Nodes (41): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-probe/README.md — Uji Koneksi LMS Guide, Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide (+33 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.08
@@ -188,33 +175,9 @@ Nodes (3): Cek Kesiapan Sistem Rekam, Aktifkan Rekam Aktivitas Peserta (toggle),
 Cohesion: 0.22
 Nodes (8): plugins, rules, react/only-export-components, react/rules-of-hooks, $schema, oxc, typescript, warn
 
-### Community 36 - "Articulate 360 Block Runtime"
-Cohesion: 0.32
-Nodes (13): Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide, Toggle fullscreen for an Articulate iframe block, Load an Articulate block's stored CMI data, Build a fake SCORM 1.2/2004 API shim for embedded Articulate content, Articulate shim LMSGetValue/GetValue implementation, Articulate shim LMSSetValue/SetValue implementation, Mark an Articulate block as completed (+5 more)
-
-### Community 37 - "BlockEditor"
-Cohesion: 0.19
-Nodes (12): BlockEditor(), add(), changeType(), remove(), toggleCollapse(), blockSummary(), GridCellPreview(), applyBlockText() (+4 more)
-
-### Community 38 - "EmojiPicker.tsx"
-Cohesion: 0.33
-Nodes (3): EmojiPicker(), Props, EMOJI_CATEGORIES
-
-### Community 39 - "Render the current NAV item into the viewport"
-Cohesion: 0.16
-Nodes (18): Inject/play per-slide voiceover audio, SCORM API Wrapper, Load learner progress state from SCORM or localStorage, Render the current NAV item into the viewport, Render the top breadcrumb for the current item, Render the cover/hero slide HTML, Render the closing summary slide, Reset all learner progress, keep identity (+10 more)
-
-### Community 40 - "uploadImageToStorage"
-Cohesion: 0.50
-Nodes (5): uploadImageToStorage(), detectPngTransparency(), ImageUploadField(), BackgroundImageField(), handleUpload()
-
-### Community 41 - "Learning Recap Popup ('Ringkasan Belajarmu')"
-Cohesion: 0.25
-Nodes (14): SVG bar chart renderer, Learning Recap Popup ('Ringkasan Belajarmu'), Render the recap bar chart of engagement signals, Close the learner recap popup, HTML-escape a value for the recap popup, Join a list of strings with Indonesian 'dan' conjunction, Build the per-signal narration text builders for recap, Open the learner recap popup, fetching data if needed (+6 more)
-
-### Community 42 - "Show the reading-speed warning overlay"
-Cohesion: 0.50
-Nodes (4): Keandalan Pencatatan Data (Outbox Offline), Peringatan Kecepatan Baca, Sisi Peserta — Yang Dialami Peserta (Tahap 6), Show the reading-speed warning overlay
+### Community 37 - "BlockEditor.tsx"
+Cohesion: 0.05
+Nodes (28): uploadImageToStorage(), BlockEditor(), add(), changeType(), remove(), toggleCollapse(), blockSummary(), detectPngTransparency() (+20 more)
 
 ### Community 43 - "QuizBuilder"
 Cohesion: 0.52
@@ -228,53 +191,29 @@ Nodes (3): public.modul_drafts_touch, modul_drafts_touch_trigger, public.modul_d
 Cohesion: 0.12
 Nodes (28): copyDraft(), fetchArticulateZip(), generateHtml(), generateHtmlForZip(), renameDraft(), blobKeDataUri(), HasilSemat, namaAset() (+20 more)
 
-### Community 49 - "Knowledge Check Gate"
-Cohesion: 0.39
-Nodes (12): Knowledge Check Gate, Check whether all Knowledge Check items on a slide are answered, Record a Knowledge Check answer, handle retry-until-correct, Apply the final locked result state for a KC question, Close the KC popup and resume pending navigation, Find a Knowledge Check question by block/index, Mark one KC option button as tried-and-wrong, Open the Knowledge Check popup for a slide (+4 more)
-
 ### Community 50 - "r2.py"
 Cohesion: 0.25
 Nodes (10): _creds(), is_configured(), presign(), _quote(), Cloudflare R2 — penanda tangan URL (presigned URL) buat paket Articulate.…, Apakah kredensial R2 lengkap terpasang di environment backend? Dipakai frontend…, Encoding yang dipakai SigV4. Slash SENGAJA dibiarkan di canonical URI…, URL bertanda tangan buat satu objek. `method` 'PUT' (upload), 'GET' (unduh),… (+2 more)
 
-### Community 51 - "Submit a section quiz for grading"
-Cohesion: 0.29
-Nodes (13): Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Section Quiz Checkpoint, Check whether a section's quiz is unlocked, Check whether a section's quiz has been passed, Play the correct-answer chime, Play the quiz-failed tone (+5 more)
-
-### Community 52 - "Dev Mode Panel"
-Cohesion: 0.33
-Nodes (7): Show/hide the progress block per HIDE_PROGRESS, Hide the dev-mode password modal, Dev Mode Panel, Show the dev-mode password modal, Validate dev-mode password and enable dev mode, Toggle developer mode on/off, Dev-mode preview toggle for hidden progress
-
-### Community 53 - "checkNetwork"
-Cohesion: 0.29
-Nodes (6): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-probe/README.md — Uji Koneksi LMS Guide
-
-### Community 54 - "Record a content-interaction event (accordion/tabs/modal/flow)"
-Cohesion: 0.25
-Nodes (8): Accordion block renderer, Record a content-interaction event (accordion/tabs/modal/flow), Flow diagram block renderer, Open modal block, Tabs block switch handler, Tabs block renderer, Accordion item toggle, Flow diagram step toggle
-
-### Community 55 - "Alat "Cek Rekam Aktivitas""
-Cohesion: 0.67
-Nodes (3): Alat "Cek Rekam Aktivitas", Command Center — Rekam Aktivitas & Analitik (Tahap 7), Deteksi Otomatis Data Janggal
-
 ## Knowledge Gaps
 - **128 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+123 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Template Modul Ikram — Source Code (Full Repo Printout)` connect `index.py` to `App.tsx`, `generator.py`?**
-  _High betweenness centrality (0.127) - this node is a cross-community bridge._
-- **Why does `react` connect `App.tsx` to `plugins`, `BlockEditor.tsx`, `EmojiPicker.tsx`, `api.ts`, `GraphicStyleSelect.tsx`, `PreviewExport.tsx`, `BlockPreview.tsx`?**
+  _High betweenness centrality (0.128) - this node is a cross-community bridge._
+- **Why does `react` connect `App.tsx` to `plugins`, `BlockEditor.tsx`, `api.ts`, `GraphicStyleSelect.tsx`, `PreviewExport.tsx`, `BlockPreview.tsx`?**
   _High betweenness centrality (0.040) - this node is a cross-community bridge._
 - **Why does `14 Jenis Blok Konten` connect `BlockEditor.tsx` to `generator.py`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
   _128 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.050774526678141134 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06286748077792854 - nodes in this community are weakly interconnected._
+- **Should `Navigate to a NAV index, enforcing all gating rules` be split into smaller, more focused modules?**
+  _Cohesion score 0.07142857142857142 - nodes in this community are weakly interconnected._
 - **Should `generator.py` be split into smaller, more focused modules?**
   _Cohesion score 0.06704260651629072 - nodes in this community are weakly interconnected._
-- **Should `index.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.06140350877192982 - nodes in this community are weakly interconnected._

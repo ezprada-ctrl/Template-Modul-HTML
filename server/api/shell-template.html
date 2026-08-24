@@ -1280,6 +1280,10 @@ const SLIDE_MIN_MS = __SLIDE_MIN_MS_JS__;
 // yang punya 20. Item pertama tabs & diagram alur gak dihitung: dia udah
 // kebuka duluan tanpa diklik.
 const TOTAL_INTERAKTIF = __TOTAL_INTERAKTIF_JS__;
+// Berapa paket Articulate yang terpasang di modul ini. Penyebut kolom
+// Articulate di Command Center - tanpa ini "0 selesai" gak bisa dibedain
+// antara peserta yang gak nyentuh dan modul yang emang gak punya paket.
+const TOTAL_ARTICULATE = __TOTAL_ARTICULATE_JS__;
 // {sectionId: judul} HANYA buat section yang punya kuis. Dipakai narasi rekap
 // ("paling banyak gagal di Section B (Judulnya)") sekaligus penanda buat
 // backend bahwa modul ini emang punya kuis - modul tanpa kuis gak boleh
@@ -2024,6 +2028,7 @@ function actStart(){
     total_slide: TOTAL_SLIDES,
     total_video: TOTAL_VIDEO,
     total_interaktif: TOTAL_INTERAKTIF,
+    total_articulate: TOTAL_ARTICULATE,
     /* Judul section berkuis ikut dikirim (kecil, cuma beberapa entri) karena
        rekap perlu nyebut "Section B (Judulnya)" DAN perlu tau modul ini punya
        kuis apa nggak. Judul SLIDE sengaja TIDAK ikut: jumlahnya gak terbatas
