@@ -456,6 +456,9 @@ function GridFields({ block, onChange }: { block: Block; onChange: (p: Partial<B
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
         Susunan di bawah ini nunjukin persis posisi tiap sel — begitu kotak terakhir mentok ke kanan, sisanya otomatis pindah baris & ke tengah, sama persis kayak hasil akhirnya nanti.
       </p>
+      <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
+        Tiap sel bisa diisi blok apa pun lewat “+ Tambah sub-blok…” — bukan cuma Kartu. Boleh sejenis semua, boleh dicampur (mis. Kartu + Gambar + Daftar).
+      </p>
       <GridCellPreview blocks={block.blocks || []} columns={columns} />
       <BlockEditor blocks={block.blocks || []} onChange={blocks => onChange({ blocks })} columns={columns} />
     </>
@@ -473,7 +476,7 @@ function GridCellPreview({ blocks, columns }: { blocks: Block[]; columns: 2 | 3 
   if (!blocks.length) {
     return (
       <p className="hint" style={{ fontSize: 12, margin: '0 0 8px' }}>
-        Belum ada sel — klik "+ Tambah blok…" di bawah buat isi sel pertama.
+        Belum ada sel — klik "+ Tambah sub-blok…" di bawah buat isi sel pertama.
       </p>
     );
   }

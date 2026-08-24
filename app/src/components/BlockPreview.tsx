@@ -54,6 +54,40 @@ export const BLOCK_PREVIEW_STYLES = `
 
 .pbp-scope .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
+/* ---- Contoh blok Grid ----
+   Kotaknya sengaja lebih lebar dari preview blok lain. Yang bikin Grid beda
+   dari blok lain justru selnya BERJEJER JADI KOLOM, dan di lebar 280px tiga
+   kolom cuma jadi tiga lajur teks kurus - persis kesan keliru yang mau
+   dihindari. Isinya juga dikecilkan proporsional biar tetap kebaca. */
+.pbp-scope.pbp-grid-demo{width:400px;max-height:none;}
+.pbp-grid-demo .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:start;}
+.pbp-grid-demo .grid3 + .grid3{margin-top:8px;}
+.pbp-grid-demo .card{padding:11px;border-radius:14px;}
+.pbp-grid-demo .card h3{font-size:11.5px;margin:0 0 6px;gap:6px;}
+.pbp-grid-demo .card h3 .ic{width:19px;height:19px;border-radius:6px;font-size:10px;}
+.pbp-grid-demo .card p{font-size:10.5px;line-height:1.45;}
+.pbp-grid-demo .callout{padding:10px;gap:7px;font-size:10.5px;border-radius:12px;}
+.pbp-grid-demo .callout .ic-badge{width:17px;height:17px;font-size:9px;}
+.pbp-grid-demo ul.tick{padding:2px 0;}
+.pbp-grid-demo ul.tick li{font-size:10.5px;padding-left:15px;margin-bottom:5px;}
+.pbp-grid-demo ul.tick li::before{width:5px;height:5px;top:5px;}
+/* margin-top bawaan .definition buat ngasih ruang tag-nya yang nongol ke atas;
+   di dalam sel grid itu bikin kolom ini turun sendiri, jadi ruangnya dipindah
+   ke padding-atas biar sejajar sama tetangganya. */
+.pbp-grid-demo .definition{margin-top:0;padding:14px 11px 11px;border-radius:12px;}
+.pbp-grid-demo .definition .tag{font-size:8px;padding:2px 7px;left:11px;top:-8px;}
+.pbp-grid-demo .definition p{font-size:10.5px;margin:2px 0 0;line-height:1.45;}
+.pbp-grid-demo .pull-quote{margin:0;padding:10px 4px;}
+.pbp-grid-demo .pull-quote .pq-num{font-size:22px;}
+.pbp-grid-demo .pull-quote .pq-text{font-size:10px;margin-top:2px;}
+.pbp-grid-demo .image-demo{padding:8px;border-radius:14px;}
+.pbp-grid-demo .image-demo .ph{height:46px;font-size:17px;}
+.pbp-grid-demo .image-demo .cap{font-size:9.5px;margin-top:5px;}
+/* Label tipe blok di tiap sel. Tanpa ini contohnya cuma "enam kotak cakep" -
+   yang mau ditunjukkan justru bahwa tiap kotak itu JENIS BLOK YANG BEDA. */
+.pbp-grid-demo .sel-label{font-size:8.5px;font-weight:800;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--text-faint);margin:0 0 4px 2px;}
+
 .pbp-scope .flow{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:4px 2px 10px;}
 .pbp-scope .flow-step{flex:1;min-width:84px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px;position:relative;transition:.25s;cursor:default;}
 .pbp-scope .flow-step.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 14px 30px -14px var(--accent-glow);transform:translateY(-2px);}
@@ -282,14 +316,7 @@ export default function BlockPreviewCard({ type }: { type: BlockType }) {
       return <FlowDemo />;
     }
     case 'grid':
-      return (
-        <div className="pbp-scope">
-          <div className="grid2">
-            <div className="card"><h3>Lorem</h3><p>{LOREM[0]}</p></div>
-            <div className="card"><h3>Ipsum</h3><p>{LOREM[1]}</p></div>
-          </div>
-        </div>
-      );
+      return <GridDemo />;
     case 'image':
       return (
         <div className="pbp-scope">
@@ -426,6 +453,84 @@ function FlowDemo() {
         </div>
         <div className="flow-detail"><b>{steps[active].title}.</b> {LOREM[active]}</div>
       </div>
+    </div>
+  );
+}
+
+// Contoh blok Grid.
+//
+// Versi lamanya cuma DUA KARTU LOREM berdampingan, dan itu salah menggambarkan
+// bloknya dari dua sisi sekaligus: (a) grid dipakai paling sering 3 kolom, dan
+// (b) selnya bukan "kartu" - sel grid bisa diisi JENIS BLOK APA PUN. Orang jadi
+// mengira Grid itu wadah khusus kartu dan gak pernah nyoba isi yang lain.
+//
+// Makanya contohnya sekarang 3 kolom, tiap sel jenis blok yang beda, dan tiap
+// sel dikasih label tipenya - supaya "boleh campur" kelihatan, bukan cuma
+// ditulis di keterangan bawah.
+function GridDemo() {
+  return (
+    <div>
+      <div className="pbp-scope pbp-grid-demo">
+        <div className="grid3">
+          <div>
+            <p className="sel-label">Kartu</p>
+            <div className="card">
+              <h3><span className="ic">📌</span>Judul</h3>
+              <p>Isi singkat kartunya di sini.</p>
+            </div>
+          </div>
+          <div>
+            <p className="sel-label">Catatan</p>
+            <div className="callout amber">
+              <span className="ic-badge">!</span>
+              <p>Hal penting yang perlu ditekankan.</p>
+            </div>
+          </div>
+          <div>
+            <p className="sel-label">Daftar</p>
+            <ul className="tick">
+              <li>Poin pertama</li>
+              <li>Poin kedua</li>
+              <li>Poin ketiga</li>
+            </ul>
+          </div>
+        </div>
+        <div className="grid3">
+          <div>
+            <p className="sel-label">Definisi</p>
+            <div className="definition">
+              <span className="tag">DEFINISI</span>
+              <p><b>Istilah</b> beserta artinya.</p>
+            </div>
+          </div>
+          <div>
+            <p className="sel-label">Gambar</p>
+            <div className="image-demo">
+              <div className="ph">🖼️</div>
+              <p className="cap">Keterangan gambar</p>
+            </div>
+          </div>
+          <div>
+            <p className="sel-label">Kutipan Angka</p>
+            <div className="pull-quote">
+              <span className="pq-num">87%</span>
+              <span className="pq-text">Angka yang mau ditonjolkan</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Keterangan ini SENGAJA di luar .pbp-scope: scope itu tiruan tampilan
+          modul jadinya, jadi teks penjelas yang gak pernah muncul di modul gak
+          boleh nebeng di dalamnya. */}
+      <p style={{
+        margin: '8px 2px 2px', maxWidth: 400, fontSize: 11, lineHeight: 1.5,
+        color: 'var(--text-dim)',
+      }}>
+        Tiap kotak bisa diisi <b>blok apa pun</b> — kartu, catatan, daftar,
+        gambar, tabel, sampai Grid lagi di dalamnya. Boleh sejenis semua, boleh
+        dicampur seperti contoh di atas. Pilih 2 atau 3 kolom; sel yang gak muat
+        otomatis pindah baris.
+      </p>
     </div>
   );
 }

@@ -982,7 +982,7 @@
       "file_type": "code",
       "norm_label": "slidepreview()",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L17"
+      "source_location": "L27"
     },
     {
       "id": "app_src_components_slidepreview_slidepreview_jumptoslide",
@@ -994,7 +994,7 @@
       "file_type": "code",
       "norm_label": "jumptoslide()",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L60"
+      "source_location": "L91"
     },
     {
       "id": "app_src_themes_findthemepresetid",
@@ -10420,7 +10420,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L45",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -16722,7 +16722,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L17",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -16744,7 +16744,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L60",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -23568,5 +23568,5 @@
       "source_file": "Panduan-Fitur-Template-Modul-Ikram.html"
     }
   ],
-  "built_at_commit": "1bd5d4f9a3d27e7f78d0f37fb7f0b5b50949b3c9"
+  "built_at_commit": "a96ad5bc3e3659b5da68ec4796dadd1ca50b7816"
 }

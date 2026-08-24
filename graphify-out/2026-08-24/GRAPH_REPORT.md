@@ -1,7 +1,7 @@
-# Graph Report - Template Modul Ikram  (2026-08-21)
+# Graph Report - Template Modul Ikram  (2026-08-24)
 
 ## Corpus Check
-- 47 files · ~94,348 words
+- 47 files · ~94,596 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1bd5d4f9`
+- Built from commit: `a96ad5bc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -81,7 +81,7 @@
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/pptx_extract.py
 - `Render Service: modul-builder-backend` --semantically_similar_to--> `server/vercel.json`  [INFERRED] [semantically similar]
   render.yaml → Template-Modul-Ikram-Source-Code.html
-- `Keandalan Pencatatan Data (Outbox Offline)` --references--> `Push failed activity rows back into the outbox queue`  [INFERRED]
+- `Identitas Peserta Lintas Modul` --references--> `Resolve learner identity from state/SCORM/shared cache`  [INFERRED]
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/shell-template.html
 
 ## Import Cycles
