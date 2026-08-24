@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ModuleData } from '../types';
 import { generateHtml } from '../api';
 
@@ -8,6 +8,16 @@ interface Props {
   target?: 'slide' | 'hero' | 'summary';
   label?: string;
 }
+
+// Lebar "layar" yang disimulasikan preview. Modulnya responsif: .grid3 jatuh
+// ke 1 kolom di bawah 900px dan .grid2 di bawah 760px (lihat shell-template.html).
+// Panel preview di samping editor jauh lebih sempit dari itu, jadi kalau iframe-nya
+// dibiarkan selebar panel, blok Grid tampil BERJEJER KE BAWAH - penyusun modul
+// mengira gridnya rusak, padahal hasil akhirnya di layar penuh baik-baik saja.
+// Solusinya: iframe tetap dirender pada lebar desktop tetap ini, lalu SELURUH
+// isinya diperkecil pakai transform:scale() supaya muat di panel. Yang dilihat
+// jadi bentuk asli modul, cuma lebih kecil - bukan versi mobile-nya.
+const LEBAR_LOGIS = 1280;
 
 // Live preview of a single slide (or the cover/hero screen), rendered by
 // generating the full module HTML and jumping the embedded page straight to
@@ -35,6 +45,27 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
   // this, someone scrolled down to see a block they just added gets yanked
   // back to the top on every single keystroke-triggered re-render.
   const scrollTopRef = useRef(0);
+  // Panel preview ikut melar/menyusut (layout editor, jendela di-resize), jadi
+  // faktor perkecilnya diukur ulang - bukan konstanta.
+  const wadahRef = useRef<HTMLDivElement>(null);
+  const [skala, setSkala] = useState(1);
+
+  useLayoutEffect(() => {
+    const el = wadahRef.current;
+    if (!el) return;
+    const ukur = () => {
+      const w = el.clientWidth;
+      if (!w) return;
+      // Gak pernah DIPERBESAR: kalau panelnya kebetulan lebih lebar dari
+      // LEBAR_LOGIS, membesarkan cuma bikin teks buram tanpa nunjukin apa pun
+      // yang baru.
+      setSkala(Math.min(1, w / LEBAR_LOGIS));
+    };
+    ukur();
+    const ro = new ResizeObserver(ukur);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -103,15 +134,29 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
         {loading && <span>memperbarui…</span>}
       </div>
       {error && <p style={{ color: 'var(--danger)', fontSize: 12, padding: 10 }}>{error}</p>}
-      {html && (
-        <iframe
-          ref={iframeRef}
-          srcDoc={html}
-          onLoad={jumpToSlide}
-          allow="autoplay; encrypted-media; picture-in-picture; clipboard-write"
-          style={{ border: 'none', flex: 1, width: '100%' }}
-        />
-      )}
+      <div ref={wadahRef} style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        {html && (
+          <iframe
+            ref={iframeRef}
+            srcDoc={html}
+            onLoad={jumpToSlide}
+            allow="autoplay; encrypted-media; picture-in-picture; clipboard-write"
+            style={{
+              border: 'none',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              // Lebar & tinggi dipasang dalam satuan SEBELUM diperkecil: setelah
+              // di-scale, hasilnya pas menutupi panel. Tanpa membagi tingginya,
+              // isi bagian bawah panel bakal kosong seukuran sisa penyusutan.
+              width: LEBAR_LOGIS,
+              height: `${100 / skala}%`,
+              transform: `scale(${skala})`,
+              transformOrigin: '0 0',
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

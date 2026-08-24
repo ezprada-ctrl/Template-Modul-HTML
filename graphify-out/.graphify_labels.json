@@ -38,16 +38,13 @@
   "36": "Canvas",
   "37": "BlockEditor",
   "38": "EmojiPicker.tsx",
-  "39": "Learning Recap Popup ('Ringkasan Belajarmu')",
+  "39": "Identity Resolution & NIP Capture",
   "40": "uploadImageToStorage",
-  "41": "types.ts",
-  "42": "PreviewExport.tsx",
   "43": "QuizBuilder",
   "44": "supabase_setup.sql",
   "45": "supabase_activity_setup.sql",
   "46": "supabase_storage_media_setup.sql",
   "47": "supabase_storage_setup.sql",
   "48": "scormZip.ts",
-  "50": "r2.py",
-  "51": "CoverForm.tsx"
+  "50": "r2.py"
 }

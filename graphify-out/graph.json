@@ -74,6 +74,19 @@
   },
   "nodes": [
     {
+      "id": "app_src_app_history",
+      "label": "History",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "history",
+      "source_file": "app/src/App.tsx",
+      "source_location": "L31"
+    },
+    {
       "id": "app_src_app_tab",
       "label": "Tab",
       "_callable": true,
@@ -85,6 +98,188 @@
       "norm_label": "tab",
       "source_file": "app/src/App.tsx",
       "source_location": "L12"
+    },
+    {
+      "id": "app_src_components_canvas_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L15"
+    },
+    {
+      "id": "app_src_components_coverform_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "app/src/components/CoverForm.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "app_src_components_previewexport_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "app_src_components_quizbuilder_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "app/src/components/QuizBuilder.tsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "app_src_components_slidebank_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "app/src/components/SlideBank.tsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "app_src_components_slidepreview_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "app/src/components/SlidePreview.tsx",
+      "source_location": "L5"
+    },
+    {
+      "id": "app_src_scormzip_zipprogress",
+      "label": "ZipProgress",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "zipprogress",
+      "source_file": "app/src/scormZip.ts",
+      "source_location": "L46"
+    },
+    {
+      "id": "app_src_themes_themecolors",
+      "label": "ThemeColors",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "themecolors",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_themes_themepreset",
+      "label": "ThemePreset",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "themepreset",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L8"
+    },
+    {
+      "id": "app_src_types_draftslide",
+      "label": "DraftSlide",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "draftslide",
+      "source_file": "app/src/types.ts",
+      "source_location": "L232"
+    },
+    {
+      "id": "app_src_types_moduledata",
+      "label": "ModuleData",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "moduledata",
+      "source_file": "app/src/types.ts",
+      "source_location": "L171"
+    },
+    {
+      "id": "app_src_types_quizquestion",
+      "label": "QuizQuestion",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "quizquestion",
+      "source_file": "app/src/types.ts",
+      "source_location": "L164"
+    },
+    {
+      "id": "app_src_types_section",
+      "label": "Section",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "section",
+      "source_file": "app/src/types.ts",
+      "source_location": "L140"
+    },
+    {
+      "id": "app_src_types_slide",
+      "label": "Slide",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "slide",
+      "source_file": "app/src/types.ts",
+      "source_location": "L148"
     },
     {
       "id": "app_src_components_graphicstyleselect_props",
@@ -191,160 +386,17 @@
       "source_location": "L4"
     },
     {
-      "id": "app_src_app_history",
-      "label": "History",
+      "id": "app_src_assetembed_hasilsemat",
+      "label": "HasilSemat",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
+      "community": 48,
+      "community_name": "scormZip.ts",
       "file_type": "code",
-      "norm_label": "history",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L31"
-    },
-    {
-      "id": "app_src_components_canvas_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L15"
-    },
-    {
-      "id": "app_src_components_quizbuilder_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "app/src/components/QuizBuilder.tsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "app_src_components_slidebank_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "app/src/components/SlideBank.tsx",
-      "source_location": "L6"
-    },
-    {
-      "id": "app_src_components_slidepreview_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L5"
-    },
-    {
-      "id": "app_src_types_draftslide",
-      "label": "DraftSlide",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "draftslide",
-      "source_file": "app/src/types.ts",
-      "source_location": "L232"
-    },
-    {
-      "id": "app_src_types_moduledata",
-      "label": "ModuleData",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "moduledata",
-      "source_file": "app/src/types.ts",
-      "source_location": "L171"
-    },
-    {
-      "id": "app_src_types_quizquestion",
-      "label": "QuizQuestion",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "quizquestion",
-      "source_file": "app/src/types.ts",
-      "source_location": "L164"
-    },
-    {
-      "id": "app_src_types_section",
-      "label": "Section",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "section",
-      "source_file": "app/src/types.ts",
-      "source_location": "L140"
-    },
-    {
-      "id": "app_src_types_slide",
-      "label": "Slide",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "slide",
-      "source_file": "app/src/types.ts",
-      "source_location": "L148"
-    },
-    {
-      "id": "app_src_components_previewexport_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "app_src_scormzip_zipprogress",
-      "label": "ZipProgress",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "zipprogress",
-      "source_file": "app/src/scormZip.ts",
-      "source_location": "L43"
+      "norm_label": "hasilsemat",
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L53"
     },
     {
       "id": "app_src_components_blockeditor_fieldstyle",
@@ -397,45 +449,6 @@
       "norm_label": "kcquestion",
       "source_file": "app/src/types.ts",
       "source_location": "L23"
-    },
-    {
-      "id": "app_src_components_coverform_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "app/src/components/CoverForm.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "app_src_themes_themecolors",
-      "label": "ThemeColors",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "themecolors",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_themes_themepreset",
-      "label": "ThemePreset",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "themepreset",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L8"
     },
     {
       "id": "app_src_api_activitylearner",
@@ -516,6 +529,42 @@
       "source_location": "L145"
     },
     {
+      "id": "app_src_api_checktrackingconfig",
+      "label": "checkTrackingConfig()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "checktrackingconfig()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L46"
+    },
+    {
+      "id": "app_src_api_copydraft",
+      "label": "copyDraft()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "copydraft()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L104"
+    },
+    {
+      "id": "app_src_api_generatehtml",
+      "label": "generateHtml()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "generatehtml()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L53"
+    },
+    {
       "id": "app_src_api_listdrafts",
       "label": "listDrafts()",
       "_callable": true,
@@ -538,6 +587,30 @@
       "norm_label": "loaddraft()",
       "source_file": "app/src/api.ts",
       "source_location": "L69"
+    },
+    {
+      "id": "app_src_api_renamedraft",
+      "label": "renameDraft()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "renamedraft()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L89"
+    },
+    {
+      "id": "app_src_api_savedraft",
+      "label": "saveDraft()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "savedraft()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L75"
     },
     {
       "id": "app_src_app_app",
@@ -744,6 +817,102 @@
       "source_location": "L39"
     },
     {
+      "id": "app_src_components_canvas_bundleanimateddemo",
+      "label": "BundleAnimatedDemo()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "bundleanimateddemo()",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L217"
+    },
+    {
+      "id": "app_src_components_canvas_bundlepanel",
+      "label": "BundlePanel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "bundlepanel()",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L161"
+    },
+    {
+      "id": "app_src_components_canvas_sliderow",
+      "label": "SlideRow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "sliderow()",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L335"
+    },
+    {
+      "id": "app_src_components_coverform_coverform",
+      "label": "CoverForm()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "coverform()",
+      "source_file": "app/src/components/CoverForm.tsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "app_src_components_previewexport_previewexport",
+      "label": "PreviewExport()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "previewexport()",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "app_src_components_previewexport_previewexport_docopy",
+      "label": "doCopy()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "docopy()",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L102"
+    },
+    {
+      "id": "app_src_components_previewexport_previewexport_doexport",
+      "label": "doExport()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "doexport()",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L30"
+    },
+    {
+      "id": "app_src_components_previewexport_previewexport_doexportscorm",
+      "label": "doExportScorm()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "doexportscorm()",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L68"
+    },
+    {
       "id": "app_src_components_previewexport_previewexport_doload",
       "label": "doLoad()",
       "_callable": true,
@@ -753,7 +922,91 @@
       "file_type": "code",
       "norm_label": "doload()",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L73"
+      "source_location": "L93"
+    },
+    {
+      "id": "app_src_components_previewexport_previewexport_dopreview",
+      "label": "doPreview()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "dopreview()",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L20"
+    },
+    {
+      "id": "app_src_components_previewexport_previewexport_dorename",
+      "label": "doRename()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "dorename()",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L120"
+    },
+    {
+      "id": "app_src_components_previewexport_previewexport_dosave",
+      "label": "doSave()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "dosave()",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L87"
+    },
+    {
+      "id": "app_src_components_previewexport_previewexport_refreshdrafts",
+      "label": "refreshDrafts()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "refreshdrafts()",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L83"
+    },
+    {
+      "id": "app_src_components_slidepreview_slidepreview",
+      "label": "SlidePreview()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "slidepreview()",
+      "source_file": "app/src/components/SlidePreview.tsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "app_src_components_slidepreview_slidepreview_jumptoslide",
+      "label": "jumpToSlide()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "jumptoslide()",
+      "source_file": "app/src/components/SlidePreview.tsx",
+      "source_location": "L60"
+    },
+    {
+      "id": "app_src_themes_findthemepresetid",
+      "label": "findThemePresetId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "findthemepresetid()",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L27"
     },
     {
       "id": "app_src_types_buildprojectslugprefix",
@@ -2412,18 +2665,6 @@
       "source_location": "L18"
     },
     {
-      "id": "app_src_components_slidebank_slidebank_onupload",
-      "label": "onUpload()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 36,
-      "community_name": "Canvas",
-      "file_type": "code",
-      "norm_label": "onupload()",
-      "source_file": "app/src/components/SlideBank.tsx",
-      "source_location": "L22"
-    },
-    {
       "id": "app_src_components_slidebank_slidebank_togglereviewed",
       "label": "toggleReviewed()",
       "_callable": true,
@@ -2724,186 +2965,6 @@
       "source_location": "L265"
     },
     {
-      "id": "app_src_components_canvas_bundleanimateddemo",
-      "label": "BundleAnimatedDemo()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "bundleanimateddemo()",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L217"
-    },
-    {
-      "id": "app_src_components_canvas_bundlepanel",
-      "label": "BundlePanel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "bundlepanel()",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L161"
-    },
-    {
-      "id": "app_src_components_canvas_sliderow",
-      "label": "SlideRow()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "sliderow()",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L335"
-    },
-    {
-      "id": "app_src_api_copydraft",
-      "label": "copyDraft()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "copydraft()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L104"
-    },
-    {
-      "id": "app_src_api_generatehtml",
-      "label": "generateHtml()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "generatehtml()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L53"
-    },
-    {
-      "id": "app_src_api_renamedraft",
-      "label": "renameDraft()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "renamedraft()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L89"
-    },
-    {
-      "id": "app_src_api_savedraft",
-      "label": "saveDraft()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "savedraft()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L75"
-    },
-    {
-      "id": "app_src_components_previewexport_previewexport",
-      "label": "PreviewExport()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "previewexport()",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L12"
-    },
-    {
-      "id": "app_src_components_previewexport_previewexport_docopy",
-      "label": "doCopy()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "docopy()",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L82"
-    },
-    {
-      "id": "app_src_components_previewexport_previewexport_doexport",
-      "label": "doExport()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "doexport()",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L29"
-    },
-    {
-      "id": "app_src_components_previewexport_previewexport_doexportscorm",
-      "label": "doExportScorm()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "doexportscorm()",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L48"
-    },
-    {
-      "id": "app_src_components_previewexport_previewexport_dopreview",
-      "label": "doPreview()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "dopreview()",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L19"
-    },
-    {
-      "id": "app_src_components_previewexport_previewexport_dorename",
-      "label": "doRename()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "dorename()",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L100"
-    },
-    {
-      "id": "app_src_components_previewexport_previewexport_dosave",
-      "label": "doSave()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "dosave()",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L67"
-    },
-    {
-      "id": "app_src_components_previewexport_previewexport_refreshdrafts",
-      "label": "refreshDrafts()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "refreshdrafts()",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L63"
-    },
-    {
       "id": "app_src_components_quizbuilder_quizbuilder",
       "label": "QuizBuilder()",
       "_callable": true,
@@ -3012,6 +3073,54 @@
       "source_location": "L645"
     },
     {
+      "id": "app_src_assetembed_blobkedatauri",
+      "label": "blobKeDataUri()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "scormZip.ts",
+      "file_type": "code",
+      "norm_label": "blobkedatauri()",
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L44"
+    },
+    {
+      "id": "app_src_assetembed_namaaset",
+      "label": "namaAset()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "scormZip.ts",
+      "file_type": "code",
+      "norm_label": "namaaset()",
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L35"
+    },
+    {
+      "id": "app_src_assetembed_sematkangambardatauri",
+      "label": "sematkanGambarDataUri()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "scormZip.ts",
+      "file_type": "code",
+      "norm_label": "sematkangambardatauri()",
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L64"
+    },
+    {
+      "id": "app_src_assetembed_urlgambar",
+      "label": "urlGambar()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "scormZip.ts",
+      "file_type": "code",
+      "norm_label": "urlgambar()",
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L24"
+    },
+    {
       "id": "app_src_scormzip_articulateblocks",
       "label": "articulateBlocks()",
       "_callable": true,
@@ -3021,7 +3130,7 @@
       "file_type": "code",
       "norm_label": "articulateblocks()",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L51"
+      "source_location": "L54"
     },
     {
       "id": "app_src_scormzip_artpaths",
@@ -3033,7 +3142,7 @@
       "file_type": "code",
       "norm_label": "artpaths()",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L67"
+      "source_location": "L70"
     },
     {
       "id": "app_src_scormzip_buildmanifest",
@@ -3045,7 +3154,7 @@
       "file_type": "code",
       "norm_label": "buildmanifest()",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L84"
+      "source_location": "L87"
     },
     {
       "id": "app_src_scormzip_bukatujuan",
@@ -3057,7 +3166,7 @@
       "file_type": "code",
       "norm_label": "bukatujuan()",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L153"
+      "source_location": "L120"
     },
     {
       "id": "app_src_scormzip_exportscormzip",
@@ -3069,7 +3178,7 @@
       "file_type": "code",
       "norm_label": "exportscormzip()",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L189"
+      "source_location": "L156"
     },
     {
       "id": "app_src_scormzip_exportscormzip_pastikanfolder",
@@ -3081,7 +3190,7 @@
       "file_type": "code",
       "norm_label": "pastikanfolder()",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L230"
+      "source_location": "L197"
     },
     {
       "id": "app_src_scormzip_hrefesc",
@@ -3093,31 +3202,7 @@
       "file_type": "code",
       "norm_label": "hrefesc()",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L80"
-    },
-    {
-      "id": "app_src_scormzip_namaaset",
-      "label": "namaAset()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "scormZip.ts",
-      "file_type": "code",
-      "norm_label": "namaaset()",
-      "source_file": "app/src/scormZip.ts",
-      "source_location": "L144"
-    },
-    {
-      "id": "app_src_scormzip_urlgambar",
-      "label": "urlGambar()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 48,
-      "community_name": "scormZip.ts",
-      "file_type": "code",
-      "norm_label": "urlgambar()",
-      "source_file": "app/src/scormZip.ts",
-      "source_location": "L133"
+      "source_location": "L83"
     },
     {
       "id": "app_src_scormzip_xmlesc",
@@ -3129,7 +3214,7 @@
       "file_type": "code",
       "norm_label": "xmlesc()",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L74"
+      "source_location": "L77"
     },
     {
       "id": "app_src_api_uploadmediatostorage",
@@ -3310,66 +3395,6 @@
       "norm_label": "_signing_key()",
       "source_file": "server/api/r2.py",
       "source_location": "L65"
-    },
-    {
-      "id": "app_src_api_checktrackingconfig",
-      "label": "checkTrackingConfig()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "checktrackingconfig()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L46"
-    },
-    {
-      "id": "app_src_components_coverform_coverform",
-      "label": "CoverForm()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "coverform()",
-      "source_file": "app/src/components/CoverForm.tsx",
-      "source_location": "L13"
-    },
-    {
-      "id": "app_src_components_slidepreview_slidepreview",
-      "label": "SlidePreview()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "slidepreview()",
-      "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L17"
-    },
-    {
-      "id": "app_src_components_slidepreview_slidepreview_jumptoslide",
-      "label": "jumpToSlide()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "jumptoslide()",
-      "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L60"
-    },
-    {
-      "id": "app_src_themes_findthemepresetid",
-      "label": "findThemePresetId()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "findthemepresetid()",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L27"
     },
     {
       "id": "app_src_api_cclistlearners",
@@ -3756,6 +3781,18 @@
       "source_location": "L36"
     },
     {
+      "id": "app_src_components_slidebank_slidebank_onupload",
+      "label": "onUpload()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 7,
+      "community_name": "api.ts",
+      "file_type": "code",
+      "norm_label": "onupload()",
+      "source_file": "app/src/components/SlideBank.tsx",
+      "source_location": "L22"
+    },
+    {
       "id": "app_src_app",
       "label": "App.tsx",
       "_origin": "ast",
@@ -3776,6 +3813,138 @@
       "norm_label": "tabs",
       "source_file": "app/src/App.tsx",
       "source_location": "L14"
+    },
+    {
+      "id": "app_src_components_canvas",
+      "label": "Canvas.tsx",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "canvas.tsx",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_components_coverform",
+      "label": "CoverForm.tsx",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "coverform.tsx",
+      "source_file": "app/src/components/CoverForm.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_components_previewexport",
+      "label": "PreviewExport.tsx",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "previewexport.tsx",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_components_quizbuilder",
+      "label": "QuizBuilder.tsx",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "quizbuilder.tsx",
+      "source_file": "app/src/components/QuizBuilder.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_components_slidebank",
+      "label": "SlideBank.tsx",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "slidebank.tsx",
+      "source_file": "app/src/components/SlideBank.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_components_slidepreview",
+      "label": "SlidePreview.tsx",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "slidepreview.tsx",
+      "source_file": "app/src/components/SlidePreview.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_main",
+      "label": "main.tsx",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "main.tsx",
+      "source_file": "app/src/main.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_themes",
+      "label": "themes.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "themes.ts",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_themes_default_theme",
+      "label": "DEFAULT_THEME",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "default_theme",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L25"
+    },
+    {
+      "id": "app_src_themes_theme_presets",
+      "label": "THEME_PRESETS",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "theme_presets",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L16"
+    },
+    {
+      "id": "app_src_types",
+      "label": "types.ts",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "types.ts",
+      "source_file": "app/src/types.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "ref_react",
+      "label": "react",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "App.tsx",
+      "file_type": "concept",
+      "norm_label": "react",
+      "source_file": "app/.oxlintrc.json",
+      "source_location": "L3"
     },
     {
       "id": "server_api_activity_store",
@@ -4933,94 +5102,6 @@
       "source_location": "L6"
     },
     {
-      "id": "app_src_components_canvas",
-      "label": "Canvas.tsx",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "canvas.tsx",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_components_quizbuilder",
-      "label": "QuizBuilder.tsx",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "quizbuilder.tsx",
-      "source_file": "app/src/components/QuizBuilder.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_components_slidebank",
-      "label": "SlideBank.tsx",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "slidebank.tsx",
-      "source_file": "app/src/components/SlideBank.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_components_slidepreview",
-      "label": "SlidePreview.tsx",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "slidepreview.tsx",
-      "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_main",
-      "label": "main.tsx",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "main.tsx",
-      "source_file": "app/src/main.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_types",
-      "label": "types.ts",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "types.ts",
-      "source_file": "app/src/types.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "ref_react",
-      "label": "react",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "types.ts",
-      "file_type": "concept",
-      "norm_label": "react",
-      "source_file": "app/.oxlintrc.json",
-      "source_location": "L3"
-    },
-    {
-      "id": "app_src_components_previewexport",
-      "label": "PreviewExport.tsx",
-      "_origin": "ast",
-      "community": 42,
-      "community_name": "PreviewExport.tsx",
-      "file_type": "code",
-      "norm_label": "previewexport.tsx",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "public_modul_drafts_touch",
       "label": "public.modul_drafts_touch",
       "_origin": "ast",
@@ -5131,6 +5212,17 @@
       "source_file": "@zip.js/zip.js"
     },
     {
+      "id": "app_src_assetembed",
+      "label": "assetEmbed.ts",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "scormZip.ts",
+      "file_type": "code",
+      "norm_label": "assetembed.ts",
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "app_src_scormzip",
       "label": "scormZip.ts",
       "_origin": "ast",
@@ -5150,7 +5242,7 @@
       "file_type": "code",
       "norm_label": "opsi_entri",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L30"
+      "source_location": "L33"
     },
     {
       "id": "app_src_components_blockeditor",
@@ -5217,50 +5309,6 @@
       "norm_label": "url bertanda tangan buat satu objek. `method` 'put' (upload), 'get' (unduh),...",
       "source_file": "server/api/r2.py",
       "source_location": "L73"
-    },
-    {
-      "id": "app_src_components_coverform",
-      "label": "CoverForm.tsx",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "coverform.tsx",
-      "source_file": "app/src/components/CoverForm.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_themes",
-      "label": "themes.ts",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "themes.ts",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_themes_default_theme",
-      "label": "DEFAULT_THEME",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "default_theme",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L25"
-    },
-    {
-      "id": "app_src_themes_theme_presets",
-      "label": "THEME_PRESETS",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "theme_presets",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L16"
     },
     {
       "id": "app_package",
@@ -6026,6 +6074,21 @@
       "source_url": null
     },
     {
+      "id": "panduan_fitur_template_modul_ikram_kuis",
+      "label": "Kuis (Tahap 4)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 0,
+      "community_name": "App.tsx",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "kuis (tahap 4)",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template__getaudioctx",
       "label": "Get or create the shared Web Audio context",
       "_origin": "semantic",
@@ -6113,6 +6176,36 @@
       "norm_label": "group a section's nav items into singles/bundles/quiz",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 2369",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_choosereadingwarningkembali",
+      "label": "Handle 'go back and reread' from reading warning",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "handle 'go back and reread' from reading warning",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3281",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_choosereadingwarningyakin",
+      "label": "Handle 'proceed anyway' from reading warning",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "handle 'proceed anyway' from reading warning",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3268",
       "source_url": null
     },
     {
@@ -6233,6 +6326,21 @@
       "norm_label": "check whether a section is unlocked",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 2214",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_itemkey",
+      "label": "Compute a stable state key for a NAV item",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "compute a stable state key for a nav item",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2190",
       "source_url": null
     },
     {
@@ -6446,6 +6554,21 @@
       "source_url": null
     },
     {
+      "id": "server_api_shell_template_openreadingwarning",
+      "label": "Show the reading-speed warning overlay",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "show the reading-speed warning overlay",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3259",
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template_playcorrectsound",
       "label": "Play the correct-answer chime",
       "_origin": "semantic",
@@ -6656,6 +6779,21 @@
       "source_url": null
     },
     {
+      "id": "server_api_shell_template_rushedslidesinsection",
+      "label": "List slides in a section flagged as rushed",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "list slides in a section flagged as rushed",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3253",
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template_savestate",
       "label": "Persist learner progress state to localStorage and SCORM",
       "_origin": "semantic",
@@ -6668,6 +6806,21 @@
       "norm_label": "persist learner progress state to localstorage and scorm",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1561",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_scormcommit",
+      "label": "SCORM LMSCommit/Commit wrapper",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "scorm lmscommit/commit wrapper",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1354",
       "source_url": null
     },
     {
@@ -6791,6 +6944,36 @@
       "source_url": null
     },
     {
+      "id": "server_api_shell_template_updatesliderushed",
+      "label": "Flag/unflag a slide as read too quickly",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "flag/unflag a slide as read too quickly",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2111",
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_peringatan_kecepatan_baca",
+      "label": "Peringatan Kecepatan Baca",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "peringatan kecepatan baca",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template_concept_dev_mode",
       "label": "Dev Mode Panel",
       "_origin": "semantic",
@@ -6831,6 +7014,22 @@
       "contributor": null,
       "file_type": "concept",
       "norm_label": "section quiz checkpoint",
+      "source_file": "server/api/shell-template.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_concept_reading_speed_warning",
+      "label": "Reading-Speed & Idle Detection",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "reading-speed & idle detection",
+      "rationale": "The 4-minute idle threshold (ACT_IDLE_MS) is a deliberately loose estimate of 'learner stepped away', chosen as a middle ground between productivity-tool defaults (~3-5 min) and news-site scroll-tracking thresholds (~5s); it is added ON TOP OF each slide's own Brysbaert-derived minimum reading time (238 wpm, SLIDE_MIN_MS) via actIdleThresholdMs(), not used in place of it. Bug fixed 2026-08-02: before actIdleThresholdMs() existed, every slide used a flat 4-minute idle cap, which could both mislabel an attentive reader on a long slide as 'abandoned' in Command Center and falsely trigger the rushed-reading warning (which compares active time against 50% of SLIDE_MIN_MS) because activeMs was cut off before the real reading time was reached.",
       "source_file": "server/api/shell-template.html",
       "source_location": null,
       "source_url": null
@@ -7586,213 +7785,258 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_barchartsvg",
-      "label": "SVG bar chart renderer",
+      "id": "server_api_shell_template_backtoidentityform",
+      "label": "Return from identity confirmation to the entry form",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "svg bar chart renderer",
+      "norm_label": "return from identity confirmation to the entry form",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 1159",
+      "source_location": "line 1848",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recapcharthtml",
-      "label": "Render the recap bar chart of engagement signals",
+      "id": "server_api_shell_template_confirmidentity",
+      "label": "Confirm and commit pending identity, start activity session",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "render the recap bar chart of engagement signals",
+      "norm_label": "confirm and commit pending identity, start activity session",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2845",
+      "source_location": "line 1855",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recapclose",
-      "label": "Close the learner recap popup",
+      "id": "server_api_shell_template_formatnip",
+      "label": "Group NIP digits per PNS NIP structure",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "close the learner recap popup",
+      "norm_label": "group nip digits per pns nip structure",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2653",
+      "source_location": "line 1810",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recapesc",
-      "label": "HTML-escape a value for the recap popup",
+      "id": "server_api_shell_template_formatnipinput",
+      "label": "Live-format the NIP input field while preserving caret",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "html-escape a value for the recap popup",
+      "norm_label": "live-format the nip input field while preserving caret",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2623",
+      "source_location": "line 1816",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recapgabung",
-      "label": "Join a list of strings with Indonesian 'dan' conjunction",
+      "id": "server_api_shell_template_identityfromscorm",
+      "label": "Read learner name/id from the SCORM API",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "join a list of strings with indonesian 'dan' conjunction",
+      "norm_label": "read learner name/id from the scorm api",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2698",
+      "source_location": "line 1698",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recapnarasi",
-      "label": "Build the per-signal narration text builders for recap",
+      "id": "server_api_shell_template_loadsharedidentity",
+      "label": "Load cross-module cached learner identity",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "build the per-signal narration text builders for recap",
+      "norm_label": "load cross-module cached learner identity",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2710",
+      "source_location": "line 1724",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recapopen",
-      "label": "Open the learner recap popup, fetching data if needed",
+      "id": "server_api_shell_template_nipdigits",
+      "label": "Strip non-digit characters from a NIP string",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "open the learner recap popup, fetching data if needed",
+      "norm_label": "strip non-digit characters from a nip string",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2628",
+      "source_location": "line 1804",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recappoint",
-      "label": "Render one recap narrative point row",
+      "id": "server_api_shell_template_openidentitygate",
+      "label": "Show the identity entry overlay",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "render one recap narrative point row",
+      "norm_label": "show the identity entry overlay",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2811",
+      "source_location": "line 1780",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recaprender",
-      "label": "Render the full recap popup body from fetched data",
+      "id": "server_api_shell_template_resolveidentity",
+      "label": "Resolve learner identity from state/SCORM/shared cache",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "render the full recap popup body from fetched data",
+      "norm_label": "resolve learner identity from state/scorm/shared cache",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2862",
+      "source_location": "line 1746",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recapsectionlabel",
-      "label": "Format a section label for recap narration",
+      "id": "server_api_shell_template_savesharedidentity",
+      "label": "Persist cross-module cached learner identity",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "format a section label for recap narration",
+      "norm_label": "persist cross-module cached learner identity",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2703",
+      "source_location": "line 1731",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recapslidelabel",
-      "label": "Format a slide label for recap narration",
+      "id": "server_api_shell_template_scormnametonatural",
+      "label": "Reformat 'Last, First' SCORM name to natural order",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "format a slide label for recap narration",
+      "norm_label": "reformat 'last, first' scorm name to natural order",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2693",
+      "source_location": "line 1683",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_recapstatshtml",
-      "label": "Render the recap top stat tiles",
+      "id": "server_api_shell_template_showidentityerror",
+      "label": "Display identity form validation error",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "render the recap top stat tiles",
+      "norm_label": "display identity form validation error",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2815",
+      "source_location": "line 1775",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_tcrow",
-      "label": "Render a key/value row for the track-check panel",
+      "id": "server_api_shell_template_submitidentity",
+      "label": "Validate and stage manually entered identity for confirmation",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "render a key/value row for the track-check panel",
+      "norm_label": "validate and stage manually entered identity for confirmation",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 2233",
+      "source_location": "line 1826",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_concept_recap_popup",
-      "label": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "id": "panduan_fitur_template_modul_ikram_identitas_peserta",
+      "label": "Identitas Peserta Lintas Modul",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 39,
-      "community_name": "Learning Recap Popup ('Ringkasan Belajarmu')",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "concept",
-      "norm_label": "learning recap popup ('ringkasan belajarmu')",
-      "rationale": "Deliberately framed as a personal mirror of the learner's own session, not a report card, per Self-Determination Theory (Deci & Ryan, 1985/2000): motivation driven by external control/evaluation undermines intrinsic motivation. Accordingly the popup shows no final score, no ranking, and no comparison of the learner's name against other participants; the underlying numbers come from the backend endpoint /api/activity/my-recap, but the narration sentences are composed client-side so wording can change with a re-export instead of a backend redeploy.",
+      "norm_label": "identitas peserta lintas modul",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_sisi_peserta",
+      "label": "Sisi Peserta \u2014 Yang Dialami Peserta (Tahap 6)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Identity Resolution & NIP Capture",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "sisi peserta \u2014 yang dialami peserta (tahap 6)",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_concept_identity_resolution",
+      "label": "Identity Resolution & NIP Capture",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Identity Resolution & NIP Capture",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "identity resolution & nip capture",
+      "rationale": "NIP is the sole cross-module identity key; a learner accepted with a name but no NIP would fragment into an unlinkable '(no identity)' bucket in Command Center, so identity is only auto-accepted when a NIP is present. Resolution order: state already saved in this module -> full SCORM identity (has NIP) -> cross-module shared-identity cache (has NIP) -> manual form (SCORM name, if any, only prefills the form). SCORM-reported IDs are not assumed to be a NIP (LMS internal IDs vary), so each session records identity_source to distinguish manually entered NIPs from LMS-supplied IDs during analysis.",
       "source_file": "server/api/shell-template.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_keandalan_pencatatan",
+      "label": "Keandalan Pencatatan Data (Outbox Offline)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 39,
+      "community_name": "Identity Resolution & NIP Capture",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "keandalan pencatatan data (outbox offline)",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
       "source_location": null,
       "source_url": null
     },
@@ -8022,8 +8266,8 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_backtoidentityform",
-      "label": "Return from identity confirmation to the entry form",
+      "id": "server_api_shell_template_barchartsvg",
+      "label": "SVG bar chart renderer",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -8031,54 +8275,9 @@
       "community_name": "Buffer an activity tracking event",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "return from identity confirmation to the entry form",
+      "norm_label": "svg bar chart renderer",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 1848",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_choosereadingwarningkembali",
-      "label": "Handle 'go back and reread' from reading warning",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "handle 'go back and reread' from reading warning",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3281",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_choosereadingwarningyakin",
-      "label": "Handle 'proceed anyway' from reading warning",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "handle 'proceed anyway' from reading warning",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3268",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_confirmidentity",
-      "label": "Confirm and commit pending identity, start activity session",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "confirm and commit pending identity, start activity session",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1855",
+      "source_location": "line 1159",
       "source_url": null
     },
     {
@@ -8097,66 +8296,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_formatnip",
-      "label": "Group NIP digits per PNS NIP structure",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "group nip digits per pns nip structure",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1810",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_formatnipinput",
-      "label": "Live-format the NIP input field while preserving caret",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "live-format the nip input field while preserving caret",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1816",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_identityfromscorm",
-      "label": "Read learner name/id from the SCORM API",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "read learner name/id from the scorm api",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1698",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_itemkey",
-      "label": "Compute a stable state key for a NAV item",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "compute a stable state key for a nav item",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 2190",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_loadoutbox",
       "label": "Load queued failed activity batches from localStorage",
       "_origin": "semantic",
@@ -8169,51 +8308,6 @@
       "norm_label": "load queued failed activity batches from localstorage",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1915",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_loadsharedidentity",
-      "label": "Load cross-module cached learner identity",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "load cross-module cached learner identity",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1724",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_nipdigits",
-      "label": "Strip non-digit characters from a NIP string",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "strip non-digit characters from a nip string",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1804",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_openidentitygate",
-      "label": "Show the identity entry overlay",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "show the identity entry overlay",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1780",
       "source_url": null
     },
     {
@@ -8232,21 +8326,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_openreadingwarning",
-      "label": "Show the reading-speed warning overlay",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "show the reading-speed warning overlay",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3259",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_outboxpush",
       "label": "Push failed activity rows back into the outbox queue",
       "_origin": "semantic",
@@ -8259,6 +8338,51 @@
       "norm_label": "push failed activity rows back into the outbox queue",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1931",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_recapcharthtml",
+      "label": "Render the recap bar chart of engagement signals",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render the recap bar chart of engagement signals",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2845",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_recapclose",
+      "label": "Close the learner recap popup",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "close the learner recap popup",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2653",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_recapesc",
+      "label": "HTML-escape a value for the recap popup",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "html-escape a value for the recap popup",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2623",
       "source_url": null
     },
     {
@@ -8277,8 +8401,8 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_resolveidentity",
-      "label": "Resolve learner identity from state/SCORM/shared cache",
+      "id": "server_api_shell_template_recapgabung",
+      "label": "Join a list of strings with Indonesian 'dan' conjunction",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -8286,9 +8410,114 @@
       "community_name": "Buffer an activity tracking event",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "resolve learner identity from state/scorm/shared cache",
+      "norm_label": "join a list of strings with indonesian 'dan' conjunction",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 1746",
+      "source_location": "line 2698",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_recapnarasi",
+      "label": "Build the per-signal narration text builders for recap",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "build the per-signal narration text builders for recap",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2710",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_recapopen",
+      "label": "Open the learner recap popup, fetching data if needed",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "open the learner recap popup, fetching data if needed",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2628",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_recappoint",
+      "label": "Render one recap narrative point row",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render one recap narrative point row",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2811",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_recaprender",
+      "label": "Render the full recap popup body from fetched data",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render the full recap popup body from fetched data",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2862",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_recapsectionlabel",
+      "label": "Format a section label for recap narration",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "format a section label for recap narration",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2703",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_recapslidelabel",
+      "label": "Format a slide label for recap narration",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "format a slide label for recap narration",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2693",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_recapstatshtml",
+      "label": "Render the recap top stat tiles",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render the recap top stat tiles",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2815",
       "source_url": null
     },
     {
@@ -8304,81 +8533,6 @@
       "norm_label": "send a live preflight event to verify activity recording works",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 2238",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_rushedslidesinsection",
-      "label": "List slides in a section flagged as rushed",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "list slides in a section flagged as rushed",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3253",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_savesharedidentity",
-      "label": "Persist cross-module cached learner identity",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "persist cross-module cached learner identity",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1731",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_scormnametonatural",
-      "label": "Reformat 'Last, First' SCORM name to natural order",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "reformat 'last, first' scorm name to natural order",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1683",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_showidentityerror",
-      "label": "Display identity form validation error",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "display identity form validation error",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1775",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_submitidentity",
-      "label": "Validate and stage manually entered identity for confirmation",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "validate and stage manually entered identity for confirmation",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1826",
       "source_url": null
     },
     {
@@ -8427,6 +8581,21 @@
       "source_url": null
     },
     {
+      "id": "server_api_shell_template_tcrow",
+      "label": "Render a key/value row for the track-check panel",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 4,
+      "community_name": "Buffer an activity tracking event",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render a key/value row for the track-check panel",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 2233",
+      "source_url": null
+    },
+    {
       "id": "server_api_shell_template_toggleacc",
       "label": "Accordion item toggle",
       "_origin": "semantic",
@@ -8454,21 +8623,6 @@
       "norm_label": "flow diagram step toggle",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1192",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_updatesliderushed",
-      "label": "Flag/unflag a slide as read too quickly",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "flag/unflag a slide as read too quickly",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 2111",
       "source_url": null
     },
     {
@@ -8517,51 +8671,6 @@
       "source_url": null
     },
     {
-      "id": "panduan_fitur_template_modul_ikram_identitas_peserta",
-      "label": "Identitas Peserta Lintas Modul",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "identitas peserta lintas modul",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_peringatan_kecepatan_baca",
-      "label": "Peringatan Kecepatan Baca",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "peringatan kecepatan baca",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_sisi_peserta",
-      "label": "Sisi Peserta \u2014 Yang Dialami Peserta (Tahap 6)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "sisi peserta \u2014 yang dialami peserta (tahap 6)",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_concept_activity_tracking",
       "label": "Learner Activity Tracking",
       "_origin": "semantic",
@@ -8573,22 +8682,6 @@
       "file_type": "concept",
       "norm_label": "learner activity tracking",
       "rationale": "Writes activity events directly to Supabase (not through SCORM cmi.suspend_data, which is capped ~4096 chars and would silently truncate per-slide duration data for long modules). The anon key is visible in shipped source by design: Supabase RLS grants the anon role INSERT-only, zero SELECT, so the key cannot be used to read other learners' data (see server/supabase_activity_setup.sql).",
-      "source_file": "server/api/shell-template.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_concept_identity_resolution",
-      "label": "Identity Resolution & NIP Capture",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "identity resolution & nip capture",
-      "rationale": "NIP is the sole cross-module identity key; a learner accepted with a name but no NIP would fragment into an unlinkable '(no identity)' bucket in Command Center, so identity is only auto-accepted when a NIP is present. Resolution order: state already saved in this module -> full SCORM identity (has NIP) -> cross-module shared-identity cache (has NIP) -> manual form (SCORM name, if any, only prefills the form). SCORM-reported IDs are not assumed to be a NIP (LMS internal IDs vary), so each session records identity_source to distinguish manually entered NIPs from LMS-supplied IDs during analysis.",
       "source_file": "server/api/shell-template.html",
       "source_location": null,
       "source_url": null
@@ -8610,8 +8703,8 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_concept_reading_speed_warning",
-      "label": "Reading-Speed & Idle Detection",
+      "id": "server_api_shell_template_concept_recap_popup",
+      "label": "Learning Recap Popup ('Ringkasan Belajarmu')",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -8619,39 +8712,9 @@
       "community_name": "Buffer an activity tracking event",
       "contributor": null,
       "file_type": "concept",
-      "norm_label": "reading-speed & idle detection",
-      "rationale": "The 4-minute idle threshold (ACT_IDLE_MS) is a deliberately loose estimate of 'learner stepped away', chosen as a middle ground between productivity-tool defaults (~3-5 min) and news-site scroll-tracking thresholds (~5s); it is added ON TOP OF each slide's own Brysbaert-derived minimum reading time (238 wpm, SLIDE_MIN_MS) via actIdleThresholdMs(), not used in place of it. Bug fixed 2026-08-02: before actIdleThresholdMs() existed, every slide used a flat 4-minute idle cap, which could both mislabel an attentive reader on a long slide as 'abandoned' in Command Center and falsely trigger the rushed-reading warning (which compares active time against 50% of SLIDE_MIN_MS) because activeMs was cut off before the real reading time was reached.",
+      "norm_label": "learning recap popup ('ringkasan belajarmu')",
+      "rationale": "Deliberately framed as a personal mirror of the learner's own session, not a report card, per Self-Determination Theory (Deci & Ryan, 1985/2000): motivation driven by external control/evaluation undermines intrinsic motivation. Accordingly the popup shows no final score, no ranking, and no comparison of the learner's name against other participants; the underlying numbers come from the backend endpoint /api/activity/my-recap, but the narration sentences are composed client-side so wording can change with a re-export instead of a backend redeploy.",
       "source_file": "server/api/shell-template.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_keandalan_pencatatan",
-      "label": "Keandalan Pencatatan Data (Outbox Offline)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "rationale",
-      "norm_label": "keandalan pencatatan data (outbox offline)",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_kuis",
-      "label": "Kuis (Tahap 4)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 41,
-      "community_name": "types.ts",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "kuis (tahap 4)",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
       "source_location": null,
       "source_url": null
     },
@@ -8983,21 +9046,6 @@
       "norm_label": "load learner progress state from scorm or localstorage",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1537",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_scormcommit",
-      "label": "SCORM LMSCommit/Commit wrapper",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 8,
-      "community_name": "Articulate 360 Block Runtime",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "scorm lmscommit/commit wrapper",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1354",
       "source_url": null
     },
     {
@@ -9485,6 +9533,30 @@
       "context": "call",
       "source_file": "app/src/App.tsx",
       "source_location": "L400",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_assetembed_sematkangambardatauri",
+      "target": "app_src_assetembed_urlgambar",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_assetembed_sematkangambardatauri",
+      "target": "app_src_assetembed_blobkedatauri",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -10096,7 +10168,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L114",
+      "source_location": "L134",
       "weight": 1.0
     },
     {
@@ -10108,7 +10180,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L87",
+      "source_location": "L107",
       "weight": 1.0
     },
     {
@@ -10120,7 +10192,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L89",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -10132,7 +10204,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L32",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_components_previewexport_previewexport_doexport",
+      "target": "app_src_assetembed_sematkangambardatauri",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -10144,7 +10228,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L52",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -10156,7 +10240,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L74",
+      "source_location": "L94",
       "weight": 1.0
     },
     {
@@ -10168,7 +10252,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L75",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -10180,7 +10264,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -10192,7 +10276,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L105",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -10204,7 +10288,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L108",
+      "source_location": "L128",
       "weight": 1.0
     },
     {
@@ -10216,7 +10300,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L68",
+      "source_location": "L88",
       "weight": 1.0
     },
     {
@@ -10228,7 +10312,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L70",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -10240,7 +10324,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L64",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -10348,7 +10432,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L86",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -10360,7 +10444,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L90",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -10372,7 +10456,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L197",
+      "source_location": "L164",
       "weight": 1.0
     },
     {
@@ -10384,7 +10468,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L199",
+      "source_location": "L166",
       "weight": 1.0
     },
     {
@@ -10396,31 +10480,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L203",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
       "source": "app_src_scormzip_exportscormzip",
-      "target": "app_src_scormzip_urlgambar",
+      "target": "app_src_assetembed_urlgambar",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L245",
+      "source_location": "L212",
       "weight": 1.0
     },
     {
       "source": "app_src_scormzip_exportscormzip",
-      "target": "app_src_scormzip_namaaset",
+      "target": "app_src_assetembed_namaaset",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L267",
+      "source_location": "L234",
       "weight": 1.0
     },
     {
@@ -10432,7 +10516,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L289",
+      "source_location": "L256",
       "weight": 1.0
     },
     {
@@ -10444,7 +10528,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L300",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -10456,7 +10540,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L358",
+      "source_location": "L325",
       "weight": 1.0
     },
     {
@@ -10468,7 +10552,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L81",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -12117,6 +12201,18 @@
     },
     {
       "source": "app_src_components_previewexport_previewexport",
+      "target": "app_src_components_previewexport_previewexport_docopy",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_components_previewexport_previewexport",
       "target": "app_src_components_previewexport_previewexport_dorename",
       "relation": "contains",
       "_origin": "ast",
@@ -12124,7 +12220,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L100",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -12136,19 +12232,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L73",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_components_previewexport_previewexport",
-      "target": "app_src_components_previewexport_previewexport_docopy",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L82",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -12232,7 +12316,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L230",
+      "source_location": "L197",
       "weight": 1.0
     },
     {
@@ -12520,7 +12604,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -13760,6 +13844,18 @@
       "weight": 1.0
     },
     {
+      "source": "app_src_components_previewexport",
+      "target": "app_src_assetembed_sematkangambardatauri",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
       "source": "app_src_components_quizbuilder",
       "target": "app_src_types_moduledata",
       "relation": "imports",
@@ -13973,6 +14069,30 @@
       "context": "import",
       "source_file": "app/src/scormZip.ts",
       "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_scormzip",
+      "target": "app_src_assetembed_namaaset",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "app/src/scormZip.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_scormzip",
+      "target": "app_src_assetembed_urlgambar",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "app/src/scormZip.ts",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -14576,6 +14696,18 @@
       "weight": 1.0
     },
     {
+      "source": "app_src_components_previewexport",
+      "target": "app_src_assetembed",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
       "source": "app_src_components_quizbuilder",
       "target": "ref_react",
       "relation": "imports_from",
@@ -14729,6 +14861,18 @@
       "context": "import",
       "source_file": "app/src/scormZip.ts",
       "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_scormzip",
+      "target": "app_src_assetembed",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "app/src/scormZip.ts",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -15614,6 +15758,61 @@
       "weight": 1.0
     },
     {
+      "source": "app_src_assetembed",
+      "target": "app_src_assetembed_urlgambar",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_assetembed",
+      "target": "app_src_assetembed_namaaset",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_assetembed",
+      "target": "app_src_assetembed_blobkedatauri",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_assetembed",
+      "target": "app_src_assetembed_hasilsemat",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L53",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_assetembed",
+      "target": "app_src_assetembed_sematkangambardatauri",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/assetEmbed.ts",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
       "source": "app_src_components_blockaddmenu",
       "target": "app_src_components_blockaddmenu_block_types",
       "relation": "contains",
@@ -16358,7 +16557,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -16369,7 +16568,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0
     },
     {
@@ -16380,7 +16579,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -16391,7 +16590,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -16402,7 +16601,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L48",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -16413,7 +16612,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L63",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -16424,7 +16623,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L67",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -16638,35 +16837,13 @@
     },
     {
       "source": "app_src_scormzip",
-      "target": "app_src_scormzip_urlgambar",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "app/src/scormZip.ts",
-      "source_location": "L133",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_scormzip",
-      "target": "app_src_scormzip_namaaset",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "app/src/scormZip.ts",
-      "source_location": "L144",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_scormzip",
       "target": "app_src_scormzip_bukatujuan",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L153",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -16677,7 +16854,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L189",
+      "source_location": "L156",
       "weight": 1.0
     },
     {
@@ -16688,7 +16865,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L30",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -16699,7 +16876,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L43",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
@@ -16710,7 +16887,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L51",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -16721,7 +16898,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L67",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -16732,7 +16909,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L74",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -16743,7 +16920,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L80",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -16754,7 +16931,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/scormZip.ts",
-      "source_location": "L84",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -23391,5 +23568,5 @@
       "source_file": "Panduan-Fitur-Template-Modul-Ikram.html"
     }
   ],
-  "built_at_commit": "6e83be344ed897158140faebf9adb301720fd0cf"
+  "built_at_commit": "1bd5d4f9a3d27e7f78d0f37fb7f0b5b50949b3c9"
 }

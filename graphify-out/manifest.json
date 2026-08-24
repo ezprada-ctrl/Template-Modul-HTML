@@ -72,10 +72,10 @@
     "semantic_hash": "eed7df3598eec0c886ba0a162ed69b13"
   },
   "app/src/components/PreviewExport.tsx": {
-    "mtime": 1787114369.3868322,
-    "seen": 1787222015.9428334,
-    "ast_hash": "19bc6f947e2923ac4f4bcf3d9c36f21e",
-    "semantic_hash": "19bc6f947e2923ac4f4bcf3d9c36f21e"
+    "mtime": 1787300318.8276243,
+    "seen": 1787300356.6715255,
+    "ast_hash": "978ae31a19250454d7ad151d75c17079",
+    "semantic_hash": ""
   },
   "app/src/components/QuizBuilder.tsx": {
     "mtime": 1784110180.8656423,
@@ -335,15 +335,21 @@
     "semantic_hash": "8a6643a420fdad6bfb583523bc6cef16"
   },
   "app/src/scormZip.ts": {
-    "mtime": 1787299995.8020217,
-    "seen": 1787300108.6915584,
-    "ast_hash": "9406e7115cdcf2df1a36548f0ca062db",
+    "mtime": 1787300287.581572,
+    "seen": 1787300356.672123,
+    "ast_hash": "c52324550d73b073236f96e0cdb98a0d",
     "semantic_hash": ""
   },
   "server/api/r2.py": {
     "mtime": 1787280308.5206456,
     "seen": 1787280592.2303967,
     "ast_hash": "6ed2e2af39a710c7cb9451528cc4f671",
+    "semantic_hash": ""
+  },
+  "app/src/assetEmbed.ts": {
+    "mtime": 1787300279.4698362,
+    "seen": 1787300356.670927,
+    "ast_hash": "df0b748a9c56f34d97b34fc7b5310d84",
     "semantic_hash": ""
   }
 }
