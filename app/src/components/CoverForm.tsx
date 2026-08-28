@@ -153,6 +153,43 @@ export default function CoverForm({ module, setModule }: Props) {
               </span>
             </label>
           )}
+          {/* Co-creation - SENGAJA sejajar "Rekam aktivitas", bukan nempel di
+              bawahnya kayak Rekap Peserta. Rekap gak punya arti tanpa data
+              rekaman; Co-creation punya (peserta tetap bisa mencatat & meninjau
+              catatannya sendiri). Lihat dua mode di rambu bawah. */}
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={!!module.showCocreation} style={{ marginTop: 3 }}
+              onChange={e => setModule({ ...module, showCocreation: e.target.checked })} />
+            <span>
+              Aktifkan Co-creation
+              <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2, lineHeight: 1.5 }}>
+                Peserta dapat tombol catatan di tiap slide materi buat menuliskan apa pun yang terbesit,
+                lalu meninjau semua catatannya dari menu “Co-creation” di sidebar — tiap catatan menyebut
+                slide &amp; bagian asalnya dan bisa diklik buat lompat ke sana. Dipakai sebagai rujukan
+                peserta waktu materinya dibahas klasikal di kelas.
+              </span>
+            </span>
+          </label>
+          {/* RAMBU MODE TERBATAS. Catatan cuma bisa naik ke server kalau modul
+              tau siapa penulisnya, dan yang menanyakan NIP itu sistem rekam
+              aktivitas. Tanpa tracking, form identitas gak pernah muncul ->
+              catatan gak punya pemilik -> gak bisa dikirim, gak bisa ditarik
+              balik dari perangkat lain. Ini konsekuensi, bukan pilihan - jadi
+              penyusun modul harus tau SEBELUM export, bukan kaget belakangan. */}
+          {module.showCocreation && !module.trackActivity && (
+            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', color: 'var(--danger)', lineHeight: 1.5 }}>
+              ⚠ “Rekam aktivitas peserta” mati, jadi Co-creation jalan dalam <b>mode terbatas</b>: catatan
+              cuma tersimpan di perangkat peserta — <b>hilang kalau dia ganti browser/laptop/HP</b>, dan
+              tidak muncul di Command Center. Nyalakan “Rekam aktivitas peserta” kalau catatan ini mau
+              dipakai sebagai bahan diskusi kelas.
+            </p>
+          )}
+          {module.showCocreation && module.trackActivity && (
+            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', lineHeight: 1.5 }}>
+              Catatan tersimpan di perangkat <b>dan</b> di server — peserta bisa membukanya dari perangkat
+              lain, dan isinya bisa dibaca di Command Center buat menyiapkan bahan diskusi kelas.
+            </p>
+          )}
           <label style={{ color: 'var(--text-dim)' }}>
             Judul besar di layar sampul
             <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>

@@ -214,6 +214,14 @@ export interface ModuleData {
   // unopened interactive menus) with narrative tuned to how they did.
   // Requires trackActivity — without it there is no data to show at all.
   showRecap?: boolean;
+  // Fitur Co-creation: peserta bisa mencatat apa pun yang terbesit di tiap
+  // slide materi, lalu meninjau semua catatannya dari satu menu (dan lompat
+  // balik ke slide asalnya) - bahan rujukan waktu materinya dibahas klasikal
+  // di kelas. SENGAJA INDEPENDEN dari `trackActivity` (beda dari showRecap
+  // yang nempel di bawahnya): Co-creation berguna sebagai alat bantu belajar
+  // walau modulnya sengaja gak merekam apa-apa. Konsekuensinya ada DUA MODE -
+  // lihat catatan di CoverForm.tsx dan COCREATION_API di generator.py.
+  showCocreation?: boolean;
   theme: { accent: string; accent2: string; onAccent: string; navy: string };
   // Gaya dekorasi grafis (blob/cincin/dll) - INDEPENDEN dari `theme` di atas
   // (theme cuma warna, ini cuma bentuk - lihat GRAPHIC_STYLES di
@@ -277,6 +285,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     hideProgress: false,
     trackActivity: false,
     showRecap: false,
+    showCocreation: false,
     theme: { ...DEFAULT_THEME },
     graphicStyle: 'none',
     sections: [{ id: 'a', title: 'A. Bagian Satu', short: 'Bagian Satu', icon: 'A', color: '#c99a3d' }],

@@ -18,9 +18,9 @@
     "semantic_hash": "0a33c5d155c9a857f31fb0c1d19bb38d"
   },
   "app/src/api.ts": {
-    "mtime": 1787298455.985168,
-    "seen": 1787298481.0047727,
-    "ast_hash": "1adcf127b0ebf441f9ddf8be63ec5b38",
+    "mtime": 1787557621.6786814,
+    "seen": 1787557850.7484312,
+    "ast_hash": "b40a6f31c767b362f04cd34c9952b3d3",
     "semantic_hash": ""
   },
   "app/src/components/BlockAddMenu.tsx": {
@@ -48,10 +48,10 @@
     "semantic_hash": "09eb10beff11d76612e6e9b464474aa6"
   },
   "app/src/components/CommandCenter.tsx": {
-    "mtime": 1784880389.7856786,
-    "seen": 1787222015.942831,
-    "ast_hash": "c9d64cf5af47ebfc76fe808fb2a30e74",
-    "semantic_hash": "c9d64cf5af47ebfc76fe808fb2a30e74"
+    "mtime": 1787557826.0436983,
+    "seen": 1787557850.748925,
+    "ast_hash": "cda4bb8da0e0ea1a93043cb1ff0082b8",
+    "semantic_hash": ""
   },
   "app/src/components/CoverForm.tsx": {
     "mtime": 1787016950.5802107,
@@ -90,16 +90,16 @@
     "semantic_hash": "68b8a18250f5278018144ae103d791e1"
   },
   "app/src/components/SlidePreview.tsx": {
-    "mtime": 1787542655.6009872,
-    "seen": 1787542758.9882302,
-    "ast_hash": "2f14b5738eea155fdc16b1fb71e76296",
+    "mtime": 1787544987.1009018,
+    "seen": 1787545222.8691933,
+    "ast_hash": "63f1c656716084983360680a3fd71974",
     "semantic_hash": ""
   },
   "app/src/demoActivityData.ts": {
-    "mtime": 1784880317.3551095,
-    "seen": 1787222015.9428358,
-    "ast_hash": "78271a88e19b7a25211371bf585fe784",
-    "semantic_hash": "78271a88e19b7a25211371bf585fe784"
+    "mtime": 1787557660.2649617,
+    "seen": 1787557850.749604,
+    "ast_hash": "80aea8cbc69d89ea8d2762dae846cfbd",
+    "semantic_hash": ""
   },
   "app/src/emojiData.ts": {
     "mtime": 1783578383.4461286,
@@ -168,10 +168,10 @@
     "semantic_hash": "6ba274d800e7f354da38fdf4e21466e7"
   },
   "server/api/activity_store.py": {
-    "mtime": 1785116249.3861148,
-    "seen": 1787222015.9428437,
-    "ast_hash": "6b51ef81ed4cc3f9d320ee66fbe6bc62",
-    "semantic_hash": "6b51ef81ed4cc3f9d320ee66fbe6bc62"
+    "mtime": 1787557581.9319232,
+    "seen": 1787557850.7505949,
+    "ast_hash": "f9d330d9aa965ac4b873ab9c4d33d0d1",
+    "semantic_hash": ""
   },
   "server/api/draft_store.py": {
     "mtime": 1787114080.802044,
@@ -180,9 +180,9 @@
     "semantic_hash": "a27888728526533faf97b5e833248527"
   },
   "server/api/generator.py": {
-    "mtime": 1787127587.1628518,
-    "seen": 1787222015.9428446,
-    "ast_hash": "f9c5a616384fbbcce7982d506d1ca92a",
+    "mtime": 1787557569.519733,
+    "seen": 1787557850.7506683,
+    "ast_hash": "dbb4d2bfa7929286e4073dd4e0016405",
     "semantic_hash": ""
   },
   "server/api/index.py": {
@@ -282,10 +282,10 @@
     "semantic_hash": ""
   },
   "server/api/shell-template.html": {
-    "mtime": 1787114143.3064444,
-    "seen": 1787222015.9428556,
-    "ast_hash": "3cd54ac357694287e27bcfc87dc20c36",
-    "semantic_hash": "3cd54ac357694287e27bcfc87dc20c36"
+    "mtime": 1787557569.5222423,
+    "seen": 1787557850.7519403,
+    "ast_hash": "54647db4b00347a45bbcf278e691e063",
+    "semantic_hash": ""
   },
   "server/requirements.txt": {
     "mtime": 1783582737.117113,

@@ -117,6 +117,114 @@ def _tanpa_preflight(rows):
     return [r for r in rows if r.get('event_type') != PREFLIGHT_EVENT]
 
 
+# Catatan Co-creation. Tiap perubahan (tulis/sunting/hapus) dikirim sebagai
+# baris BARU dengan id catatan yang sama - tabelnya append-only, gak pernah
+# di-UPDATE. Jadi "isi catatan sekarang" = baris ber-`rev` TERBESAR untuk tiap
+# id. `rev` (waktu diubah) sengaja beda dari `ts` (waktu dibuat, dipakai
+# mengurut) - lihat penjelasan lengkapnya di bagian CO-CREATION di
+# shell-template.html.
+COCREATION_EVENT = 'cocreation_note'
+
+
+def _rev(payload):
+    """Nomor revisi catatan. Jatuh balik ke `ts` buat catatan yang ditulis
+    sebelum `rev` ada, supaya tetap bisa dibandingkan."""
+    return payload.get('rev') or payload.get('ts') or 0
+
+
+def _gabung_catatan(rows):
+    """Peras baris event jadi satu catatan per id: yang ts-nya terbesar menang.
+
+    Baris bertanda `deleted` ikut menang kalau dia yang terbaru - itu batu
+    nisan, dan harus tetap mengalahkan versi lama yang masih berisi teks.
+    Kalau tidak, catatan yang sudah dihapus peserta hidup lagi begitu ditarik
+    dari server di perangkat lain.
+    """
+    terbaru = {}
+    for r in rows:
+        if r.get('event_type') != COCREATION_EVENT:
+            continue
+        p = r.get('payload') or {}
+        nid = p.get('id')
+        if not nid:
+            continue
+        lama = terbaru.get(nid)
+        if lama is None or _rev(p) > _rev(lama):
+            terbaru[nid] = p
+    return terbaru
+
+
+def cocreation_notes_for_learner(module_slug, learner_id):
+    """Semua catatan HIDUP milik satu peserta di satu modul.
+
+    Dipakai modul buat menarik balik catatannya sendiri (jalur ini yang bikin
+    catatan tahan ganti perangkat). Batu nisan tidak ikut dikirim - modul
+    cukup tau mana yang masih ada.
+    """
+    rows = fetch_rows(module_slug=module_slug, learner_id=learner_id,
+                      columns='event_type,payload', event_type=COCREATION_EVENT)
+    catatan = _gabung_catatan(rows)
+    return sorted(
+        [n for n in catatan.values() if not n.get('deleted')],
+        key=lambda n: n.get('ts') or 0)
+
+
+def cocreation_by_slide(module_slug):
+    """Catatan satu modul, dikelompokkan PER SLIDE - buat menyiapkan bahan kelas.
+
+    Diurutkan dari slide yang paling banyak dicatat: kalau 12 orang menulis di
+    slide yang sama, itu sinyal paling kuat bahwa materi itu yang perlu
+    dibahas lebih dalam waktu klasikal.
+    """
+    rows = _tanpa_preflight(fetch_rows(
+        module_slug=module_slug,
+        columns='learner_id,learner_name,event_type,payload',
+        event_type=COCREATION_EVENT))
+
+    # Nama peserta tidak ikut di payload catatan (payload dibatasi ukurannya),
+    # jadi dipetakan balik dari kolom baris mana pun milik NIP itu.
+    nama_per_nip = {}
+    for r in rows:
+        if r.get('learner_id') and r.get('learner_name'):
+            nama_per_nip[r['learner_id']] = r['learner_name']
+
+    # Batu nisan hanya bisa dikenali per-PESERTA: id catatan dibuat di sisi
+    # klien, jadi dua peserta secara teori bisa punya id yang sama. Digabung
+    # per (nip, id) supaya catatan orang lain tidak saling menimpa.
+    per_pemilik = {}
+    for r in rows:
+        per_pemilik.setdefault(r.get('learner_id') or '(tanpa identitas)', []).append(r)
+
+    slides = {}
+    for nip, baris in per_pemilik.items():
+        for n in _gabung_catatan(baris).values():
+            if n.get('deleted'):
+                continue
+            num = n.get('slide')
+            s = slides.setdefault(num, {
+                'slide': num,
+                'judul': n.get('judul') or f'Slide {num}',
+                'section': n.get('section') or '',
+                'judul_section': n.get('judulSection') or '',
+                'catatan': [],
+            })
+            s['catatan'].append({
+                'learner_id': nip,
+                'nama': nama_per_nip.get(nip) or '',
+                'text': n.get('text') or '',
+                'ts': n.get('ts') or 0,
+            })
+
+    out = []
+    for s in slides.values():
+        s['catatan'].sort(key=lambda c: c['ts'])
+        s['jumlah_catatan'] = len(s['catatan'])
+        s['jumlah_peserta'] = len({c['learner_id'] for c in s['catatan']})
+        out.append(s)
+    out.sort(key=lambda s: (-s['jumlah_catatan'], s['slide'] if s['slide'] is not None else 0))
+    return out
+
+
 def _judul_per_slug():
     """Peta module_slug -> daftar judul modul (module_title) yang pernah muncul.
 
@@ -214,6 +322,10 @@ def summarize_sessions(module_slug):
             # Knowledge Check (blok cek-paham inline, TIDAK mengunci). Dihitung
             # TERPISAH dari kuis section biar angka "gagal kuis" tetap bersih.
             'kc_dijawab': 0, 'kc_benar': 0,
+            # Catatan Co-creation yang DISENTUH di sesi ini (ditulis atau
+            # diubah). Pakai set id, bukan penghitung: satu catatan yang
+            # disunting tiga kali di sesi yang sama tetap satu catatan.
+            '_catatan_ids': set(),
             'perangkat': None,
             '_ada_session_end': False,
             # Nomor slide KONTEN unik yang pernah dibuka (bukan kunjungan) -
@@ -316,6 +428,9 @@ def summarize_sessions(module_slug):
             s['kc_dijawab'] += 1
             if p.get('benar'):
                 s['kc_benar'] += 1
+        elif t == COCREATION_EVENT:
+            if p.get('id') and not p.get('deleted'):
+                s['_catatan_ids'].add(p['id'])
         elif t == 'articulate_selesai':
             # Paket Articulate ngasih tau "completed/passed" lewat SHIM SCORM
             # kita (lihat artMarkDone di shell-template.html). Sebelum ini
@@ -347,6 +462,7 @@ def summarize_sessions(module_slug):
         s['video_detail'] = sorted(
             [{'slide': video_slide.get(b), 'persen': p} for b, p in video_max.items()],
             key=lambda d: d['persen'])
+        s['catatan'] = len(s.pop('_catatan_ids'))
         s['articulate_selesai'] = len(s.pop('_articulate_selesai'))
         s['peringatan_detail'] = s.pop('_peringatan_detail')
         # Kalau sesi ditutup paksa (tab dibunuh HP), session_end gak pernah
@@ -419,6 +535,7 @@ def summarize_learners():
         total_video_modul = None
         total_articulate_modul = None
         articulate_sesi = set()
+        catatan_sesi = []
         video_max_sesi = {}
         video_slide_sesi = {}
         total_slide_modul = None
@@ -475,6 +592,9 @@ def summarize_learners():
                 kc_dijawab += 1
                 if p.get('benar'):
                     kc_benar += 1
+            elif t == COCREATION_EVENT:
+                if p.get('id'):
+                    catatan_sesi.append(p)
             elif t == 'articulate_selesai':
                 if p.get('blok'):
                     articulate_sesi.add(p['blok'])
@@ -524,6 +644,10 @@ def summarize_learners():
             # (slug, block) - block id yang kebetulan sama di modul BEDA gak
             # boleh ketuker jadi satu paket, sama alasannya kayak _video_max.
             '_articulate_selesai': set(),
+            # (slug, id) -> payload catatan TERBARU. Digabung di sini, bukan
+            # per sesi: satu catatan bisa ditulis di sesi A lalu dihapus di
+            # sesi B, dan yang benar adalah keadaan terakhirnya.
+            '_catatan': {},
         })
         if nama and nama not in L['nama_varian']:
             L['nama_varian'].append(nama)
@@ -542,6 +666,11 @@ def summarize_learners():
             m['total_articulate'] = total_articulate_modul
         for blok in articulate_sesi:
             L['_articulate_selesai'].add((slug, blok))
+        for n in catatan_sesi:
+            kunci = (slug, n['id'])
+            lama = L['_catatan'].get(kunci)
+            if lama is None or _rev(n) > _rev(lama):
+                L['_catatan'][kunci] = n
         for num in slide_unik_sesi:
             L['_slide_unik'].add((slug, num))
         for block, persen in video_max_sesi.items():
@@ -592,6 +721,7 @@ def summarize_learners():
         art_totals = [m['total_articulate'] for m in L['modul'].values() if m['total_articulate'] is not None]
         L['total_articulate_program'] = sum(art_totals) if art_totals else None
         L['articulate_selesai'] = len(L.pop('_articulate_selesai'))
+        L['catatan'] = len([n for n in L.pop('_catatan').values() if not n.get('deleted')])
         video_max = L.pop('_video_max')
         video_slide = L.pop('_video_slide')
         L['video_dimulai'] = len(video_max)

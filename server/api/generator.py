@@ -1188,6 +1188,21 @@ def generate_html(module):
         os.environ.get('RECAP_API_BASE', 'https://template-modul-html-backend.vercel.app').rstrip('/')
         if show_recap else ''))
 
+    # Co-creation - catatan peserta per slide. SENGAJA TIDAK di-AND dengan
+    # `track` (beda dari show_recap di atas): tanpa perekaman pun peserta tetap
+    # bisa mencatat & meninjau catatannya sendiri di perangkatnya. Yang hilang
+    # cuma sinkronisasi lintas perangkat & tampilan di Command Center.
+    show_cocreation = bool(module.get('showCocreation', False))
+    out = out.replace('__SHOW_COCREATION_JS__', js_str(show_cocreation))
+    # Alamat backend buat MENARIK BALIK catatan dari server (anon key modul
+    # cuma bisa INSERT, nol SELECT - sama alasannya kayak RECAP_API di atas).
+    # Kosong = mode terbatas: catatan cuma hidup di localStorage perangkat itu.
+    # Butuh `track` karena catatan di server dikenali lewat NIP, dan yang
+    # menanyakan NIP cuma sistem rekam aktivitas.
+    out = out.replace('__COCREATION_API_JS__', js_str(
+        os.environ.get('RECAP_API_BASE', 'https://template-modul-html-backend.vercel.app').rstrip('/')
+        if (show_cocreation and track) else ''))
+
     hero_title_html = nl2br(module.get('heroTitleHtml') or esc(module.get('title', '')))
     out = out.replace('__HERO_TITLE_HTML__', hero_title_html)
 

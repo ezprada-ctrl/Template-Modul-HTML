@@ -1,7 +1,7 @@
 import { Fragment, useRef, useState } from 'react';
-import type { ActivityModule, ActivitySession, ActivityLearner, PeringatanDetail, VideoDetail } from '../api';
-import { ccListModules, ccListSessions, ccListLearners, ccRawRows } from '../api';
-import { DEMO_MODULES, DEMO_SESSIONS, DEMO_LEARNERS } from '../demoActivityData';
+import type { ActivityModule, ActivitySession, ActivityLearner, CocreationSlide, PeringatanDetail, VideoDetail } from '../api';
+import { ccCocreation, ccListModules, ccListSessions, ccListLearners, ccRawRows } from '../api';
+import { DEMO_MODULES, DEMO_SESSIONS, DEMO_LEARNERS, DEMO_COCREATION } from '../demoActivityData';
 
 // Rincian slide di bawah WPM buat satu kejadian reading_warning - dipakai di
 // baris expand kolom Peringatan (Per Modul & Per Peserta sama-sama pakai ini).
@@ -78,6 +78,12 @@ export default function CommandCenter() {
   const [sessions, setSessions] = useState<ActivitySession[]>([]);
   const [learners, setLearners] = useState<ActivityLearner[]>([]);
   const [view, setView] = useState<'modul' | 'peserta'>('modul');
+  // Sub-tampilan di dalam satu modul. Catatan Co-creation dipisah dari tabel
+  // sesi karena bentuknya beda total: tabel sesi itu angka per orang, catatan
+  // itu teks yang dikelompokkan per SLIDE - dipakai buat menyiapkan bahan
+  // diskusi kelas, bukan buat menilai peserta.
+  const [modulTab, setModulTab] = useState<'sesi' | 'cocreation'>('sesi');
+  const [cocreation, setCocreation] = useState<CocreationSlide[]>([]);
   const [activeSlug, setActiveSlug] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -132,12 +138,31 @@ export default function CommandCenter() {
 
   async function openModule(slug: string) {
     setActiveSlug(slug);
+    setModulTab('sesi');
+    setCocreation([]);
     if (demoMode) { setSessions(DEMO_SESSIONS); setTerpotong(false); return; }
     setBusy(true);
     setError('');
     try {
       const r = await ccListSessions(password, slug);
       setSessions(r.items);
+      setTerpotong(r.terpotong);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function bukaCocreation() {
+    setModulTab('cocreation');
+    if (cocreation.length) return;
+    if (demoMode) { setCocreation(DEMO_COCREATION); return; }
+    setBusy(true);
+    setError('');
+    try {
+      const r = await ccCocreation(password, activeSlug);
+      setCocreation(r.items);
       setTerpotong(r.terpotong);
     } catch (e: any) {
       setError(e.message);
@@ -431,7 +456,7 @@ ${ref.current.outerHTML}
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
-                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Peringatan', 'Modul yang dibuka'].map(h => (
+                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan', 'Modul yang dibuka'].map(h => (
                         <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
                       ))}
                     </tr>
@@ -543,6 +568,10 @@ ${ref.current.outerHTML}
                             <>{l.articulate_selesai}/{l.total_articulate_program} selesai</>
                           )}
                         </td>
+                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                            title="Catatan Co-creation yang masih tersimpan (yang sudah dihapus tidak dihitung), digabung dari semua modulnya">
+                          {l.catatan ? l.catatan : <span style={{ color: 'var(--text-faint)' }}>—</span>}
+                        </td>
                         {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
                             sebelum kuis, dijumlah lintas semua modul. Angka utama = total
                             peringatan yang MUNCUL (termasuk yang ditindaklanjuti dengan baca
@@ -601,6 +630,19 @@ ${ref.current.outerHTML}
 
       {view === 'modul' && activeSlug && (
         <>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+            <button className={modulTab === 'sesi' ? 'btn-primary btn-sm' : 'btn-sm'}
+                    onClick={() => setModulTab('sesi')}>
+              Aktivitas per sesi
+            </button>
+            <button className={modulTab === 'cocreation' ? 'btn-primary btn-sm' : 'btn-sm'}
+                    onClick={bukaCocreation}
+                    title="Catatan Co-creation peserta, dikelompokkan per slide">
+              Catatan Co-creation
+            </button>
+          </div>
+
+          {modulTab === 'sesi' && (<>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
             <button className="btn-sm" onClick={unduhRingkasan} disabled={!sessions.length}>
               ⬇ CSV ringkasan per sesi
@@ -624,8 +666,8 @@ ${ref.current.outerHTML}
             // ini cuma nambah kebisingan.
             const bentrok = !!modules.find(m => m.module_slug === activeSlug)?.kemungkinan_bentrok;
             const kolom = bentrok
-              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Peringatan']
-              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Peringatan'];
+              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan']
+              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan'];
             return (
             <div ref={sessionsTableRef} style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
@@ -741,6 +783,10 @@ ${ref.current.outerHTML}
                           <>{s.articulate_selesai}/{s.total_articulate} selesai</>
                         )}
                       </td>
+                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
+                          title="Catatan Co-creation yang ditulis atau diubah di sesi ini">
+                        {s.catatan ? s.catatan : <span style={{ color: 'var(--text-faint)' }}>—</span>}
+                      </td>
                       {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
                           (< 50% waktu baca minimum Brysbaert) sebelum percobaan kuis
                           pertama bagian itu. Angka utama = total peringatan yang MUNCUL
@@ -782,6 +828,57 @@ ${ref.current.outerHTML}
             </div>
             );
           })()}
+          </>)}
+
+          {modulTab === 'cocreation' && (
+            <>
+              {busy && <p className="hint">Memuat…</p>}
+              {!busy && cocreation.length === 0 && (
+                <p className="hint">
+                  Belum ada catatan Co-creation di modul ini. Catatan baru muncul di sini kalau modulnya
+                  di-export dengan Co-creation <b>dan</b> “Rekam aktivitas peserta” sama-sama aktif —
+                  tanpa perekaman, catatan peserta cuma tersimpan di perangkatnya sendiri.
+                </p>
+              )}
+              {cocreation.length > 0 && (
+                <>
+                  <p className="hint" style={{ marginBottom: 12 }}>
+                    Diurutkan dari slide yang <b>paling banyak dicatat</b> — itu materi yang paling perlu
+                    dibahas lebih dalam waktu kelas klasikal.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {cocreation.map(sl => (
+                      <div key={String(sl.slide)} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+                        <div style={{ padding: '10px 13px', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
+                          {sl.judul_section && (
+                            <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 2 }}>
+                              {sl.judul_section}
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                            <b style={{ fontSize: 13.5 }}>{sl.judul}</b>
+                            <span style={{ fontSize: 11.5, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums' }}>
+                              {sl.jumlah_catatan} catatan · {sl.jumlah_peserta} peserta
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          {sl.catatan.map((c, i) => (
+                            <div key={i} style={{ padding: '10px 13px', borderTop: i ? '1px solid var(--border)' : 'none' }}>
+                              <p style={{ margin: '0 0 5px', fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{c.text}</p>
+                              <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
+                                {c.nama || '(tanpa nama)'} · {c.learner_id}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          )}
         </>
       )}
     </div>

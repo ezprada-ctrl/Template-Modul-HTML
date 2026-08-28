@@ -968,6 +968,132 @@ ul.tick li b, ol.tick li b{color:var(--text);}
   .recap-stat{flex:1 1 100%;}
 }
 
+/* ============================= CO-CREATION =============================
+   Tombol melayang SENGAJA duduk 96px dari bawah, bukan menempel di tepi:
+   #bottomnav itu bagian dari alur layout (tinggi ~76px), jadi tombol di
+   bottom:0 bakal menimpa tombol "Sebelumnya/Selanjutnya". Angka 96px sama
+   dengan yang sudah dipakai #lock-toast — dua elemen melayang ini jadi
+   sejajar, bukan masing-masing punya garis sendiri. */
+#coc-fab{
+  position:fixed;right:26px;bottom:96px;z-index:60;
+  display:flex;align-items:center;gap:9px;padding:12px 20px;border-radius:40px;
+  border:none;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:var(--on-accent);font-family:inherit;font-weight:700;font-size:13.5px;
+  cursor:pointer;box-shadow:0 10px 28px -10px var(--accent-glow),var(--shadow-md);
+  transition:transform .18s,box-shadow .18s;
+}
+#coc-fab:hover{transform:translateY(-2px);box-shadow:0 14px 32px -10px var(--accent-glow),var(--shadow-md);}
+.coc-fab-icon{font-size:15px;line-height:1;}
+.coc-fab-count{
+  display:flex;align-items:center;justify-content:center;min-width:20px;height:20px;
+  padding:0 6px;border-radius:20px;background:rgba(255,255,255,.9);color:var(--navy);
+  font-size:11px;font-weight:800;
+}
+
+#coc-overlay,#coc-menu-overlay{
+  display:none;position:fixed;inset:0;background:rgba(22,33,62,.62);backdrop-filter:blur(3px);
+  z-index:88;align-items:center;justify-content:center;padding:24px;
+}
+#coc-overlay.show,#coc-menu-overlay.show{display:flex;}
+.coc-panel{
+  position:relative;width:100%;max-width:560px;max-height:86vh;overflow-y:auto;
+  background:var(--surface);border-radius:var(--radius-lg);padding:26px 28px;
+  box-shadow:var(--shadow-lg);
+}
+.coc-menu-panel{max-width:660px;}
+.coc-close{
+  position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;
+  background:var(--surface-2);border:none;color:var(--text-dim);font-size:14px;cursor:pointer;
+}
+.coc-close:hover{background:var(--surface-3);color:var(--text);}
+.coc-panel-eyebrow{
+  margin:0 0 4px;font-size:10.5px;font-weight:800;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--accent-2);
+}
+.coc-slide-label{margin-bottom:16px;font-size:16px;line-height:1.4;color:var(--text);}
+.coc-slide-label .coc-sec{
+  display:block;font-size:11.5px;font-weight:700;color:var(--text-faint);margin-bottom:2px;
+}
+.coc-list{margin-bottom:16px;display:flex;flex-direction:column;gap:10px;}
+.coc-note{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;
+}
+.coc-note-text{margin:0 0 8px;font-size:13.5px;line-height:1.6;color:var(--text);white-space:pre-wrap;}
+.coc-note-foot{display:flex;align-items:center;gap:10px;}
+.coc-note-ts{font-size:11px;color:var(--text-faint);margin-right:auto;}
+.coc-mini{
+  background:none;border:none;padding:2px 4px;font-family:inherit;font-size:11.5px;font-weight:700;
+  color:var(--accent-2);cursor:pointer;
+}
+.coc-mini:hover{text-decoration:underline;}
+.coc-mini-danger{color:#c04a44;}
+.coc-empty{
+  padding:22px 10px;text-align:center;font-size:13px;color:var(--text-faint);line-height:1.6;margin:0;
+}
+.coc-input{
+  width:100%;box-sizing:border-box;padding:12px 14px;border:1px solid var(--border);
+  border-radius:var(--radius-md);background:var(--bg);color:var(--text);
+  font-family:inherit;font-size:13.5px;line-height:1.6;resize:vertical;
+}
+.coc-input:focus{outline:none;border-color:var(--accent);}
+.coc-panel-foot{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;}
+.coc-counter{font-size:11px;color:var(--text-faint);margin-right:auto;}
+.coc-counter-warn{color:#c04a44;}
+.coc-panel-actions{display:flex;gap:8px;}
+.coc-panel-actions .nav-btn{padding:10px 18px;font-size:13px;}
+
+.coc-menu-title{margin:0 0 4px;font-size:19px;font-weight:800;color:var(--navy);}
+.coc-menu-hint{margin:0 0 16px;font-size:12px;line-height:1.55;color:var(--text-faint);}
+.coc-menu-body{display:flex;flex-direction:column;gap:6px;}
+.coc-menu-sec{
+  margin:14px 0 4px;font-size:10.5px;font-weight:800;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--text-faint);
+}
+.coc-menu-sec:first-child{margin-top:0;}
+.coc-menu-slide{margin-bottom:8px;}
+.coc-menu-slide-head{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;
+  padding:6px 2px;font-family:inherit;font-size:13.5px;font-weight:700;color:var(--text);cursor:pointer;
+}
+.coc-menu-slide-head:hover .coc-menu-jump{opacity:1;}
+.coc-menu-jump{
+  margin-left:auto;font-size:11px;font-weight:700;color:var(--accent-2);opacity:.55;transition:opacity .18s;
+  white-space:nowrap;
+}
+.coc-menu-note{
+  display:block;width:100%;text-align:left;background:var(--surface-2);border:1px solid var(--border);
+  border-left:3px solid var(--accent);border-radius:var(--radius-sm);padding:10px 13px;margin-bottom:6px;
+  font-family:inherit;cursor:pointer;transition:.18s;
+}
+.coc-menu-note:hover{background:var(--surface-3);transform:translateX(2px);}
+.coc-menu-note-text{
+  display:block;font-size:13px;line-height:1.6;color:var(--text);margin-bottom:5px;white-space:pre-wrap;
+}
+
+/* Entri sidebar, sejajar section tapi tanpa gembok — menu ini selalu bisa
+   dibuka, termasuk sebelum semua section selesai. */
+.nav-coc-btn{
+  display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;margin-top:8px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  font-family:inherit;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;transition:.18s;
+}
+.nav-coc-btn:hover{border-color:var(--accent);}
+.nav-coc-icon{
+  display:flex;align-items:center;justify-content:center;width:26px;height:26px;flex-shrink:0;
+  border-radius:8px;background:var(--accent-soft);color:var(--accent-2);font-size:13px;
+}
+.nav-coc-count{
+  margin-left:auto;font-size:11px;font-weight:800;color:var(--accent-2);
+  background:var(--accent-soft);padding:2px 8px;border-radius:20px;
+}
+
+@media(max-width:760px){
+  /* #bottomnav menyusut di layar kecil (padding 14px), jadi tombolnya ikut
+     turun — kalau tetap 96px dia menggantung terlalu jauh dari tepi. */
+  #coc-fab{right:16px;bottom:86px;padding:11px 16px;font-size:13px;}
+  .coc-panel{padding:22px 18px;}
+}
+
 /* Per-slide voiceover player, injected above slide content by applySlideAudio */
 .slide-audio{margin:0 0 18px;}
 .slide-audio audio{width:100%;height:38px;}
@@ -1112,6 +1238,44 @@ ul.tick li b, ol.tick li b{color:var(--text);}
       <button class="recap-close" onclick="recapClose()" aria-label="Tutup">✕</button>
       <div id="recap-body"></div>
       <div id="recap-actions"></div>
+    </div>
+  </div>
+
+  <!-- Co-creation: tombol melayang (cuma di slide materi), panel tulis
+       catatan per slide, dan menu berisi seluruh catatan. Tombolnya duduk DI
+       ATAS #bottomnav (lihat CSS .coc-fab), bukan menimpanya. -->
+  <button id="coc-fab" onclick="cocOpen()" style="display:none">
+    <span class="coc-fab-icon">✎</span>
+    <span class="coc-fab-label">Catatan</span>
+    <span class="coc-fab-count" style="display:none"></span>
+  </button>
+
+  <div id="coc-overlay">
+    <div class="coc-panel">
+      <button class="coc-close" onclick="cocClose()" aria-label="Tutup">✕</button>
+      <p class="coc-panel-eyebrow">Catatan Co-creation</p>
+      <div id="coc-slide-label" class="coc-slide-label"></div>
+      <div id="coc-list" class="coc-list"></div>
+      <textarea id="coc-input" class="coc-input" maxlength="2000" rows="4"
+        oninput="cocUpdateCounter()"
+        placeholder="Tulis apa pun yang terbesit soal materi ini — pertanyaan, keraguan, contoh dari pekerjaanmu, atau hal yang mau kamu tajamkan di kelas nanti."></textarea>
+      <div class="coc-panel-foot">
+        <span id="coc-counter" class="coc-counter"></span>
+        <span class="coc-panel-actions">
+          <button id="coc-cancel-edit" class="nav-btn" style="display:none" onclick="cocCancelEdit()">Batal</button>
+          <button id="coc-submit" class="nav-btn primary" onclick="cocSubmit()">Simpan catatan</button>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div id="coc-menu-overlay">
+    <div class="coc-panel coc-menu-panel">
+      <button class="coc-close" onclick="cocMenuClose()" aria-label="Tutup">✕</button>
+      <p class="coc-panel-eyebrow">Co-creation</p>
+      <h3 class="coc-menu-title">Semua catatanmu</h3>
+      <p id="coc-menu-note" class="coc-menu-hint"></p>
+      <div id="coc-menu-body" class="coc-menu-body"></div>
     </div>
   </div>
 
@@ -1651,6 +1815,17 @@ const SHOW_RECAP = __SHOW_RECAP_JS__;
 const RECAP_API = __RECAP_API_JS__;
 const RECAP_READY = !!(TRACK_READY && SHOW_RECAP && RECAP_API);
 
+/* Co-creation — catatan bebas peserta per slide materi.
+   DUA MODE, dan bedanya nyata buat peserta:
+   - Penuh (perekaman aktivitas nyala): catatan disimpan di perangkat DAN
+     dikirim ke server, jadi tahan ganti perangkat & kebaca di Command Center.
+   - Terbatas (perekaman mati): cuma localStorage perangkat itu. Bukan pilihan
+     desain — catatan di server dikenali lewat NIP, dan yang menanyakan NIP
+     cuma sistem rekam aktivitas; tanpa itu catatan gak punya pemilik. */
+const SHOW_COCREATION = __SHOW_COCREATION_JS__;
+const COCREATION_API = __COCREATION_API_JS__;
+const COCREATION_SYNC = !!(SHOW_COCREATION && TRACK_READY && COCREATION_API);
+
 let actSessionId = null;
 let actBuffer = [];
 let actFlushTimer = null;
@@ -2070,6 +2245,10 @@ function actStart(){
      cukup rapat: presisi deteksi idle ±15 detik, gak masalah buat ambang 4
      menit. */
   actFlushTimer = setInterval(function(){ actCheckIdle(); actFlush(); }, 15000);
+  /* Baru di sini identitas peserta dipastikan ada (actStart cuma jalan
+     setelah NIP ketemu, dari SCORM maupun form). Sebelum titik ini catatan
+     di server gak bisa ditarik — gak ada pemiliknya buat dicari. */
+  cocSyncFromServer();
   actBindActivity();
   actMarkSlide();
 }
@@ -2524,6 +2703,21 @@ function renderSidebar(){
     `;
     wrap.appendChild(sectionEl);
   });
+
+  /* Co-creation: entri terakhir, di bawah section terakhir. SENGAJA di luar
+     loop section dan BUKAN item NAV — dia overlay, bukan halaman. Kalau
+     dijadikan item NAV, dia ikut kehitung di progres belajar, di tombol
+     Sebelumnya/Selanjutnya, dan di gerbang penguncian section — padahal ini
+     cuma tempat meninjau catatan, bukan materi yang harus diselesaikan. */
+  if(SHOW_COCREATION){
+    const n = cocTotalNotes();
+    const btn = document.createElement('button');
+    btn.className = 'nav-coc-btn';
+    btn.setAttribute('onclick', 'cocMenuOpen()');
+    btn.innerHTML = '<span class="nav-coc-icon">✎</span><span>Co-creation</span>'
+      + '<span class="nav-coc-count" id="coc-menu-count">' + (n ? n : '') + '</span>';
+    wrap.appendChild(btn);
+  }
 }
 function notifyLocked(sectionIdx){
   const prevSec = SECTIONS[sectionIdx-1];
@@ -2685,6 +2879,345 @@ function renderSummary(){
    Angkanya datang dari backend (endpoint /api/activity/my-recap), tapi
    KALIMATNYA disusun di sini — biar redaksinya bisa diubah cukup dengan
    export ulang modul, tanpa deploy ulang backend. */
+/* ============================= CO-CREATION =============================
+
+   Catatan bebas peserta per slide materi, ditinjau ulang dari satu menu.
+
+   KENAPA SIMPANANNYA TERPISAH DARI `state`, BUKAN NUMPANG DI SITU:
+   saveState() menulis SELURUH `state` ke cmi.suspend_data, yang dibatasi
+   ~4096 karakter di SCORM 1.2. Catatan itu teks bebas — gampang menembus
+   batas itu, dan waktu jebol LMS memotong diam-diam. Yang rusak bukan cuma
+   catatannya, tapi SELURUH progres belajar (slide dikunjungi, jawaban kuis)
+   karena semuanya ikut di JSON yang sama. Jadi catatan hidup di kunci
+   localStorage sendiri dan TIDAK PERNAH masuk `state`. Pola yang sama sudah
+   dipakai suspend_data milik paket Articulate.
+
+   BENTUK DATA: peta id -> {id, slide, judul, section, judulSection, text, ts,
+   rev, deleted}.
+
+   DUA WAKTU, SENGAJA DIPISAH — ini bukan duplikasi:
+   - `ts`  = kapan catatan DIBUAT. Tidak pernah berubah. Dipakai buat mengurut
+             dan menampilkan waktunya ke peserta.
+   - `rev` = kapan catatan terakhir DIUBAH. Dipakai HANYA buat memutuskan versi
+             mana yang menang waktu digabung dengan catatan dari server.
+   Kalau keduanya disatukan, membetulkan satu typo bikin catatan itu melompat
+   ke urutan paling bawah — peserta kehilangan jejak alur pikirannya sendiri.
+
+   Sunting = entri yang sama ditulis ulang dengan `rev` lebih baru; hapus =
+   entri ditandai `deleted` (batu nisan), bukan dibuang. Batu nisan perlu
+   supaya catatan yang dihapus di satu perangkat gak hidup lagi waktu ditarik
+   dari server. */
+const COCREATION_KEY = STORAGE_KEY + '-cocreation-v1';
+/* Batas panjang satu catatan. Kolom payload di Supabase dibatasi
+   CHECK pg_column_size(payload) < 8192 — satu catatan + judul slide/section
+   harus muat jauh di bawah itu, dan 2000 karakter sudah sangat lega buat
+   satu penajaman pikiran. */
+const COCREATION_MAX = 2000;
+let cocreationNotes = {};
+let cocreationOpenSlide = null;
+let cocreationEditingId = null;
+
+function cocLoad(){
+  try{
+    const raw = localStorage.getItem(COCREATION_KEY);
+    if(raw) cocreationNotes = JSON.parse(raw) || {};
+  }catch(e){ cocreationNotes = {}; }
+}
+function cocSave(){
+  try{ localStorage.setItem(COCREATION_KEY, JSON.stringify(cocreationNotes)); }catch(e){}
+}
+
+function cocEsc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* Catatan hidup (belum dihapus) buat satu slide, terbaru di bawah. */
+function cocNotesForSlide(num){
+  return Object.values(cocreationNotes)
+    .filter(n => !n.deleted && n.slide === num)
+    .sort((a,b) => a.ts - b.ts);   /* waktu DIBUAT - urutannya gak goyang gara-gara disunting */
+}
+function cocTotalNotes(){
+  return Object.values(cocreationNotes).filter(n => !n.deleted).length;
+}
+
+/* Satu perubahan catatan = satu entri lokal + satu event ke server (kalau
+   mode penuh). Event-nya nebeng pipeline aktivitas yang sudah ada, jadi
+   otomatis ikut dapat batching, keepalive, dan outbox anti-hilang. */
+function cocCommit(note){
+  cocreationNotes[note.id] = note;
+  cocSave();
+  if(COCREATION_SYNC) actEvent('cocreation_note', note);
+}
+
+function cocNewId(){
+  return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+}
+
+/* Judul slide & section ikut disimpan DI DALAM catatan, bukan cuma nomornya.
+   Alasannya: catatan dibaca ulang di Command Center (yang gak punya daftar
+   judul slide modul ini) dan dipakai buat kalimat "catatan ini untuk slide
+   apa di bagian mana". Menyimpan judulnya bikin tiap catatan menjelaskan
+   dirinya sendiri, tanpa perlu dicocokkan balik ke data modul. */
+function cocSlideMeta(num){
+  const item = NAV.find(it => it.kind === 'slide' && it.num === num);
+  const sec = item ? SECTIONS.find(s => s.id === item.section) : null;
+  return {
+    judul: SLIDE_TITLES[num] || ('Slide ' + num),
+    section: item ? item.section : '',
+    judulSection: sec ? sec.title : '',
+  };
+}
+
+function cocAdd(num, text){
+  const meta = cocSlideMeta(num);
+  const now = Date.now();
+  cocCommit({
+    id: cocNewId(), slide: num, judul: meta.judul,
+    section: meta.section, judulSection: meta.judulSection,
+    text: text, ts: now, rev: now,
+  });
+}
+/* `ts` sengaja TIDAK disentuh di dua fungsi bawah — cuma `rev` yang maju. */
+function cocUpdate(id, text){
+  const old = cocreationNotes[id];
+  if(!old) return;
+  cocCommit(Object.assign({}, old, { text: text, rev: Date.now() }));
+}
+function cocDelete(id){
+  const old = cocreationNotes[id];
+  if(!old) return;
+  cocCommit(Object.assign({}, old, { deleted: true, text: '', rev: Date.now() }));
+}
+
+/* Tarik catatan dari server lalu gabungkan. Yang ts-nya lebih baru menang —
+   berlaku dua arah, jadi sunting/hapus di perangkat lain ikut terbawa, dan
+   catatan yang baru ditulis di perangkat ini gak ketimpa versi lama server. */
+function cocSyncFromServer(){
+  if(!COCREATION_SYNC) return;
+  const id = state.identity || {};
+  if(!id.nip) return;
+  fetch(COCREATION_API + '/api/cocreation/my-notes', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ module_slug: MODULE_SLUG, learner_id: id.nip }),
+  }).then(r => r.ok ? r.json() : null).then(data => {
+    if(!data || !data.notes) return;
+    let berubah = false;
+    data.notes.forEach(n => {
+      const lokal = cocreationNotes[n.id];
+      /* Dibandingkan pakai `rev` (waktu diubah), bukan `ts` (waktu dibuat):
+         yang ditanya di sini "versi siapa yang paling baru", bukan "catatan
+         mana yang lebih dulu ditulis". Catatan lama tanpa `rev` jatuh balik
+         ke `ts` supaya tetap kebandingkan. */
+      const revBaru = n.rev || n.ts || 0;
+      const revLokal = lokal ? (lokal.rev || lokal.ts || 0) : -1;
+      if(!lokal || revBaru > revLokal){ cocreationNotes[n.id] = n; berubah = true; }
+    });
+    if(berubah){
+      cocSave();
+      cocRefreshUi();
+    }
+  }).catch(()=>{ /* offline: catatan lokal tetap kepakai, bukan error buat peserta */ });
+}
+
+/* Dipanggil tiap kali catatan berubah ATAU slide berpindah. Menyentuh tiga
+   tempat sekaligus supaya gak ada satu pun yang basi diam-diam. */
+function cocRefreshUi(){
+  if(!SHOW_COCREATION) return;
+  cocRenderFab();
+  const ov = document.getElementById('coc-overlay');
+  if(ov && ov.classList.contains('show')) cocRenderPanel();
+  const menuCount = document.getElementById('coc-menu-count');
+  if(menuCount){
+    const n = cocTotalNotes();
+    menuCount.textContent = n ? String(n) : '';
+  }
+}
+
+/* ---------- tombol melayang di slide materi ---------- */
+function cocRenderFab(){
+  const fab = document.getElementById('coc-fab');
+  if(!fab) return;
+  const item = NAV[currentIdx];
+  /* Cuma slide materi. Sampul, halaman kuis, dan Ringkasan gak dapat tombol:
+     catatan di situ gak punya potongan materi yang jelas buat dirujuk waktu
+     dibahas di kelas. */
+  const aktif = SHOW_COCREATION && item && item.kind === 'slide';
+  fab.style.display = aktif ? 'flex' : 'none';
+  if(!aktif) return;
+  const n = cocNotesForSlide(item.num).length;
+  const badge = fab.querySelector('.coc-fab-count');
+  badge.textContent = n ? String(n) : '';
+  badge.style.display = n ? 'flex' : 'none';
+  fab.setAttribute('title', n ? (n + ' catatan di slide ini') : 'Tulis catatan untuk slide ini');
+}
+
+function cocOpen(){
+  const item = NAV[currentIdx];
+  if(!SHOW_COCREATION || !item || item.kind !== 'slide') return;
+  cocreationOpenSlide = item.num;
+  cocreationEditingId = null;
+  document.getElementById('coc-overlay').classList.add('show');
+  cocRenderPanel();
+  setTimeout(function(){ const t = document.getElementById('coc-input'); if(t) t.focus(); }, 60);
+}
+function cocClose(){
+  document.getElementById('coc-overlay').classList.remove('show');
+  cocreationEditingId = null;
+}
+
+function cocRenderPanel(){
+  const num = cocreationOpenSlide;
+  if(num == null) return;
+  const meta = cocSlideMeta(num);
+  const head = document.getElementById('coc-slide-label');
+  head.innerHTML = (meta.judulSection ? '<span class="coc-sec">' + cocEsc(meta.judulSection) + '</span>' : '')
+    + '<b>' + cocEsc(meta.judul) + '</b>';
+
+  const list = cocNotesForSlide(num);
+  const wrap = document.getElementById('coc-list');
+  if(!list.length){
+    wrap.innerHTML = '<p class="coc-empty">Belum ada catatan di slide ini.</p>';
+  } else {
+    wrap.innerHTML = list.map(function(n){
+      return '<div class="coc-note">'
+        + '<p class="coc-note-text">' + cocEsc(n.text).replace(/\n/g, '<br>') + '</p>'
+        + '<div class="coc-note-foot">'
+        + '<span class="coc-note-ts">' + cocFormatTs(n.ts) + '</span>'
+        + '<button class="coc-mini" onclick="cocStartEdit(\'' + n.id + '\')">Ubah</button>'
+        + '<button class="coc-mini coc-mini-danger" onclick="cocAskDelete(\'' + n.id + '\')">Hapus</button>'
+        + '</div></div>';
+    }).join('');
+  }
+
+  const input = document.getElementById('coc-input');
+  const submit = document.getElementById('coc-submit');
+  const cancel = document.getElementById('coc-cancel-edit');
+  if(cocreationEditingId && cocreationNotes[cocreationEditingId]){
+    input.value = cocreationNotes[cocreationEditingId].text || '';
+    submit.textContent = 'Simpan perubahan';
+    cancel.style.display = 'inline-flex';
+  } else {
+    submit.textContent = 'Simpan catatan';
+    cancel.style.display = 'none';
+  }
+  cocUpdateCounter();
+}
+
+function cocFormatTs(ts){
+  try{
+    const d = new Date(ts);
+    return d.toLocaleDateString('id-ID', {day:'numeric', month:'short'})
+      + ' · ' + d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+  }catch(e){ return ''; }
+}
+
+function cocUpdateCounter(){
+  const input = document.getElementById('coc-input');
+  const counter = document.getElementById('coc-counter');
+  if(!input || !counter) return;
+  const sisa = COCREATION_MAX - input.value.length;
+  counter.textContent = sisa + ' karakter tersisa';
+  counter.classList.toggle('coc-counter-warn', sisa < 100);
+}
+
+function cocStartEdit(id){
+  cocreationEditingId = id;
+  cocRenderPanel();
+  const t = document.getElementById('coc-input');
+  if(t){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+}
+function cocCancelEdit(){
+  cocreationEditingId = null;
+  const t = document.getElementById('coc-input');
+  if(t) t.value = '';
+  cocRenderPanel();
+}
+function cocAskDelete(id){
+  if(!confirm('Hapus catatan ini?')) return;
+  cocDelete(id);
+  if(cocreationEditingId === id) cocreationEditingId = null;
+  const t = document.getElementById('coc-input');
+  if(t && cocreationEditingId === null) t.value = '';
+  cocRefreshUi();
+  cocMenuRender();
+}
+
+function cocSubmit(){
+  const input = document.getElementById('coc-input');
+  const teks = (input.value || '').trim();
+  if(!teks) return;
+  if(cocreationEditingId) cocUpdate(cocreationEditingId, teks.slice(0, COCREATION_MAX));
+  else cocAdd(cocreationOpenSlide, teks.slice(0, COCREATION_MAX));
+  cocreationEditingId = null;
+  input.value = '';
+  cocRefreshUi();
+  cocMenuRender();
+}
+
+/* ---------- menu "Co-creation": semua catatan, dikelompokkan ---------- */
+function cocMenuOpen(){
+  if(!SHOW_COCREATION) return;
+  document.getElementById('coc-menu-overlay').classList.add('show');
+  cocMenuRender();
+}
+function cocMenuClose(){
+  document.getElementById('coc-menu-overlay').classList.remove('show');
+}
+
+function cocMenuRender(){
+  const body = document.getElementById('coc-menu-body');
+  if(!body) return;
+  const hidup = Object.values(cocreationNotes).filter(function(n){ return !n.deleted; });
+  if(!hidup.length){
+    body.innerHTML = '<p class="coc-empty">Belum ada catatan sama sekali. Buka slide materi mana pun, '
+      + 'lalu klik tombol catatan di pojok kanan bawah untuk menuliskan apa yang terbesit.</p>';
+    return;
+  }
+  /* Dikelompokkan mengikuti urutan NAV — bukan urutan menulis — supaya
+     susunannya sama persis dengan alur modul waktu dibahas di kelas. */
+  const urutan = NAV.filter(function(it){ return it.kind === 'slide'; }).map(function(it){ return it.num; });
+  const perSlide = {};
+  hidup.forEach(function(n){ (perSlide[n.slide] = perSlide[n.slide] || []).push(n); });
+
+  let html = '';
+  let sectionTerakhir = null;
+  urutan.forEach(function(num){
+    const list = (perSlide[num] || []).sort(function(a,b){ return a.ts - b.ts; });
+    if(!list.length) return;
+    const judulSection = list[0].judulSection || '';
+    if(judulSection !== sectionTerakhir){
+      sectionTerakhir = judulSection;
+      if(judulSection) html += '<h4 class="coc-menu-sec">' + cocEsc(judulSection) + '</h4>';
+    }
+    html += '<div class="coc-menu-slide">'
+      + '<button class="coc-menu-slide-head" onclick="cocJump(' + num + ')">'
+      + '<span>' + cocEsc(list[0].judul || ('Slide ' + num)) + '</span>'
+      + '<span class="coc-menu-jump">Buka slide →</span>'
+      + '</button>';
+    list.forEach(function(n){
+      html += '<button class="coc-menu-note" onclick="cocJump(' + num + ')">'
+        + '<span class="coc-menu-note-text">' + cocEsc(n.text).replace(/\n/g, '<br>') + '</span>'
+        + '<span class="coc-note-ts">' + cocFormatTs(n.ts) + '</span>'
+        + '</button>';
+    });
+    html += '</div>';
+  });
+  body.innerHTML = html;
+}
+
+/* Klik catatan = lompat ke slide asalnya. Lewat goTo() yang sama dengan
+   navigasi biasa, jadi seluruh gerbang (section terkunci, Knowledge Check
+   belum dijawab) tetap berlaku — menu ini gak jadi pintu belakang. */
+function cocJump(num){
+  const idx = NAV.findIndex(function(it){ return it.kind === 'slide' && it.num === num; });
+  if(idx < 0) return;
+  cocMenuClose();
+  goTo(idx);
+}
+
 let recapData = null;
 let recapLoading = false;
 let recapAutoShown = false;
@@ -3005,6 +3538,9 @@ function render(opts){
   updateProgress();
   renderBottomNav();
   actMarkSlide();
+  /* Sesudah renderSidebar() — entri Co-creation baru ada di DOM di titik ini,
+     dan tombol melayangnya perlu tau slide sekarang jenisnya apa. */
+  cocRefreshUi();
 
   /* Rekap muncul sendiri sekali begitu peserta sampai di Ringkasan — kalau
      cuma nunggu tombol diklik, yang paling perlu lihat justru yang paling
@@ -3655,6 +4191,19 @@ document.addEventListener('keydown', e=>{
 
 /* ============================= INIT ============================= */
 loadState();
+/* Catatan Co-creation dimuat TERPISAH dari loadState() — simpanannya memang
+   kunci localStorage sendiri, sengaja gak numpang cmi.suspend_data (lihat
+   alasannya di bagian CO-CREATION). Ditaruh sebelum render pertama biar
+   jumlah catatan sudah benar di tombol & sidebar sejak layar pertama. */
+if(SHOW_COCREATION){
+  cocLoad();
+  const hint = document.getElementById('coc-menu-note');
+  if(hint){
+    hint.textContent = COCREATION_SYNC
+      ? 'Catatan tersimpan otomatis dan bisa kamu buka lagi dari perangkat lain. Klik catatan mana pun untuk melompat ke slide asalnya.'
+      : 'Catatan tersimpan di perangkat ini saja — kalau kamu ganti browser, laptop, atau HP, catatan ini tidak ikut. Klik catatan mana pun untuk melompat ke slide asalnya.';
+  }
+}
 applyProgressVisibility();
 /* Kalau ada blok embed Instagram, muat embed.js SEKALI dari sini (bukan dari
    dalam blok — <script> yang disuntik lewat innerHTML gak pernah jalan).

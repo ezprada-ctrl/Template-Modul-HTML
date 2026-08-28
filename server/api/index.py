@@ -360,6 +360,55 @@ def api_activity_my_recap():
         return jsonify({'error': str(e)}), 503
 
 
+@app.post('/api/cocreation/my-notes')
+def api_cocreation_my_notes():
+    """Catatan Co-creation milik SATU peserta, dipanggil dari dalam modulnya.
+
+    Inilah yang bikin catatan tahan ganti perangkat: modul menulis catatan ke
+    Supabase pakai anon key (INSERT-only), lalu menariknya balik lewat sini.
+
+    SENGAJA TANPA PASSWORD, alasan & batasnya sama persis dengan
+    /api/activity/my-recap di atas — silakan baca penjelasan di situ. Bedanya
+    satu dan penting: yang dibalikin di sini bukan angka agregat, tapi TEKS
+    CATATAN peserta apa adanya. Jadi aturan "jangan pernah tambahkan daftar
+    peserta atau pencarian NIP ke endpoint ini" berlaku lebih keras lagi di
+    sini — tanpa cara menemukan NIP, catatan orang lain tetap tidak bisa
+    dipanen massal.
+    """
+    data = request.get_json(silent=True) or {}
+    slug = (data.get('module_slug') or '').strip()
+    nip = (data.get('learner_id') or '').strip()
+    if not slug or not nip:
+        return jsonify({'error': 'module_slug dan learner_id wajib diisi'}), 400
+    try:
+        activity_store.reset_truncation()
+        return jsonify({'notes': activity_store.cocreation_notes_for_learner(slug, nip)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
+@app.post('/api/activity/cocreation')
+def api_activity_cocreation():
+    """Catatan Co-creation satu modul, dikelompokkan per slide — buat pemateri.
+
+    Dikunci password seperti endpoint Command Center lain: ini teks catatan
+    SEMUA peserta, bukan cuma milik satu orang.
+    """
+    data = request.get_json(silent=True) or {}
+    denied = _check_cc_password(data)
+    if denied:
+        return denied
+    slug = (data.get('module_slug') or '').strip()
+    if not slug:
+        return jsonify({'error': 'module_slug wajib diisi'}), 400
+    try:
+        activity_store.reset_truncation()
+        slides = activity_store.cocreation_by_slide(slug)
+        return jsonify({'slides': slides, 'terpotong': activity_store.was_truncated()})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
 @app.get('/api/keepalive')
 def api_keepalive():
     """Hit daily by Vercel Cron (schedule lives in server/vercel.json) so the

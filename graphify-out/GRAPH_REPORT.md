@@ -1,16 +1,16 @@
 # Graph Report - Template Modul Ikram  (2026-08-24)
 
 ## Corpus Check
-- 47 files · ~95,966 words
+- 47 files · ~96,989 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 724 nodes · 1260 edges · 43 communities (30 shown, 13 thin omitted)
+- 726 nodes · 1263 edges · 45 communities (32 shown, 13 thin omitted)
 - Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 155 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0f258116`
+- Built from commit: `81e6dea7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -28,6 +28,7 @@
 - activity_store.py
 - compilerOptions
 - GraphicStyleSelect.tsx
+- checkNetwork
 - Video Progress Tracking
 - Ambang "Ditinggal" — 4 Menit
 - icons.svg (SVG sprite sheet)
@@ -48,6 +49,7 @@
 - SVG donut chart renderer
 - Open the mobile sidebar drawer
 - plugins
+- Dev Mode Panel
 - BlockEditor.tsx
 - QuizBuilder
 - supabase_setup.sql
@@ -59,8 +61,8 @@
 1. `App()` - 25 edges
 2. `esc()` - 20 edges
 3. `Navigate to a NAV index, enforcing all gating rules` - 20 edges
-4. `compilerOptions` - 18 edges
-5. `generate_html()` - 18 edges
+4. `generate_html()` - 19 edges
+5. `compilerOptions` - 18 edges
 6. `Render the current NAV item into the viewport` - 18 edges
 7. `ModuleData` - 17 edges
 8. `Canvas()` - 16 edges
@@ -89,27 +91,27 @@
 - **Articulate SCORM-in-SCORM containment** — server_api_shell_template_artmakeshim, server_api_shell_template_scormfindapi, server_api_shell_template_concept_articulate_runtime [INFERRED 0.85]
 - **Research Basis for Idle/Reading-speed Thresholds** — panduan_fitur_template_modul_ikram_ambang_ditinggal_4_menit, panduan_fitur_template_modul_ikram_ambang_dibaca_238wpm, server_api_shell_template_actidlethresholdms, server_api_generator [INFERRED 0.85]
 
-## Communities (43 total, 13 thin omitted)
+## Communities (45 total, 13 thin omitted)
 
 ### Community 0 - "App.tsx"
 Cohesion: 0.06
 Nodes (46): checkTrackingConfig(), listDrafts(), loadDraft(), saveDraft(), uploadMediaToStorage(), App(), handleCreateProject(), handleOpenExistingDraft() (+38 more)
 
 ### Community 1 - "Navigate to a NAV index, enforcing all gating rules"
-Cohesion: 0.07
-Nodes (56): Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Show/hide the progress block per HIDE_PROGRESS, Inject/play per-slide voiceover audio, Group a section's NAV items into singles/bundles/quiz, Hide the dev-mode password modal, Close the mobile sidebar drawer (+48 more)
+Cohesion: 0.06
+Nodes (73): Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Inject/play per-slide voiceover audio, Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide, Toggle fullscreen for an Articulate iframe block, Load an Articulate block's stored CMI data (+65 more)
 
 ### Community 2 - "generator.py"
-Cohesion: 0.07
-Nodes (54): Preview & Export (Tahap 5), art_entry(), build_nav(), _caption_html(), clamp_brightness(), count_interaktif(), count_words(), esc() (+46 more)
+Cohesion: 0.06
+Nodes (56): Preview & Export (Tahap 5), art_entry(), build_nav(), _caption_html(), clamp_brightness(), count_articulate(), count_interaktif(), count_words() (+48 more)
 
 ### Community 3 - "index.py"
 Cohesion: 0.06
 Nodes (53): get, Import PPTX (Tahap 1), post, Render Service: modul-builder-backend, _headers(), list_drafts(), load_draft(), ping() (+45 more)
 
 ### Community 4 - "Buffer an activity tracking event"
-Cohesion: 0.06
-Nodes (56): Alat "Cek Rekam Aktivitas", Command Center — Rekam Aktivitas & Analitik (Tahap 7), Deteksi Otomatis Data Janggal, Identitas Peserta Lintas Modul, Keandalan Pencatatan Data (Outbox Offline), Peringatan Kecepatan Baca, Sisi Peserta — Yang Dialami Peserta (Tahap 6), Accordion block renderer (+48 more)
+Cohesion: 0.07
+Nodes (53): Alat "Cek Rekam Aktivitas", Command Center — Rekam Aktivitas & Analitik (Tahap 7), Deteksi Otomatis Data Janggal, Identitas Peserta Lintas Modul, Keandalan Pencatatan Data (Outbox Offline), Peringatan Kecepatan Baca, Sisi Peserta — Yang Dialami Peserta (Tahap 6), Accordion block renderer (+45 more)
 
 ### Community 5 - "Canvas"
 Cohesion: 0.16
@@ -124,8 +126,8 @@ Cohesion: 0.08
 Nodes (35): ActivityLearner, ActivityModule, ActivitySession, ArticulateInfo, ccListLearners(), ccListModules(), ccListSessions(), ccPost() (+27 more)
 
 ### Community 8 - "Identity Resolution & NIP Capture"
-Cohesion: 0.08
-Nodes (41): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-probe/README.md — Uji Koneksi LMS Guide, Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide (+33 more)
+Cohesion: 0.24
+Nodes (14): Return from identity confirmation to the entry form, Identity Resolution & NIP Capture, Confirm and commit pending identity, start activity session, Group NIP digits per PNS NIP structure, Live-format the NIP input field while preserving caret, Read learner name/id from the SCORM API, Load cross-module cached learner identity, Strip non-digit characters from a NIP string (+6 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.08
@@ -142,6 +144,10 @@ Nodes (19): compilerOptions, allowImportingTsExtensions, erasableSyntaxOnly, lib
 ### Community 12 - "GraphicStyleSelect.tsx"
 Cohesion: 0.15
 Nodes (10): GraphicStyleSelect(), hexToRgba(), KIND_LABEL, KINDS, PANEL_STYLE, Props, GRAPHIC_STYLE_PREVIEWS, GraphicStylePreviewSet (+2 more)
+
+### Community 13 - "checkNetwork"
+Cohesion: 0.29
+Nodes (6): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-probe/README.md — Uji Koneksi LMS Guide
 
 ### Community 14 - "Video Progress Tracking"
 Cohesion: 0.42
@@ -175,6 +181,10 @@ Nodes (3): Cek Kesiapan Sistem Rekam, Aktifkan Rekam Aktivitas Peserta (toggle),
 Cohesion: 0.22
 Nodes (8): plugins, rules, react/only-export-components, react/rules-of-hooks, $schema, oxc, typescript, warn
 
+### Community 36 - "Dev Mode Panel"
+Cohesion: 0.33
+Nodes (7): Show/hide the progress block per HIDE_PROGRESS, Hide the dev-mode password modal, Dev Mode Panel, Show the dev-mode password modal, Validate dev-mode password and enable dev mode, Toggle developer mode on/off, Dev-mode preview toggle for hidden progress
+
 ### Community 37 - "BlockEditor.tsx"
 Cohesion: 0.05
 Nodes (28): uploadImageToStorage(), BlockEditor(), add(), changeType(), remove(), toggleCollapse(), blockSummary(), detectPngTransparency() (+20 more)
@@ -204,7 +214,7 @@ Nodes (10): _creds(), is_configured(), presign(), _quote(), Cloudflare R2 — pe
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Template Modul Ikram — Source Code (Full Repo Printout)` connect `index.py` to `App.tsx`, `generator.py`?**
-  _High betweenness centrality (0.128) - this node is a cross-community bridge._
+  _High betweenness centrality (0.129) - this node is a cross-community bridge._
 - **Why does `react` connect `App.tsx` to `plugins`, `BlockEditor.tsx`, `api.ts`, `GraphicStyleSelect.tsx`, `PreviewExport.tsx`, `BlockPreview.tsx`?**
   _High betweenness centrality (0.040) - this node is a cross-community bridge._
 - **Why does `14 Jenis Blok Konten` connect `BlockEditor.tsx` to `generator.py`?**
@@ -214,6 +224,6 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `App.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.06286748077792854 - nodes in this community are weakly interconnected._
 - **Should `Navigate to a NAV index, enforcing all gating rules` be split into smaller, more focused modules?**
-  _Cohesion score 0.07142857142857142 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0578386605783866 - nodes in this community are weakly interconnected._
 - **Should `generator.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.06704260651629072 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06428988895382817 - nodes in this community are weakly interconnected._

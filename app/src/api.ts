@@ -187,6 +187,10 @@ export interface ActivitySession {
   // ditanam - beda dari "modul ini gak punya paket Articulate" (0).
   articulate_selesai: number;
   total_articulate: number | null;
+  // Catatan Co-creation yang DISENTUH di sesi ini (ditulis atau diubah).
+  // Bukan jumlah catatan hidup peserta - satu catatan yang disunting berkali
+  // di sesi yang sama tetap dihitung satu.
+  catatan: number;
   mulai: string;
   selesai: string;
   durasi_total_ms: number;
@@ -251,6 +255,9 @@ export interface ActivityLearner {
   // dan totalnya. null = semua modulnya di-export sebelum angka ini ditanam.
   articulate_selesai: number;
   total_articulate_program: number | null;
+  // Jumlah catatan Co-creation yang MASIH HIDUP milik peserta ini (yang sudah
+  // dihapus tidak dihitung), digabung lintas semua modulnya.
+  catatan: number;
   video_dimulai: number;
   video_rata_persen: number | null;
   // Rincian per video (slide + persen masing-masing), diurutkan dari yang
@@ -318,6 +325,32 @@ export async function ccListLearners(password: string): Promise<{ items: Activit
 
 export async function ccRawRows(password: string, moduleSlug: string): Promise<any[]> {
   return (await ccPost('rows', { password, module_slug: moduleSlug })).rows;
+}
+
+// Satu catatan Co-creation milik satu peserta, sebagaimana dilihat pemateri.
+export interface CocreationNote {
+  learner_id: string;
+  nama: string;
+  text: string;
+  ts: number;
+}
+
+// Catatan satu slide, dikumpulkan dari semua peserta. Diurutkan backend dari
+// slide yang PALING BANYAK dicatat - itu sinyal materi mana yang paling perlu
+// dibahas lebih dalam waktu kelas klasikal.
+export interface CocreationSlide {
+  slide: number | null;
+  judul: string;
+  section: string;
+  judul_section: string;
+  catatan: CocreationNote[];
+  jumlah_catatan: number;
+  jumlah_peserta: number;
+}
+
+export async function ccCocreation(password: string, moduleSlug: string): Promise<{ items: CocreationSlide[]; terpotong: boolean }> {
+  const d = await ccPost('cocreation', { password, module_slug: moduleSlug });
+  return { items: d.slides, terpotong: !!d.terpotong };
 }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;

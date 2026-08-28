@@ -1,4 +1,4 @@
-import type { ActivityModule, ActivitySession, ActivityLearner } from './api';
+import type { ActivityModule, ActivitySession, ActivityLearner, CocreationSlide } from './api';
 
 /**
  * Data KARANGAN buat "Lihat Contoh" di Command Center — dipakai waktu belum
@@ -47,7 +47,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     jumlah_slide_dilihat: 96, jumlah_interaksi: 21,
     kuis_dijawab: 8, kuis_benar: 8, kuis_diulang: 0, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
-    kc_dijawab: 0, kc_benar: 0, articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
+    kc_dijawab: 0, kc_benar: 0, catatan: 3,
+    articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
     perangkat: 'desktop',
   },
   {
@@ -61,7 +62,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     kuis_dijawab: 9, kuis_benar: 7, kuis_diulang: 1, kuis_gagal: 1,
     peringatan_baca_cepat: 1, peringatan_diabaikan: 0,
     peringatan_detail: [{ section: 'b', slides: [14], choice: 'kembali' }],
-    kc_dijawab: 12, kc_benar: 7, articulate_selesai: 0, total_articulate: TOTAL_ARTICULATE,
+    kc_dijawab: 12, kc_benar: 7, catatan: 0,
+    articulate_selesai: 0, total_articulate: TOTAL_ARTICULATE,
     perangkat: 'desktop',
   },
   {
@@ -78,7 +80,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
       { section: 'b', slides: [9, 11], choice: 'kembali' },
       { section: 'c', slides: [21], choice: 'yakin' },
     ],
-    kc_dijawab: 9, kc_benar: 9, articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
+    kc_dijawab: 9, kc_benar: 9, catatan: 2,
+    articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
     perangkat: 'mobile',
   },
   {
@@ -90,7 +93,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     jumlah_slide_dilihat: 15, jumlah_interaksi: 2,
     kuis_dijawab: 3, kuis_benar: 2, kuis_diulang: 1, kuis_gagal: 1,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
-    kc_dijawab: 1, kc_benar: 1, articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
+    kc_dijawab: 1, kc_benar: 1, catatan: 4,
+    articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
     perangkat: 'desktop',
   },
   {
@@ -105,7 +109,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     jumlah_slide_dilihat: 7, jumlah_interaksi: 1,
     kuis_dijawab: 0, kuis_benar: 0, kuis_diulang: 0, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
-    kc_dijawab: 2, kc_benar: 1, articulate_selesai: 0, total_articulate: TOTAL_ARTICULATE,
+    kc_dijawab: 2, kc_benar: 1, catatan: 0,
+    articulate_selesai: 0, total_articulate: TOTAL_ARTICULATE,
     perangkat: 'mobile',
   },
   {
@@ -118,7 +123,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     jumlah_slide_dilihat: 95, jumlah_interaksi: 26,
     kuis_dijawab: 10, kuis_benar: 10, kuis_diulang: 0, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
-    kc_dijawab: 0, kc_benar: 0, articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
+    kc_dijawab: 0, kc_benar: 0, catatan: 1,
+    articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
     perangkat: 'desktop',
   },
   {
@@ -135,7 +141,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
       { section: 'a', slides: [8], choice: 'yakin' },
       { section: 'c', slides: [44], choice: 'kembali' },
     ],
-    kc_dijawab: 6, kc_benar: 3, articulate_selesai: 0, total_articulate: TOTAL_ARTICULATE,
+    kc_dijawab: 6, kc_benar: 3, catatan: 0,
+    articulate_selesai: 0, total_articulate: TOTAL_ARTICULATE,
     perangkat: 'desktop',
   },
   {
@@ -150,7 +157,8 @@ export const DEMO_SESSIONS: ActivitySession[] = [
     jumlah_slide_dilihat: 10, jumlah_interaksi: 3,
     kuis_dijawab: 0, kuis_benar: 0, kuis_diulang: 0, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
-    kc_dijawab: 0, kc_benar: 0, articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
+    kc_dijawab: 0, kc_benar: 0, catatan: 2,
+    articulate_selesai: 1, total_articulate: TOTAL_ARTICULATE,
     perangkat: 'mobile',
   },
 ];
@@ -172,6 +180,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
     kuis_dijawab: 8, kuis_benar: 8, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
     kc_dijawab: 0, kc_benar: 0,
+    catatan: 3,
     articulate_selesai: 1, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T01:00:00.000Z', terakhir: '2026-07-20T01:56:00.000Z',
   },
@@ -192,6 +201,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
     peringatan_baca_cepat: 1, peringatan_diabaikan: 0,
     peringatan_detail: [{ modul: SLUG, section: 'b', slides: [14], choice: 'kembali' }],
     kc_dijawab: 12, kc_benar: 7,
+    catatan: 0,
     articulate_selesai: 0, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T02:00:00.000Z', terakhir: '2026-07-20T03:15:00.000Z',
   },
@@ -213,6 +223,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
       { modul: SLUG, section: 'c', slides: [21], choice: 'yakin' },
     ],
     kc_dijawab: 9, kc_benar: 9,
+    catatan: 2,
     articulate_selesai: 1, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T03:00:00.000Z', terakhir: '2026-07-20T03:39:00.000Z',
   },
@@ -230,6 +241,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
     kuis_dijawab: 3, kuis_benar: 2, kuis_gagal: 1,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
     kc_dijawab: 5, kc_benar: 2,
+    catatan: 4,
     articulate_selesai: 1, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T04:00:00.000Z', terakhir: '2026-07-20T05:07:00.000Z',
   },
@@ -249,6 +261,7 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
     kuis_dijawab: 10, kuis_benar: 10, kuis_gagal: 0,
     peringatan_baca_cepat: 0, peringatan_diabaikan: 0, peringatan_detail: [],
     kc_dijawab: 0, kc_benar: 0,
+    catatan: 0,
     articulate_selesai: 0, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T06:00:00.000Z', terakhir: '2026-07-20T07:18:00.000Z',
   },
@@ -275,7 +288,40 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
       { modul: SLUG, section: 'c', slides: [44], choice: 'kembali' },
     ],
     kc_dijawab: 6, kc_benar: 3,
+    catatan: 1,
     articulate_selesai: 1, total_articulate_program: TOTAL_ARTICULATE,
     pertama: '2026-07-20T08:00:00.000Z', terakhir: '2026-07-20T09:42:00.000Z',
+  },
+];
+
+// Catatan Co-creation contoh, dikelompokkan per slide seperti yang dilihat
+// pemateri. Sengaja dibikin TIMPANG (satu slide jauh lebih ramai dari yang
+// lain): itu bentuk data yang paling berguna dilatih dibaca — sinyal materi
+// mana yang perlu dibahas lebih dalam di kelas, bukan sebaran yang rata.
+export const DEMO_COCREATION: CocreationSlide[] = [
+  {
+    slide: 14, judul: 'Bukti Pemeriksaan yang Kompeten', section: 'c',
+    judul_section: 'C. Bukti Pemeriksaan', jumlah_catatan: 4, jumlah_peserta: 4,
+    catatan: [
+      { learner_id: '198801052012052411', nama: 'Siti Amara', text: 'Batas "kompeten" ini sebenarnya diukur pakai apa? Di lapangan sering debat sama WP soal kecukupan bukti.', ts: 1 },
+      { learner_id: '199203152015031005', nama: 'Rahmat Wijaya', text: 'Mau minta contoh kasus nyata yang buktinya ditolak di keberatan.', ts: 2 },
+      { learner_id: '199407222018012003', nama: 'Dewi Lestari', text: 'Bedanya relevan vs andal masih ketuker di kepala saya.', ts: 3 },
+      { learner_id: '198512302010121007', nama: 'Bagus Prakoso', text: 'Kalau bukti dari pihak ketiga tapi tidak bisa dikonfirmasi, statusnya gimana?', ts: 4 },
+    ],
+  },
+  {
+    slide: 7, judul: 'Tujuan Audit Terkait Transaksi', section: 'b',
+    judul_section: 'B. Tujuan Pemeriksaan', jumlah_catatan: 2, jumlah_peserta: 2,
+    catatan: [
+      { learner_id: '198801052012052411', nama: 'Siti Amara', text: 'Keterjadian vs kelengkapan: dua-duanya soal "ada", tapi arah ujinya berlawanan. Mau dipertegas di kelas.', ts: 5 },
+      { learner_id: '199712102021011002', nama: 'Anisa Rahma', text: 'Di SPT yang saya periksa kemarin, posting & pengikhtisaran ini yang paling sering meleset.', ts: 6 },
+    ],
+  },
+  {
+    slide: 21, judul: 'Metode Pemeriksaan Tidak Langsung', section: 'd',
+    judul_section: 'D. Metode Pemeriksaan', jumlah_catatan: 1, jumlah_peserta: 1,
+    catatan: [
+      { learner_id: '199203152015031005', nama: 'Rahmat Wijaya', text: 'Kapan boleh pakai metode tidak langsung tanpa dianggap mengada-ada?', ts: 7 },
+    ],
   },
 ];
