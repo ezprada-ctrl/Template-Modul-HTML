@@ -169,122 +169,115 @@ def cocreation_notes_for_learner(module_slug, learner_id):
         key=lambda n: n.get('ts') or 0)
 
 
-def cocreation_by_slide(module_slug):
-    """Catatan satu modul, dikelompokkan PER SLIDE - buat menyiapkan bahan kelas.
+def cocreation_tree(module_slug=None):
+    """Catatan Co-creation bertingkat: Modul -> Section -> Slide -> catatan.
 
-    Diurutkan dari slide yang paling banyak dicatat: kalau 12 orang menulis di
-    slide yang sama, itu sinyal paling kuat bahwa materi itu yang perlu
-    dibahas lebih dalam waktu klasikal.
+    `module_slug=None` = SEMUA modul dalam satu layar (buat pelatihan yang
+    dipecah jadi beberapa modul terpisah); diisi = cuma modul itu.
+
+    URUTANNYA MENGIKUTI ALUR MATERI, bukan jumlah catatan. Versi pertama
+    fungsi ini mengurut dari slide yang paling banyak dicatat - hasilnya satu
+    section bisa TERPECAH ke dua tempat di daftar yang sama (slide ramai di
+    atas, slide sepi di bawah), jadi pertanyaan "section mana saja yang ada
+    catatannya" justru gak kejawab. Sinyal "paling ramai" tetap dipertahankan,
+    tapi sebagai PENANDA (`slide_terramai`), bukan sebagai urutan.
+
+    Cara mengurut section: dari nomor slide TERKECIL di section itu - bukan
+    dari id section. Nomor slide memang sudah dinomori ulang mengikuti urutan
+    section lalu urutan slide (renumberModule di types.ts), jadi ini selalu
+    cocok dengan alur modul, apa pun skema id section-nya.
     """
     rows = _tanpa_preflight(fetch_rows(
         module_slug=module_slug,
-        columns='learner_id,learner_name,event_type,payload',
+        columns='module_slug,learner_id,learner_name,event_type,payload',
         event_type=COCREATION_EVENT))
 
-    # Nama peserta tidak ikut di payload catatan (payload dibatasi ukurannya),
-    # jadi dipetakan balik dari kolom baris mana pun milik NIP itu.
     nama_per_nip = {}
     for r in rows:
         if r.get('learner_id') and r.get('learner_name'):
             nama_per_nip[r['learner_id']] = r['learner_name']
 
-    # Batu nisan hanya bisa dikenali per-PESERTA: id catatan dibuat di sisi
-    # klien, jadi dua peserta secara teori bisa punya id yang sama. Digabung
-    # per (nip, id) supaya catatan orang lain tidak saling menimpa.
+    # Digabung per (modul, peserta): id catatan dibuat di sisi klien, jadi dua
+    # peserta bisa saja punya id yang sama - kalau digabung mentah, catatan
+    # orang lain saling menimpa.
     per_pemilik = {}
     for r in rows:
-        per_pemilik.setdefault(r.get('learner_id') or '(tanpa identitas)', []).append(r)
+        kunci = (r.get('module_slug'), r.get('learner_id') or '(tanpa identitas)')
+        per_pemilik.setdefault(kunci, []).append(r)
 
-    slides = {}
-    for nip, baris in per_pemilik.items():
+    modul = {}
+    for (slug, nip), baris in per_pemilik.items():
         for n in _gabung_catatan(baris).values():
             if n.get('deleted'):
                 continue
+            m = modul.setdefault(slug, {'module_slug': slug, '_sections': {}})
+            sec_id = n.get('section') or ''
+            sec = m['_sections'].setdefault(sec_id, {
+                'section': sec_id,
+                'judul_section': n.get('judulSection') or '',
+                '_slides': {},
+            })
             num = n.get('slide')
-            s = slides.setdefault(num, {
+            sl = sec['_slides'].setdefault(num, {
                 'slide': num,
                 'judul': n.get('judul') or f'Slide {num}',
-                'section': n.get('section') or '',
-                'judul_section': n.get('judulSection') or '',
                 'catatan': [],
             })
-            s['catatan'].append({
+            sl['catatan'].append({
                 'learner_id': nip,
                 'nama': nama_per_nip.get(nip) or '',
                 'text': n.get('text') or '',
                 'ts': n.get('ts') or 0,
             })
 
-    out = []
-    for s in slides.values():
-        s['catatan'].sort(key=lambda c: c['ts'])
-        s['jumlah_catatan'] = len(s['catatan'])
-        s['jumlah_peserta'] = len({c['learner_id'] for c in s['catatan']})
-        out.append(s)
-    out.sort(key=lambda s: (-s['jumlah_catatan'], s['slide'] if s['slide'] is not None else 0))
-    return out
-
-
-def _judul_per_slug():
-    """Peta module_slug -> daftar judul modul (module_title) yang pernah muncul.
-
-    Kenapa penting: `slug` itu identitas PROJECT di builder, bukan identitas
-    modul. Kalau satu project didaur ulang (diedit jadi modul beda lalu
-    di-export lagi), dua file modul yang beda hidup di LMS dengan slug SAMA →
-    datanya nyampur di bawah satu slug. Satu slug dengan >1 judul modul =
-    tanda bentrok itu. Diambil dari payload session_start (1 baris per sesi,
-    jauh lebih sedikit dari total event) biar gak berat.
-    """
-    rows = _tanpa_preflight(
-        fetch_rows(columns='module_slug,payload', event_type='session_start'))
-    judul = {}
-    for r in rows:
-        p = r.get('payload') or {}
-        t = (p.get('module_title') or '').strip()
-        if t:
-            judul.setdefault(r['module_slug'], set()).add(t)
-    return {slug: sorted(s) for slug, s in judul.items()}
-
-
-def list_modules():
-    """Ringkasan per modul buat layar utama Command Center."""
-    rows = _tanpa_preflight(
-        fetch_rows(columns='module_slug,session_id,learner_id,created_at,event_type'))
-    judul_map = _judul_per_slug()
-    by_slug = {}
-    for r in rows:
-        slug = r['module_slug']
-        m = by_slug.setdefault(slug, {
-            'module_slug': slug, 'rows': 0,
-            '_sessions': set(), '_learners': set(),
-            'first_seen': r['created_at'], 'last_seen': r['created_at'],
-        })
-        m['rows'] += 1
-        m['_sessions'].add(r['session_id'])
-        if r.get('learner_id'):
-            m['_learners'].add(r['learner_id'])
-        if r['created_at'] < m['first_seen']:
-            m['first_seen'] = r['created_at']
-        if r['created_at'] > m['last_seen']:
-            m['last_seen'] = r['created_at']
+    judul_slug = _judul_per_slug()
+    # Kapan tiap modul PERTAMA dipakai - dipakai mengurut modul mengikuti
+    # jalannya pelatihan, karena antar-modul gak ada urutan bawaan apa pun
+    # (slug itu acak, judul belum tentu bernomor).
+    pertama = {}
+    for r in _tanpa_preflight(fetch_rows(columns='module_slug,created_at', event_type='session_start')):
+        s = r['module_slug']
+        if s not in pertama or r['created_at'] < pertama[s]:
+            pertama[s] = r['created_at']
 
     out = []
-    for m in by_slug.values():
-        judul = judul_map.get(m['module_slug'], [])
+    for slug, m in modul.items():
+        sections = []
+        for sec in m['_sections'].values():
+            slides = sorted(sec.pop('_slides').values(),
+                            key=lambda s: s['slide'] if s['slide'] is not None else 0)
+            for sl in slides:
+                sl['catatan'].sort(key=lambda c: c['ts'])
+                sl['jumlah_catatan'] = len(sl['catatan'])
+                sl['jumlah_peserta'] = len({c['learner_id'] for c in sl['catatan']})
+            sec['slides'] = slides
+            sec['jumlah_catatan'] = sum(s['jumlah_catatan'] for s in slides)
+            sec['jumlah_peserta'] = len({c['learner_id'] for s in slides for c in s['catatan']})
+            sec['_slide_min'] = slides[0]['slide'] if slides and slides[0]['slide'] is not None else 0
+            sections.append(sec)
+        sections.sort(key=lambda x: x.pop('_slide_min'))
+
+        semua_slide = [s for sec in sections for s in sec['slides']]
+        terramai = max(semua_slide, key=lambda s: s['jumlah_catatan']) if semua_slide else None
+        judul_list = judul_slug.get(slug, [])
         out.append({
-            'module_slug': m['module_slug'],
-            'rows': m['rows'],
-            'sessions': len(m['_sessions']),
-            'learners': len(m['_learners']),
-            'first_seen': m['first_seen'],
-            'last_seen': m['last_seen'],
-            'judul_modul': judul,
-            # >1 judul di bawah satu slug = project didaur ulang, datanya
-            # nyampur. Ditandai keras biar penganalisis tau harus misahin per
-            # judul (tiap sesi bawa module_title-nya, lihat summarize_sessions).
-            'kemungkinan_bentrok': len(judul) > 1,
+            'module_slug': slug,
+            # Kalau satu slug ternyata dipakai beberapa judul modul (project
+            # didaur ulang), semuanya disebut - jangan diam-diam pilih satu.
+            'judul_modul': ' / '.join(judul_list) if judul_list else slug,
+            'kemungkinan_bentrok': len(judul_list) > 1,
+            'sections': sections,
+            'jumlah_catatan': sum(sec['jumlah_catatan'] for sec in sections),
+            'jumlah_peserta': len({c['learner_id'] for sec in sections
+                                   for s in sec['slides'] for c in s['catatan']}),
+            'slide_terramai': None if terramai is None else {
+                'slide': terramai['slide'],
+                'judul': terramai['judul'],
+                'jumlah_catatan': terramai['jumlah_catatan'],
+            },
+            '_pertama': pertama.get(slug, ''),
         })
-    out.sort(key=lambda m: m['last_seen'], reverse=True)
+    out.sort(key=lambda m: (m.pop('_pertama') or '', m['module_slug']))
     return out
 
 

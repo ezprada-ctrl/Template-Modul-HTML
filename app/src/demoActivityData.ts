@@ -1,4 +1,4 @@
-import type { ActivityModule, ActivitySession, ActivityLearner, CocreationSlide } from './api';
+import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule } from './api';
 
 /**
  * Data KARANGAN buat "Lihat Contoh" di Command Center — dipakai waktu belum
@@ -298,30 +298,79 @@ export const DEMO_LEARNERS: ActivityLearner[] = [
 // pemateri. Sengaja dibikin TIMPANG (satu slide jauh lebih ramai dari yang
 // lain): itu bentuk data yang paling berguna dilatih dibaca — sinyal materi
 // mana yang perlu dibahas lebih dalam di kelas, bukan sebaran yang rata.
-export const DEMO_COCREATION: CocreationSlide[] = [
+
+// Catatan Co-creation contoh, bentuknya persis seperti yang dilihat pemateri:
+// Modul → Bagian → Slide → catatan. Sengaja DUA MODUL supaya tampilan lintas
+// modul kelihatan gunanya, dan sengaja TIMPANG (satu slide jauh lebih ramai
+// dari yang lain) — itu bentuk data yang paling perlu dilatih dibaca, karena
+// di situlah sinyal "materi ini perlu dibahas lebih dalam" muncul.
+export const DEMO_COCREATION: CocreationModule[] = [
   {
-    slide: 14, judul: 'Bukti Pemeriksaan yang Kompeten', section: 'c',
-    judul_section: 'C. Bukti Pemeriksaan', jumlah_catatan: 4, jumlah_peserta: 4,
-    catatan: [
-      { learner_id: '198801052012052411', nama: 'Siti Amara', text: 'Batas "kompeten" ini sebenarnya diukur pakai apa? Di lapangan sering debat sama WP soal kecukupan bukti.', ts: 1 },
-      { learner_id: '199203152015031005', nama: 'Rahmat Wijaya', text: 'Mau minta contoh kasus nyata yang buktinya ditolak di keberatan.', ts: 2 },
-      { learner_id: '199407222018012003', nama: 'Dewi Lestari', text: 'Bedanya relevan vs andal masih ketuker di kepala saya.', ts: 3 },
-      { learner_id: '198512302010121007', nama: 'Bagus Prakoso', text: 'Kalau bukti dari pihak ketiga tapi tidak bisa dikonfirmasi, statusnya gimana?', ts: 4 },
+    module_slug: SLUG,
+    judul_modul: 'Modul 1 — Dasar Pemeriksaan',
+    kemungkinan_bentrok: false,
+    jumlah_catatan: 6, jumlah_peserta: 5,
+    slide_terramai: { slide: 14, judul: 'Bukti Pemeriksaan yang Kompeten', jumlah_catatan: 4 },
+    sections: [
+      {
+        section: 'b', judul_section: 'B. Tujuan Pemeriksaan',
+        jumlah_catatan: 2, jumlah_peserta: 2,
+        slides: [
+          {
+            slide: 7, judul: 'Tujuan Audit Terkait Transaksi',
+            jumlah_catatan: 2, jumlah_peserta: 2,
+            catatan: [
+              { learner_id: '198801052012052411', nama: 'Siti Amara', text: 'Keterjadian vs kelengkapan: dua-duanya soal "ada", tapi arah ujinya berlawanan. Mau dipertegas di kelas.', ts: 1 },
+              { learner_id: '199712102021011002', nama: 'Anisa Rahma', text: 'Di SPT yang saya periksa kemarin, posting & pengikhtisaran ini yang paling sering meleset.', ts: 2 },
+            ],
+          },
+        ],
+      },
+      {
+        section: 'c', judul_section: 'C. Bukti Pemeriksaan',
+        jumlah_catatan: 4, jumlah_peserta: 4,
+        slides: [
+          {
+            slide: 14, judul: 'Bukti Pemeriksaan yang Kompeten',
+            jumlah_catatan: 4, jumlah_peserta: 4,
+            catatan: [
+              { learner_id: '198801052012052411', nama: 'Siti Amara', text: 'Batas "kompeten" ini sebenarnya diukur pakai apa? Di lapangan sering debat sama WP soal kecukupan bukti.', ts: 3 },
+              { learner_id: '199203152015031005', nama: 'Rahmat Wijaya', text: 'Mau minta contoh kasus nyata yang buktinya ditolak di keberatan.', ts: 4 },
+              { learner_id: '199407222018012003', nama: 'Dewi Lestari', text: 'Bedanya relevan vs andal masih ketuker di kepala saya.', ts: 5 },
+              { learner_id: '198512302010121007', nama: 'Bagus Prakoso', text: 'Kalau bukti dari pihak ketiga tapi tidak bisa dikonfirmasi, statusnya gimana?', ts: 6 },
+            ],
+          },
+        ],
+      },
     ],
   },
   {
-    slide: 7, judul: 'Tujuan Audit Terkait Transaksi', section: 'b',
-    judul_section: 'B. Tujuan Pemeriksaan', jumlah_catatan: 2, jumlah_peserta: 2,
-    catatan: [
-      { learner_id: '198801052012052411', nama: 'Siti Amara', text: 'Keterjadian vs kelengkapan: dua-duanya soal "ada", tapi arah ujinya berlawanan. Mau dipertegas di kelas.', ts: 5 },
-      { learner_id: '199712102021011002', nama: 'Anisa Rahma', text: 'Di SPT yang saya periksa kemarin, posting & pengikhtisaran ini yang paling sering meleset.', ts: 6 },
-    ],
-  },
-  {
-    slide: 21, judul: 'Metode Pemeriksaan Tidak Langsung', section: 'd',
-    judul_section: 'D. Metode Pemeriksaan', jumlah_catatan: 1, jumlah_peserta: 1,
-    catatan: [
-      { learner_id: '199203152015031005', nama: 'Rahmat Wijaya', text: 'Kapan boleh pakai metode tidak langsung tanpa dianggap mengada-ada?', ts: 7 },
+    module_slug: 'demo-modul-lanjutan',
+    judul_modul: 'Modul 2 — Metode Pemeriksaan',
+    kemungkinan_bentrok: false,
+    jumlah_catatan: 2, jumlah_peserta: 2,
+    slide_terramai: { slide: 21, judul: 'Metode Pemeriksaan Tidak Langsung', jumlah_catatan: 1 },
+    sections: [
+      {
+        section: 'd', judul_section: 'D. Metode Pemeriksaan',
+        jumlah_catatan: 2, jumlah_peserta: 2,
+        slides: [
+          {
+            slide: 21, judul: 'Metode Pemeriksaan Tidak Langsung',
+            jumlah_catatan: 1, jumlah_peserta: 1,
+            catatan: [
+              { learner_id: '199203152015031005', nama: 'Rahmat Wijaya', text: 'Kapan boleh pakai metode tidak langsung tanpa dianggap mengada-ada?', ts: 7 },
+            ],
+          },
+          {
+            slide: 26, judul: 'Pengujian Arus Kas',
+            jumlah_catatan: 1, jumlah_peserta: 1,
+            catatan: [
+              { learner_id: '199407222018012003', nama: 'Dewi Lestari', text: 'Contoh perhitungannya kemarin terlalu cepat, mau diulang pelan-pelan di kelas.', ts: 8 },
+            ],
+          },
+        ],
+      },
     ],
   },
 ];

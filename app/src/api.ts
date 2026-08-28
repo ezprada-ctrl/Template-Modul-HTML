@@ -335,22 +335,42 @@ export interface CocreationNote {
   ts: number;
 }
 
-// Catatan satu slide, dikumpulkan dari semua peserta. Diurutkan backend dari
-// slide yang PALING BANYAK dicatat - itu sinyal materi mana yang paling perlu
-// dibahas lebih dalam waktu kelas klasikal.
+// Catatan satu slide, dikumpulkan dari semua peserta.
 export interface CocreationSlide {
   slide: number | null;
   judul: string;
-  section: string;
-  judul_section: string;
   catatan: CocreationNote[];
   jumlah_catatan: number;
   jumlah_peserta: number;
 }
 
-export async function ccCocreation(password: string, moduleSlug: string): Promise<{ items: CocreationSlide[]; terpotong: boolean }> {
-  const d = await ccPost('cocreation', { password, module_slug: moduleSlug });
-  return { items: d.slides, terpotong: !!d.terpotong };
+export interface CocreationSection {
+  section: string;
+  judul_section: string;
+  slides: CocreationSlide[];
+  jumlah_catatan: number;
+  jumlah_peserta: number;
+}
+
+// Satu modul beserta seluruh catatannya. Section & slide di dalamnya diurutkan
+// backend MENGIKUTI ALUR MATERI (bukan jumlah catatan) supaya pertanyaan
+// "section mana saja yang ada catatannya" bisa ditelusuri dari atas ke bawah.
+// Sinyal "paling banyak dicatat" tetap ada, tapi sebagai penanda terpisah.
+export interface CocreationModule {
+  module_slug: string;
+  judul_modul: string;
+  kemungkinan_bentrok: boolean;
+  sections: CocreationSection[];
+  jumlah_catatan: number;
+  jumlah_peserta: number;
+  slide_terramai: { slide: number | null; judul: string; jumlah_catatan: number } | null;
+}
+
+// moduleSlug kosong = SEMUA modul sekaligus (buat pelatihan yang dipecah jadi
+// beberapa modul terpisah).
+export async function ccCocreation(password: string, moduleSlug?: string): Promise<{ items: CocreationModule[]; terpotong: boolean }> {
+  const d = await ccPost('cocreation', { password, module_slug: moduleSlug || '' });
+  return { items: d.modules, terpotong: !!d.terpotong };
 }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;

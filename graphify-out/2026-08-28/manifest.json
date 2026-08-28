@@ -18,9 +18,9 @@
     "semantic_hash": "0a33c5d155c9a857f31fb0c1d19bb38d"
   },
   "app/src/api.ts": {
-    "mtime": 1787911870.116784,
-    "seen": 1787912367.5025134,
-    "ast_hash": "fc6b1426bda61d26bd464fb62f105a01",
+    "mtime": 1787557621.6786814,
+    "seen": 1787557850.7484312,
+    "ast_hash": "b40a6f31c767b362f04cd34c9952b3d3",
     "semantic_hash": ""
   },
   "app/src/components/BlockAddMenu.tsx": {
@@ -48,16 +48,16 @@
     "semantic_hash": "09eb10beff11d76612e6e9b464474aa6"
   },
   "app/src/components/CommandCenter.tsx": {
-    "mtime": 1787911973.7729352,
-    "seen": 1787912367.5029185,
-    "ast_hash": "2c764a5185c48e64837200b953ff9192",
+    "mtime": 1787557826.0436983,
+    "seen": 1787557850.748925,
+    "ast_hash": "cda4bb8da0e0ea1a93043cb1ff0082b8",
     "semantic_hash": ""
   },
   "app/src/components/CoverForm.tsx": {
-    "mtime": 1787911429.8048933,
-    "seen": 1787912367.5029202,
-    "ast_hash": "4baeff2829878a1116cf19c32f62640b",
-    "semantic_hash": ""
+    "mtime": 1787016950.5802107,
+    "seen": 1787222015.9428315,
+    "ast_hash": "31de546f3f77845feeedd81a5fc39695",
+    "semantic_hash": "31de546f3f77845feeedd81a5fc39695"
   },
   "app/src/components/EmojiPicker.tsx": {
     "mtime": 1784091584.112843,
@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "app/src/demoActivityData.ts": {
-    "mtime": 1787912008.0853803,
-    "seen": 1787912367.503374,
-    "ast_hash": "1fc58541026cc3fc7bb95b6271d484e4",
+    "mtime": 1787557660.2649617,
+    "seen": 1787557850.749604,
+    "ast_hash": "80aea8cbc69d89ea8d2762dae846cfbd",
     "semantic_hash": ""
   },
   "app/src/emojiData.ts": {
@@ -132,9 +132,9 @@
     "semantic_hash": "0c2e9d7860102cadd11a3c82a33979b5"
   },
   "app/src/types.ts": {
-    "mtime": 1787911411.1250904,
-    "seen": 1787912367.503819,
-    "ast_hash": "e65ddc17ac8748050c8315f7d80d920e",
+    "mtime": 1787280550.3178742,
+    "seen": 1787280592.2297254,
+    "ast_hash": "1d90c27d6f80c2fc7759373bd77d6c54",
     "semantic_hash": ""
   },
   "app/src/vite-env.d.ts": {
@@ -168,9 +168,9 @@
     "semantic_hash": "6ba274d800e7f354da38fdf4e21466e7"
   },
   "server/api/activity_store.py": {
-    "mtime": 1787912199.4820979,
-    "seen": 1787912367.5042317,
-    "ast_hash": "56bfa801e91b992da65ce67c3c8e82c2",
+    "mtime": 1787557581.9319232,
+    "seen": 1787557850.7505949,
+    "ast_hash": "f9d330d9aa965ac4b873ab9c4d33d0d1",
     "semantic_hash": ""
   },
   "server/api/draft_store.py": {
@@ -180,15 +180,15 @@
     "semantic_hash": "a27888728526533faf97b5e833248527"
   },
   "server/api/generator.py": {
-    "mtime": 1787911441.3272114,
-    "seen": 1787912367.5043185,
-    "ast_hash": "7a6b4f15eb2894b4ef40c71d697ec286",
+    "mtime": 1787557864.911734,
+    "seen": 1787558057.325747,
+    "ast_hash": "cb41bbf02a384562aa8d22d9f500bec2",
     "semantic_hash": ""
   },
   "server/api/index.py": {
-    "mtime": 1787911813.1429524,
-    "seen": 1787912367.5043194,
-    "ast_hash": "3d4a717f9a959b3e0e0cceebe7407740",
+    "mtime": 1787280339.1014636,
+    "seen": 1787280592.2303255,
+    "ast_hash": "3f61c57608326c83d7687bbc6f99aeec",
     "semantic_hash": ""
   },
   "server/api/pptx_extract.py": {
@@ -282,9 +282,9 @@
     "semantic_hash": ""
   },
   "server/api/shell-template.html": {
-    "mtime": 1787912199.4810967,
-    "seen": 1787912367.50557,
-    "ast_hash": "d4e1663ad507c28bc53a29c131810e29",
+    "mtime": 1787557894.5143907,
+    "seen": 1787558057.326973,
+    "ast_hash": "f766b875eca9a8a91ab9ad73d4d5ab32",
     "semantic_hash": ""
   },
   "server/requirements.txt": {

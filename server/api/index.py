@@ -389,7 +389,10 @@ def api_cocreation_my_notes():
 
 @app.post('/api/activity/cocreation')
 def api_activity_cocreation():
-    """Catatan Co-creation satu modul, dikelompokkan per slide — buat pemateri.
+    """Catatan Co-creation bertingkat (Modul → Section → Slide) — buat pemateri.
+
+    `module_slug` OPSIONAL: kosong = semua modul dalam satu balasan (buat
+    pelatihan yang dipecah jadi beberapa modul), diisi = cuma modul itu.
 
     Dikunci password seperti endpoint Command Center lain: ini teks catatan
     SEMUA peserta, bukan cuma milik satu orang.
@@ -398,13 +401,11 @@ def api_activity_cocreation():
     denied = _check_cc_password(data)
     if denied:
         return denied
-    slug = (data.get('module_slug') or '').strip()
-    if not slug:
-        return jsonify({'error': 'module_slug wajib diisi'}), 400
+    slug = (data.get('module_slug') or '').strip() or None
     try:
         activity_store.reset_truncation()
-        slides = activity_store.cocreation_by_slide(slug)
-        return jsonify({'slides': slides, 'terpotong': activity_store.was_truncated()})
+        modules = activity_store.cocreation_tree(slug)
+        return jsonify({'modules': modules, 'terpotong': activity_store.was_truncated()})
     except Exception as e:
         return jsonify({'error': str(e)}), 503
 

@@ -1,7 +1,73 @@
 import { Fragment, useRef, useState } from 'react';
-import type { ActivityModule, ActivitySession, ActivityLearner, CocreationSlide, PeringatanDetail, VideoDetail } from '../api';
+import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule, PeringatanDetail, VideoDetail } from '../api';
 import { ccCocreation, ccListModules, ccListSessions, ccListLearners, ccRawRows } from '../api';
 import { DEMO_MODULES, DEMO_SESSIONS, DEMO_LEARNERS, DEMO_COCREATION } from '../demoActivityData';
+
+// Catatan Co-creation satu modul: Section -> Slide -> catatan.
+// Dipakai DUA tempat dengan data yang sama bentuknya - tampilan lintas modul
+// dan sub-tab di dalam satu modul - jadi susunannya gak pernah beda antara
+// keduanya.
+function CocreationModulView({ m, tampilkanJudulModul }: { m: CocreationModule; tampilkanJudulModul: boolean }) {
+  return (
+    <div style={{ marginBottom: tampilkanJudulModul ? 26 : 0 }}>
+      {tampilkanJudulModul && (
+        <div style={{ marginBottom: 10, paddingBottom: 8, borderBottom: '2px solid var(--border-strong)' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+            <b style={{ fontSize: 15 }}>{m.judul_modul}</b>
+            <span style={{ fontSize: 11.5, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums' }}>
+              {m.jumlah_catatan} catatan · {m.jumlah_peserta} peserta
+            </span>
+            {m.kemungkinan_bentrok && (
+              <span title="Satu slug dipakai beberapa judul modul - datanya kemungkinan bercampur"
+                    style={{ fontSize: 11, color: 'var(--danger)' }}>⚠ slug bentrok</span>
+            )}
+          </div>
+          {m.slide_terramai && m.slide_terramai.jumlah_catatan > 1 && (
+            <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 3 }}>
+              Paling banyak dicatat: <b style={{ color: 'var(--text-dim)' }}>{m.slide_terramai.judul}</b>
+              {' '}({m.slide_terramai.jumlah_catatan} catatan)
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {m.sections.map(sec => (
+          <div key={sec.section || sec.judul_section}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+                {sec.judul_section || '(tanpa bagian)'}
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--text-faint)', fontVariantNumeric: 'tabular-nums' }}>
+                {sec.jumlah_catatan} catatan · {sec.jumlah_peserta} peserta
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {sec.slides.map(sl => (
+                <div key={String(sl.slide)} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+                  <div style={{ padding: '8px 12px', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'baseline', gap: 9, flexWrap: 'wrap' }}>
+                    <b style={{ fontSize: 13 }}>{sl.judul}</b>
+                    <span style={{ fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums' }}>
+                      {sl.jumlah_catatan} catatan · {sl.jumlah_peserta} peserta
+                    </span>
+                  </div>
+                  {sl.catatan.map((c, i) => (
+                    <div key={i} style={{ padding: '9px 12px', borderTop: i ? '1px solid var(--border)' : 'none' }}>
+                      <p style={{ margin: '0 0 4px', fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{c.text}</p>
+                      <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
+                        {c.nama || '(tanpa nama)'} · {c.learner_id}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // Rincian slide di bawah WPM buat satu kejadian reading_warning - dipakai di
 // baris expand kolom Peringatan (Per Modul & Per Peserta sama-sama pakai ini).
@@ -77,13 +143,17 @@ export default function CommandCenter() {
   const [modules, setModules] = useState<ActivityModule[]>([]);
   const [sessions, setSessions] = useState<ActivitySession[]>([]);
   const [learners, setLearners] = useState<ActivityLearner[]>([]);
-  const [view, setView] = useState<'modul' | 'peserta'>('modul');
+  const [view, setView] = useState<'modul' | 'peserta' | 'cocreation'>('modul');
   // Sub-tampilan di dalam satu modul. Catatan Co-creation dipisah dari tabel
   // sesi karena bentuknya beda total: tabel sesi itu angka per orang, catatan
   // itu teks yang dikelompokkan per SLIDE - dipakai buat menyiapkan bahan
   // diskusi kelas, bukan buat menilai peserta.
   const [modulTab, setModulTab] = useState<'sesi' | 'cocreation'>('sesi');
-  const [cocreation, setCocreation] = useState<CocreationSlide[]>([]);
+  const [cocreation, setCocreation] = useState<CocreationModule[]>([]);
+  // Terpisah dari `cocreation` (yang isinya satu modul saja): tampilan lintas
+  // modul dimuat sekali dan dipakai ulang, jangan saling menimpa dengan
+  // tampilan per-modul yang cakupannya beda.
+  const [cocreationAll, setCocreationAll] = useState<CocreationModule[]>([]);
   const [activeSlug, setActiveSlug] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -163,6 +233,23 @@ export default function CommandCenter() {
     try {
       const r = await ccCocreation(password, activeSlug);
       setCocreation(r.items);
+      setTerpotong(r.terpotong);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function bukaCocreationSemua() {
+    setView('cocreation');
+    if (cocreationAll.length) return;
+    if (demoMode) { setCocreationAll(DEMO_COCREATION); return; }
+    setBusy(true);
+    setError('');
+    try {
+      const r = await ccCocreation(password);   // tanpa slug = semua modul
+      setCocreationAll(r.items);
       setTerpotong(r.terpotong);
     } catch (e: any) {
       setError(e.message);
@@ -404,6 +491,13 @@ ${ref.current.outerHTML}
           onClick={openPeserta}
         >
           Per Peserta
+        </button>
+        <button
+          className={view === 'cocreation' ? 'btn-primary btn-sm' : 'btn-sm'}
+          onClick={bukaCocreationSemua}
+          title="Catatan Co-creation seluruh modul dalam satu layar"
+        >
+          Co-creation
         </button>
       </div>
 
@@ -843,40 +937,42 @@ ${ref.current.outerHTML}
               {cocreation.length > 0 && (
                 <>
                   <p className="hint" style={{ marginBottom: 12 }}>
-                    Diurutkan dari slide yang <b>paling banyak dicatat</b> — itu materi yang paling perlu
-                    dibahas lebih dalam waktu kelas klasikal.
+                    Disusun mengikuti alur materi: bagian demi bagian, slide demi slide.
+                    {cocreation[0].slide_terramai && cocreation[0].slide_terramai!.jumlah_catatan > 1 && (
+                      <> Paling banyak dicatat: <b>{cocreation[0].slide_terramai!.judul}</b>{' '}
+                      ({cocreation[0].slide_terramai!.jumlah_catatan} catatan).</>
+                    )}
                   </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {cocreation.map(sl => (
-                      <div key={String(sl.slide)} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
-                        <div style={{ padding: '10px 13px', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
-                          {sl.judul_section && (
-                            <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 2 }}>
-                              {sl.judul_section}
-                            </div>
-                          )}
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-                            <b style={{ fontSize: 13.5 }}>{sl.judul}</b>
-                            <span style={{ fontSize: 11.5, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums' }}>
-                              {sl.jumlah_catatan} catatan · {sl.jumlah_peserta} peserta
-                            </span>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          {sl.catatan.map((c, i) => (
-                            <div key={i} style={{ padding: '10px 13px', borderTop: i ? '1px solid var(--border)' : 'none' }}>
-                              <p style={{ margin: '0 0 5px', fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{c.text}</p>
-                              <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
-                                {c.nama || '(tanpa nama)'} · {c.learner_id}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {cocreation.map(m => (
+                    <CocreationModulView key={m.module_slug} m={m} tampilkanJudulModul={false} />
+                  ))}
                 </>
               )}
+            </>
+          )}
+        </>
+      )}
+
+      {view === 'cocreation' && (
+        <>
+          {busy && <p className="hint">Memuat…</p>}
+          {!busy && cocreationAll.length === 0 && (
+            <p className="hint">
+              Belum ada catatan Co-creation di modul mana pun. Catatan baru muncul di sini kalau modulnya
+              di-export dengan Co-creation <b>dan</b> “Rekam aktivitas peserta” sama-sama aktif — tanpa
+              perekaman, catatan peserta cuma tersimpan di perangkatnya sendiri.
+            </p>
+          )}
+          {cocreationAll.length > 0 && (
+            <>
+              <p className="hint" style={{ marginBottom: 16 }}>
+                Seluruh modul dalam satu layar, disusun mengikuti alur pelatihan: modul demi modul,
+                lalu bagian demi bagian di dalamnya. Dipakai buat menyiapkan bahan diskusi kelas —
+                terlihat bagian mana yang paling banyak dipertanyakan, dan oleh siapa.
+              </p>
+              {cocreationAll.map(m => (
+                <CocreationModulView key={m.module_slug} m={m} tampilkanJudulModul={true} />
+              ))}
             </>
           )}
         </>
