@@ -62,6 +62,22 @@ export default function PreviewExport({ module, setModule }: Props) {
     }
   }
 
+  // Export "mentah": simpan seluruh ModuleData sebagai file .json. Bentuknya
+  // IDENTIK dengan yang dibolak-balik saveDraft/loadDraft ke server — jadi ini
+  // salinan portabel buat backup, commit ke git, atau nyerahin modul ke orang
+  // di mesin lain. Dibaca balik lewat "Import dari file JSON" di modal Project.
+  function doExportJson() {
+    setError('');
+    const blob = new Blob([JSON.stringify(module, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${module.slug || 'modul'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus(`Project JSON diunduh (${module.slug || 'modul'}.json)`);
+  }
+
   // Paket SCORM .zip — satu-satunya bentuk export yang membawa serta konten
   // Articulate. Dirakit di browser (lihat scormZip.ts), jadi ukuran paketnya
   // gak dibatasi limit fungsi serverless.
@@ -144,6 +160,7 @@ export default function PreviewExport({ module, setModule }: Props) {
         <button onClick={doExportScorm} disabled={!!zip}>
           {zip ? 'Membungkus…' : 'Export SCORM (.zip)'}
         </button>
+        <button onClick={doExportJson}>Export JSON</button>
         <button onClick={doSave}>Simpan Draft</button>
         <button className="btn-ghost" onClick={refreshDrafts}>Muat daftar draft</button>
       </div>

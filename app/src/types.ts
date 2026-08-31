@@ -301,6 +301,29 @@ export function normalizeModule(data: Partial<ModuleData>): ModuleData {
   return { ...emptyModule(), ...data, theme: { ...DEFAULT_THEME, ...data.theme } };
 }
 
+// Parses a raw JSON string (a file the user picked in "Import dari file JSON")
+// into a ModuleData, or throws with a message safe to show the user. The file
+// is the SAME shape saveDraft/loadDraft roundtrip — an export from this app,
+// authored on any machine. Runs through normalizeModule (fills fields added
+// after the file was written) and renumberModule (rebuilds slide numbers +
+// bundle refs, in case the file's are stale or hand-edited).
+export function moduleFromJson(text: string): ModuleData {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new Error('File itu bukan JSON yang valid.');
+  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new Error('Isi file bukan objek JSON.');
+  }
+  const o = raw as Record<string, unknown>;
+  if (typeof o.title !== 'string' || !Array.isArray(o.sections) || !Array.isArray(o.slides)) {
+    throw new Error('JSON ini bukan Project Modul — butuh field title, sections[], dan slides[].');
+  }
+  return renumberModule(normalizeModule(o as Partial<ModuleData>));
+}
+
 // Recomputes every slide's `number` from scratch, purely from (a) the order
 // of `sections` and (b) each slide's relative position within its own
 // section (as reflected by `slides` array order). This is the single source

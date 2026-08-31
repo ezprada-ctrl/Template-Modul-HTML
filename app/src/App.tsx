@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ModuleData, DraftSlide } from './types';
-import { emptyModule, normalizeModule, buildProjectSlugPrefix } from './types';
+import { emptyModule, normalizeModule, buildProjectSlugPrefix, moduleFromJson } from './types';
 import { listDrafts, loadDraft, saveDraft } from './api';
 import SlideBank from './components/SlideBank';
 import Canvas from './components/Canvas';
@@ -158,6 +158,19 @@ function App() {
     setShowNewProjectModal(false);
   }
 
+  // "Import dari file JSON": load a Project JSON the user picked from disk
+  // (exported earlier via Preview → Export JSON, possibly on another machine).
+  // moduleFromJson already validated + normalized it. From here it behaves
+  // like any open project — autosave will persist it server-side under its own
+  // slug on the next edit, so LAST_SLUG_KEY is set now so that autosave (and
+  // the next auto-restore) target the right draft.
+  function handleImportJson(data: ModuleData) {
+    resetHistory(data);
+    localStorage.setItem(LAST_SLUG_KEY, data.slug);
+    setProjectReady(true);
+    setShowNewProjectModal(false);
+  }
+
   // Leaving "Import PPTX" with unreviewed draft slides still sitting in `bank`
   // asks for confirmation first — the extracted deck (every image as base64)
   // lives purely in this tab's memory and is never saved to the draft, so
@@ -243,6 +256,7 @@ function App() {
           onCreate={handleCreateProject}
           onSkip={handleSkipNewProject}
           onOpenExisting={handleOpenExistingDraft}
+          onImportJson={handleImportJson}
         />
       )}
 
@@ -366,13 +380,28 @@ function ThemeToggle({ theme, onToggle }: { theme: 'light' | 'dark'; onToggle: (
   );
 }
 
-function NewProjectModal({ onCreate, onSkip, onOpenExisting }: {
+function NewProjectModal({ onCreate, onSkip, onOpenExisting, onImportJson }: {
   onCreate: (nama: string, namaProject: string) => void;
   onSkip: () => void;
   onOpenExisting: (slug: string, data: ModuleData) => void;
+  onImportJson: (data: ModuleData) => void;
 }) {
   const [nama, setNama] = useState('');
   const [namaProject, setNamaProject] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = useState('');
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-picking the same file after an error
+    if (!file) return;
+    setImportError('');
+    try {
+      onImportJson(moduleFromJson(await file.text()));
+    } catch (err: any) {
+      setImportError(err?.message || 'Gagal membaca file.');
+    }
+  }
   // Toggles this modal into "pick an existing draft" mode. Kept inline
   // (rather than sending the user off to the Preview tab first) so nothing
   // ever gets autosaved in between - the placeholder blank module this app
@@ -413,10 +442,21 @@ function NewProjectModal({ onCreate, onSkip, onOpenExisting }: {
         {mode === 'create' ? (
           <>
             <h3 style={{ marginTop: 0, marginBottom: 6 }}>Project baru</h3>
-            <p className="hint" style={{ marginTop: 0, marginBottom: 18 }}>
+            <p className="hint" style={{ marginTop: 0, marginBottom: importError ? 8 : 18 }}>
               Isi nama kamu &amp; nama project biar gampang dikenali di daftar draft — walau localStorage kehapus, kamu masih ingat slug-nya.
               Sudah punya project? <button className="btn-ghost btn-sm" style={{ padding: '1px 6px' }} onClick={openExistingMode}>Buka draft yang sudah ada</button>
+              {' '}atau <button className="btn-ghost btn-sm" style={{ padding: '1px 6px' }} onClick={() => fileRef.current?.click()}>Import dari file JSON</button>
             </p>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="application/json,.json"
+              style={{ display: 'none' }}
+              onChange={handleFile}
+            />
+            {importError && (
+              <p style={{ color: 'var(--danger)', fontSize: 12.5, marginTop: 0, marginBottom: 16 }}>{importError}</p>
+            )}
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-dim)', marginBottom: 5 }}>Nama kamu</label>
             <input
               value={nama}
