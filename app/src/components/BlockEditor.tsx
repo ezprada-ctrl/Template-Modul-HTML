@@ -147,6 +147,58 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
   );
 }
 
+// <textarea> untuk field yang isinya HTML mentah (bodyHtml, pullquote.text, isi
+// accordion/tab, detail flow, feedback KC, dll — semua dirender lewat nl2br
+// TANPA escape di generator.py). Ctrl/Cmd+B membungkus teks terpilih dengan
+// <strong>…</strong>, Ctrl/Cmd+I dengan <em>…</em> — toggle: kalau yang terpilih
+// PERSIS sudah terbungkus tag itu, tag-nya dilepas. Biar user gak perlu ngetik
+// tag sendiri. Selain shortcut, ini textarea biasa.
+function RichTextarea({ value, onChange, style, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  style?: CSSProperties;
+  placeholder?: string;
+}) {
+  function toggleWrap(el: HTMLTextAreaElement, tag: 'strong' | 'em') {
+    const s = el.selectionStart;
+    const e = el.selectionEnd;
+    const sel = value.slice(s, e);
+    const open = `<${tag}>`;
+    const close = `</${tag}>`;
+    let next: string;
+    let a: number;
+    let b: number;
+    if (sel.length >= open.length + close.length && sel.startsWith(open) && sel.endsWith(close)) {
+      const inner = sel.slice(open.length, sel.length - close.length);
+      next = value.slice(0, s) + inner + value.slice(e);
+      a = s;
+      b = s + inner.length;
+    } else {
+      next = value.slice(0, s) + open + sel + close + value.slice(e);
+      a = s + open.length;
+      b = a + sel.length;
+    }
+    onChange(next);
+    // Kembalikan seleksi ke potongan teks yang sama setelah React re-render.
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(a, b); });
+  }
+  return (
+    <textarea
+      style={style}
+      placeholder={placeholder}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      onKeyDown={e => {
+        if (e.altKey || !(e.ctrlKey || e.metaKey)) return;
+        const k = e.key.toLowerCase();
+        if (k === 'b') { e.preventDefault(); toggleWrap(e.currentTarget, 'strong'); }
+        else if (k === 'i') { e.preventDefault(); toggleWrap(e.currentTarget, 'em'); }
+      }}
+      title="Ctrl+B: tebal (&lt;strong&gt;) · Ctrl+I: miring (&lt;em&gt;)"
+    />
+  );
+}
+
 function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<Block>) => void }) {
   const ta = { width: '100%', minHeight: 60, fontFamily: 'inherit', fontSize: 13, resize: 'vertical' as const };
   const inp = { width: '100%', fontSize: 13, marginBottom: 4 };
@@ -159,7 +211,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
           Icon cuma tampil kalau "Judul kartu" di bawah ini diisi — nempel di sebelah judul, bukan berdiri sendiri.
         </p>
         <input style={inp} placeholder="Judul kartu" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
-        <textarea style={ta} placeholder="Isi (HTML/teks)" value={block.bodyHtml || ''} onChange={e => onChange({ bodyHtml: e.target.value })} />
+        <RichTextarea style={ta} placeholder="Isi (HTML/teks)" value={block.bodyHtml || ''} onChange={v => onChange({ bodyHtml: v })} />
       </>;
     case 'callout':
       return <>
@@ -168,17 +220,17 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
         </select>
         <input style={inp} placeholder="Badge singkat (opsional, mis. angka/huruf)" value={block.badge || ''} onChange={e => onChange({ badge: e.target.value })} />
         <EmojiPicker value={block.icon || ''} onChange={icon => onChange({ icon })} placeholder="Atau pakai icon simbol (opsional, dipakai kalau badge kosong)" />
-        <textarea style={ta} placeholder="Isi catatan" value={block.bodyHtml || ''} onChange={e => onChange({ bodyHtml: e.target.value })} />
+        <RichTextarea style={ta} placeholder="Isi catatan" value={block.bodyHtml || ''} onChange={v => onChange({ bodyHtml: v })} />
       </>;
     case 'definition':
       return <>
         <input style={inp} placeholder="Label singkat (mis. DEFINISI) - bukan tempat isi definisinya" value={block.tag || ''} onChange={e => onChange({ tag: e.target.value })} />
-        <textarea style={ta} placeholder="Isi definisi (kalimat lengkapnya taruh di sini)" value={block.bodyHtml || ''} onChange={e => onChange({ bodyHtml: e.target.value })} />
+        <RichTextarea style={ta} placeholder="Isi definisi (kalimat lengkapnya taruh di sini)" value={block.bodyHtml || ''} onChange={v => onChange({ bodyHtml: v })} />
       </>;
     case 'pullquote':
       return <>
         <input style={inp} placeholder="Angka/kata besar" value={block.num || ''} onChange={e => onChange({ num: e.target.value })} />
-        <textarea style={ta} placeholder="Teks penjelas" value={block.text || ''} onChange={e => onChange({ text: e.target.value })} />
+        <RichTextarea style={ta} placeholder="Teks penjelas" value={block.text || ''} onChange={v => onChange({ text: v })} />
       </>;
     case 'ticklist':
       return <>
@@ -207,8 +259,8 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
             <input style={inp} placeholder="a. Judul" value={it.h} onChange={e => {
               const accItems = [...(block.accItems || [])]; accItems[i] = { ...it, h: e.target.value }; onChange({ accItems });
             }} />
-            <textarea style={ta} placeholder="Isi" value={it.b} onChange={e => {
-              const accItems = [...(block.accItems || [])]; accItems[i] = { ...it, b: e.target.value }; onChange({ accItems });
+            <RichTextarea style={ta} placeholder="Isi" value={it.b} onChange={v => {
+              const accItems = [...(block.accItems || [])]; accItems[i] = { ...it, b: v }; onChange({ accItems });
             }} />
             <button onClick={() => onChange({ accItems: (block.accItems || []).filter((_, x) => x !== i) })}>Hapus item</button>
           </div>
@@ -222,8 +274,8 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
             <input style={inp} placeholder="Label tab" value={it.label} onChange={e => {
               const tabItems = [...(block.tabItems || [])]; tabItems[i] = { ...it, label: e.target.value }; onChange({ tabItems });
             }} />
-            <textarea style={ta} placeholder="Isi tab" value={it.content} onChange={e => {
-              const tabItems = [...(block.tabItems || [])]; tabItems[i] = { ...it, content: e.target.value }; onChange({ tabItems });
+            <RichTextarea style={ta} placeholder="Isi tab" value={it.content} onChange={v => {
+              const tabItems = [...(block.tabItems || [])]; tabItems[i] = { ...it, content: v }; onChange({ tabItems });
             }} />
             <button onClick={() => onChange({ tabItems: (block.tabItems || []).filter((_, x) => x !== i) })}>Hapus tab</button>
           </div>
@@ -257,8 +309,8 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
             <input style={inp} placeholder="Judul langkah" value={s.title} onChange={e => {
               const steps = [...(block.steps || [])]; steps[i] = { ...s, title: e.target.value }; onChange({ steps });
             }} />
-            <textarea style={ta} placeholder="Detail langkah" value={s.detail} onChange={e => {
-              const steps = [...(block.steps || [])]; steps[i] = { ...s, detail: e.target.value }; onChange({ steps });
+            <RichTextarea style={ta} placeholder="Detail langkah" value={s.detail} onChange={v => {
+              const steps = [...(block.steps || [])]; steps[i] = { ...s, detail: v }; onChange({ steps });
             }} />
             <button onClick={() => onChange({ steps: (block.steps || []).filter((_, x) => x !== i) })}>Hapus langkah</button>
           </div>
@@ -272,7 +324,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
     case 'badgeref':
       return <input style={inp} placeholder="Teks badge (mis. Pasal 4 · PMK 15/2025)" value={block.refText || ''} onChange={e => onChange({ refText: e.target.value })} />;
     case 'html':
-      return <textarea style={ta} placeholder="HTML bebas" value={block.raw || ''} onChange={e => onChange({ raw: e.target.value })} />;
+      return <RichTextarea style={ta} placeholder="HTML bebas" value={block.raw || ''} onChange={v => onChange({ raw: v })} />;
     case 'media':
       return <MediaFields block={block} onChange={onChange} inp={inp} />;
     case 'knowledge':
@@ -287,7 +339,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
         </p>
         <EmojiPicker value={block.icon || '📝'} onChange={icon => onChange({ icon })} />
         <input style={inp} placeholder="Judul tombol & popup (mis. Rincian Tambahan)" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
-        <textarea style={{ ...ta, minHeight: 120 }} placeholder="Isi popup (HTML/teks, boleh tabel dtable dll)" value={block.bodyHtml || ''} onChange={e => onChange({ bodyHtml: e.target.value })} />
+        <RichTextarea style={{ ...ta, minHeight: 120 }} placeholder="Isi popup (HTML/teks, boleh tabel dtable dll)" value={block.bodyHtml || ''} onChange={v => onChange({ bodyHtml: v })} />
       </>;
     default:
       return null;
@@ -908,11 +960,11 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
               <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, marginBottom: 3, color: 'var(--success, #2f9e6a)' }}>
                 ✓ Feedback kalau jawaban BENAR
               </span>
-              <textarea style={ta} placeholder="Feedback (opsional)" value={it.feedbackCorrect || ''} onChange={e => patchItem(qi, { feedbackCorrect: e.target.value })} />
+              <RichTextarea style={ta} placeholder="Feedback (opsional)" value={it.feedbackCorrect || ''} onChange={v => patchItem(qi, { feedbackCorrect: v })} />
               <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, margin: '4px 0 3px', color: 'var(--danger, #c0392b)' }}>
                 ✕ Feedback kalau jawaban SALAH
               </span>
-              <textarea style={ta} placeholder="Feedback (opsional)" value={it.feedbackWrong || ''} onChange={e => patchItem(qi, { feedbackWrong: e.target.value })} />
+              <RichTextarea style={ta} placeholder="Feedback (opsional)" value={it.feedbackWrong || ''} onChange={v => patchItem(qi, { feedbackWrong: v })} />
             </>
           ) : (
             <p className="hint" style={{ fontSize: 11, margin: '0 0 4px' }}>
