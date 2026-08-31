@@ -45,6 +45,45 @@
   --radius-sm:10px;
   --shadow-lg:0 20px 50px -20px rgba(22,33,62,.20);
   --shadow-md:0 10px 26px -14px rgba(22,33,62,.16);
+  /* Bilah atas/bawah yang di-blur: token sendiri supaya bisa dibalik di mode
+     gelap tanpa color-mix (biar aman di webview LMS jadul). */
+  --bar-bg:rgba(255,255,255,.75);
+}
+
+/* ---------- Mode gelap ----------
+   Netral (bg/surface/text/border) dibalik di sini; warna aksen & navy tetap
+   dari tema modul (generator) karena sudah cukup kontras di dua latar. Dua
+   jalur: ikut OS kalau peserta belum milih, dan menang kalau peserta milih
+   lewat tombol di topbar (data-theme di <html>). */
+:root[data-theme="dark"]{
+  --bg:#0f1420; --bg-soft:#141b29;
+  --surface:#161d2c; --surface-2:#1e2637; --surface-hover:#26314a;
+  --border:rgba(255,255,255,.11); --border-strong:rgba(255,255,255,.20);
+  --text:#e7ebf3; --text-dim:#a9b2c6; --text-faint:#7c8698;
+  --accent-soft:color-mix(in srgb, var(--accent) 26%, #161d2c);
+  --amber-soft:color-mix(in srgb, var(--accent) 26%, #161d2c);
+  --navy-soft:color-mix(in srgb, var(--navy) 45%, #1e2637);
+  --rose-soft:rgba(224,138,138,.16); --blue-soft:rgba(127,166,220,.16);
+  --violet-soft:rgba(126,196,180,.20); --green-soft:rgba(128,200,150,.16);
+  --shadow-lg:0 22px 55px -18px rgba(0,0,0,.62);
+  --shadow-md:0 12px 30px -16px rgba(0,0,0,.55);
+  --bar-bg:rgba(18,24,37,.78);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1420; --bg-soft:#141b29;
+    --surface:#161d2c; --surface-2:#1e2637; --surface-hover:#26314a;
+    --border:rgba(255,255,255,.11); --border-strong:rgba(255,255,255,.20);
+    --text:#e7ebf3; --text-dim:#a9b2c6; --text-faint:#7c8698;
+    --accent-soft:color-mix(in srgb, var(--accent) 26%, #161d2c);
+    --amber-soft:color-mix(in srgb, var(--accent) 26%, #161d2c);
+    --navy-soft:color-mix(in srgb, var(--navy) 45%, #1e2637);
+    --rose-soft:rgba(224,138,138,.16); --blue-soft:rgba(127,166,220,.16);
+    --violet-soft:rgba(126,196,180,.20); --green-soft:rgba(128,200,150,.16);
+    --shadow-lg:0 22px 55px -18px rgba(0,0,0,.62);
+    --shadow-md:0 12px 30px -16px rgba(0,0,0,.55);
+    --bar-bg:rgba(18,24,37,.78);
+  }
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
@@ -196,9 +235,9 @@ a{color:inherit;}
 .nav-item-btn.visited .dot{background:var(--accent);border-color:var(--accent);}
 .nav-item-btn.current .dot{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
 .nav-item-btn .quiz-tag{margin-left:auto;font-size:9.5px;background:var(--violet-soft);color:var(--violet);padding:2px 7px;border-radius:20px;font-weight:700;letter-spacing:.03em;}
-.nav-item-btn.quiz-off{color:#c7cbd2;}
-.nav-item-btn.quiz-off .quiz-tag{background:#f1f2f4;color:#c7cbd2;}
-.nav-item-btn.quiz-off:hover{background:var(--surface-2);color:#c7cbd2;}
+.nav-item-btn.quiz-off{color:var(--text-faint);opacity:.7;}
+.nav-item-btn.quiz-off .quiz-tag{background:var(--surface-2);color:var(--text-faint);}
+.nav-item-btn.quiz-off:hover{background:var(--surface-2);color:var(--text-faint);}
 
 .nav-bundle-head{padding-right:12px;}
 .nav-bundle-head .bundle-chevron{margin-left:auto;font-size:10px;color:var(--text-faint);transition:transform .2s;}
@@ -276,9 +315,16 @@ a{color:inherit;}
 #topbar{
   display:flex;align-items:center;gap:14px;padding:16px 34px;
   border-bottom:1px solid var(--border);flex-shrink:0;
-  background:rgba(255,255,255,.75);backdrop-filter:blur(10px);
+  background:var(--bar-bg);backdrop-filter:blur(10px);
 }
 #menu-toggle{display:none;}
+#theme-toggle{
+  margin-left:auto;flex-shrink:0;width:34px;height:34px;border-radius:10px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text-dim);
+  cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;
+  transition:.15s;
+}
+#theme-toggle:hover{color:var(--text);border-color:var(--border-strong);}
 .crumb{font-size:12.5px;color:var(--text-faint);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .crumb b{color:var(--text-dim);font-weight:600;}
 .crumb .sep{color:var(--text-faint);opacity:.5;}
@@ -605,7 +651,7 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 /* bottom nav */
 #bottomnav{
   display:flex;align-items:center;gap:14px;padding:16px 34px;border-top:1px solid var(--border);
-  background:rgba(255,255,255,.75);backdrop-filter:blur(10px);flex-shrink:0;
+  background:var(--bar-bg);backdrop-filter:blur(10px);flex-shrink:0;
 }
 .nav-btn{
   display:flex;align-items:center;gap:9px;padding:12px 22px;border-radius:40px;border:1px solid var(--border);
@@ -1314,6 +1360,7 @@ ul.tick li b, ol.tick li b{color:var(--text);}
     <div id="topbar">
       <button id="menu-toggle" onclick="openSidebar()">☰</button>
       <div class="crumb" id="crumb"></div>
+      <button id="theme-toggle" onclick="toggleTheme()" title="Ganti tema terang/gelap" aria-label="Ganti tema terang/gelap">🌙</button>
     </div>
 
     <div class="side-dots left" aria-hidden="true"></div>
@@ -1726,6 +1773,29 @@ function artPendingOnSlide(num){
 /* ============================= STATE ============================= */
 const STORAGE_KEY = '__STORAGE_KEY__';
 const MODULE_TITLE = '__MODULE_TITLE__';
+
+/* ---------- Tema terang/gelap ----------
+   Pilihan disimpan di localStorage TERPISAH (bukan cmi.suspend_data - ini
+   preferensi tampilan, bukan progres, dan suspend_data SCORM 1.2 cuma ~4KB).
+   Tanpa pilihan eksplisit, modul ikut tema OS lewat @media prefers-color-scheme. */
+const THEME_KEY = STORAGE_KEY.replace(/-progress-v1$/, '') + '-theme';
+function themeNow(){
+  const a = document.documentElement.getAttribute('data-theme');
+  if(a) return a;
+  return (window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches) ? 'dark' : 'light';
+}
+function applyTheme(t){
+  if(t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+  else document.documentElement.removeAttribute('data-theme');
+  const btn = document.getElementById('theme-toggle');
+  if(btn) btn.textContent = themeNow() === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const next = themeNow() === 'dark' ? 'light' : 'dark';
+  try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  applyTheme(next);
+}
+(function(){ try{ applyTheme(localStorage.getItem(THEME_KEY) || ''); }catch(e){ applyTheme(''); } })();
 /* slideRushed & quizWarnShown baru dipakai kalau TRACK_ACTIVITY nyala (lihat
    resolveReadingWarning) - tetap disimpen di state biasa (bukan cuma
    activity buffer) karena harus tahan lintas sesi/reload, gak cuma
