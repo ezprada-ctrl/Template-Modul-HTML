@@ -281,6 +281,69 @@ def cocreation_tree(module_slug=None):
     return out
 
 
+def _judul_per_slug():
+    """Peta module_slug -> daftar judul modul (module_title) yang pernah muncul.
+
+    Kenapa penting: `slug` itu identitas PROJECT di builder, bukan identitas
+    modul. Kalau satu project didaur ulang (diedit jadi modul beda lalu
+    di-export lagi), dua file modul yang beda hidup di LMS dengan slug SAMA →
+    datanya nyampur di bawah satu slug. Satu slug dengan >1 judul modul =
+    tanda bentrok itu. Diambil dari payload session_start (1 baris per sesi,
+    jauh lebih sedikit dari total event) biar gak berat.
+    """
+    rows = _tanpa_preflight(
+        fetch_rows(columns='module_slug,payload', event_type='session_start'))
+    judul = {}
+    for r in rows:
+        p = r.get('payload') or {}
+        t = (p.get('module_title') or '').strip()
+        if t:
+            judul.setdefault(r['module_slug'], set()).add(t)
+    return {slug: sorted(s) for slug, s in judul.items()}
+
+
+def list_modules():
+    """Ringkasan per modul buat layar utama Command Center."""
+    rows = _tanpa_preflight(
+        fetch_rows(columns='module_slug,session_id,learner_id,created_at,event_type'))
+    judul_map = _judul_per_slug()
+    by_slug = {}
+    for r in rows:
+        slug = r['module_slug']
+        m = by_slug.setdefault(slug, {
+            'module_slug': slug, 'rows': 0,
+            '_sessions': set(), '_learners': set(),
+            'first_seen': r['created_at'], 'last_seen': r['created_at'],
+        })
+        m['rows'] += 1
+        m['_sessions'].add(r['session_id'])
+        if r.get('learner_id'):
+            m['_learners'].add(r['learner_id'])
+        if r['created_at'] < m['first_seen']:
+            m['first_seen'] = r['created_at']
+        if r['created_at'] > m['last_seen']:
+            m['last_seen'] = r['created_at']
+
+    out = []
+    for m in by_slug.values():
+        judul = judul_map.get(m['module_slug'], [])
+        out.append({
+            'module_slug': m['module_slug'],
+            'rows': m['rows'],
+            'sessions': len(m['_sessions']),
+            'learners': len(m['_learners']),
+            'first_seen': m['first_seen'],
+            'last_seen': m['last_seen'],
+            'judul_modul': judul,
+            # >1 judul di bawah satu slug = project didaur ulang, datanya
+            # nyampur. Ditandai keras biar penganalisis tau harus misahin per
+            # judul (tiap sesi bawa module_title-nya, lihat summarize_sessions).
+            'kemungkinan_bentrok': len(judul) > 1,
+        })
+    out.sort(key=lambda m: m['last_seen'], reverse=True)
+    return out
+
+
 def summarize_sessions(module_slug):
     """Satu baris per sesi belajar — bentuk yang paling langsung kepakai buat
     analisis habit (siapa, berapa lama, sejauh mana, skor berapa)."""
