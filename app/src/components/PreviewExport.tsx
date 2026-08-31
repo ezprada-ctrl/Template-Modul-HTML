@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import type { ModuleData } from '../types';
-import { normalizeModule, moduleFromJson } from '../types';
+import { normalizeModule, moduleFromJson, slugify } from '../types';
 import { generateHtml, listDrafts, loadDraft, saveDraft, renameDraft, copyDraft } from '../api';
 import { articulateBlocks, exportScormZip, type ZipProgress } from '../scormZip';
 import { sematkanGambarDataUri } from '../assetEmbed';
@@ -86,7 +86,6 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
   // Kebalikan doExportJson: muat file .json (ModuleData) dari disk jadi project
   // yang dibuka. moduleFromJson yang memvalidasi bentuk + menormalkan + menomori
   // ulang slide; kalau formatnya salah dia melempar pesan yang aman ditampilkan.
-  // Konfirmasi dulu karena ini MENGGANTI project yang lagi terbuka.
   async function doImportJson(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = ''; // biar file yang sama bisa dipilih ulang setelah error
@@ -100,14 +99,29 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
       setError(err?.message || 'Gagal membaca file.');
       return;
     }
-    const ok = window.confirm(
-      `Impor "${data.title}" (${data.sections.length} section, ${data.slides.length} slide) ` +
-      `dan ganti project yang sedang terbuka?\n\n` +
-      `Project sekarang ("${module.slug}") tetap tersimpan sebagai draft-nya sendiri di server.`,
+    // Namai draft-nya sendiri. Tanpa ini modul mewarisi slug yang kebetulan ada
+    // di file, dan autosave berikutnya bisa menimpa draft server yang namanya
+    // kebetulan sama. Prompt sekaligus jadi titik konfirmasi (batal = urung).
+    const jawab = window.prompt(
+      `Impor "${data.title}" (${data.sections.length} section, ${data.slides.length} slide) sebagai draft.\n` +
+      `Project yang terbuka sekarang ("${module.slug}") tetap tersimpan.\n\n` +
+      `Nama draft untuk modul yang diimpor:`,
+      data.slug,
     );
-    if (!ok) return;
-    onImportJson(data);
-    setStatus(`Project "${data.slug}" diimpor — ${data.sections.length} section, ${data.slides.length} slide.`);
+    if (jawab === null) return; // batal
+    const slug = slugify(jawab) || data.slug;
+    // Nama itu sudah dipakai draft lain di server? Autosave bakal menimpanya
+    // diam-diam kalau diteruskan. (Tidak dipersoalkan kalau namanya = project
+    // yang sedang terbuka — itu memang "muat ulang versi terbaru".)
+    try {
+      const adaDrafts = await listDrafts();
+      if (adaDrafts.includes(slug) && slug !== module.slug &&
+          !window.confirm(`Draft "${slug}" sudah ada di server. Timpa dengan modul yang diimpor?`)) {
+        return;
+      }
+    } catch { /* daftar draft gak kebaca — lanjut, autosave yang jadi penentu */ }
+    onImportJson({ ...data, slug });
+    setStatus(`Modul diimpor sebagai draft "${slug}" — ${data.sections.length} section, ${data.slides.length} slide.`);
   }
 
   // Paket SCORM .zip — satu-satunya bentuk export yang membawa serta konten
