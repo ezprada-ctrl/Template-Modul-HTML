@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ModuleData } from '../types';
-import { normalizeModule } from '../types';
+import { normalizeModule, moduleFromJson } from '../types';
 import { generateHtml, listDrafts, loadDraft, saveDraft, renameDraft, copyDraft } from '../api';
 import { articulateBlocks, exportScormZip, type ZipProgress } from '../scormZip';
 import { sematkanGambarDataUri } from '../assetEmbed';
@@ -8,14 +8,19 @@ import { sematkanGambarDataUri } from '../assetEmbed';
 interface Props {
   module: ModuleData;
   setModule: (m: ModuleData) => void;
+  // Import Project JSON dari tab ini = GANTI project yang lagi terbuka. Ditangani
+  // di App.tsx (handleImportJson): reset undo history + arahkan autosave ke slug
+  // baru — sama persis dengan jalur "Import dari file JSON" di modal Project.
+  onImportJson: (data: ModuleData) => void;
 }
 
-export default function PreviewExport({ module, setModule }: Props) {
+export default function PreviewExport({ module, setModule, onImportJson }: Props) {
   const [html, setHtml] = useState('');
   const [error, setError] = useState('');
   const [drafts, setDrafts] = useState<string[]>([]);
   const [status, setStatus] = useState('');
   const [zip, setZip] = useState<ZipProgress | null>(null);
+  const importRef = useRef<HTMLInputElement>(null);
 
   async function doPreview() {
     setError('');
@@ -76,6 +81,33 @@ export default function PreviewExport({ module, setModule }: Props) {
     a.click();
     URL.revokeObjectURL(url);
     setStatus(`Project JSON diunduh (${module.slug || 'modul'}.json)`);
+  }
+
+  // Kebalikan doExportJson: muat file .json (ModuleData) dari disk jadi project
+  // yang dibuka. moduleFromJson yang memvalidasi bentuk + menormalkan + menomori
+  // ulang slide; kalau formatnya salah dia melempar pesan yang aman ditampilkan.
+  // Konfirmasi dulu karena ini MENGGANTI project yang lagi terbuka.
+  async function doImportJson(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // biar file yang sama bisa dipilih ulang setelah error
+    if (!file) return;
+    setError('');
+    setStatus('');
+    let data: ModuleData;
+    try {
+      data = moduleFromJson(await file.text());
+    } catch (err: any) {
+      setError(err?.message || 'Gagal membaca file.');
+      return;
+    }
+    const ok = window.confirm(
+      `Impor "${data.title}" (${data.sections.length} section, ${data.slides.length} slide) ` +
+      `dan ganti project yang sedang terbuka?\n\n` +
+      `Project sekarang ("${module.slug}") tetap tersimpan sebagai draft-nya sendiri di server.`,
+    );
+    if (!ok) return;
+    onImportJson(data);
+    setStatus(`Project "${data.slug}" diimpor — ${data.sections.length} section, ${data.slides.length} slide.`);
   }
 
   // Paket SCORM .zip — satu-satunya bentuk export yang membawa serta konten
@@ -161,8 +193,16 @@ export default function PreviewExport({ module, setModule }: Props) {
           {zip ? 'Membungkus…' : 'Export SCORM (.zip)'}
         </button>
         <button onClick={doExportJson}>Export JSON</button>
+        <button onClick={() => importRef.current?.click()}>Import JSON</button>
         <button onClick={doSave}>Simpan Draft</button>
         <button className="btn-ghost" onClick={refreshDrafts}>Muat daftar draft</button>
+        <input
+          ref={importRef}
+          type="file"
+          accept="application/json,.json"
+          onChange={doImportJson}
+          style={{ display: 'none' }}
+        />
       </div>
       {status && <p style={{ fontSize: 12.5, color: 'var(--success)', fontWeight: 500 }}>{status}</p>}
       {jumlahArt > 0 && (

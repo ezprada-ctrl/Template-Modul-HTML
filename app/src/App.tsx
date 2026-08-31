@@ -307,7 +307,7 @@ function App() {
       {tab === 'canvas' && <Canvas module={module} setModule={setModule} />}
       {tab === 'cover' && <CoverForm module={module} setModule={setModule} />}
       {tab === 'quiz' && <QuizBuilder module={module} setModule={setModule} />}
-      {tab === 'preview' && <PreviewExport module={module} setModule={setModule} />}
+      {tab === 'preview' && <PreviewExport module={module} setModule={setModule} onImportJson={handleImportJson} />}
       {tab === 'command' && <CommandCenter />}
     </div>
   );
