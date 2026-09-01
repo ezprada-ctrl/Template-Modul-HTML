@@ -230,3 +230,53 @@ code {
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 20px; border: 3px solid var(--bg-2); }
 *::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- Option list (deretan centang pengaturan modul) ----
+   Tiap opsi punya judul tebal + keterangan redup di bawahnya. Tanpa kartu &
+   garis pemisah, belasan baris keterangan panjang ini kelihatan jadi satu
+   tembok teks yang susah dipindai. */
+.optgroup {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.optgroup > .opt + .opt { border-top: 1px solid var(--border); }
+
+.opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+  cursor: pointer;
+  transition: background var(--ease);
+}
+.opt:hover { background: var(--surface-2); }
+.opt > input[type=checkbox] { margin: 1px 0 0; flex: none; }
+.opt-title { display: block; font-weight: 600; color: var(--text); line-height: 1.35; }
+.opt-desc  { display: block; color: var(--text-faint); font-size: 11.5px; line-height: 1.55; margin-top: 3px; }
+
+/* Opsi turunan: cuma muncul kalau induknya nyala, jadi diberi takik dan garis
+   vertikal supaya ketergantungannya kebaca sekali lihat. */
+.opt-sub {
+  padding-left: 34px;
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--border-strong);
+}
+.opt-sub:hover { background: var(--surface-3); }
+
+/* Catatan status/peringatan di bawah sebuah opsi. Dibikin sebagai baris
+   bergaris kiri, bukan paragraf merah lepas, biar jelas nempel ke opsinya. */
+.opt-note {
+  margin: 0;
+  padding: 9px 13px 9px 34px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  box-shadow: inset 3px 0 0 var(--border-strong);
+}
+.opt-note.is-ok     { background: var(--success-soft); color: var(--success); box-shadow: inset 3px 0 0 var(--success); }
+.opt-note.is-warn   { background: var(--danger-soft);  color: var(--danger);  box-shadow: inset 3px 0 0 var(--danger); }
+.opt-note.is-muted  { background: var(--surface-2); color: var(--text-faint); }
+.opt-note .opt-note-aside { color: var(--text-faint); }

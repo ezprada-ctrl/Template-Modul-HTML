@@ -78,131 +78,139 @@ export default function CoverForm({ module, setModule }: Props) {
               />
             </div>
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={!!module.hideProgress}
-              onChange={e => setModule({ ...module, hideProgress: e.target.checked })} />
-            <span>Sembunyikan progress belajar</span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={!!module.hideCover} style={{ marginTop: 3 }}
-              onChange={e => setModule({ ...module, hideCover: e.target.checked })} />
-            <span>
-              Tanpa layar Sampul &amp; Penutup
-              <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2, lineHeight: 1.5 }}>
-                Modul langsung mulai dari slide materi pertama dan berakhir di slide terakhir — tanpa layar
-                sampul pembuka (beserta tombol “Mulai Belajar”), tanpa entri “Sampul” di sidebar, dan tanpa
-                layar “Selesai” di akhir. Judul &amp; gambar sampul/penutup di bawah tetap tersimpan tapi
-                diabaikan saat modul di-export.
-              </span>
-            </span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={!!module.trackActivity} style={{ marginTop: 3 }}
-              onChange={e => setModule({ ...module, trackActivity: e.target.checked })} />
-            <span>
-              Rekam aktivitas peserta
-              <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
-                Peserta diminta isi Nama &amp; NIP di awal, lalu durasi per slide, kuis, dan interaksinya
-                direkam buat bahan riset. Modul tanpa centang ini gak ngirim data apa pun.
-              </span>
-            </span>
-          </label>
-          {/* Status kredensial backend — dicek otomatis saat tracking nyala.
-              Menangkap kegagalan senyap "env var backend kosong" yang bikin
-              modul bisu walau checkbox dicentang, SEBELUM modul di-export. */}
-          {module.trackActivity && trackReady === null && !trackCheckErr && (
-            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px' }}>Mengecek koneksi rekam…</p>
-          )}
-          {module.trackActivity && trackReady === true && (
-            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', color: 'var(--success)' }}>
-              ✓ Backend siap merekam. <span style={{ color: 'var(--text-faint)' }}>
-                (Ini cuma memastikan kredensial ada — buat bukti jaringan LMS beneran tembus,
-                pakai tombol “Cek Rekam Aktivitas” di Dev Mode setelah modul diupload.)
-              </span>
-            </p>
-          )}
-          {module.trackActivity && trackReady === false && (
-            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', color: 'var(--danger)', lineHeight: 1.5 }}>
-              ⚠ Backend belum punya kredensial rekam-aktivitas (SUPABASE_URL / SUPABASE_ANON_KEY kosong).
-              Modul yang di-export sekarang <b>gak akan merekam apa pun</b> walau centang ini nyala.
-              Hubungi pengelola buat set env var-nya di Vercel dulu.
-            </p>
-          )}
-          {module.trackActivity && trackCheckErr && (
-            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', color: 'var(--text-faint)' }}>
-              (Gak bisa cek status koneksi rekam — backend mungkin lagi tidur. Pastikan lewat tombol
-              “Cek Rekam Aktivitas” di Dev Mode setelah modul diupload.)
-            </p>
-          )}
-          {/* Peringatan bentrok slug: data aktivitas ditandai pakai slug
-              project ini. Kalau project didaur ulang jadi modul lain, dua
-              modul bakal berbagi slug dan datanya nyampur di Command Center.
-              Cuma relevan kalau tracking nyala. */}
-          {module.trackActivity && (
-            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', color: 'var(--danger)', lineHeight: 1.5 }}>
-              ⚠ Data direkam pakai slug <code>{module.slug}</code>. Buat <b>tiap modul baru</b>, mulai dari
-              tombol “+ Mulai Project Baru” di header — jangan daur ulang project ini jadi modul lain,
-              nanti datanya nyampur di Command Center.
-            </p>
-          )}
-          {/* Rekap buat peserta — sengaja nempel di bawah "Rekam aktivitas"
-              dan cuma muncul kalau centang itu nyala: tanpa perekaman gak ada
-              satu angka pun buat diringkas, jadi centang ini sendirian bakal
-              nampilin popup kosong. Nilainya sengaja TIDAK ikut dimatikan
-              waktu tracking dimatikan — generator udah maksa mati saat export,
-              jadi pilihan penyusun tetap keinget kalau tracking dinyalain lagi. */}
-          {module.trackActivity && (
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-dim)', cursor: 'pointer', margin: '2px 0 0 26px' }}>
-              <input type="checkbox" checked={!!module.showRecap} style={{ marginTop: 3 }}
-                onChange={e => setModule({ ...module, showRecap: e.target.checked })} />
+          {/* Semua centang pengaturan modul dikumpulkan jadi satu kartu.
+              Sebelumnya tiap opsi berdiri sendiri dengan keterangan panjang,
+              jadi susah dibedakan mana judul opsi mana penjelasan. */}
+          <div className="optgroup">
+            <label className="opt">
+              <input type="checkbox" checked={!!module.hideProgress}
+                onChange={e => setModule({ ...module, hideProgress: e.target.checked })} />
+              <span className="opt-title">Sembunyikan progress belajar</span>
+            </label>
+
+            <label className="opt">
+              <input type="checkbox" checked={!!module.hideCover}
+                onChange={e => setModule({ ...module, hideCover: e.target.checked })} />
               <span>
-                Tampilkan Rekap Aktivitas ke Peserta
-                <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2, lineHeight: 1.5 }}>
-                  Di slide Ringkasan, peserta dikasih popup “Ringkasan Belajarmu” berisi catatan sesinya
-                  sendiri (durasi tatap layar, slide yang kelewat cepat, video, Knowledge Check, kuis,
-                  menu interaktif) plus ajakan mengulang kalau sesinya kurang maksimal. Yang dilihat
-                  cuma datanya sendiri — peserta gak bisa lihat data peserta lain.
+                <span className="opt-title">Tanpa layar Sampul &amp; Penutup</span>
+                <span className="opt-desc">
+                  Modul langsung mulai dari slide materi pertama dan berakhir di slide terakhir — tanpa layar
+                  sampul pembuka (beserta tombol “Mulai Belajar”), tanpa entri “Sampul” di sidebar, dan tanpa
+                  layar “Selesai” di akhir. Judul &amp; gambar sampul/penutup di bawah tetap tersimpan tapi
+                  diabaikan saat modul di-export.
                 </span>
               </span>
             </label>
-          )}
-          {/* Co-creation - SENGAJA sejajar "Rekam aktivitas", bukan nempel di
-              bawahnya kayak Rekap Peserta. Rekap gak punya arti tanpa data
-              rekaman; Co-creation punya (peserta tetap bisa mencatat & meninjau
-              catatannya sendiri). Lihat dua mode di rambu bawah. */}
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
-            <input type="checkbox" checked={!!module.showCocreation} style={{ marginTop: 3 }}
-              onChange={e => setModule({ ...module, showCocreation: e.target.checked })} />
-            <span>
-              Aktifkan Co-creation
-              <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2, lineHeight: 1.5 }}>
-                Peserta dapat tombol catatan di tiap slide materi buat menuliskan apa pun yang terbesit,
-                lalu meninjau semua catatannya dari menu “Co-creation” di sidebar — tiap catatan menyebut
-                slide &amp; bagian asalnya dan bisa diklik buat lompat ke sana. Dipakai sebagai rujukan
-                peserta waktu materinya dibahas klasikal di kelas.
+
+            <label className="opt">
+              <input type="checkbox" checked={!!module.trackActivity}
+                onChange={e => setModule({ ...module, trackActivity: e.target.checked })} />
+              <span>
+                <span className="opt-title">Rekam aktivitas peserta</span>
+                <span className="opt-desc">
+                  Peserta diminta isi Nama &amp; NIP di awal, lalu durasi per slide, kuis, dan interaksinya
+                  direkam buat bahan riset. Modul tanpa centang ini gak ngirim data apa pun.
+                </span>
               </span>
-            </span>
-          </label>
-          {/* RAMBU MODE TERBATAS. Catatan cuma bisa naik ke server kalau modul
-              tau siapa penulisnya, dan yang menanyakan NIP itu sistem rekam
-              aktivitas. Tanpa tracking, form identitas gak pernah muncul ->
-              catatan gak punya pemilik -> gak bisa dikirim, gak bisa ditarik
-              balik dari perangkat lain. Ini konsekuensi, bukan pilihan - jadi
-              penyusun modul harus tau SEBELUM export, bukan kaget belakangan. */}
-          {module.showCocreation && !module.trackActivity && (
-            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', color: 'var(--danger)', lineHeight: 1.5 }}>
-              ⚠ “Rekam aktivitas peserta” mati, jadi Co-creation jalan dalam <b>mode terbatas</b>: catatan
-              cuma tersimpan di perangkat peserta — <b>hilang kalau dia ganti browser/laptop/HP</b>, dan
-              tidak muncul di Command Center. Nyalakan “Rekam aktivitas peserta” kalau catatan ini mau
-              dipakai sebagai bahan diskusi kelas.
-            </p>
-          )}
-          {module.showCocreation && module.trackActivity && (
-            <p className="hint" style={{ fontSize: 11, margin: '2px 0 0 26px', lineHeight: 1.5 }}>
-              Catatan tersimpan di perangkat <b>dan</b> di server — peserta bisa membukanya dari perangkat
-              lain, dan isinya bisa dibaca di Command Center buat menyiapkan bahan diskusi kelas.
-            </p>
-          )}
+            </label>
+            {/* Status kredensial backend — dicek otomatis saat tracking nyala.
+                Menangkap kegagalan senyap "env var backend kosong" yang bikin
+                modul bisu walau checkbox dicentang, SEBELUM modul di-export. */}
+            {module.trackActivity && trackReady === null && !trackCheckErr && (
+              <p className="opt-note is-muted">Mengecek koneksi rekam…</p>
+            )}
+            {module.trackActivity && trackReady === true && (
+              <p className="opt-note is-ok">
+                ✓ Backend siap merekam. <span className="opt-note-aside">
+                  (Ini cuma memastikan kredensial ada — buat bukti jaringan LMS beneran tembus,
+                  pakai tombol “Cek Rekam Aktivitas” di Dev Mode setelah modul diupload.)
+                </span>
+              </p>
+            )}
+            {module.trackActivity && trackReady === false && (
+              <p className="opt-note is-warn">
+                ⚠ Backend belum punya kredensial rekam-aktivitas (SUPABASE_URL / SUPABASE_ANON_KEY kosong).
+                Modul yang di-export sekarang <b>gak akan merekam apa pun</b> walau centang ini nyala.
+                Hubungi pengelola buat set env var-nya di Vercel dulu.
+              </p>
+            )}
+            {module.trackActivity && trackCheckErr && (
+              <p className="opt-note is-muted">
+                (Gak bisa cek status koneksi rekam — backend mungkin lagi tidur. Pastikan lewat tombol
+                “Cek Rekam Aktivitas” di Dev Mode setelah modul diupload.)
+              </p>
+            )}
+            {/* Peringatan bentrok slug: data aktivitas ditandai pakai slug
+                project ini. Kalau project didaur ulang jadi modul lain, dua
+                modul bakal berbagi slug dan datanya nyampur di Command Center.
+                Cuma relevan kalau tracking nyala. */}
+            {module.trackActivity && (
+              <p className="opt-note is-warn">
+                ⚠ Data direkam pakai slug <code>{module.slug}</code>. Buat <b>tiap modul baru</b>, mulai dari
+                tombol “+ Mulai Project Baru” di header — jangan daur ulang project ini jadi modul lain,
+                nanti datanya nyampur di Command Center.
+              </p>
+            )}
+            {/* Rekap buat peserta — sengaja nempel di bawah "Rekam aktivitas"
+                dan cuma muncul kalau centang itu nyala: tanpa perekaman gak ada
+                satu angka pun buat diringkas, jadi centang ini sendirian bakal
+                nampilin popup kosong. Nilainya sengaja TIDAK ikut dimatikan
+                waktu tracking dimatikan — generator udah maksa mati saat export,
+                jadi pilihan penyusun tetap keinget kalau tracking dinyalain lagi. */}
+            {module.trackActivity && (
+              <label className="opt opt-sub">
+                <input type="checkbox" checked={!!module.showRecap}
+                  onChange={e => setModule({ ...module, showRecap: e.target.checked })} />
+                <span>
+                  <span className="opt-title">Tampilkan Rekap Aktivitas ke Peserta</span>
+                  <span className="opt-desc">
+                    Di slide Ringkasan, peserta dikasih popup “Ringkasan Belajarmu” berisi catatan sesinya
+                    sendiri (durasi tatap layar, slide yang kelewat cepat, video, Knowledge Check, kuis,
+                    menu interaktif) plus ajakan mengulang kalau sesinya kurang maksimal. Yang dilihat
+                    cuma datanya sendiri — peserta gak bisa lihat data peserta lain.
+                  </span>
+                </span>
+              </label>
+            )}
+
+            {/* Co-creation - SENGAJA sejajar "Rekam aktivitas", bukan nempel di
+                bawahnya kayak Rekap Peserta. Rekap gak punya arti tanpa data
+                rekaman; Co-creation punya (peserta tetap bisa mencatat & meninjau
+                catatannya sendiri). Lihat dua mode di rambu bawah. */}
+            <label className="opt">
+              <input type="checkbox" checked={!!module.showCocreation}
+                onChange={e => setModule({ ...module, showCocreation: e.target.checked })} />
+              <span>
+                <span className="opt-title">Aktifkan Co-creation</span>
+                <span className="opt-desc">
+                  Peserta dapat tombol catatan di tiap slide materi buat menuliskan apa pun yang terbesit,
+                  lalu meninjau semua catatannya dari menu “Co-creation” di sidebar — tiap catatan menyebut
+                  slide &amp; bagian asalnya dan bisa diklik buat lompat ke sana. Dipakai sebagai rujukan
+                  peserta waktu materinya dibahas klasikal di kelas.
+                </span>
+              </span>
+            </label>
+            {/* RAMBU MODE TERBATAS. Catatan cuma bisa naik ke server kalau modul
+                tau siapa penulisnya, dan yang menanyakan NIP itu sistem rekam
+                aktivitas. Tanpa tracking, form identitas gak pernah muncul ->
+                catatan gak punya pemilik -> gak bisa dikirim, gak bisa ditarik
+                balik dari perangkat lain. Ini konsekuensi, bukan pilihan - jadi
+                penyusun modul harus tau SEBELUM export, bukan kaget belakangan. */}
+            {module.showCocreation && !module.trackActivity && (
+              <p className="opt-note is-warn">
+                ⚠ “Rekam aktivitas peserta” mati, jadi Co-creation jalan dalam <b>mode terbatas</b>: catatan
+                cuma tersimpan di perangkat peserta — <b>hilang kalau dia ganti browser/laptop/HP</b>, dan
+                tidak muncul di Command Center. Nyalakan “Rekam aktivitas peserta” kalau catatan ini mau
+                dipakai sebagai bahan diskusi kelas.
+              </p>
+            )}
+            {module.showCocreation && module.trackActivity && (
+              <p className="opt-note">
+                Catatan tersimpan di perangkat <b>dan</b> di server — peserta bisa membukanya dari perangkat
+                lain, dan isinya bisa dibaca di Command Center buat menyiapkan bahan diskusi kelas.
+              </p>
+            )}
+          </div>
           <label style={{ color: 'var(--text-dim)' }}>
             Judul besar di layar sampul
             <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
