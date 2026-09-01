@@ -93,8 +93,7 @@ export default function SlideBank({ bank, setBank, module, setModule }: Props) {
     <div>
       <h2 style={{ margin: '0 0 4px' }}>Import PPTX</h2>
       <p className="hint" style={{ marginTop: 0, marginBottom: 16 }}>
-        Upload file PPTX asli (maks 20MB). Tiap slide otomatis diekstrak jadi draft (nomor slide asli dipertahankan
-        biar gampang dicocokkan manual ke file PPTX kamu). Centang "sudah dicek" setelah kamu bandingkan.
+        Upload PPTX asli (maks 20MB); tiap slide jadi draft.
       </p>
       <input type="file" accept=".pptx" onChange={onUpload} />
       {loading && <p className="hint" style={{ marginTop: 10 }}>Mengunggah &amp; mengekstrak PPTX…</p>}

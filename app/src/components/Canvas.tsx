@@ -106,7 +106,7 @@ export default function Canvas({ module, setModule }: Props) {
     <div>
       <h2 style={{ margin: '0 0 4px' }}>Susun Modul</h2>
       <p className="hint" style={{ marginTop: 0, marginBottom: 18 }}>
-        Drag slide untuk atur urutan dalam satu section. Klik “Edit blok” untuk buka editor konten slide-nya.
+        Drag buat atur urutan; klik “Edit blok” buat isi slide.
       </p>
       {module.sections.map(sec => (
         <div className="panel" key={sec.id} style={{ padding: 14, marginBottom: 16 }}>
@@ -174,8 +174,7 @@ function BundlePanel({ slides, bundles, theme, onAdd, onUpdateLabel, onToggleSli
         <button className="btn-sm" onClick={onAdd}>+ Bundle</button>
       </div>
       <p className="hint" style={{ margin: '6px 0 10px' }}>
-        Gabungkan beberapa slide berurutan jadi 1 poin expandable di sidebar (mis. "Kriteria Pemeriksaan" untuk slide 7-8),
-        alih-alih tiap slide berdiri sendiri.
+        Gabungkan beberapa slide jadi satu poin di sidebar.
       </p>
       {bundles.length === 0 && <p className="hint" style={{ margin: 0 }}>Belum ada bundle di section ini.</p>}
       {bundles.map((b, idx) => (

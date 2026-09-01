@@ -78,7 +78,7 @@ export default function QuizBuilder({ module, setModule }: Props) {
       </div>
       <button className="btn-sm" onClick={autoDistribute}>Sebar jawaban benar merata A/B/C/D</button>
       <p className="hint" style={{ margin: '6px 0 16px' }}>
-        Cuma pindahin POSISI jawaban benar (biar gak numpuk di huruf yang sama terus), isi/teks tiap opsi tetap sama persis — gak ngubah jawaban.
+        Cuma mengacak posisi jawaban benar; isi opsi tetap.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {questions.map((q, i) => (

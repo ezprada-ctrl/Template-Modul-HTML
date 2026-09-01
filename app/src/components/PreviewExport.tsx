@@ -284,9 +284,7 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
       {status && <p style={{ fontSize: 12.5, color: 'var(--success)', fontWeight: 500 }}>{status}</p>}
       {jumlahArt > 0 && (
         <p className="hint" style={{ fontSize: 11.5, lineHeight: 1.6, margin: '0 0 10px' }}>
-          Modul ini punya <strong>{jumlahArt} blok Articulate</strong> ({totalArtMb.toFixed(0)}MB).
-          Konten itu <strong>cuma ikut di Export SCORM (.zip)</strong> — di Live Preview dan Export HTML
-          yang muncul cuma kotak penanda, karena file-nya belum dibawa ke mana-mana.
+          <strong>{jumlahArt} blok Articulate</strong> ({totalArtMb.toFixed(0)}MB) cuma ikut di Export SCORM.
         </p>
       )}
       {zip && (
@@ -296,8 +294,7 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
       )}
       {manage && (
         <p className="hint" style={{ fontSize: 11.5, margin: '0 0 8px', color: 'var(--text-dim)' }}>
-          Mode kelola aktif — seret gagang <strong>⠿</strong> buat atur urutan (urutan ini cuma di peramban ini),
-          klik <strong>🗑</strong> buat hapus draft dari daftar bersama (permanen).
+          Seret <strong>⠿</strong> buat atur urutan, <strong>🗑</strong> buat hapus permanen.
         </p>
       )}
       {drafts.length > 0 && (

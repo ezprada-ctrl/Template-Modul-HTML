@@ -208,7 +208,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       return <>
         <EmojiPicker value={block.icon || ''} onChange={icon => onChange({ icon })} />
         <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-          Icon cuma tampil kalau "Judul kartu" di bawah ini diisi — nempel di sebelah judul, bukan berdiri sendiri.
+          Icon cuma muncul kalau Judul kartu diisi.
         </p>
         <input style={inp} placeholder="Judul kartu" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
         <RichTextarea style={ta} placeholder="Isi (HTML/teks)" value={block.bodyHtml || ''} onChange={v => onChange({ bodyHtml: v })} />
@@ -236,7 +236,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       return <>
         <input style={inp} placeholder="Judul daftar (opsional)" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
         <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-          Kosongkan kalau daftarnya gak perlu judul — nanti cuma daftarnya sendiri yang tampil.
+          Kosongkan kalau daftarnya gak perlu judul.
         </p>
         <label style={{ fontSize: 12, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
           <input type="checkbox" checked={!!block.ordered} onChange={e => onChange({ ordered: e.target.checked })} />
@@ -334,8 +334,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
     case 'modal':
       return <>
         <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-          Cocok buat detail tambahan yang bikin slide penuh/ribet (mis. rincian formula) — muncul jadi tombol,
-          isinya baru kelihatan kalau tombolnya diklik (popup).
+          Detail tambahan; muncul jadi tombol, isinya kelihatan setelah diklik.
         </p>
         <EmojiPicker value={block.icon || '📝'} onChange={icon => onChange({ icon })} />
         <input style={inp} placeholder="Judul tombol & popup (mis. Rincian Tambahan)" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
@@ -483,7 +482,7 @@ function ImageFields({ block, onChange, inp }: { block: Block; onChange: (p: Par
       )}
 
       <p className="hint" style={{ fontSize: 11, margin: '4px 0 0' }}>
-        PNG transparan otomatis jadi mode "bersih" saat diupload. "Dampingi teks" bikin gambar berdiri di satu sisi &amp; materi mengalir di sebelahnya (di HP otomatis jadi atas-bawah).
+        "Dampingi teks" bikin gambar dan materi berdampingan.
       </p>
     </>
   );
@@ -506,10 +505,10 @@ function GridFields({ block, onChange }: { block: Block; onChange: (p: Partial<B
         <option value={3}>3 kolom</option>
       </select>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-        Susunan di bawah ini nunjukin persis posisi tiap sel — begitu kotak terakhir mentok ke kanan, sisanya otomatis pindah baris & ke tengah, sama persis kayak hasil akhirnya nanti.
+        Susunan di bawah persis seperti hasil akhirnya.
       </p>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-        Tiap sel bisa diisi blok apa pun lewat “+ Tambah sub-blok…” — bukan cuma Kartu. Boleh sejenis semua, boleh dicampur (mis. Kartu + Gambar + Daftar).
+        Tiap sel bisa diisi blok apa pun, boleh dicampur.
       </p>
       <GridCellPreview blocks={block.blocks || []} columns={columns} />
       <BlockEditor blocks={block.blocks || []} onChange={blocks => onChange({ blocks })} columns={columns} />
@@ -744,8 +743,7 @@ function ArticulateFields({ block, onChange, inp }: { block: Block; onChange: (p
   return (
     <>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-        Upload ZIP hasil <strong>Publish &rarr; LMS &rarr; SCORM 1.2</strong> dari Articulate 360 (Storyline atau Rise).
-        Semua interaksinya jalan apa adanya di dalam slide ini, dan ikut dibungkus waktu <strong>Export SCORM (.zip)</strong>.
+        Upload ZIP <strong>Publish &rarr; LMS &rarr; SCORM 1.2</strong> dari Articulate 360.
       </p>
 
       <input type="file" accept=".zip" disabled={busy}
@@ -790,8 +788,7 @@ function ArticulateFields({ block, onChange, inp }: { block: Block; onChange: (p
         <span>
           Kunci sampai selesai
           <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
-            Peserta gak bisa maju ke slide berikutnya sebelum konten ini lapor selesai.
-            Butuh paket SCORM (ada imsmanifest.xml) — paket hasil publish "Web" gak pernah lapor apa-apa.
+            Peserta gak bisa lanjut sebelum konten ini selesai.
           </span>
         </span>
       </label>
@@ -827,7 +824,7 @@ function MediaFields({ block, onChange, inp }: { block: Block; onChange: (p: Par
 
         <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
         <p className="hint" style={{ fontSize: 11, margin: '2px 0 0' }}>
-          Suara video ikut otomatis (tidak di-mute). Peserta punya kontrol play/pause/volume bawaan.
+          Suara ikut otomatis; kontrol play/pause bawaan.
           {block.videoRatio && ' Kalau video aslinya beda rasio dari pilihan di atas, ditampilkan utuh dengan bar hitam di sisi yang kelebihan (gak dipotong).'}
         </p>
       </>}
@@ -836,7 +833,7 @@ function MediaFields({ block, onChange, inp }: { block: Block; onChange: (p: Par
         <input style={inp} placeholder="URL YouTube (mis. https://youtu.be/xxxx atau .../watch?v=xxxx)" value={block.embedUrl || ''} onChange={e => onChange({ embedUrl: e.target.value })} />
         <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
         <p className="hint" style={{ fontSize: 11, margin: '2px 0 0' }}>
-          Tampil sebagai thumbnail asli video + tombol play (16:9, atau 9:16 untuk Shorts) — video baru main saat diklik. Boleh link watch?v=, youtu.be/, atau /shorts/.
+          Tampil sebagai thumbnail; video main saat diklik.
         </p>
       </>}
 
@@ -844,7 +841,7 @@ function MediaFields({ block, onChange, inp }: { block: Block; onChange: (p: Par
         <input style={inp} placeholder="URL postingan/Reels Instagram (mis. https://www.instagram.com/reel/xxxx/)" value={block.embedUrl || ''} onChange={e => onChange({ embedUrl: e.target.value })} />
         <input style={inp} placeholder="Caption (opsional)" value={block.caption || ''} onChange={e => onChange({ caption: e.target.value })} />
         <p className="hint" style={{ fontSize: 11, margin: '2px 0 0' }}>
-          Ukuran widget IG responsif otomatis (portrait untuk Reels). Catatan: embed IG butuh koneksi ke instagram.com — belum diuji tembus dari jaringan LMS.
+          Ukuran widget responsif otomatis, portrait untuk Reels.
         </p>
       </>}
     </>
@@ -886,13 +883,7 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
   return (
     <>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-        Cek pemahaman ringan — muncul sebagai <b>popup begitu peserta mau pindah dari slide ini</b> (klik Selanjutnya/Sebelumnya/menu sidebar).
-        Mode <b>"Feedback benar/salah"</b>: peserta dikunci begitu menjawab sekali (langsung boleh lanjut, benar atau salah), tapi
-        teks feedback-nya beda buat masing-masing hasil — supaya kamu gak salah tulis feedback yang cuma cocok buat satu hasil
-        tapi ketampil buat hasil satunya juga.
-        Mode <b>"Feedback per pilihan"</b>: kalau salah, peserta dikasih tau + boleh coba opsi lain berkali-kali sampai benar — baru
-        setelah itu boleh lanjut (jawab benar langsung di percobaan pertama juga boleh lanjut). Boleh 1 soal. Setiap percobaan
-        direkam ke Command Center (kolom "Knowledge Check").
+        Cek pemahaman ringan; muncul jadi popup saat pindah slide.
       </p>
       {items.map((it, qi) => {
         const mode = it.feedbackMode || 'single';
@@ -968,7 +959,7 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
             </>
           ) : (
             <p className="hint" style={{ fontSize: 11, margin: '0 0 4px' }}>
-              Isi feedback langsung di bawah tiap pilihan di atas — boleh sebagian pilihan aja yang diisi, sisanya cukup tampil ✓/✕ tanpa penjelasan.
+              Isi feedback di bawah tiap pilihan; boleh sebagian.
             </p>
           )}
           {items.length > 1 && (

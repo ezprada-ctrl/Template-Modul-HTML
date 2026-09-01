@@ -37,7 +37,7 @@ export default function CoverForm({ module, setModule }: Props) {
             <input style={{ width: '100%', marginTop: 5 }} value={module.title} onChange={e => setModule({ ...module, title: e.target.value })} />
           </label>
           <label style={{ color: 'var(--text-dim)' }}>
-            Tema Warna Modul <span className="hint" style={{ fontSize: 11 }}>(cuma ganti 2 warna brand - emas/aksen &amp; navy; warna benar/salah/info tetap sama)</span>
+            Tema Warna Modul <span className="hint" style={{ fontSize: 11 }}>(ganti warna aksen &amp; navy; warna status tetap)</span>
           </label>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: -6 }}>
             {THEME_PRESETS.map(preset => {
@@ -68,7 +68,7 @@ export default function CoverForm({ module, setModule }: Props) {
             })}
           </div>
           <label style={{ color: 'var(--text-dim)' }}>
-            Gaya Grafis <span className="hint" style={{ fontSize: 11 }}>(dekorasi di Sampul, tiap slide konten, dan slide penutup - independen dari warna di atas, bebas dikombinasikan; arahkan kursor buat lihat preview)</span>
+            Gaya Grafis <span className="hint" style={{ fontSize: 11 }}>(dekorasi sampul dan tiap slide; arahkan kursor buat preview)</span>
             <div style={{ marginTop: 5 }}>
               <GraphicStyleSelect
                 value={module.graphicStyle || 'none'}
@@ -93,10 +93,7 @@ export default function CoverForm({ module, setModule }: Props) {
               <span>
                 <span className="opt-title">Tanpa layar Sampul &amp; Penutup</span>
                 <span className="opt-desc">
-                  Modul langsung mulai dari slide materi pertama dan berakhir di slide terakhir — tanpa layar
-                  sampul pembuka (beserta tombol “Mulai Belajar”), tanpa entri “Sampul” di sidebar, dan tanpa
-                  layar “Selesai” di akhir. Judul &amp; gambar sampul/penutup di bawah tetap tersimpan tapi
-                  diabaikan saat modul di-export.
+                  Modul mulai langsung dari slide materi pertama.
                 </span>
               </span>
             </label>
@@ -107,8 +104,7 @@ export default function CoverForm({ module, setModule }: Props) {
               <span>
                 <span className="opt-title">Rekam aktivitas peserta</span>
                 <span className="opt-desc">
-                  Peserta diminta isi Nama &amp; NIP di awal, lalu durasi per slide, kuis, dan interaksinya
-                  direkam buat bahan riset. Modul tanpa centang ini gak ngirim data apa pun.
+                  Peserta isi Nama &amp; NIP; aktivitasnya direkam.
                 </span>
               </span>
             </label>
@@ -148,10 +144,7 @@ export default function CoverForm({ module, setModule }: Props) {
                 <span>
                   <span className="opt-title">Tampilkan Rekap Aktivitas ke Peserta</span>
                   <span className="opt-desc">
-                    Di slide Ringkasan, peserta dikasih popup “Ringkasan Belajarmu” berisi catatan sesinya
-                    sendiri (durasi tatap layar, slide yang kelewat cepat, video, Knowledge Check, kuis,
-                    menu interaktif) plus ajakan mengulang kalau sesinya kurang maksimal. Yang dilihat
-                    cuma datanya sendiri — peserta gak bisa lihat data peserta lain.
+                    Peserta lihat ringkasan sesi belajarnya sendiri.
                   </span>
                 </span>
               </label>
@@ -167,10 +160,7 @@ export default function CoverForm({ module, setModule }: Props) {
               <span>
                 <span className="opt-title">Aktifkan Co-creation</span>
                 <span className="opt-desc">
-                  Peserta dapat tombol catatan di tiap slide materi buat menuliskan apa pun yang terbesit,
-                  lalu meninjau semua catatannya dari menu “Co-creation” di sidebar — tiap catatan menyebut
-                  slide &amp; bagian asalnya dan bisa diklik buat lompat ke sana. Dipakai sebagai rujukan
-                  peserta waktu materinya dibahas klasikal di kelas.
+                  Peserta bisa mencatat di tiap slide materi.
                 </span>
               </span>
             </label>
@@ -178,9 +168,7 @@ export default function CoverForm({ module, setModule }: Props) {
           <label style={{ color: 'var(--text-dim)' }}>
             Judul besar di layar sampul
             <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
-              Ketik biasa — tekan Enter buat ganti baris, otomatis jadi baris baru saat di-generate (gak perlu
-              ngetik <code>&lt;br&gt;</code> sendiri). Mau ada bagian yang diwarnai emas? Bungkus teksnya pakai{' '}
-              <code>&lt;span&gt;...&lt;/span&gt;</code>.
+              Enter buat ganti baris; <code>&lt;span&gt;</code> buat warna emas.
             </span>
             <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.heroTitleHtml}
               onChange={e => setModule({ ...module, heroTitleHtml: e.target.value })} />
@@ -225,10 +213,7 @@ export default function CoverForm({ module, setModule }: Props) {
           <label style={{ color: 'var(--text-dim)' }}>
             Judul di slide penutup ("Selesai") saat modul kelar dipelajari
             <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
-              Sama seperti judul sampul: ketik biasa, Enter otomatis ganti baris (gak perlu ngetik{' '}
-              <code>&lt;br&gt;</code> sendiri). Opsional bungkus sebagian teks pakai{' '}
-              <code>&lt;span&gt;...&lt;/span&gt;</code> buat highlight emas. Dikosongkan = otomatis pakai judul
-              modul + "Berhasil Diselesaikan" (lihat preview di samping).
+              Sama seperti judul sampul; kosong = otomatis.
             </span>
             <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.endingTitleHtml || ''}
               onChange={e => setModule({ ...module, endingTitleHtml: e.target.value })} />
@@ -236,7 +221,7 @@ export default function CoverForm({ module, setModule }: Props) {
           <label style={{ color: 'var(--text-dim)' }}>
             Deskripsi singkat di bawah judul penutup
             <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
-              Opsional — dikosongkan berarti slide penutup cuma menampilkan judulnya saja, persis seperti sebelumnya.
+              Opsional; kosong berarti penutup cuma menampilkan judul.
             </span>
             <textarea style={{ width: '100%', minHeight: 50, marginTop: 5 }} value={module.endingDesc || ''}
               onChange={e => setModule({ ...module, endingDesc: e.target.value })} />

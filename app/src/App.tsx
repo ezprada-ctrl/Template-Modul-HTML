@@ -332,7 +332,7 @@ function ProjectBar({ module, onNewProject }: { module: ModuleData; onNewProject
           }}>{module.slug}</code>
         </div>
         <p className="hint" style={{ margin: '3px 0 0' }}>
-          Tiap orang otomatis dapet project sendiri; pakai “Muat Draft” di tab Preview kalau mau buka punya orang lain.
+          Tiap orang otomatis dapat project sendiri.
         </p>
       </div>
       <button className="btn-sm" onClick={onNewProject} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
