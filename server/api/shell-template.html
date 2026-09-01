@@ -1179,6 +1179,61 @@ ul.tick li b, ol.tick li b{color:var(--text);}
   animation:none;
 }
 
+/* ---- Penanda "blok ini bisa diklik" ----
+   Accordion, tab, langkah alur, dan tombol modal kelihatan sama saja dengan
+   kartu statis sampai peserta kebetulan menyorotnya — jadi konten yang harus
+   digali gampang kelewat. Tiap blok interaktif dikasih sapuan kilau tipis
+   plus tepi yang menyala sekejap, berulang pelan: undangan yang kebaca tanpa
+   bikin halaman jadi lampu disko.
+
+   Digambar di ::before ber-inset:0, bukan di box-shadow elemennya, supaya
+   (a) gak menimpa border/shadow yang sudah dipunyai tiap blok, dan (b) gak
+   butuh overflow:hidden — badge .fs-badge yang sengaja nongol di luar
+   .flow-step tetap utuh. Kilaunya digeser lewat background-position, bukan
+   transform, biar gak pernah keluar dari kotaknya sendiri; di luar sapuan
+   posisinya diparkir jauh di kiri/kanan sehingga loop-nya gak kelihatan
+   lompat. Warnanya dicampur ke transparan (bukan --accent-soft yang pekat)
+   biar teks di baliknya tetap kebaca waktu kilau lewat.
+
+   Berhenti begitu bloknya pernah dipakai (lihat tandaiTerpakai() di JS):
+   undangannya sudah selesai tugasnya, dan animasi yang jalan terus di konten
+   yang lagi dibaca cuma jadi gangguan. */
+@keyframes clickable-hint{
+  0%       { background-position:150% 0; box-shadow:inset 0 0 0 1px transparent; }
+  16%      { box-shadow:inset 0 0 0 1px var(--accent-glow); }
+  44%      { background-position:-70% 0; }
+  56%,100% { background-position:-70% 0; box-shadow:inset 0 0 0 1px transparent; }
+}
+.acc-group:not(.seen) .acc-item:not(.open),
+.flow:not(.seen) .flow-step,
+.tabs:not(.seen) .tab-btn:not(.active),
+.modal-trigger:not(.seen){ position:relative; }
+.acc-group:not(.seen) .acc-item:not(.open)::before,
+.flow:not(.seen) .flow-step::before,
+.tabs:not(.seen) .tab-btn:not(.active)::before,
+.modal-trigger:not(.seen)::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;
+  background:linear-gradient(100deg,transparent 38%,color-mix(in srgb,var(--accent) 16%,transparent) 50%,transparent 62%);
+  background-size:260% 100%;background-repeat:no-repeat;
+  animation:clickable-hint 5.4s cubic-bezier(.4,0,.2,1) infinite;
+}
+/* Tab itu pil kecil — sapuan penuh di dalamnya kelihatan berat, jadi yang
+   dipakai cuma kedip tepinya. */
+.tabs:not(.seen) .tab-btn:not(.active)::before{ background:none; }
+/* Digeser sedikit biar tiap blok di satu slide gak berkedip serempak. */
+.acc-group:not(.seen) .acc-item:nth-child(2n)::before,
+.flow:not(.seen) .flow-step:nth-child(4n+3)::before,
+.tabs:not(.seen) .tab-btn:nth-child(2n)::before{ animation-delay:1.3s; }
+.acc-group:not(.seen) .acc-item:nth-child(3n)::before,
+.flow:not(.seen) .flow-step:nth-child(4n+5)::before{ animation-delay:2.6s; }
+
+/* Undangan ini murni dekoratif — buat yang mematikan animasi di sistemnya,
+   blok tetap kebuka lewat hover/fokus seperti biasa. */
+@media (prefers-reduced-motion:reduce){
+  .acc-chevron,.nsh-chevron,.nav-bundle-head .bundle-chevron,.modal-trigger .chevron,
+  .acc-item::before,.flow-step::before,.tab-btn::before,.modal-trigger::before{ animation:none; }
+}
+
 /* final-quiz completion card (aesthetic, only shown on the LAST section's
    quiz once passed) — badge pop-in + reuses .cp-result's riseIn fade */
 .cp-final{position:relative;overflow:hidden;padding:18px 10px 8px;}
@@ -1430,10 +1485,22 @@ function flowDiagram(steps, containerId){
   return html;
 }
 window._flowData = {};
+/* Matikan undangan "bisa diklik" (kilau + kedip tepi) begitu bloknya pernah
+   dipakai. Tandanya ditempel di WADAH blok, bukan di item yang barusan
+   diklik: sekali peserta buka satu tab/langkah/panel, dia sudah paham blok
+   ini interaktif — item sebelahnya gak perlu terus-terusan melambai. Sekali
+   ditandai gak pernah dicabut, jadi menutup accordion gak menyalakannya
+   lagi. Selector-nya lihat "Penanda blok bisa diklik" di CSS. */
+function tandaiTerpakai(el, selectorWadah){
+  const wadah = el && (selectorWadah ? el.closest(selectorWadah) : el);
+  if(wadah) wadah.classList.add('seen');
+}
+
 function toggleFlow(id, idx){
   const steps = window._flowData[id];
   document.querySelectorAll(`#${CSS.escape(id)}-wrap .flow-step`).forEach((el,i)=>{
     el.classList.toggle('active', i===idx);
+    if(i===idx) tandaiTerpakai(el, '.flow');
   });
   document.getElementById(id+'-detail').innerHTML = steps[idx].detail;
   actInteraksi('flow', id, idx);
@@ -1460,11 +1527,15 @@ function accordion(items, prefix){
 function toggleAcc(id){
   const el = document.getElementById(id);
   el.classList.toggle('open');
+  tandaiTerpakai(el, '.acc-group');
   if(el.classList.contains('open')) actInteraksi('accordion', id);
 }
 function openModal(id){
   document.getElementById(id).classList.add('open');
   document.body.style.overflow='hidden';
+  /* Tombol pemicunya elemen terpisah dari overlay-nya, jadi ditandai lewat
+     atribut onclick-nya - satu-satunya kaitan antara keduanya di DOM. */
+  tandaiTerpakai(document.querySelector(`.modal-trigger[onclick*="'${id}'"]`));
   actInteraksi('modal', id);
 }
 function closeModal(id){
@@ -1484,6 +1555,7 @@ function tabsBlock(tabs, prefix){
 }
 function switchTab(prefix, idx){
   const wrap = document.getElementById(prefix+'-wrap');
+  tandaiTerpakai(wrap.querySelector('.tabs'));
   wrap.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', i===idx));
   wrap.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active', i===idx));
   actInteraksi('tabs', prefix, idx);
