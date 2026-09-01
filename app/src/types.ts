@@ -203,6 +203,12 @@ export interface ModuleData {
   // learners in the exported HTML — for modules that are just one part of a
   // larger series, where "100%" on this module alone would be misleading.
   hideProgress?: boolean;
+  // When true, the exported module has NO opening cover screen and NO closing
+  // "Selesai" screen: it starts on the first content slide and ends on the
+  // last one. The build_nav generator simply omits the 'hero' and 'summary'
+  // NAV entries (shell already guards every use of them). Cover/ending
+  // title+image fields are left as-is but ignored at export.
+  hideCover?: boolean;
   // When true, the exported module records learner activity (slide durations,
   // quiz attempts, interactions) to Supabase for study-habit research, and
   // asks the learner for Nama + NIP up front. Opt-in per module so ordinary
@@ -283,6 +289,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     sidebarTitle: 'Modul Baru',
     coverImageDataUri: '',
     hideProgress: false,
+    hideCover: false,
     trackActivity: false,
     showRecap: false,
     showCocreation: false,

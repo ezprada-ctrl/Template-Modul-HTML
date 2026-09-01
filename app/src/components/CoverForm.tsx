@@ -84,6 +84,19 @@ export default function CoverForm({ module, setModule }: Props) {
             <span>Sembunyikan progress belajar</span>
           </label>
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={!!module.hideCover} style={{ marginTop: 3 }}
+              onChange={e => setModule({ ...module, hideCover: e.target.checked })} />
+            <span>
+              Tanpa layar Sampul &amp; Penutup
+              <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2, lineHeight: 1.5 }}>
+                Modul langsung mulai dari slide materi pertama dan berakhir di slide terakhir — tanpa layar
+                sampul pembuka (beserta tombol “Mulai Belajar”), tanpa entri “Sampul” di sidebar, dan tanpa
+                layar “Selesai” di akhir. Judul &amp; gambar sampul/penutup di bawah tetap tersimpan tapi
+                diabaikan saat modul di-export.
+              </span>
+            </span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'var(--text-dim)', cursor: 'pointer' }}>
             <input type="checkbox" checked={!!module.trackActivity} style={{ marginTop: 3 }}
               onChange={e => setModule({ ...module, trackActivity: e.target.checked })} />
             <span>

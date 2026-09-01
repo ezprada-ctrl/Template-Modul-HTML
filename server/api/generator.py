@@ -959,6 +959,13 @@ def build_nav(module):
     for sid in slides_by_section:
         slides_by_section[sid].sort(key=lambda s: s['number'])
 
+    # hideCover: modul tanpa layar Sampul pembuka DAN tanpa layar "Selesai"
+    # penutup - langsung mulai dari slide materi pertama, berakhir di slide
+    # terakhir. Cukup gak menaruh entri 'hero'/'summary' di NAV; shell udah
+    # menjaga tiap pemakaian keduanya (heroItem = NAV.find(...) di
+    # renderSidebar, cabang kind==='hero'/'summary' di render/goTo, dst).
+    hide_cover = bool(module.get('hideCover', False))
+
     nav = []
     # Sampul SENGAJA gak punya section. Dia pintu masuk modul, bukan bagian
     # dari materi mana pun - dulu dititipkan ke section pertama dan akibatnya
@@ -966,7 +973,8 @@ def build_nav(module):
     # Sampul salah satu slide "Pendahuluan". section=None bikin dia lolos
     # dari filter per-section di renderSidebar, jadi dia dirender sendiri di
     # paling atas, sejajar dengan section - bukan anaknya.
-    nav.append({'kind': 'hero', 'section': None, 'num': 1})
+    if not hide_cover:
+        nav.append({'kind': 'hero', 'section': None, 'num': 1})
     for sec in sections:
         for s in slides_by_section.get(sec['id'], []):
             nav.append({'kind': 'slide', 'section': sec['id'], 'num': s['number']})
@@ -976,8 +984,9 @@ def build_nav(module):
         # quiz with an undefined question list.
         if quizzes.get(sec['id']):
             nav.append({'kind': 'quiz', 'section': sec['id']})
-    last_section_id = sections[-1]['id'] if sections else None
-    nav.append({'kind': 'summary', 'section': last_section_id})
+    if not hide_cover:
+        last_section_id = sections[-1]['id'] if sections else None
+        nav.append({'kind': 'summary', 'section': last_section_id})
     return nav
 
 
