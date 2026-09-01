@@ -97,6 +97,15 @@ export async function renameDraft(name: string, newName: string): Promise<string
   return data.slug;
 }
 
+// Removes a draft for good (slug is the Supabase primary key - see
+// draft_store.delete_draft). Irreversible and hits the SHARED draft pool,
+// so the caller password-gates + confirms first (see PreviewExport).
+export async function deleteDraft(name: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/drafts/${encodeURIComponent(name)}`, { method: 'DELETE' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Gagal hapus draft');
+}
+
 // Duplicates a draft under a new name - no dedicated backend endpoint,
 // just load the source + save under the new slug, both existing routes.
 // The existence check comes first so a typo'd/colliding name fails loudly

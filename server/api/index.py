@@ -229,6 +229,12 @@ def api_rename_draft(name):
     return jsonify({'ok': True, 'slug': slug})
 
 
+@app.delete('/api/drafts/<name>')
+def api_delete_draft(name):
+    slug = draft_store.delete_draft(name)
+    return jsonify({'ok': True, 'slug': slug})
+
+
 @app.get('/api/health')
 def api_health():
     return jsonify({'ok': True, 'storage': 'supabase' if draft_store.USE_SUPABASE else 'local-file'})

@@ -148,3 +148,25 @@ def rename_draft(old_name, new_name):
     if os.path.exists(old_path):
         os.rename(old_path, new_path)
     return new_slug
+
+
+def delete_draft(name):
+    """Removes a draft for good - `slug` is the primary key (modul_drafts),
+    so this deletes that row. Silent no-op when the draft doesn't exist:
+    the goal state ("no draft by that name") is already true, and a repeat
+    delete shouldn't error. Returns the sanitized slug that was targeted."""
+    slug = _safe_name(name)
+    if USE_SUPABASE:
+        res = requests.delete(
+            f'{SUPABASE_URL}/rest/v1/modul_drafts',
+            params={'slug': f'eq.{slug}'},
+            headers=_headers(),
+            timeout=10,
+        )
+        res.raise_for_status()
+        return slug
+
+    path = os.path.join(LOCAL_DRAFTS_DIR, slug + '.json')
+    if os.path.exists(path):
+        os.remove(path)
+    return slug

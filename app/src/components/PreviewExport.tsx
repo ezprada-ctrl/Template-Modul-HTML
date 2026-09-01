@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import type { ModuleData } from '../types';
 import { normalizeModule, moduleFromJson, slugify } from '../types';
-import { generateHtml, listDrafts, loadDraft, saveDraft, renameDraft, copyDraft } from '../api';
+import { generateHtml, listDrafts, loadDraft, saveDraft, renameDraft, copyDraft, deleteDraft } from '../api';
 import { articulateBlocks, exportScormZip, type ZipProgress } from '../scormZip';
 import { sematkanGambarDataUri } from '../assetEmbed';
 
@@ -21,6 +21,66 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
   const [status, setStatus] = useState('');
   const [zip, setZip] = useState<ZipProgress | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
+
+  // Mode kelola daftar draft: hapus + atur urutan (drag). Digembok password
+  // karena hapus itu permanen DAN daftar draft dipakai bareng semua orang.
+  const [manage, setManage] = useState(false);
+  // Urutan tampilan draft — SIMPANAN LOKAL per-peramban (localStorage), bukan
+  // di server: ini "rak" pribadi si pengguna, gak boleh ngubah urutan yang
+  // dilihat orang lain. Draft yang gak ada di daftar ini nyusul di belakang,
+  // urut abjad.
+  const [draftOrder, setDraftOrder] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('pe:draft-order') || '[]'); } catch { return []; }
+  });
+  const dragFrom = useRef<string | null>(null);
+
+  const MANAGE_PASSWORD = 'PasswordPE100%';
+
+  function sortByOrder(list: string[]): string[] {
+    return [...list].sort((a, b) => {
+      const ia = draftOrder.indexOf(a);
+      const ib = draftOrder.indexOf(b);
+      if (ia === -1 && ib === -1) return a.localeCompare(b);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  }
+  function persistOrder(next: string[]) {
+    setDraftOrder(next);
+    try { localStorage.setItem('pe:draft-order', JSON.stringify(next)); } catch { /* kuota penuh — urutan gak kesimpen, fitur tetap jalan */ }
+  }
+  function toggleManage() {
+    if (manage) { setManage(false); setStatus('Mode kelola draft dimatikan.'); return; }
+    setError('');
+    const p = window.prompt('Password mode kelola draft:');
+    if (p === null) return;
+    if (p === MANAGE_PASSWORD) {
+      setManage(true);
+      setStatus('Mode kelola draft aktif — seret ⠿ buat atur urutan, 🗑 buat hapus.');
+    } else {
+      setError('Password salah.');
+    }
+  }
+  function reorder(from: string, target: string) {
+    if (!from || from === target) return;
+    const vis = sortByOrder(drafts).filter(x => x !== from);
+    const ti = vis.indexOf(target);
+    vis.splice(ti < 0 ? vis.length : ti, 0, from);
+    persistOrder(vis);
+  }
+  async function doDelete(name: string) {
+    if (!window.confirm(`Hapus draft "${name}" PERMANEN?\nIni ngefek ke daftar draft yang dipakai bareng semua orang, dan gak bisa dibatalkan.`)) return;
+    setError('');
+    try {
+      await deleteDraft(name);
+      persistOrder(draftOrder.filter(o => o !== name));
+      setStatus(`Draft "${name}" dihapus`);
+      refreshDrafts();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }
 
   async function doPreview() {
     setError('');
@@ -210,6 +270,9 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
         <button onClick={() => importRef.current?.click()}>Import JSON</button>
         <button onClick={doSave}>Simpan Draft</button>
         <button className="btn-ghost" onClick={refreshDrafts}>Muat daftar draft</button>
+        <button className="btn-ghost" onClick={toggleManage} title="Mode kelola daftar draft (hapus & atur urutan)">
+          {manage ? '🔓 Dev' : '🔒 Dev'}
+        </button>
         <input
           ref={importRef}
           type="file"
@@ -231,15 +294,44 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
           {zip.pesan}{zip.persen !== null && zip.fase !== 'selesai' ? ` ${zip.persen}%` : ''}
         </p>
       )}
+      {manage && (
+        <p className="hint" style={{ fontSize: 11.5, margin: '0 0 8px', color: 'var(--text-dim)' }}>
+          Mode kelola aktif — seret gagang <strong>⠿</strong> buat atur urutan (urutan ini cuma di peramban ini),
+          klik <strong>🗑</strong> buat hapus draft dari daftar bersama (permanen).
+        </p>
+      )}
       {drafts.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-          {drafts.map(d => (
-            <div key={d} style={{ display: 'flex', alignItems: 'stretch', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
-              <button className="btn-sm" style={{ border: 'none', borderRadius: 0 }} onClick={() => doLoad(d)}>{d}</button>
+          {sortByOrder(drafts).map(d => (
+            <div
+              key={d}
+              onDragOver={manage ? (e) => e.preventDefault() : undefined}
+              onDrop={manage ? (e) => { e.preventDefault(); reorder(e.dataTransfer.getData('text/plain'), d); dragFrom.current = null; } : undefined}
+              style={{
+                display: 'flex', alignItems: 'stretch',
+                border: `1px solid ${manage ? 'var(--border-strong)' : 'var(--border)'}`,
+                borderRadius: 'var(--radius-sm)', overflow: 'hidden',
+              }}
+            >
+              {manage && (
+                <span
+                  draggable
+                  onDragStart={(e) => { dragFrom.current = d; e.dataTransfer.setData('text/plain', d); e.dataTransfer.effectAllowed = 'move'; }}
+                  onDragEnd={() => { dragFrom.current = null; }}
+                  className="btn-sm"
+                  style={{ display: 'flex', alignItems: 'center', padding: '0 6px', cursor: 'grab', color: 'var(--text-faint)', userSelect: 'none' }}
+                  title="Seret buat atur urutan"
+                >⠿</span>
+              )}
+              <button className="btn-sm" style={{ border: 'none', borderRadius: 0, borderLeft: manage ? '1px solid var(--border)' : 'none' }} onClick={() => doLoad(d)}>{d}</button>
               <button className="btn-sm" style={{ border: 'none', borderRadius: 0, borderLeft: '1px solid var(--border)', padding: '0 8px' }}
                 title="Duplikat draft ini" onClick={() => doCopy(d)}>⧉</button>
               <button className="btn-sm" style={{ border: 'none', borderRadius: 0, borderLeft: '1px solid var(--border)', padding: '0 8px' }}
                 title="Ganti nama draft ini" onClick={() => doRename(d)}>✎</button>
+              {manage && (
+                <button className="btn-sm" style={{ border: 'none', borderRadius: 0, borderLeft: '1px solid var(--border)', padding: '0 8px', color: 'var(--danger)' }}
+                  title="Hapus draft ini (permanen)" onClick={() => doDelete(d)}>🗑</button>
+              )}
             </div>
           ))}
         </div>
