@@ -34,6 +34,23 @@ const ZOOM_MAX = 3;
 // tapi tetap kerasa gerak dalam sekali klik.
 const LANGKAH = 1.25;
 
+// Apakah penyusun modul MENYALAKAN SENDIRI Dev Mode di dalam preview.
+//
+// Sengaja di luar komponen, bukan useRef: tiap slide punya panel preview
+// sendiri, jadi pindah slide/section bikin komponennya di-mount ulang dan
+// state di dalamnya hangus. Yang diminta justru sebaliknya - Dev Mode nyala
+// sekali, lalu bertahan ke manapun penyusunnya menggeser, sampai dia sendiri
+// yang mematikannya. Nilai bersama satu tab ini yang bikin itu mungkin.
+//
+// TIDAK disimpan ke localStorage: Dev Mode dijaga password, dan menyimpannya
+// bakal bikin sesi berikutnya masuk tanpa pernah ditanya. Muat ulang halaman
+// = mulai bersih, dan itu memang disengaja.
+//
+// Dev Mode yang dinyalakan sekejap oleh jumpToSlide() (buat nembus gerbang
+// section waktu lompat slide) TIDAK dihitung di sini - lihat pemasangan
+// pengamat di jumpToSlide().
+let devModeDipilihPenyusun = false;
+
 // Live preview of a single slide (or the cover/hero screen), rendered by
 // generating the full module HTML and jumping the embedded page straight to
 // that slide (bypassing section gating via devMode) — so editors see the
@@ -166,7 +183,23 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
         // lock icons and Dev Mode button state stay in sync with the real
         // (now non-dev) gating - not just the variable.
         if (devMode) toggleDevMode();
+        ${devModeDipilihPenyusun ? 'if (typeof enableDevMode === "function") enableDevMode(false);' : ''}
       `);
+      // Kalau penyusun modul sendiri yang menyalakan Dev Mode di dalam preview,
+      // pilihan itu miliknya - bukan sesuatu yang boleh dimatikan diam-diam
+      // oleh proses generate ulang. Tombolnya dipantau lewat class .active
+      // (satu-satunya jejak keadaan Dev Mode yang kelihatan dari luar), dan
+      // hasilnya dipakai buat menyalakan ulang di pemuatan berikutnya - lihat
+      // enableDevMode() di shell-template.html. Dipasang SESUDAH eval di atas
+      // supaya mematikan-sementara buat lompat slide gak kebaca sebagai
+      // "penyusunnya mematikan Dev Mode".
+      const tombolDev = win.document.getElementById('devmode-btn');
+      if (tombolDev) {
+        const pantauDev = new win.MutationObserver(() => {
+          devModeDipilihPenyusun = tombolDev.classList.contains('active');
+        });
+        pantauDev.observe(tombolDev, { attributes: true, attributeFilter: ['class'] });
+      }
       // Restore the scroll offset the PREVIOUS document had, then keep
       // tracking it live on this fresh one so the next reload has something
       // current to restore. Re-attached every load since srcDoc gives a

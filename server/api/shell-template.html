@@ -2690,21 +2690,33 @@ function openDevModeModal(){
 function closeDevModeModal(){
   document.getElementById('devmode-modal-overlay').classList.remove('show');
 }
+/* Bagian "nyalakan"-nya dipisah dari pengecekan password supaya Live Preview
+   di aplikasi penyusun bisa MEMULIHKAN Dev Mode setelah iframe-nya dimuat
+   ulang (tiap ketikan bikin modul di-generate ulang) tanpa harus menanyakan
+   password lagi ke orang yang barusan mengetiknya. Password tetap dipegang
+   submitDevModePassword() — satu-satunya jalan masuk buat peserta.
+
+   cekRekam=false dipakai waktu pemulihan itu: statusnya sudah pernah dicek
+   waktu Dev Mode pertama dinyalakan, dan mengulanginya tiap ketikan cuma
+   membanjiri backend dengan permintaan yang jawabannya sudah diketahui. */
+function enableDevMode(cekRekam){
+  devMode = true;
+  renderSidebar();
+  document.getElementById('devmode-btn').classList.add('active');
+  document.getElementById('devmode-btn').textContent = '● Dev Mode aktif';
+  document.getElementById('reset-btn').classList.add('dev-visible');
+  document.getElementById('hideprogress-btn').classList.add('dev-visible');
+  document.getElementById('trackcheck-btn').classList.add('dev-visible');
+  document.getElementById('trackcheck-status').classList.add('dev-visible');
+  /* Status awal ditampilkan tanpa nunggu diklik: kalau modulnya ternyata
+     gak bakal ngerekam, itu harus langsung keliatan, bukan cuma kalau
+     orangnya kebetulan iseng ngeklik. */
+  if(cekRekam !== false) runTrackCheck();
+}
 function submitDevModePassword(){
   const input = document.getElementById('devmode-pw-input');
   if(input.value === 'Password100%'){
-    devMode = true;
-    renderSidebar();
-    document.getElementById('devmode-btn').classList.add('active');
-    document.getElementById('devmode-btn').textContent = '● Dev Mode aktif';
-    document.getElementById('reset-btn').classList.add('dev-visible');
-    document.getElementById('hideprogress-btn').classList.add('dev-visible');
-    document.getElementById('trackcheck-btn').classList.add('dev-visible');
-    document.getElementById('trackcheck-status').classList.add('dev-visible');
-    /* Status awal ditampilkan tanpa nunggu diklik: kalau modulnya ternyata
-       gak bakal ngerekam, itu harus langsung keliatan, bukan cuma kalau
-       orangnya kebetulan iseng ngeklik. */
-    runTrackCheck();
+    enableDevMode(true);
     closeDevModeModal();
   } else {
     document.getElementById('devmode-modal-error').classList.add('show');
