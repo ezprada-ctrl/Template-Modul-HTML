@@ -142,12 +142,17 @@ function mapBlock(b, mkId) {
       return out;
     }
 
-    case 'tabel':
-      return [{
+    case 'tabel': {
+      const t = {
         id: mkId(), type: 'dtable',
         headers: (b.headers || []).map(textField),
         rows: (b.rows || []).map((r) => r.map(textField)),
-      }];
+      };
+      // `group`: judul super-header di atas baris headers (dtableGroups di app),
+      // membentang penuh selebar kolom.
+      if (b.group) t.dtableGroups = [{ label: textField(b.group), span: (b.headers || []).length || 1 }];
+      return [t];
+    }
 
     case 'ref':
       return [{ id: mkId(), type: 'badgeref', refText: textField(b.text) }];
