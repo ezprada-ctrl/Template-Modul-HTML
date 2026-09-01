@@ -208,96 +208,58 @@ for (const sec of src.sections) {
   }
 }
 
-const p = src.project || {};
-
-// --- restrukturisasi sidebar ---------------------------------------------
-// Model app: Section -> slide/bundle -> 1 kuis per section. Ketimbang 1 pajak
-// = 1 section (jadi 9-11 section datar), semua pajak dimasukkan ke SATU
-// section dan tiap pajak jadi BUNDLE expandable di sidebar (multiGroups).
-//   Pendahuluan  |  Pajak Daerah <X> (bundle per pajak + 1 kuis)  |  Penutup
-// Kuis section = ringkasan `QUIZ_PER_PAJAK` soal per pajak (default 2). KC
-// per-pajak yang embedded di slide tetap jalan sebagai cek formatif.
-
-const PER_PAJAK = Math.max(1, Number(process.env.QUIZ_PER_PAJAK) || 2);
-const INTRO_SEC_ID = 'sec-intro';
-const PAJAK_SEC_ID = 'sec-pajak';
-const OUTRO_SEC_ID = 'sec-penutup';
-
 const outSections = [];
 const outSlides = [];
 const quizzes = {};
-const multiGroups = {};
-let slideNo = 0; // nomor placeholder unik; renumberModule remap saat import
+let secLetter = 0;
 
-function emitSlide(sl, sectionId, kicker) {
-  slideNo += 1;
-  let n = 0;
-  const mkId = () => `${sl.id}-b${++n}`;
-  const blocks = (sl.blocks || []).flatMap((b) => mapBlock(b, mkId));
-  if (sl.knowledgeCheck) blocks.push(mapKnowledgeCheck(sl.knowledgeCheck, mkId));
-  outSlides.push({
-    id: sl.id,
-    number: slideNo,
-    sectionId,
-    title: textField(sl.title),
-    kickerLabel: textField(kicker),
-    ...(sl.lead ? { subtitle: htmlField(sl.lead) } : {}), // slide-sub dirender raw
-    blocks,
+for (const sec of src.sections) {
+  // slide non-cover di section ini
+  const slides = (sec.slides || []).filter((sl) => !(sl.blocks || []).some((b) => b.type === 'cover'));
+  if (!slides.length && !sec.quiz) continue; // intro yang cuma berisi cover
+
+  const title =
+    sec.type === 'intro' ? 'Pendahuluan'
+      : sec.type === 'outro' ? (sec.title || 'Rangkuman')
+        : sec.title;
+
+  outSections.push({
+    id: sec.id,
+    title,
+    short: shortTitle(title),
+    icon: LETTERS[secLetter % 26],
+    color: theme.accent,
   });
-  return slideNo;
-}
-const contentSlides = (sec) =>
-  (sec?.slides || []).filter((sl) => !(sl.blocks || []).some((b) => b.type === 'cover'));
+  secLetter++;
 
-const introSec = src.sections.find((s) => s.type === 'intro');
-const pajakSecs = src.sections.filter((s) => s.type === 'pajak');
-const outroSec = src.sections.find((s) => s.type === 'outro');
+  for (const sl of slides) {
+    let n = 0;
+    const mkId = () => `${sl.id}-b${++n}`;
+    const blocks = (sl.blocks || []).flatMap((b) => mapBlock(b, mkId));
+    if (sl.knowledgeCheck) blocks.push(mapKnowledgeCheck(sl.knowledgeCheck, mkId));
+    outSlides.push({
+      id: sl.id,
+      number: 0, // diperbaiki renumberModule saat import
+      sectionId: sec.id,
+      title: textField(sl.title),
+      kickerLabel: textField(title),
+      ...(sl.lead ? { subtitle: htmlField(sl.lead) } : {}), // slide-sub dirender raw
+      blocks,
+    });
+  }
 
-const pajakTitle =
-  /kabupaten|kab\.?\s*\/?\s*kota/i.test(p.title || '') ? 'Pajak Daerah Kabupaten/Kota'
-    : /provinsi/i.test(p.title || '') ? 'Pajak Daerah Provinsi'
-      : 'Pajak Daerah';
-
-// 1) Pendahuluan
-const introSlides = contentSlides(introSec);
-if (introSlides.length) {
-  outSections.push({ id: INTRO_SEC_ID, title: 'Pendahuluan', short: 'Pendahuluan', icon: 'A', color: theme.navy });
-  for (const sl of introSlides) emitSlide(sl, INTRO_SEC_ID, 'Pendahuluan');
-}
-
-// 2) Pajak Daerah <X> — satu section, tiap pajak jadi bundle
-outSections.push({ id: PAJAK_SEC_ID, title: pajakTitle, short: shortTitle(pajakTitle), icon: 'B', color: theme.accent });
-const bundles = [];
-const quizPajak = [];
-for (const sec of pajakSecs) {
-  const label = textField(sec.title);
-  const nums = contentSlides(sec).map((sl) => emitSlide(sl, PAJAK_SEC_ID, label));
-  if (nums.length > 1) bundles.push({ label, slides: nums }); // bundle 1-item gak berguna
   if (sec.quiz) {
-    for (const q of sec.quiz.questions.slice(0, PER_PAJAK)) {
-      quizPajak.push({
-        q: textField(q.question),
-        opts: q.options.map((o) => textField(o.text)),
-        correct: Math.max(0, q.options.findIndex((o) => o.correct)),
-        explain: '',
-      });
-    }
+    // q/opts kuis disuntik ke shell sebagai teks; explain belum ada di sumber.
+    quizzes[sec.id] = sec.quiz.questions.map((q) => ({
+      q: textField(q.question),
+      opts: q.options.map((o) => textField(o.text)),
+      correct: Math.max(0, q.options.findIndex((o) => o.correct)),
+      explain: '',
+    }));
   }
 }
-if (bundles.length) multiGroups[PAJAK_SEC_ID] = bundles;
-if (quizPajak.length) quizzes[PAJAK_SEC_ID] = quizPajak;
 
-// 3) Penutup
-const outroSlides = contentSlides(outroSec);
-if (outroSlides.length) {
-  const t = textField(outroSec.title || 'Rangkuman');
-  outSections.push({ id: OUTRO_SEC_ID, title: t, short: shortTitle(t), icon: 'C', color: theme.navy });
-  for (const sl of outroSlides) emitSlide(sl, OUTRO_SEC_ID, t);
-}
-
-// ikon section = A, B, C ... sesuai urutan akhir
-outSections.forEach((s, i) => { s.icon = LETTERS[i % 26]; });
-
+const p = src.project || {};
 const moduleData = {
   title: p.title || 'Modul',
   slug: p.slug || 'modul',
@@ -320,7 +282,7 @@ const moduleData = {
   sections: outSections,
   slides: outSlides,
   quizzes,
-  multiGroups,
+  multiGroups: {},
 };
 
 mkdirSync(dirname(outFile), { recursive: true });
