@@ -276,7 +276,6 @@ code {
   border-top: 1px solid var(--border);
   box-shadow: inset 3px 0 0 var(--border-strong);
 }
-.opt-note.is-ok     { background: var(--success-soft); color: var(--success); box-shadow: inset 3px 0 0 var(--success); }
-.opt-note.is-warn   { background: var(--danger-soft);  color: var(--danger);  box-shadow: inset 3px 0 0 var(--danger); }
-.opt-note.is-muted  { background: var(--surface-2); color: var(--text-faint); }
+.opt-note.is-ok   { background: var(--success-soft); color: var(--success); box-shadow: inset 3px 0 0 var(--success); }
+.opt-note.is-warn { background: var(--danger-soft);  color: var(--danger);  box-shadow: inset 3px 0 0 var(--danger); }
 .opt-note .opt-note-aside { color: var(--text-faint); }

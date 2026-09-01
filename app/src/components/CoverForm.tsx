@@ -12,19 +12,18 @@ interface Props {
 
 export default function CoverForm({ module, setModule }: Props) {
   // Status kredensial rekam-aktivitas di backend. Dicek otomatis begitu
-  // "Rekam aktivitas" nyala, biar penyusun tau SEBELUM export kalau modulnya
-  // bakal bisu gara-gara env var backend kosong. null = belum/masih dicek.
+  // "Rekam aktivitas" nyala. Cuma dipakai buat menampilkan konfirmasi "siap
+  // merekam"; selain itu (masih dicek, kredensial kosong, backend gak bisa
+  // dihubungi) panelnya sengaja diam. null = belum/masih dicek.
   const [trackReady, setTrackReady] = useState<boolean | null>(null);
-  const [trackCheckErr, setTrackCheckErr] = useState(false);
 
   useEffect(() => {
-    if (!module.trackActivity) { setTrackReady(null); setTrackCheckErr(false); return; }
+    if (!module.trackActivity) { setTrackReady(null); return; }
     let alive = true;
     setTrackReady(null);
-    setTrackCheckErr(false);
     checkTrackingConfig()
       .then(ok => { if (alive) setTrackReady(ok); })
-      .catch(() => { if (alive) setTrackCheckErr(true); });
+      .catch(() => { if (alive) setTrackReady(false); });
     return () => { alive = false; };
   }, [module.trackActivity]);
 
@@ -114,30 +113,15 @@ export default function CoverForm({ module, setModule }: Props) {
               </span>
             </label>
             {/* Status kredensial backend — dicek otomatis saat tracking nyala.
-                Menangkap kegagalan senyap "env var backend kosong" yang bikin
-                modul bisu walau checkbox dicentang, SEBELUM modul di-export. */}
-            {module.trackActivity && trackReady === null && !trackCheckErr && (
-              <p className="opt-note is-muted">Mengecek koneksi rekam…</p>
-            )}
+                Cuma keadaan "siap" yang dilaporkan; keadaan lain (masih ngecek,
+                kredensial kosong, backend gak bisa dihubungi) sengaja diam biar
+                panelnya gak penuh catatan kaki. */}
             {module.trackActivity && trackReady === true && (
               <p className="opt-note is-ok">
                 ✓ Backend siap merekam. <span className="opt-note-aside">
                   (Ini cuma memastikan kredensial ada — buat bukti jaringan LMS beneran tembus,
                   pakai tombol “Cek Rekam Aktivitas” di Dev Mode setelah modul diupload.)
                 </span>
-              </p>
-            )}
-            {module.trackActivity && trackReady === false && (
-              <p className="opt-note is-warn">
-                ⚠ Backend belum punya kredensial rekam-aktivitas (SUPABASE_URL / SUPABASE_ANON_KEY kosong).
-                Modul yang di-export sekarang <b>gak akan merekam apa pun</b> walau centang ini nyala.
-                Hubungi pengelola buat set env var-nya di Vercel dulu.
-              </p>
-            )}
-            {module.trackActivity && trackCheckErr && (
-              <p className="opt-note is-muted">
-                (Gak bisa cek status koneksi rekam — backend mungkin lagi tidur. Pastikan lewat tombol
-                “Cek Rekam Aktivitas” di Dev Mode setelah modul diupload.)
               </p>
             )}
             {/* Peringatan bentrok slug: data aktivitas ditandai pakai slug
@@ -176,7 +160,7 @@ export default function CoverForm({ module, setModule }: Props) {
             {/* Co-creation - SENGAJA sejajar "Rekam aktivitas", bukan nempel di
                 bawahnya kayak Rekap Peserta. Rekap gak punya arti tanpa data
                 rekaman; Co-creation punya (peserta tetap bisa mencatat & meninjau
-                catatannya sendiri). Lihat dua mode di rambu bawah. */}
+                catatannya sendiri). */}
             <label className="opt">
               <input type="checkbox" checked={!!module.showCocreation}
                 onChange={e => setModule({ ...module, showCocreation: e.target.checked })} />
@@ -190,26 +174,6 @@ export default function CoverForm({ module, setModule }: Props) {
                 </span>
               </span>
             </label>
-            {/* RAMBU MODE TERBATAS. Catatan cuma bisa naik ke server kalau modul
-                tau siapa penulisnya, dan yang menanyakan NIP itu sistem rekam
-                aktivitas. Tanpa tracking, form identitas gak pernah muncul ->
-                catatan gak punya pemilik -> gak bisa dikirim, gak bisa ditarik
-                balik dari perangkat lain. Ini konsekuensi, bukan pilihan - jadi
-                penyusun modul harus tau SEBELUM export, bukan kaget belakangan. */}
-            {module.showCocreation && !module.trackActivity && (
-              <p className="opt-note is-warn">
-                ⚠ “Rekam aktivitas peserta” mati, jadi Co-creation jalan dalam <b>mode terbatas</b>: catatan
-                cuma tersimpan di perangkat peserta — <b>hilang kalau dia ganti browser/laptop/HP</b>, dan
-                tidak muncul di Command Center. Nyalakan “Rekam aktivitas peserta” kalau catatan ini mau
-                dipakai sebagai bahan diskusi kelas.
-              </p>
-            )}
-            {module.showCocreation && module.trackActivity && (
-              <p className="opt-note">
-                Catatan tersimpan di perangkat <b>dan</b> di server — peserta bisa membukanya dari perangkat
-                lain, dan isinya bisa dibaca di Command Center buat menyiapkan bahan diskusi kelas.
-              </p>
-            )}
           </div>
           <label style={{ color: 'var(--text-dim)' }}>
             Judul besar di layar sampul
