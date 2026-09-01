@@ -1,7 +1,96 @@
-import { Fragment, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
+import { Fragment, useState } from 'react';
 import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule, PeringatanDetail, VideoDetail } from '../api';
 import { ccCocreation, ccListModules, ccListSessions, ccListLearners, ccRawRows } from '../api';
 import { DEMO_MODULES, DEMO_SESSIONS, DEMO_LEARNERS, DEMO_COCREATION } from '../demoActivityData';
+
+// Ringkasan di atas tabel. Alasannya: tabelnya 13 kolom dengan bobot visual
+// sama rata, jadi gak ada apa pun yang menuntun mata ke angka yang paling
+// menentukan tindak lanjut. Ini tempat mendarat sebelum masuk ke rinciannya.
+// Sengaja cuma 4 angka - kalau lebih, dia berubah jadi tabel kedua dan
+// masalahnya balik lagi.
+function RingkasanBar({ butir }: { butir: { label: string; nilai: string; catatan?: string; awas?: boolean }[] }) {
+  return (
+    <div style={{
+      display: 'flex', flexWrap: 'wrap', gap: 1, marginBottom: 14,
+      background: 'var(--border)', border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-sm)', overflow: 'hidden',
+    }}>
+      {butir.map(b => (
+        <div key={b.label} style={{ flex: '1 1 130px', background: 'var(--surface)', padding: '10px 13px' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+            {b.label}
+          </div>
+          <div style={{
+            fontSize: 19, fontWeight: 700, fontVariantNumeric: 'tabular-nums', marginTop: 2,
+            color: b.awas ? 'var(--danger)' : 'var(--text)',
+          }}>
+            {b.nilai}
+          </div>
+          {b.catatan && (
+            <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 1 }}>{b.catatan}</div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Satu peserta dihitung "perlu ditindaklanjuti" kalau ada MINIMAL SATU sinyal
+// yang memang bisa ditindaklanjuti di kelas: mengabaikan peringatan baca-cepat,
+// meninggalkan layar lama, gagal kuis, atau membuka video lalu praktis tidak
+// menontonnya. Ambangnya sengaja sama persis dengan ambang ⚠ yang sudah dipakai
+// di tabel - biar angka ringkasan dan tanda di baris gak pernah bercerita beda.
+function perluTindakLanjut(x: {
+  peringatan_diabaikan?: number; durasi_ditinggal_menit: number | null;
+  kuis_gagal: number; video_dimulai: number; video_rata_persen: number | null;
+}): boolean {
+  if ((x.peringatan_diabaikan || 0) > 0) return true;
+  if ((x.durasi_ditinggal_menit ?? 0) > 10) return true;
+  if (x.kuis_gagal > 0) return true;
+  if (x.video_dimulai > 0 && (x.video_rata_persen ?? 100) < 20) return true;
+  return false;
+}
+
+// Kolom pertama (nama peserta) DIKUNCI supaya tetap kelihatan waktu tabel
+// digeser ke kanan. Tanpa ini tabelnya praktis gak kebaca menyamping: lebarnya
+// ~1400px di wadah ~760px, jadi begitu pembaca geser buat lihat kolom kanan,
+// nama pesertanya keluar layar dan dia gak tau lagi itu baris siapa.
+// Latarnya WAJIB dipasang eksplisit - sel sticky melayang di atas sel lain,
+// kalau tembus pandang teksnya bakal saling tumpuk waktu digeser.
+const SEL_NAMA: CSSProperties = {
+  padding: '8px 11px',
+  position: 'sticky',
+  left: 0,
+  zIndex: 1,
+  background: 'var(--surface)',
+  borderRight: '1px solid var(--border)',
+};
+const TH_NAMA: CSSProperties = {
+  position: 'sticky',
+  left: 0,
+  zIndex: 2,
+  background: 'var(--surface-2)',
+  borderRight: '1px solid var(--border)',
+};
+
+// NIP: kunci penggabung data, bukan bahan bacaan. Dulu kolom sendiri selebar
+// ~140px di tiap baris padahal yang dicari mata itu nama. Sekarang nempel
+// sebagai baris kecil di bawah nama - tetap kelihatan & tetap bisa disalin,
+// tanpa memakan satu kolom penuh.
+function NamaPeserta({ nama, nip, peringatan }: { nama: string | null; nip: string | null; peringatan?: React.ReactNode }) {
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        <span>{nama || <span style={{ color: 'var(--text-faint)' }}>—</span>}</span>
+        {peringatan}
+      </div>
+      <div style={{ fontSize: 10.5, color: 'var(--text-faint)', fontVariantNumeric: 'tabular-nums', marginTop: 1 }}>
+        {nip || '—'}
+      </div>
+    </>
+  );
+}
 
 // Catatan Co-creation satu modul: Section -> Slide -> catatan.
 // Dipakai DUA tempat dengan data yang sama bentuknya - tampilan lintas modul
@@ -159,12 +248,6 @@ export default function CommandCenter() {
   const [busy, setBusy] = useState(false);
   // true kalau backend motong hasil di MAX_ROWS — rekap cuma sebagian.
   const [terpotong, setTerpotong] = useState(false);
-  // Nempel ke wrapper tabel yang lagi tampil, dipakai buat "Unduh tampilan
-  // (HTML)" - beda dari CSV, ini nyimpen tabelnya UTUH persis kayak yang
-  // kelihatan di layar (warna, badge ⚠, dst ikut), bukan angka mentah per
-  // kolom terpisah.
-  const sessionsTableRef = useRef<HTMLDivElement>(null);
-  const learnersTableRef = useRef<HTMLDivElement>(null);
   // Baris expand yang lagi kebuka, dipakai bareng kolom Peringatan & Video.
   // Key diprefix per-kolom+view (mis. "peringatan-sesi-x" / "video-sesi-x")
   // biar dua kolom di baris yang sama bisa expand independen.
@@ -175,6 +258,14 @@ export default function CommandCenter() {
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
+  }
+
+  // Slug itu identitas project di builder, bukan nama yang dikenal manusia.
+  // Dipetakan ke judul modul yang terekam; kalau satu slug punya beberapa
+  // judul (project didaur ulang) semuanya disebut, jangan diam-diam pilih satu.
+  function judulModul(slug: string): string {
+    const m = modules.find(x => x.module_slug === slug);
+    return m && m.judul_modul.length ? m.judul_modul.join(' / ') : slug;
   }
 
   async function unlock() {
@@ -284,42 +375,6 @@ export default function CommandCenter() {
     URL.revokeObjectURL(url);
   }
 
-  // Design tokens dipakai ulang di sini (bukan cuma dilink) karena file
-  // hasil unduhan ini BERDIRI SENDIRI - dibuka nanti tanpa app.css sama
-  // sekali, jadi var(--border)/var(--danger)/dst di style inline tabel
-  // (React nulis literal string "var(--danger)" ke atribut style) gak akan
-  // ke-resolve tanpa definisinya ditanam ulang di sini. Nilai disalin dari
-  // index.css (tema terang saja - file statis, gak ada toggle tema).
-  const EXPORT_TOKENS_CSS = `
-    :root{
-      --bg:#ffffff; --bg-2:#f6f6f7; --surface:#ffffff; --surface-2:#f3f3f5; --surface-3:#e9e9ec;
-      --border:#e4e4e7; --border-strong:#d1d1d6;
-      --text:#18181b; --text-dim:#565660; --text-faint:#9a9aa4;
-      --danger:#c0392c; --danger-soft:rgba(192,57,44,.09);
-      --success:#2f8f57; --success-soft:rgba(47,143,87,.12);
-      --radius-sm:7px; --radius:10px;
-    }
-    body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg-2);color:var(--text);padding:24px;margin:0;}
-    h1{font-size:16px;margin:0 0 4px;}
-    .exp-meta{font-size:12.5px;color:var(--text-dim);margin:0 0 18px;}
-    table{border-collapse:collapse;font-size:12.5px;white-space:nowrap;}
-  `;
-
-  // Unduh tabel yang lagi TAMPIL di layar UTUH apa adanya (warna, badge ⚠,
-  // dst ikut) - beda dari CSV yang sengaja isinya angka mentah per kolom.
-  // Cuma nyalin markup (outerHTML) tabel yang udah dirender React, bukan
-  // nge-render ulang - jadi PASTI persis sama kayak yang keliatan.
-  function unduhTampilan(ref: React.RefObject<HTMLDivElement | null>, filename: string, judul: string) {
-    if (!ref.current) return;
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${judul}</title>
-<style>${EXPORT_TOKENS_CSS}</style></head><body>
-<h1>${judul}</h1>
-<p class="exp-meta">Diunduh ${new Date().toLocaleString('id-ID')} — tampilan persis seperti di Command Center saat diunduh.</p>
-${ref.current.outerHTML}
-</body></html>`;
-    download(filename, html, 'text/html;charset=utf-8;');
-  }
-
   // Excel Indonesia sering buka CSV dengan pemisah titik-koma. Tapi yang
   // lebih penting: tiap sel dibungkus kutip & kutip di dalamnya digandakan,
   // supaya nama/teks yang mengandung koma atau kutip gak bikin kolomnya
@@ -408,7 +463,7 @@ ${ref.current.outerHTML}
       <div style={{ maxWidth: 380 }}>
         <h2 style={{ margin: '0 0 4px' }}>Command Center</h2>
         <p className="hint" style={{ marginTop: 0, marginBottom: 16 }}>
-          Berisi data pribadi peserta (nama, NIP, rekam jejak belajar). Masukkan password untuk membuka.
+          Berisi data pribadi peserta; masukkan password.
         </p>
         <input
           type="password"
@@ -532,12 +587,22 @@ ${ref.current.outerHTML}
 
       {view === 'peserta' && (
         <>
+          {learners.length > 0 && (() => {
+            const tuntas = learners.filter(l => l.total_slide_program != null && l.jumlah_slide_unik >= l.total_slide_program).length;
+            const perlu = learners.filter(perluTindakLanjut).length;
+            const menit = Math.round(learners.reduce((a, l) => a + l.durasi_tatap_layar_menit, 0) / learners.length);
+            return (
+              <RingkasanBar butir={[
+                { label: 'Peserta', nilai: String(learners.length), catatan: `${learners.reduce((a, l) => a + l.jumlah_sesi, 0)} sesi` },
+                { label: 'Materi tuntas', nilai: `${tuntas}/${learners.length}`, catatan: 'semua slide dibuka' },
+                { label: 'Perlu ditindaklanjuti', nilai: String(perlu), catatan: 'abai peringatan · ditinggal · gagal kuis · video', awas: perlu > 0 },
+                { label: 'Rata-rata tatap layar', nilai: `${menit} m`, catatan: 'per peserta' },
+              ]} />
+            );
+          })()}
           <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
             <button className="btn-sm" onClick={unduhPeserta} disabled={!learners.length}>
               ⬇ CSV rekap per peserta
-            </button>
-            <button className="btn-sm" onClick={() => unduhTampilan(learnersTableRef, 'aktivitas-per-peserta-tampilan.html', 'Command Center — Per Peserta')} disabled={!learners.length}>
-              ⬇ Unduh tampilan (HTML)
             </button>
           </div>
 
@@ -546,12 +611,12 @@ ${ref.current.outerHTML}
 
           {learners.length > 0 && (
             <>
-              <div ref={learnersTableRef} style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+              <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
-                      {['Peserta', 'NIP', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan', 'Modul yang dibuka'].map(h => (
-                        <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
+                      {['Peserta', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan'].map((h, i) => (
+                        <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)', ...(i === 0 ? TH_NAMA : {}) }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -562,19 +627,30 @@ ${ref.current.outerHTML}
                       return (
                     <Fragment key={l.learner_id}>
                       <tr style={{ borderTop: '1px solid var(--border)' }}>
-                        <td style={{ padding: '8px 11px' }}>
-                          {l.nama || <span style={{ color: 'var(--text-faint)' }}>—</span>}
-                          {/* Satu NIP dengan beberapa varian nama = tanda NIP
-                              salah ketik / dipakai berdua. Ditandai, bukan
-                              didiamkan — kalau disembunyiin, analisisnya keliru
-                              tanpa ada yang sadar. */}
-                          {l.nama_bervariasi && (
-                            <span title={`Nama bervariasi untuk NIP ini: ${l.nama_varian.join(' / ')}`}
-                                  style={{ marginLeft: 6, color: 'var(--danger)', cursor: 'help' }}>⚠</span>
-                          )}
+                        <td style={SEL_NAMA}>
+                          <NamaPeserta nama={l.nama} nip={l.learner_id} peringatan={
+                            /* Satu NIP dengan beberapa varian nama = tanda NIP
+                               salah ketik / dipakai berdua. Ditandai, bukan
+                               didiamkan — kalau disembunyiin, analisisnya keliru
+                               tanpa ada yang sadar. */
+                            l.nama_bervariasi ? (
+                              <span title={`Nama bervariasi untuk NIP ini: ${l.nama_varian.join(' / ')}`}
+                                    style={{ color: 'var(--danger)', cursor: 'help' }}>⚠</span>
+                            ) : null
+                          } />
                         </td>
-                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.learner_id}</td>
-                        <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_modul}</td>
+                        {/* Dulu ini DUA kolom: jumlah modul, dan daftar slug-nya di
+                            ujung kanan tabel. Angkanya turunan dari daftarnya, dan
+                            slug (`ikram_modul-a-x9f2`) itu identitas internal yang
+                            gak dikenal manusia. Digabung jadi satu, menampilkan
+                            JUDUL modul; slug cuma jadi cadangan kalau judulnya
+                            belum pernah terekam. */}
+                        <td style={{ padding: '8px 11px' }}>
+                          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_modul}</span>
+                          <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 1, whiteSpace: 'normal', maxWidth: 190 }}>
+                            {l.modul_slugs.map(slug => judulModul(slug)).join(', ')}
+                          </div>
+                        </td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_sesi}</td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.durasi_tatap_layar_menit} m</td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
@@ -601,13 +677,13 @@ ${ref.current.outerHTML}
                             pembanding langsung daripada angka telanjang yang gak ada artinya
                             tanpa tau totalnya. null = modul lama, belum ada data totalnya. */}
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
-                          {l.jumlah_slide_dilihat}
-                          {l.total_slide_program != null && (
-                            <span style={{ color: 'var(--text-faint)', marginLeft: 4 }}
-                                  title="kunjungan (slide unik dibuka / total slide di semua modulnya)">
-                              ({l.jumlah_slide_unik}/{l.total_slide_program})
-                            </span>
-                          )}
+                          {l.total_slide_program != null
+                            ? <span>{l.jumlah_slide_unik}/{l.total_slide_program}</span>
+                            : <span>{l.jumlah_slide_unik}</span>}
+                          <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 1 }}
+                               title="Termasuk slide yang dibuka berulang, dijumlah dari semua modulnya">
+                            {l.jumlah_slide_dilihat} kunjungan
+                          </div>
                         </td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_interaksi}</td>
                         {/* Berapa kali submit kuis GAGAL, dijumlah lintas semua modul peserta
@@ -616,14 +692,14 @@ ${ref.current.outerHTML}
                             selesai, jadi status lulus/belum sengaja gak ditampilkan. */}
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                             title="Jumlah submit kuis yang gagal, dijumlah dari semua modul yang peserta ini kerjakan">
-                          {l.kuis_gagal > 0 ? `${l.kuis_gagal}×` : '—'}
+                            {l.kuis_gagal > 0 ? `${l.kuis_gagal}× gagal` : '—'}
                         </td>
                         {/* Knowledge Check = blok cek-paham inline yang TIDAK mengunci apa
                             pun. Benar/dijawab, dijumlah lintas semua modul. Sengaja TERPISAH
                             dari kolom Kuis biar angka gagal-kuis tetap bersih. */}
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                             title="Knowledge check (cek paham, tidak mengunci): jawaban benar / total dijawab, dari semua modulnya">
-                          {l.kc_dijawab > 0 ? `${l.kc_benar}/${l.kc_dijawab}` : '—'}
+                          {l.kc_dijawab > 0 ? `${l.kc_benar}/${l.kc_dijawab} benar` : '—'}
                         </td>
                         {/* Video (upload + YouTube - Instagram gak mungkin diamati, lihat
                             catatan generator.py): "dimulai" = berapa video yang DIKLIK PLAY
@@ -689,7 +765,7 @@ ${ref.current.outerHTML}
                             </span>
                           )}
                         </td>
-                        <td style={{ padding: '8px 11px', color: 'var(--text-faint)' }}>{l.modul_slugs.join(', ')}</td>
+
                       </tr>
                       {vOpen && l.video_detail.length > 0 && (
                         <tr style={{ borderTop: '1px dashed var(--border)', background: 'var(--surface-2)' }}>
@@ -737,6 +813,24 @@ ${ref.current.outerHTML}
           </div>
 
           {modulTab === 'sesi' && (<>
+          {sessions.length > 0 && (() => {
+            const nip = (x: ActivitySession) => x.learner_id || `?${x.session_id}`;
+            const peserta = new Set(sessions.map(nip));
+            // Digabung per PESERTA dulu, bukan per baris: satu orang bisa punya
+            // beberapa sesi, dan menghitung per baris bikin yang mengulang
+            // kelihatan seperti beberapa orang berbeda.
+            const tuntas = new Set(sessions.filter(x => x.total_slide != null && x.jumlah_slide_unik >= x.total_slide).map(nip));
+            const perlu = new Set(sessions.filter(perluTindakLanjut).map(nip));
+            const menit = Math.round(sessions.reduce((a, x) => a + x.durasi_tatap_layar_menit, 0) / peserta.size);
+            return (
+              <RingkasanBar butir={[
+                { label: 'Peserta', nilai: String(peserta.size), catatan: `${sessions.length} sesi` },
+                { label: 'Materi tuntas', nilai: `${tuntas.size}/${peserta.size}`, catatan: 'semua slide dibuka' },
+                { label: 'Perlu ditindaklanjuti', nilai: String(perlu.size), catatan: 'abai peringatan · ditinggal · gagal kuis · video', awas: perlu.size > 0 },
+                { label: 'Rata-rata tatap layar', nilai: `${menit} m`, catatan: 'per peserta' },
+              ]} />
+            );
+          })()}
           <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
             <button className="btn-sm" onClick={unduhRingkasan} disabled={!sessions.length}>
               ⬇ CSV ringkasan per sesi
@@ -744,9 +838,6 @@ ${ref.current.outerHTML}
             <button className="btn-sm" onClick={unduhMentah} disabled={busy || demoMode}
                     title={demoMode ? 'Gak tersedia di Mode Contoh - data mentah cuma ada di Supabase asli' : undefined}>
               ⬇ CSV mentah (semua event)
-            </button>
-            <button className="btn-sm" onClick={() => unduhTampilan(sessionsTableRef, `aktivitas-${activeSlug}-tampilan.html`, `Command Center — ${activeSlug}`)} disabled={!sessions.length}>
-              ⬇ Unduh tampilan (HTML)
             </button>
           </div>
 
@@ -760,15 +851,24 @@ ${ref.current.outerHTML}
             // ini cuma nambah kebisingan.
             const bentrok = !!modules.find(m => m.module_slug === activeSlug)?.kemungkinan_bentrok;
             const kolom = bentrok
-              ? ['Peserta', 'NIP', 'Modul', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan']
-              : ['Peserta', 'NIP', 'Sumber', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan'];
+              ? ['Peserta', 'Modul', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan']
+              : ['Peserta', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan'];
+            // Sumber identitas ('scorm' / 'manual') itu keterangan DIAGNOSTIK,
+            // bukan angka belajar. Di LMS beneran identitas selalu datang dari
+            // SCORM, jadi kolomnya berisi nilai yang sama persis di setiap baris
+            // = nol informasi tapi makan tempat permanen. Cuma dimunculkan kalau
+            // isinya BERCAMPUR - dan campurnya sendiri yang jadi temuan (sebagian
+            // peserta ngetik NIP sendiri, yang belum tentu sama dengan ID LMS).
+            // Pola yang sama dipakai kolom "Modul" di atas.
+            const sumberBervariasi = new Set(sessions.map(x => x.identity_source || '—')).size > 1;
+            if (sumberBervariasi) kolom.splice(bentrok ? 2 : 1, 0, 'Sumber');
             return (
-            <div ref={sessionsTableRef} style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+            <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ background: 'var(--surface-2)' }}>
-                    {kolom.map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)' }}>{h}</th>
+                    {kolom.map((h, i) => (
+                      <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)', ...(i === 0 ? TH_NAMA : {}) }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -779,17 +879,26 @@ ${ref.current.outerHTML}
                     return (
                     <Fragment key={s.session_id}>
                     <tr style={{ borderTop: '1px solid var(--border)' }}>
-                      <td style={{ padding: '8px 11px' }}>{s.learner_name || <span style={{ color: 'var(--text-faint)' }}>—</span>}</td>
-                      <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.learner_id || '—'}</td>
+                      <td style={SEL_NAMA}><NamaPeserta nama={s.learner_name} nip={s.learner_id} /></td>
                       {bentrok && <td style={{ padding: '8px 11px' }}>{s.module_title || <span style={{ color: 'var(--text-faint)' }}>—</span>}</td>}
-                      <td style={{ padding: '8px 11px' }}>
-                        {/* Penting buat analisis: 'scorm' artinya ID-nya dari LMS
-                            dan BELUM TENTU NIP; 'manual' artinya NIP diketik peserta. */}
-                        <span style={{ fontSize: 11, color: s.identity_source === 'scorm' ? 'var(--success)' : 'var(--text-faint)' }}>
-                          {s.identity_source || '—'}
-                        </span>
+                      {/* Cuma muncul kalau sumbernya bercampur — lihat alasannya
+                          di tempat `sumberBervariasi` dihitung. 'scorm' artinya
+                          ID dari LMS dan BELUM TENTU NIP; 'manual' artinya NIP
+                          diketik peserta sendiri. */}
+                      {sumberBervariasi && (
+                        <td style={{ padding: '8px 11px' }}>
+                          <span style={{ fontSize: 11, color: s.identity_source === 'scorm' ? 'var(--success)' : 'var(--text-faint)' }}>
+                            {s.identity_source || '—'}
+                          </span>
+                        </td>
+                      )}
+                      {/* Tanpa detik: tabel ini dibaca setelah pelatihan selesai,
+                          presisi sampai detik gak pernah punya arti di situ. */}
+                      <td style={{ padding: '8px 11px', whiteSpace: 'nowrap' }}>
+                        {new Date(s.mulai).toLocaleString('id-ID', {
+                          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+                        })}
                       </td>
-                      <td style={{ padding: '8px 11px' }}>{new Date(s.mulai).toLocaleString('id-ID')}</td>
                       {/* Tatap layar (durasi_tatap_layar_menit) dipakai sebagai
                           durasi utama, BUKAN durasi_menit total: peserta yang
                           tab-nya dibiarkan kebuka sambil ditinggal lama akan
@@ -816,14 +925,20 @@ ${ref.current.outerHTML}
                           penyusun modul sering lupa modulnya ada berapa slide, jadi
                           dikasih pembanding langsung. null = modul lama, export sebelum
                           fitur ini ada. */}
+                      {/* Dulu ditulis "96(94/95)" — tiga angka tanpa label sama
+                          sekali, pembaca harus hafal posisi mana artinya apa.
+                          Sekarang yang jadi angka UTAMA adalah pertanyaan yang
+                          sebenarnya dicari ("berapa slide yang dia buka dari
+                          total"), dan jumlah kunjungan turun jadi keterangan
+                          kecil yang diberi kata. */}
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>
-                        {s.jumlah_slide_dilihat}
-                        {s.total_slide != null && (
-                          <span style={{ color: 'var(--text-faint)', marginLeft: 4 }}
-                                title="kunjungan (slide unik dibuka / total slide modul ini)">
-                            ({s.jumlah_slide_unik}/{s.total_slide})
-                          </span>
-                        )}
+                        {s.total_slide != null
+                          ? <span>{s.jumlah_slide_unik}/{s.total_slide}</span>
+                          : <span>{s.jumlah_slide_unik}</span>}
+                        <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 1 }}
+                             title="Termasuk slide yang dibuka berulang — bolak-balik ke slide yang sama ikut dihitung">
+                          {s.jumlah_slide_dilihat} kunjungan
+                        </div>
                       </td>
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{s.jumlah_interaksi}</td>
                       {/* Berapa kali submit kuis GAGAL (lulus:false) di modul ini - BUKAN
@@ -834,13 +949,13 @@ ${ref.current.outerHTML}
                           SETELAH pelatihan selesai, bukan saat masih berjalan. */}
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                           title="Jumlah submit kuis yang gagal di modul ini">
-                        {s.kuis_gagal > 0 ? `${s.kuis_gagal}×` : '—'}
+                        {s.kuis_gagal > 0 ? `${s.kuis_gagal}× gagal` : '—'}
                       </td>
                       {/* Knowledge check (blok cek-paham inline, TIDAK mengunci): jawaban
                           benar / total dijawab di modul ini. Terpisah dari kolom Kuis. */}
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                           title="Knowledge check (cek paham, tidak mengunci): jawaban benar / total dijawab di modul ini">
-                        {s.kc_dijawab > 0 ? `${s.kc_benar}/${s.kc_dijawab}` : '—'}
+                        {s.kc_dijawab > 0 ? `${s.kc_benar}/${s.kc_dijawab} benar` : '—'}
                       </td>
                       {/* Video (upload + YouTube - Instagram gak mungkin diamati): "dimulai" =
                           berapa video yang DIKLIK PLAY minimal sekali (BUKAN "selesai
@@ -937,7 +1052,7 @@ ${ref.current.outerHTML}
               {cocreation.length > 0 && (
                 <>
                   <p className="hint" style={{ marginBottom: 12 }}>
-                    Disusun mengikuti alur materi: bagian demi bagian, slide demi slide.
+                    Disusun mengikuti alur materi.
                     {cocreation[0].slide_terramai && cocreation[0].slide_terramai!.jumlah_catatan > 1 && (
                       <> Paling banyak dicatat: <b>{cocreation[0].slide_terramai!.judul}</b>{' '}
                       ({cocreation[0].slide_terramai!.jumlah_catatan} catatan).</>
@@ -966,9 +1081,7 @@ ${ref.current.outerHTML}
           {cocreationAll.length > 0 && (
             <>
               <p className="hint" style={{ marginBottom: 16 }}>
-                Seluruh modul dalam satu layar, disusun mengikuti alur pelatihan: modul demi modul,
-                lalu bagian demi bagian di dalamnya. Dipakai buat menyiapkan bahan diskusi kelas —
-                terlihat bagian mana yang paling banyak dipertanyakan, dan oleh siapa.
+                Seluruh modul dalam satu layar, urut alur pelatihan.
               </p>
               {cocreationAll.map(m => (
                 <CocreationModulView key={m.module_slug} m={m} tampilkanJudulModul={true} />
