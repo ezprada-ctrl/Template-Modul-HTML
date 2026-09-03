@@ -113,45 +113,6 @@
       "source_location": "L46"
     },
     {
-      "id": "app_src_components_coverform_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "app/src/components/CoverForm.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "app_src_themes_themecolors",
-      "label": "ThemeColors",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "themecolors",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_themes_themepreset",
-      "label": "ThemePreset",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "themepreset",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L8"
-    },
-    {
       "id": "app_src_components_graphicstyleselect_props",
       "label": "Props",
       "_callable": true,
@@ -295,97 +256,6 @@
       "source_location": "L23"
     },
     {
-      "id": "app_src_app_history",
-      "label": "History",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "history",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L31"
-    },
-    {
-      "id": "app_src_components_canvas_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L15"
-    },
-    {
-      "id": "app_src_components_quizbuilder_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "app/src/components/QuizBuilder.tsx",
-      "source_location": "L4"
-    },
-    {
-      "id": "app_src_components_slidepreview_props",
-      "label": "Props",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "props",
-      "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L5"
-    },
-    {
-      "id": "app_src_types_moduledata",
-      "label": "ModuleData",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "moduledata",
-      "source_file": "app/src/types.ts",
-      "source_location": "L171"
-    },
-    {
-      "id": "app_src_types_quizquestion",
-      "label": "QuizQuestion",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "quizquestion",
-      "source_file": "app/src/types.ts",
-      "source_location": "L164"
-    },
-    {
-      "id": "app_src_types_section",
-      "label": "Section",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "section",
-      "source_file": "app/src/types.ts",
-      "source_location": "L140"
-    },
-    {
       "id": "app_src_components_emojipicker_props",
       "label": "Props",
       "_callable": true,
@@ -399,17 +269,69 @@
       "source_location": "L4"
     },
     {
+      "id": "app_src_app_history",
+      "label": "History",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "history",
+      "source_file": "app/src/App.tsx",
+      "source_location": "L36"
+    },
+    {
       "id": "app_src_app_tab",
       "label": "Tab",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "tab",
       "source_file": "app/src/App.tsx",
       "source_location": "L12"
+    },
+    {
+      "id": "app_src_components_canvas_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L15"
+    },
+    {
+      "id": "app_src_components_coverform_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "app/src/components/CoverForm.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "app_src_components_quizbuilder_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "app/src/components/QuizBuilder.tsx",
+      "source_location": "L4"
     },
     {
       "id": "app_src_components_slidebank_props",
@@ -417,7 +339,7 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 51,
+      "community": 48,
       "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "props",
@@ -425,12 +347,51 @@
       "source_location": "L6"
     },
     {
+      "id": "app_src_components_slidepreview_props",
+      "label": "Props",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "props",
+      "source_file": "app/src/components/SlidePreview.tsx",
+      "source_location": "L5"
+    },
+    {
+      "id": "app_src_themes_themecolors",
+      "label": "ThemeColors",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "themecolors",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_themes_themepreset",
+      "label": "ThemePreset",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "themepreset",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L8"
+    },
+    {
       "id": "app_src_types_draftslide",
       "label": "DraftSlide",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 51,
+      "community": 48,
       "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "draftslide",
@@ -438,12 +399,51 @@
       "source_location": "L246"
     },
     {
+      "id": "app_src_types_moduledata",
+      "label": "ModuleData",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "moduledata",
+      "source_file": "app/src/types.ts",
+      "source_location": "L171"
+    },
+    {
+      "id": "app_src_types_quizquestion",
+      "label": "QuizQuestion",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "quizquestion",
+      "source_file": "app/src/types.ts",
+      "source_location": "L164"
+    },
+    {
+      "id": "app_src_types_section",
+      "label": "Section",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "section",
+      "source_file": "app/src/types.ts",
+      "source_location": "L140"
+    },
+    {
       "id": "app_src_types_slide",
       "label": "Slide",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 51,
+      "community": 48,
       "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "slide",
@@ -581,6 +581,18 @@
       "source_location": "L154"
     },
     {
+      "id": "app_src_api_copydraft",
+      "label": "copyDraft()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "PreviewExport.tsx",
+      "file_type": "code",
+      "norm_label": "copydraft()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L113"
+    },
+    {
       "id": "app_src_api_deletedraft",
       "label": "deleteDraft()",
       "_callable": true,
@@ -639,6 +651,18 @@
       "norm_label": "renamedraft()",
       "source_file": "app/src/api.ts",
       "source_location": "L89"
+    },
+    {
+      "id": "app_src_api_savedraft",
+      "label": "saveDraft()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "PreviewExport.tsx",
+      "file_type": "code",
+      "norm_label": "savedraft()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L75"
     },
     {
       "id": "app_src_assetembed_blobkedatauri",
@@ -963,42 +987,6 @@
       "norm_label": "xmlesc()",
       "source_file": "app/src/scormZip.ts",
       "source_location": "L77"
-    },
-    {
-      "id": "app_src_api_checktrackingconfig",
-      "label": "checkTrackingConfig()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "checktrackingconfig()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L46"
-    },
-    {
-      "id": "app_src_components_coverform_coverform",
-      "label": "CoverForm()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "coverform()",
-      "source_file": "app/src/components/CoverForm.tsx",
-      "source_location": "L13"
-    },
-    {
-      "id": "app_src_themes_findthemepresetid",
-      "label": "findThemePresetId()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "findthemepresetid()",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L27"
     },
     {
       "id": "server_api_activity_store_cocreation_notes_for_learner",
@@ -2393,18 +2381,6 @@
       "source_location": "L13"
     },
     {
-      "id": "app_src_api_uploadmediatostorage",
-      "label": "uploadMediaToStorage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "BlockEditor.tsx",
-      "file_type": "code",
-      "norm_label": "uploadmediatostorage()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L436"
-    },
-    {
       "id": "app_src_components_blockeditor_blockfields",
       "label": "BlockFields()",
       "_callable": true,
@@ -2523,114 +2499,6 @@
       "norm_label": "togglewrap()",
       "source_file": "app/src/components/BlockEditor.tsx",
       "source_location": "L162"
-    },
-    {
-      "id": "app_src_components_blockeditor_videouploadfield",
-      "label": "VideoUploadField()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "BlockEditor.tsx",
-      "file_type": "code",
-      "norm_label": "videouploadfield()",
-      "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L851"
-    },
-    {
-      "id": "app_src_components_canvas_slideaudiofield",
-      "label": "SlideAudioField()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "BlockEditor.tsx",
-      "file_type": "code",
-      "norm_label": "slideaudiofield()",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L284"
-    },
-    {
-      "id": "app_src_components_canvas_bundleanimateddemo",
-      "label": "BundleAnimatedDemo()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "bundleanimateddemo()",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L216"
-    },
-    {
-      "id": "app_src_components_canvas_bundlepanel",
-      "label": "BundlePanel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "bundlepanel()",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L161"
-    },
-    {
-      "id": "app_src_components_canvas_sliderow",
-      "label": "SlideRow()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "sliderow()",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L334"
-    },
-    {
-      "id": "app_src_components_slidepreview_slidepreview",
-      "label": "SlidePreview()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "slidepreview()",
-      "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L59"
-    },
-    {
-      "id": "app_src_components_slidepreview_slidepreview_bawapopupkelayar",
-      "label": "bawaPopupKeLayar()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "bawapopupkelayar()",
-      "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L125"
-    },
-    {
-      "id": "app_src_components_slidepreview_slidepreview_jumptoslide",
-      "label": "jumpToSlide()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "jumptoslide()",
-      "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L166"
-    },
-    {
-      "id": "app_src_components_slidepreview_slidepreview_ubahzoom",
-      "label": "ubahZoom()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "ubahzoom()",
-      "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L107"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields",
@@ -3065,28 +2933,64 @@
       "source_location": "L21"
     },
     {
-      "id": "app_src_api_copydraft",
-      "label": "copyDraft()",
+      "id": "app_src_api_checktrackingconfig",
+      "label": "checkTrackingConfig()",
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
-      "norm_label": "copydraft()",
+      "norm_label": "checktrackingconfig()",
       "source_file": "app/src/api.ts",
-      "source_location": "L113"
+      "source_location": "L46"
     },
     {
-      "id": "app_src_api_savedraft",
-      "label": "saveDraft()",
+      "id": "app_src_api_listdrafts",
+      "label": "listDrafts()",
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
-      "norm_label": "savedraft()",
+      "norm_label": "listdrafts()",
       "source_file": "app/src/api.ts",
-      "source_location": "L75"
+      "source_location": "L63"
+    },
+    {
+      "id": "app_src_api_loaddraft",
+      "label": "loadDraft()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "loaddraft()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L69"
+    },
+    {
+      "id": "app_src_api_uploadimagetostorage",
+      "label": "uploadImageToStorage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "uploadimagetostorage()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L431"
+    },
+    {
+      "id": "app_src_api_uploadmediatostorage",
+      "label": "uploadMediaToStorage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "uploadmediatostorage()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L436"
     },
     {
       "id": "app_src_app_app",
@@ -3094,11 +2998,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "app()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L92"
+      "source_location": "L97"
     },
     {
       "id": "app_src_app_app_cancelleaveimport",
@@ -3106,11 +3010,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "cancelleaveimport()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L194"
+      "source_location": "L213"
     },
     {
       "id": "app_src_app_app_confirmleaveimport",
@@ -3118,11 +3022,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "confirmleaveimport()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L189"
+      "source_location": "L208"
+    },
+    {
+      "id": "app_src_app_app_handlecreateproject",
+      "label": "handleCreateProject()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "handlecreateproject()",
+      "source_file": "app/src/App.tsx",
+      "source_location": "L158"
     },
     {
       "id": "app_src_app_app_handleimportjson",
@@ -3130,11 +3046,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "handleimportjson()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L167"
+      "source_location": "L186"
+    },
+    {
+      "id": "app_src_app_app_handleopenexistingdraft",
+      "label": "handleOpenExistingDraft()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "handleopenexistingdraft()",
+      "source_file": "app/src/App.tsx",
+      "source_location": "L173"
     },
     {
       "id": "app_src_app_app_handleskipnewproject",
@@ -3142,11 +3070,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "handleskipnewproject()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L146"
+      "source_location": "L165"
     },
     {
       "id": "app_src_app_app_handletabclick",
@@ -3154,11 +3082,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "handletabclick()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L182"
+      "source_location": "L201"
     },
     {
       "id": "app_src_app_app_onkey",
@@ -3166,11 +3094,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "onkey()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L203"
+      "source_location": "L222"
     },
     {
       "id": "app_src_app_autosaveindicator",
@@ -3178,11 +3106,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "autosaveindicator()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L539"
+      "source_location": "L558"
     },
     {
       "id": "app_src_app_leaveimportwarningmodal",
@@ -3190,11 +3118,59 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "leaveimportwarningmodal()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L515"
+      "source_location": "L534"
+    },
+    {
+      "id": "app_src_app_newprojectmodal",
+      "label": "NewProjectModal()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "newprojectmodal()",
+      "source_file": "app/src/App.tsx",
+      "source_location": "L402"
+    },
+    {
+      "id": "app_src_app_newprojectmodal_handlefile",
+      "label": "handleFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "handlefile()",
+      "source_file": "app/src/App.tsx",
+      "source_location": "L413"
+    },
+    {
+      "id": "app_src_app_newprojectmodal_openexistingmode",
+      "label": "openExistingMode()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "openexistingmode()",
+      "source_file": "app/src/App.tsx",
+      "source_location": "L434"
+    },
+    {
+      "id": "app_src_app_newprojectmodal_pickdraft",
+      "label": "pickDraft()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "pickdraft()",
+      "source_file": "app/src/App.tsx",
+      "source_location": "L444"
     },
     {
       "id": "app_src_app_projectbar",
@@ -3202,11 +3178,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "projectbar()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L316"
+      "source_location": "L335"
     },
     {
       "id": "app_src_app_themetoggle",
@@ -3214,11 +3190,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "themetoggle()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L370"
+      "source_location": "L389"
     },
     {
       "id": "app_src_app_undoredo",
@@ -3226,11 +3202,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "undoredo()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L345"
+      "source_location": "L364"
     },
     {
       "id": "app_src_app_usemodulehistory",
@@ -3238,11 +3214,299 @@
       "_callable": true,
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "usemodulehistory()",
       "source_file": "app/src/App.tsx",
-      "source_location": "L39"
+      "source_location": "L44"
+    },
+    {
+      "id": "app_src_components_blockeditor_videouploadfield",
+      "label": "VideoUploadField()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "videouploadfield()",
+      "source_file": "app/src/components/BlockEditor.tsx",
+      "source_location": "L851"
+    },
+    {
+      "id": "app_src_components_canvas_bundleanimateddemo",
+      "label": "BundleAnimatedDemo()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "bundleanimateddemo()",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L216"
+    },
+    {
+      "id": "app_src_components_canvas_bundlepanel",
+      "label": "BundlePanel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "bundlepanel()",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L161"
+    },
+    {
+      "id": "app_src_components_canvas_slideaudiofield",
+      "label": "SlideAudioField()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "slideaudiofield()",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L284"
+    },
+    {
+      "id": "app_src_components_canvas_sliderow",
+      "label": "SlideRow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "sliderow()",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L334"
+    },
+    {
+      "id": "app_src_components_coverform_backgroundimagefield",
+      "label": "BackgroundImageField()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "backgroundimagefield()",
+      "source_file": "app/src/components/CoverForm.tsx",
+      "source_location": "L258"
+    },
+    {
+      "id": "app_src_components_coverform_backgroundimagefield_handleupload",
+      "label": "handleUpload()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "handleupload()",
+      "source_file": "app/src/components/CoverForm.tsx",
+      "source_location": "L272"
+    },
+    {
+      "id": "app_src_components_coverform_coverform",
+      "label": "CoverForm()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "coverform()",
+      "source_file": "app/src/components/CoverForm.tsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "app_src_components_previewexport_previewexport_doimportjson",
+      "label": "doImportJson()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "doimportjson()",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L189"
+    },
+    {
+      "id": "app_src_components_previewexport_previewexport_doload",
+      "label": "doLoad()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "doload()",
+      "source_file": "app/src/components/PreviewExport.tsx",
+      "source_location": "L255"
+    },
+    {
+      "id": "app_src_components_slidepreview_slidepreview",
+      "label": "SlidePreview()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "slidepreview()",
+      "source_file": "app/src/components/SlidePreview.tsx",
+      "source_location": "L59"
+    },
+    {
+      "id": "app_src_components_slidepreview_slidepreview_bawapopupkelayar",
+      "label": "bawaPopupKeLayar()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "bawapopupkelayar()",
+      "source_file": "app/src/components/SlidePreview.tsx",
+      "source_location": "L125"
+    },
+    {
+      "id": "app_src_components_slidepreview_slidepreview_jumptoslide",
+      "label": "jumpToSlide()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "jumptoslide()",
+      "source_file": "app/src/components/SlidePreview.tsx",
+      "source_location": "L166"
+    },
+    {
+      "id": "app_src_components_slidepreview_slidepreview_ubahzoom",
+      "label": "ubahZoom()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "ubahzoom()",
+      "source_file": "app/src/components/SlidePreview.tsx",
+      "source_location": "L107"
+    },
+    {
+      "id": "app_src_themes_findthemepresetid",
+      "label": "findThemePresetId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "findthemepresetid()",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L27"
+    },
+    {
+      "id": "app_src_types_applyblocktext",
+      "label": "applyBlockText()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "applyblocktext()",
+      "source_file": "app/src/types.ts",
+      "source_location": "L472"
+    },
+    {
+      "id": "app_src_types_buildprojectslugprefix",
+      "label": "buildProjectSlugPrefix()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "buildprojectslugprefix()",
+      "source_file": "app/src/types.ts",
+      "source_location": "L268"
+    },
+    {
+      "id": "app_src_types_changeblocktype",
+      "label": "changeBlockType()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "changeblocktype()",
+      "source_file": "app/src/types.ts",
+      "source_location": "L524"
+    },
+    {
+      "id": "app_src_types_emptymodule",
+      "label": "emptyModule()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "emptymodule()",
+      "source_file": "app/src/types.ts",
+      "source_location": "L274"
+    },
+    {
+      "id": "app_src_types_modulefromjson",
+      "label": "moduleFromJson()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "modulefromjson()",
+      "source_file": "app/src/types.ts",
+      "source_location": "L317"
+    },
+    {
+      "id": "app_src_types_newblock",
+      "label": "newBlock()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "newblock()",
+      "source_file": "app/src/types.ts",
+      "source_location": "L390"
+    },
+    {
+      "id": "app_src_types_normalizemodule",
+      "label": "normalizeModule()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "normalizemodule()",
+      "source_file": "app/src/types.ts",
+      "source_location": "L307"
+    },
+    {
+      "id": "app_src_types_slugify",
+      "label": "slugify()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "slugify()",
+      "source_file": "app/src/types.ts",
+      "source_location": "L256"
+    },
+    {
+      "id": "app_src_types_uid",
+      "label": "uid()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "uid()",
+      "source_file": "app/src/types.ts",
+      "source_location": "L383"
     },
     {
       "id": "app_src_components_canvas_canvas",
@@ -3425,6 +3689,66 @@
       "source_location": "L48"
     },
     {
+      "id": "app_src_components_slidebank_slidebank",
+      "label": "SlideBank()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Canvas",
+      "file_type": "code",
+      "norm_label": "slidebank()",
+      "source_file": "app/src/components/SlideBank.tsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "app_src_components_slidebank_slidebank_addtocanvas",
+      "label": "addToCanvas()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Canvas",
+      "file_type": "code",
+      "norm_label": "addtocanvas()",
+      "source_file": "app/src/components/SlideBank.tsx",
+      "source_location": "L41"
+    },
+    {
+      "id": "app_src_components_slidebank_slidebank_countadded",
+      "label": "countAdded()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Canvas",
+      "file_type": "code",
+      "norm_label": "countadded()",
+      "source_file": "app/src/components/SlideBank.tsx",
+      "source_location": "L18"
+    },
+    {
+      "id": "app_src_components_slidebank_slidebank_onupload",
+      "label": "onUpload()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Canvas",
+      "file_type": "code",
+      "norm_label": "onupload()",
+      "source_file": "app/src/components/SlideBank.tsx",
+      "source_location": "L22"
+    },
+    {
+      "id": "app_src_components_slidebank_slidebank_togglereviewed",
+      "label": "toggleReviewed()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "Canvas",
+      "file_type": "code",
+      "norm_label": "togglereviewed()",
+      "source_file": "app/src/components/SlideBank.tsx",
+      "source_location": "L37"
+    },
+    {
       "id": "app_src_types_renumbermodule",
       "label": "renumberModule()",
       "_callable": true,
@@ -3509,234 +3833,6 @@
       "source_location": "L65"
     },
     {
-      "id": "app_src_app_app_handlecreateproject",
-      "label": "handleCreateProject()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "handlecreateproject()",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L139"
-    },
-    {
-      "id": "app_src_types_applyblocktext",
-      "label": "applyBlockText()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "applyblocktext()",
-      "source_file": "app/src/types.ts",
-      "source_location": "L472"
-    },
-    {
-      "id": "app_src_types_buildprojectslugprefix",
-      "label": "buildProjectSlugPrefix()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "buildprojectslugprefix()",
-      "source_file": "app/src/types.ts",
-      "source_location": "L268"
-    },
-    {
-      "id": "app_src_types_changeblocktype",
-      "label": "changeBlockType()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "changeblocktype()",
-      "source_file": "app/src/types.ts",
-      "source_location": "L524"
-    },
-    {
-      "id": "app_src_types_emptymodule",
-      "label": "emptyModule()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "emptymodule()",
-      "source_file": "app/src/types.ts",
-      "source_location": "L274"
-    },
-    {
-      "id": "app_src_types_newblock",
-      "label": "newBlock()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "newblock()",
-      "source_file": "app/src/types.ts",
-      "source_location": "L390"
-    },
-    {
-      "id": "app_src_types_slugify",
-      "label": "slugify()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "slugify()",
-      "source_file": "app/src/types.ts",
-      "source_location": "L256"
-    },
-    {
-      "id": "app_src_types_uid",
-      "label": "uid()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "uid()",
-      "source_file": "app/src/types.ts",
-      "source_location": "L383"
-    },
-    {
-      "id": "app_src_api_listdrafts",
-      "label": "listDrafts()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "listdrafts()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L63"
-    },
-    {
-      "id": "app_src_api_loaddraft",
-      "label": "loadDraft()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "loaddraft()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L69"
-    },
-    {
-      "id": "app_src_app_app_handleopenexistingdraft",
-      "label": "handleOpenExistingDraft()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "handleopenexistingdraft()",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L154"
-    },
-    {
-      "id": "app_src_app_newprojectmodal",
-      "label": "NewProjectModal()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "newprojectmodal()",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L383"
-    },
-    {
-      "id": "app_src_app_newprojectmodal_handlefile",
-      "label": "handleFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "handlefile()",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L394"
-    },
-    {
-      "id": "app_src_app_newprojectmodal_openexistingmode",
-      "label": "openExistingMode()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "openexistingmode()",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L415"
-    },
-    {
-      "id": "app_src_app_newprojectmodal_pickdraft",
-      "label": "pickDraft()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "pickdraft()",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L425"
-    },
-    {
-      "id": "app_src_components_previewexport_previewexport_doimportjson",
-      "label": "doImportJson()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "doimportjson()",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L189"
-    },
-    {
-      "id": "app_src_components_previewexport_previewexport_doload",
-      "label": "doLoad()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "doload()",
-      "source_file": "app/src/components/PreviewExport.tsx",
-      "source_location": "L255"
-    },
-    {
-      "id": "app_src_types_modulefromjson",
-      "label": "moduleFromJson()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "modulefromjson()",
-      "source_file": "app/src/types.ts",
-      "source_location": "L317"
-    },
-    {
-      "id": "app_src_types_normalizemodule",
-      "label": "normalizeModule()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "normalizeModule",
-      "file_type": "code",
-      "norm_label": "normalizemodule()",
-      "source_file": "app/src/types.ts",
-      "source_location": "L307"
-    },
-    {
       "id": "app_src_components_blockaddmenu_blockaddmenu",
       "label": "BlockAddMenu()",
       "_callable": true,
@@ -3807,66 +3903,6 @@
       "norm_label": "schedulehover()",
       "source_file": "app/src/components/BlockAddMenu.tsx",
       "source_location": "L81"
-    },
-    {
-      "id": "app_src_components_slidebank_slidebank",
-      "label": "SlideBank()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SlideBank",
-      "file_type": "code",
-      "norm_label": "slidebank()",
-      "source_file": "app/src/components/SlideBank.tsx",
-      "source_location": "L13"
-    },
-    {
-      "id": "app_src_components_slidebank_slidebank_addtocanvas",
-      "label": "addToCanvas()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SlideBank",
-      "file_type": "code",
-      "norm_label": "addtocanvas()",
-      "source_file": "app/src/components/SlideBank.tsx",
-      "source_location": "L41"
-    },
-    {
-      "id": "app_src_components_slidebank_slidebank_countadded",
-      "label": "countAdded()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SlideBank",
-      "file_type": "code",
-      "norm_label": "countadded()",
-      "source_file": "app/src/components/SlideBank.tsx",
-      "source_location": "L18"
-    },
-    {
-      "id": "app_src_components_slidebank_slidebank_onupload",
-      "label": "onUpload()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SlideBank",
-      "file_type": "code",
-      "norm_label": "onupload()",
-      "source_file": "app/src/components/SlideBank.tsx",
-      "source_location": "L22"
-    },
-    {
-      "id": "app_src_components_slidebank_slidebank_togglereviewed",
-      "label": "toggleReviewed()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "SlideBank",
-      "file_type": "code",
-      "norm_label": "togglereviewed()",
-      "source_file": "app/src/components/SlideBank.tsx",
-      "source_location": "L37"
     },
     {
       "id": "app_src_api_cccocreation",
@@ -4047,18 +4083,6 @@
       "norm_label": "uploadfiletostorage()",
       "source_file": "app/src/api.ts",
       "source_location": "L399"
-    },
-    {
-      "id": "app_src_api_uploadimagetostorage",
-      "label": "uploadImageToStorage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "uploadimagetostorage()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L431"
     },
     {
       "id": "app_src_api_uploadpptxtostorage",
@@ -4349,30 +4373,6 @@
       "source_location": "L191"
     },
     {
-      "id": "app_src_components_coverform_backgroundimagefield",
-      "label": "BackgroundImageField()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "backgroundimagefield()",
-      "source_file": "app/src/components/CoverForm.tsx",
-      "source_location": "L258"
-    },
-    {
-      "id": "app_src_components_coverform_backgroundimagefield_handleupload",
-      "label": "handleUpload()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "handleupload()",
-      "source_file": "app/src/components/CoverForm.tsx",
-      "source_location": "L272"
-    },
-    {
       "id": "app_src_assetembed",
       "label": "assetEmbed.ts",
       "_origin": "ast",
@@ -4415,50 +4415,6 @@
       "norm_label": "opsi_entri",
       "source_file": "app/src/scormZip.ts",
       "source_location": "L33"
-    },
-    {
-      "id": "app_src_components_coverform",
-      "label": "CoverForm.tsx",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "coverform.tsx",
-      "source_file": "app/src/components/CoverForm.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_themes",
-      "label": "themes.ts",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "themes.ts",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_themes_default_theme",
-      "label": "DEFAULT_THEME",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "default_theme",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L25"
-    },
-    {
-      "id": "app_src_themes_theme_presets",
-      "label": "THEME_PRESETS",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "CoverForm.tsx",
-      "file_type": "code",
-      "norm_label": "theme_presets",
-      "source_file": "app/src/themes.ts",
-      "source_location": "L16"
     },
     {
       "id": "server_api_activity_store",
@@ -5814,39 +5770,6 @@
       "source_location": "L1"
     },
     {
-      "id": "app_src_components_canvas",
-      "label": "Canvas.tsx",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "canvas.tsx",
-      "source_file": "app/src/components/Canvas.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_components_quizbuilder",
-      "label": "QuizBuilder.tsx",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "quizbuilder.tsx",
-      "source_file": "app/src/components/QuizBuilder.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_components_slidepreview",
-      "label": "SlidePreview.tsx",
-      "_origin": "ast",
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "file_type": "code",
-      "norm_label": "slidepreview.tsx",
-      "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "app_src_components_emojipicker",
       "label": "EmojiPicker.tsx",
       "_origin": "ast",
@@ -6027,7 +5950,7 @@
       "label": "App.tsx",
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "app.tsx",
       "source_file": "app/src/App.tsx",
@@ -6038,21 +5961,120 @@
       "label": "TABS",
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "tabs",
       "source_file": "app/src/App.tsx",
       "source_location": "L14"
     },
     {
+      "id": "app_src_components_canvas",
+      "label": "Canvas.tsx",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "canvas.tsx",
+      "source_file": "app/src/components/Canvas.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_components_coverform",
+      "label": "CoverForm.tsx",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "coverform.tsx",
+      "source_file": "app/src/components/CoverForm.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_components_quizbuilder",
+      "label": "QuizBuilder.tsx",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "quizbuilder.tsx",
+      "source_file": "app/src/components/QuizBuilder.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_components_slidebank",
+      "label": "SlideBank.tsx",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "slidebank.tsx",
+      "source_file": "app/src/components/SlideBank.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_components_slidepreview",
+      "label": "SlidePreview.tsx",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "slidepreview.tsx",
+      "source_file": "app/src/components/SlidePreview.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "app_src_main",
       "label": "main.tsx",
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "code",
       "norm_label": "main.tsx",
       "source_file": "app/src/main.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_themes",
+      "label": "themes.ts",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "themes.ts",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_src_themes_default_theme",
+      "label": "DEFAULT_THEME",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "default_theme",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L25"
+    },
+    {
+      "id": "app_src_themes_theme_presets",
+      "label": "THEME_PRESETS",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "theme_presets",
+      "source_file": "app/src/themes.ts",
+      "source_location": "L16"
+    },
+    {
+      "id": "app_src_types",
+      "label": "types.ts",
+      "_origin": "ast",
+      "community": 48,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "types.ts",
+      "source_file": "app/src/types.ts",
       "source_location": "L1"
     },
     {
@@ -6060,7 +6082,7 @@
       "label": "react",
       "_origin": "ast",
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "file_type": "concept",
       "norm_label": "react",
       "source_file": "app/.oxlintrc.json",
@@ -6120,28 +6142,6 @@
       "norm_label": "url bertanda tangan buat satu objek. `method` 'put' (upload), 'get' (unduh),...",
       "source_file": "server/api/r2.py",
       "source_location": "L73"
-    },
-    {
-      "id": "app_src_components_slidebank",
-      "label": "SlideBank.tsx",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "slidebank.tsx",
-      "source_file": "app/src/components/SlideBank.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_src_types",
-      "label": "types.ts",
-      "_origin": "ast",
-      "community": 51,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "types.ts",
-      "source_file": "app/src/types.ts",
-      "source_location": "L1"
     },
     {
       "id": "app_package",
@@ -8530,21 +8530,6 @@
       "source_url": null
     },
     {
-      "id": "panduan_fitur_template_modul_ikram_kuis",
-      "label": "Kuis (Tahap 4)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 38,
-      "community_name": "Canvas.tsx",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "kuis (tahap 4)",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_accordion",
       "label": "Accordion block renderer",
       "_origin": "semantic",
@@ -9290,11 +9275,26 @@
       "author": null,
       "captured_at": null,
       "community": 48,
-      "community_name": "App.tsx",
+      "community_name": "types.ts",
       "contributor": null,
       "file_type": "code",
       "norm_label": "handlecreateproject()",
       "source_file": "Template-Modul-Ikram-Source-Code.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_kuis",
+      "label": "Kuis (Tahap 4)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 48,
+      "community_name": "types.ts",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "kuis (tahap 4)",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
       "source_location": null,
       "source_url": null
     },
@@ -10259,30 +10259,6 @@
     },
     {
       "source": "app_src_app_app",
-      "target": "app_src_types_normalizemodule",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L134",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app_app",
-      "target": "app_src_types_buildprojectslugprefix",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L140",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app_app",
       "target": "app_src_app_usemodulehistory",
       "relation": "calls",
       "_origin": "ast",
@@ -10290,7 +10266,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L94",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -10302,7 +10278,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L94",
+      "source_location": "L108",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_app_app",
+      "target": "app_src_types_normalizemodule",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app/src/App.tsx",
+      "source_location": "L153",
       "weight": 1.0
     },
     {
@@ -10314,7 +10302,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L140",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -10326,7 +10314,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L141",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -10338,55 +10326,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L155",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app_newprojectmodal",
-      "target": "app_src_types_modulefromjson",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L400",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app_newprojectmodal",
-      "target": "app_src_api_listdrafts",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L419",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app_newprojectmodal",
-      "target": "app_src_api_loaddraft",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L428",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app_newprojectmodal",
-      "target": "app_src_types_normalizemodule",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L429",
+      "source_location": "L174",
       "weight": 1.0
     },
     {
@@ -10398,7 +10338,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L400",
+      "source_location": "L419",
       "weight": 1.0
     },
     {
@@ -10410,7 +10350,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L419",
+      "source_location": "L438",
       "weight": 1.0
     },
     {
@@ -10422,7 +10362,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L428",
+      "source_location": "L447",
       "weight": 1.0
     },
     {
@@ -10434,7 +10374,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L429",
+      "source_location": "L448",
       "weight": 1.0
     },
     {
@@ -13098,7 +13038,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L182",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -13110,7 +13050,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/App.tsx",
-      "source_location": "L425",
+      "source_location": "L444",
       "weight": 1.0
     },
     {
@@ -13954,18 +13894,6 @@
       "weight": 1.0
     },
     {
-      "source": "app_src_app_history",
-      "target": "app_src_types_moduledata",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "field",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L31",
-      "weight": 1.0
-    },
-    {
       "source": "app_src_components_blockaddmenu_props",
       "target": "app_src_types_blocktype",
       "relation": "references",
@@ -14375,18 +14303,6 @@
     },
     {
       "source": "app_src_app",
-      "target": "app_src_components_commandcenter_commandcenter",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L10",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app",
       "target": "app_src_types_draftslide",
       "relation": "imports",
       "_origin": "ast",
@@ -14491,66 +14407,6 @@
       "context": "import",
       "source_file": "app/src/App.tsx",
       "source_location": "L4",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app",
-      "target": "app_src_components_slidebank_slidebank",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L5",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app",
-      "target": "app_src_components_canvas_canvas",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L6",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app",
-      "target": "app_src_components_coverform_coverform",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L7",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app",
-      "target": "app_src_components_quizbuilder_quizbuilder",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L8",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app",
-      "target": "app_src_components_previewexport_previewexport",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "app/src/App.tsx",
-      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -17162,24 +17018,24 @@
     },
     {
       "source": "app_src_app",
-      "target": "app_src_app_history",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "app/src/App.tsx",
-      "source_location": "L31",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_app",
       "target": "app_src_app_projectbar",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L316",
+      "source_location": "L335",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_app",
+      "target": "app_src_app_history",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/App.tsx",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -17190,7 +17046,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L345",
+      "source_location": "L364",
       "weight": 1.0
     },
     {
@@ -17201,7 +17057,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L370",
+      "source_location": "L389",
       "weight": 1.0
     },
     {
@@ -17212,7 +17068,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L383",
+      "source_location": "L402",
       "weight": 1.0
     },
     {
@@ -17223,7 +17079,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L39",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -17234,7 +17090,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L515",
+      "source_location": "L534",
       "weight": 1.0
     },
     {
@@ -17245,7 +17101,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L539",
+      "source_location": "L558",
       "weight": 1.0
     },
     {
@@ -17256,7 +17112,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L92",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -17267,7 +17123,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L139",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -17278,7 +17134,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L146",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -17289,7 +17145,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L154",
+      "source_location": "L173",
       "weight": 1.0
     },
     {
@@ -17300,7 +17156,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L167",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
@@ -17311,7 +17167,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L189",
+      "source_location": "L208",
       "weight": 1.0
     },
     {
@@ -17322,7 +17178,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L194",
+      "source_location": "L213",
       "weight": 1.0
     },
     {
@@ -17333,7 +17189,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L394",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -17344,7 +17200,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/App.tsx",
-      "source_location": "L415",
+      "source_location": "L434",
       "weight": 1.0
     },
     {
@@ -21261,7 +21117,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "app/src/App.tsx",
-      "source_location": "L210",
+      "source_location": "L229",
       "weight": 1.0
     },
     {
@@ -25801,5 +25657,5 @@
       "source_file": "Panduan-Fitur-Template-Modul-Ikram.html"
     }
   ],
-  "built_at_commit": "2c7ad7c2fd5b7abd34c59fc22a4f20fe21099ccb"
+  "built_at_commit": "2a2dbff21aafbb0fb8a6f06e15539b7ca808b744"
 }
