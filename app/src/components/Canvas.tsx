@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
 } from '@dnd-kit/core';
@@ -17,8 +17,63 @@ interface Props {
   setModule: (m: ModuleData) => void;
 }
 
+// Slide yang editornya lagi kebuka. Disimpan biar muat ulang (Ctrl+Shift+R,
+// peramban tertutup sendiri) balik ke editor yang sama, bukan ke daftar slide
+// yang tergulung habis di atas.
+const SLIDE_TERBUKA_KEY = 'modul-builder-slide-terbuka';
+
 export default function Canvas({ module, setModule }: Props) {
   const [openSlideId, setOpenSlideId] = useState<string | null>(null);
+  // Pemulihan cuma boleh sekali. Tanpa penanda ini, tiap kali daftar slide
+  // berubah (tambah/hapus/geser slide) editornya bakal loncat balik ke slide
+  // yang tersimpan — menimpa apa yang barusan dibuka orangnya.
+  const sudahPulih = useRef(false);
+  // Ditandai waktu editor dipulihkan, dibaca oleh effect penggulir di bawah.
+  const perluGulir = useRef(false);
+
+  // Dipulihkan di effect, BUKAN di initializer useState: waktu komponen ini
+  // pertama mount, draft-nya masih dimuat dari server dan module.slides masih
+  // kosong — id yang tersimpan gak akan ketemu padanannya lalu kebuang.
+  useEffect(() => {
+    if (sudahPulih.current || module.slides.length === 0) return;
+    sudahPulih.current = true;
+    try {
+      const id = localStorage.getItem(SLIDE_TERBUKA_KEY);
+      // Dicocokkan ke slide yang benar-benar ada: id sisa dari project lain
+      // atau slide yang sudah dihapus gak boleh bikin editor hantu kebuka.
+      if (id && module.slides.some(s => s.id === id)) {
+        setOpenSlideId(id);
+        perluGulir.current = true;
+      }
+    } catch { /* localStorage diblokir (mode privat) — mulai tanpa editor kebuka */ }
+  }, [module.slides]);
+
+  // Menggulir ke editor yang dipulihkan. Editornya panjang, jadi tanpa ini
+  // yang kebuka ada jauh di luar layar dan orangnya tetap merasa "kelempar".
+  //
+  // Digulir di effect TERPISAH, bukan barengan pemulihan di atas: waktu
+  // setOpenSlideId dipanggil, editornya belum kerender sama sekali, jadi
+  // posisi barisnya masih posisi baris terlipat. Dua frame — satu buat
+  // React menaruh editornya ke DOM, satu lagi buat tata letaknya benar-benar
+  // jadi sebelum posisinya diukur.
+  useEffect(() => {
+    if (!perluGulir.current || !openSlideId) return;
+    perluGulir.current = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      document.getElementById(`slide-row-${openSlideId}`)?.scrollIntoView({ block: 'start' });
+    }));
+  }, [openSlideId]);
+
+  // Menunggu percobaan pemulihan selesai sebelum menulis: kalau enggak, nilai
+  // awal null dari mount pertama bakal menghapus id yang mau dipulihkan.
+  useEffect(() => {
+    if (!sudahPulih.current) return;
+    try {
+      if (openSlideId) localStorage.setItem(SLIDE_TERBUKA_KEY, openSlideId);
+      else localStorage.removeItem(SLIDE_TERBUKA_KEY);
+    } catch { /* kuota penuh / mode privat — cuma ingatannya yang hilang */ }
+  }, [openSlideId]);
+
   const sensors = useSensors(useSensor(PointerSensor));
 
   function addSection() {
@@ -337,8 +392,10 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: slide.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+  // id-nya dipakai buat menggulir balik ke editor yang dipulihkan setelah muat
+  // ulang — lihat SLIDE_TERBUKA_KEY di Canvas().
   return (
-    <div ref={setNodeRef} style={{ ...style, border: `1px solid ${open ? 'var(--border-strong)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', boxShadow: open ? 'var(--shadow-sm)' : 'none' }}>
+    <div id={`slide-row-${slide.id}`} ref={setNodeRef} style={{ ...style, border: `1px solid ${open ? 'var(--border-strong)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', boxShadow: open ? 'var(--shadow-sm)' : 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8 }}>
         <span {...attributes} {...listeners} style={{ cursor: 'grab', color: 'var(--text-faint)', fontSize: 15, padding: '0 2px' }} title="Geser untuk atur urutan">⠿</span>
         <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, whiteSpace: 'nowrap' }}>#{slide.number}{slide.sourceSlideNo ? ` · PPTX ${slide.sourceSlideNo}` : ''}</span>
