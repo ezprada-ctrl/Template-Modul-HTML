@@ -522,12 +522,21 @@ def render_modal(b):
     title = esc(b.get('heading', 'Info Tambahan'))
     body = nl2br(b.get('bodyHtml', ''))
     icon = b.get('icon') or '📝'
+    # Gambar opsional di dalam popup (field `src`, dipakai bareng blok Gambar
+    # & Media - lihat catatannya di types.ts). Ditaruh DI ATAS teks: kalau
+    # keduanya diisi, yang lazim itu bagan dulu baru penjelasannya. Blok lama
+    # tanpa `src` menghasilkan HTML yang sama persis seperti sebelum ini ada.
+    #
+    # <img> biasa dengan URL absolut, bukan background-image: itu yang dipindai
+    # urlGambar() waktu export, jadi gambarnya ikut tersemat ke HTML tunggal
+    # dan ikut disalin ke paket SCORM tanpa penanganan khusus.
+    img = f'<img class="modal-img" src="{esc(b["src"])}" alt="">' if b.get('src') else ''
     return (
         f'<button class="modal-trigger" onclick="openModal(\'{modal_id}\')">'
         f'<span class="ic">{icon}</span><span>{title}</span><span class="chevron">›</span></button>'
         f'<div class="modal-overlay" id="{modal_id}" onclick="if(event.target===this) closeModal(\'{modal_id}\')">'
         f'<div class="modal-box"><button class="modal-close" onclick="closeModal(\'{modal_id}\')">✕</button>'
-        f'<h3>{title}</h3>{body}</div></div>'
+        f'<h3>{title}</h3>{img}{body}</div></div>'
     )
 
 

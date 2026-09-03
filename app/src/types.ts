@@ -80,6 +80,10 @@ export interface Block {
   columns?: 2 | 3;
   blocks?: Block[];
   // image
+  // Dipakai bersama tiga blok: blok Gambar, blok Media ('video'), dan blok
+  // Modal Popup (gambar opsional di dalam popup-nya). Ketiganya gak pernah
+  // dirender berbarengan dalam satu blok, jadi satu field cukup — sama seperti
+  // `heading`/`bodyHtml` yang juga dipakai ulang lintas tipe blok.
   src?: string;
   caption?: string;
   // Layout controls (all optional; unset = current behaviour: boxed, 100%,

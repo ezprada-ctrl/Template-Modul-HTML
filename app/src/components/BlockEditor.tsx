@@ -339,6 +339,18 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
         <EmojiPicker value={block.icon || '📝'} onChange={icon => onChange({ icon })} />
         <input style={inp} placeholder="Judul tombol & popup (mis. Rincian Tambahan)" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
         <RichTextarea style={{ ...ta, minHeight: 120 }} placeholder="Isi popup (HTML/teks, boleh tabel dtable dll)" value={block.bodyHtml || ''} onChange={v => onChange({ bodyHtml: v })} />
+        {/* Gambar OPSIONAL di dalam popup. Dua-duanya boleh diisi sekaligus:
+            gambar tampil di atas, teks di bawahnya — pola yang biasa dipakai
+            buat bagan/diagram plus penjelasannya. Isi salah satu saja juga
+            sah: popup teks saja, atau popup gambar saja. */}
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' }}>
+          Gambar di dalam popup (opsional)
+        </label>
+        <ImageUploadField value={block.src || ''} onUploaded={src => onChange({ src })} />
+        {block.src && (
+          <button className="btn-sm btn-danger" style={{ marginBottom: 6 }}
+            onClick={() => onChange({ src: '' })}>Hapus gambar</button>
+        )}
       </>;
     default:
       return null;

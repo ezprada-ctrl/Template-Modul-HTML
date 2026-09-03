@@ -97,7 +97,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-head">
       <p class="sidebar-title">Template Modul Ikram</p>
-      <p class="sidebar-sub">49 file / 16273 baris kode</p>
+      <p class="sidebar-sub">49 file / 16517 baris kode</p>
     </div>
     <div class="filter-box"><input id="filterInput" type="text" placeholder="Cari nama file..." autocomplete="off"></div>
     <div class="fgroup"><div class="fgroup-label">Frontend — masuk &amp; setup</div>
@@ -167,7 +167,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
     <div class="intro">
       <h1>Seluruh source code, satu halaman</h1>
       <p>Semua file penting di repo <code>ezprada-ctrl/Template-Modul-HTML</code> digabung berurutan: frontend (React/TypeScript) dulu, lalu backend (Python), lalu file konfigurasi. Klik nama file di sidebar buat langsung lompat ke situ, atau ketik di kolom cari. Klik judul tiap file buat lipat/buka isinya.</p>
-      <p class="stats">49 file / 16273 baris kode &middot; commit <code>04b0003</code> &middot; dicetak 01 September 2026 &middot; perbarui dengan <code>python tools/build_source_printout.py</code></p>
+      <p class="stats">49 file / 16517 baris kode &middot; commit <code>fca2527</code> &middot; dicetak 03 September 2026 &middot; perbarui dengan <code>python tools/build_source_printout.py</code></p>
     </div>
 
 <section class="file" id="app-src-main-tsx">
@@ -191,7 +191,7 @@ createRoot(document.getElementById(&#x27;root&#x27;)!).render(
 <section class="file" id="app-src-App-tsx">
   <div class="file-head">
     <div class="file-path"><span class="dir">app/src/</span><span class="base">App.tsx</span></div>
-    <div class="file-meta"><span class="lang">tsx</span><span class="lines">551 baris</span></div>
+    <div class="file-meta"><span class="lang">tsx</span><span class="lines">570 baris</span></div>
   </div>
   <pre class="code lang-tsx"><code>import { useCallback, useEffect, useRef, useState } from &#x27;react&#x27;;
 import type { ModuleData, DraftSlide } from &#x27;./types&#x27;;
@@ -217,6 +217,11 @@ const TABS: { id: Tab; label: string; hint: string }[] = [
 
 const LAST_SLUG_KEY = &#x27;modul-builder-last-slug&#x27;;
 const THEME_KEY = &#x27;modul-builder-theme&#x27;;
+// Tab yang terakhir dibuka. Draft &amp; tema sudah bertahan menyeberangi muat
+// ulang, tapi tab-nya enggak — jadi tiap Ctrl+Shift+R (atau peramban yang
+// tertutup sendiri) melempar orang balik ke &quot;Import PPTX&quot;, tab yang justru
+// paling jarang dipakai setelah slide-nya masuk.
+const TAB_KEY = &#x27;modul-builder-last-tab&#x27;;
 
 const HISTORY_CAP = 50;
 // Edits landing within this window (e.g. typing) collapse into one undo step
@@ -285,7 +290,16 @@ function useModuleHistory(initial: ModuleData) {
 }
 
 function App() {
-  const [tab, setTab] = useState&lt;Tab&gt;(&#x27;bank&#x27;);
+  const [tab, setTab] = useState&lt;Tab&gt;(() =&gt; {
+    try {
+      const tersimpan = localStorage.getItem(TAB_KEY);
+      // Dicocokkan ke daftar TABS, bukan dipercaya apa adanya: kalau id tab
+      // pernah berubah atau dihapus, nilai lama bikin isi tab gak kerender
+      // sama sekali — layar kosong tanpa pesan apa pun.
+      if (tersimpan &amp;&amp; TABS.some(t =&gt; t.id === tersimpan)) return tersimpan as Tab;
+    } catch { /* localStorage diblokir (mode privat) — mulai dari tab pertama */ }
+    return &#x27;bank&#x27;;
+  });
   const { module, setModule, undo, redo, resetHistory, canUndo, canRedo } = useModuleHistory(emptyModule());
   const [bank, setBank] = useState&lt;DraftSlide[]&gt;([]);
   const [hydrated, setHydrated] = useState(false);
@@ -310,6 +324,11 @@ function App() {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
+
+  // Ingat tab yang lagi dibuka, biar muat ulang balik ke tempat yang sama.
+  useEffect(() =&gt; {
+    try { localStorage.setItem(TAB_KEY, tab); } catch { /* kuota penuh / mode privat — cuma ingatannya yang hilang */ }
+  }, [tab]);
 
   // On first load: try to restore the last-worked-on draft automatically.
   // If there&#x27;s no local record of a previous project, ask for a name so
@@ -764,7 +783,7 @@ button {
 <section class="file" id="app-src-index-css">
   <div class="file-head">
     <div class="file-path"><span class="dir">app/src/</span><span class="base">index.css</span></div>
-    <div class="file-meta"><span class="lang">css</span><span class="lines">282 baris</span></div>
+    <div class="file-meta"><span class="lang">css</span><span class="lines">338 baris</span></div>
   </div>
   <pre class="code lang-css"><code>/* ============================================================================
    Design tokens — monochrome neutral builder UI, light + dark.
@@ -1047,6 +1066,62 @@ code {
 .opt-note.is-ok   { background: var(--success-soft); color: var(--success); box-shadow: inset 3px 0 0 var(--success); }
 .opt-note.is-warn { background: var(--danger-soft);  color: var(--danger);  box-shadow: inset 3px 0 0 var(--danger); }
 .opt-note .opt-note-aside { color: var(--text-faint); }
+
+/* ---- Daftar draft (tab Preview &amp; Export) ----
+   Satu kolom, bukan chip yang membungkus: dengan puluhan nama berpola mirip,
+   susunan mengalir gak menyisakan tepi lurus buat dipindai mata. Tinggi dibatasi
+   supaya daftar yang panjang gak mendorong isi tab lain keluar layar. */
+.draft-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  max-height: 340px;
+  overflow-y: auto;
+}
+.draft-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 0 4px;
+  transition: background var(--ease);
+}
+.draft-row + .draft-row { border-top: 1px solid var(--border); }
+.draft-row:hover { background: var(--surface-2); }
+
+.draft-grip {
+  flex: none;
+  padding: 0 4px;
+  color: var(--text-faint);
+  user-select: none;
+  font-size: 13px;
+}
+
+/* Nama draft = tombol muat, dan sengaja memenuhi sisa baris supaya seluruh
+   lebar baris bisa diklik, bukan cuma tulisannya. */
+.draft-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 8px 8px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: ui-monospace, &#x27;SFMono-Regular&#x27;, Menlo, monospace;
+  font-size: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.draft-name:hover { color: var(--ink); }
+
+/* Tombol aksi diredupkan sampai barisnya disentuh: yang dicari mata waktu
+   memindai daftar itu NAMA, bukan tiga ikon yang berulang di tiap baris.
+   Tetap tampil penuh saat difokus lewat keyboard. */
+.draft-actions { display: flex; gap: 2px; flex: none; opacity: 0; transition: opacity var(--ease); }
+.draft-row:hover .draft-actions,
+.draft-actions:focus-within { opacity: 1; }
+@media (hover: none) { .draft-actions { opacity: 1; } }
 </code></pre>
 </section>
 
@@ -1072,7 +1147,7 @@ interface ImportMeta {
 <section class="file" id="app-src-types-ts">
   <div class="file-head">
     <div class="file-path"><span class="dir">app/src/</span><span class="base">types.ts</span></div>
-    <div class="file-meta"><span class="lang">ts</span><span class="lines">530 baris</span></div>
+    <div class="file-meta"><span class="lang">ts</span><span class="lines">534 baris</span></div>
   </div>
   <pre class="code lang-ts"><code>import { DEFAULT_THEME } from &#x27;./themes&#x27;;
 
@@ -1156,6 +1231,10 @@ export interface Block {
   columns?: 2 | 3;
   blocks?: Block[];
   // image
+  // Dipakai bersama tiga blok: blok Gambar, blok Media (&#x27;video&#x27;), dan blok
+  // Modal Popup (gambar opsional di dalam popup-nya). Ketiganya gak pernah
+  // dirender berbarengan dalam satu blok, jadi satu field cukup — sama seperti
+  // `heading`/`bodyHtml` yang juga dipakai ulang lintas tipe blok.
   src?: string;
   caption?: string;
   // Layout controls (all optional; unset = current behaviour: boxed, 100%,
@@ -3596,9 +3675,9 @@ export default function SlideBank({ bank, setBank, module, setModule }: Props) {
 <section class="file" id="app-src-components-Canvas-tsx">
   <div class="file-head">
     <div class="file-path"><span class="dir">app/src/components/</span><span class="base">Canvas.tsx</span></div>
-    <div class="file-meta"><span class="lang">tsx</span><span class="lines">401 baris</span></div>
+    <div class="file-meta"><span class="lang">tsx</span><span class="lines">458 baris</span></div>
   </div>
-  <pre class="code lang-tsx"><code>import { useEffect, useState } from &#x27;react&#x27;;
+  <pre class="code lang-tsx"><code>import { useEffect, useRef, useState } from &#x27;react&#x27;;
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
 } from &#x27;@dnd-kit/core&#x27;;
@@ -3617,8 +3696,63 @@ interface Props {
   setModule: (m: ModuleData) =&gt; void;
 }
 
+// Slide yang editornya lagi kebuka. Disimpan biar muat ulang (Ctrl+Shift+R,
+// peramban tertutup sendiri) balik ke editor yang sama, bukan ke daftar slide
+// yang tergulung habis di atas.
+const SLIDE_TERBUKA_KEY = &#x27;modul-builder-slide-terbuka&#x27;;
+
 export default function Canvas({ module, setModule }: Props) {
   const [openSlideId, setOpenSlideId] = useState&lt;string | null&gt;(null);
+  // Pemulihan cuma boleh sekali. Tanpa penanda ini, tiap kali daftar slide
+  // berubah (tambah/hapus/geser slide) editornya bakal loncat balik ke slide
+  // yang tersimpan — menimpa apa yang barusan dibuka orangnya.
+  const sudahPulih = useRef(false);
+  // Ditandai waktu editor dipulihkan, dibaca oleh effect penggulir di bawah.
+  const perluGulir = useRef(false);
+
+  // Dipulihkan di effect, BUKAN di initializer useState: waktu komponen ini
+  // pertama mount, draft-nya masih dimuat dari server dan module.slides masih
+  // kosong — id yang tersimpan gak akan ketemu padanannya lalu kebuang.
+  useEffect(() =&gt; {
+    if (sudahPulih.current || module.slides.length === 0) return;
+    sudahPulih.current = true;
+    try {
+      const id = localStorage.getItem(SLIDE_TERBUKA_KEY);
+      // Dicocokkan ke slide yang benar-benar ada: id sisa dari project lain
+      // atau slide yang sudah dihapus gak boleh bikin editor hantu kebuka.
+      if (id &amp;&amp; module.slides.some(s =&gt; s.id === id)) {
+        setOpenSlideId(id);
+        perluGulir.current = true;
+      }
+    } catch { /* localStorage diblokir (mode privat) — mulai tanpa editor kebuka */ }
+  }, [module.slides]);
+
+  // Menggulir ke editor yang dipulihkan. Editornya panjang, jadi tanpa ini
+  // yang kebuka ada jauh di luar layar dan orangnya tetap merasa &quot;kelempar&quot;.
+  //
+  // Digulir di effect TERPISAH, bukan barengan pemulihan di atas: waktu
+  // setOpenSlideId dipanggil, editornya belum kerender sama sekali, jadi
+  // posisi barisnya masih posisi baris terlipat. Dua frame — satu buat
+  // React menaruh editornya ke DOM, satu lagi buat tata letaknya benar-benar
+  // jadi sebelum posisinya diukur.
+  useEffect(() =&gt; {
+    if (!perluGulir.current || !openSlideId) return;
+    perluGulir.current = false;
+    requestAnimationFrame(() =&gt; requestAnimationFrame(() =&gt; {
+      document.getElementById(`slide-row-${openSlideId}`)?.scrollIntoView({ block: &#x27;start&#x27; });
+    }));
+  }, [openSlideId]);
+
+  // Menunggu percobaan pemulihan selesai sebelum menulis: kalau enggak, nilai
+  // awal null dari mount pertama bakal menghapus id yang mau dipulihkan.
+  useEffect(() =&gt; {
+    if (!sudahPulih.current) return;
+    try {
+      if (openSlideId) localStorage.setItem(SLIDE_TERBUKA_KEY, openSlideId);
+      else localStorage.removeItem(SLIDE_TERBUKA_KEY);
+    } catch { /* kuota penuh / mode privat — cuma ingatannya yang hilang */ }
+  }, [openSlideId]);
+
   const sensors = useSensors(useSensor(PointerSensor));
 
   function addSection() {
@@ -3937,8 +4071,10 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: slide.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+  // id-nya dipakai buat menggulir balik ke editor yang dipulihkan setelah muat
+  // ulang — lihat SLIDE_TERBUKA_KEY di Canvas().
   return (
-    &lt;div ref={setNodeRef} style={{ ...style, border: `1px solid ${open ? &#x27;var(--border-strong)&#x27; : &#x27;var(--border)&#x27;}`, borderRadius: &#x27;var(--radius-sm)&#x27;, background: &#x27;var(--surface)&#x27;, boxShadow: open ? &#x27;var(--shadow-sm)&#x27; : &#x27;none&#x27; }}&gt;
+    &lt;div id={`slide-row-${slide.id}`} ref={setNodeRef} style={{ ...style, border: `1px solid ${open ? &#x27;var(--border-strong)&#x27; : &#x27;var(--border)&#x27;}`, borderRadius: &#x27;var(--radius-sm)&#x27;, background: &#x27;var(--surface)&#x27;, boxShadow: open ? &#x27;var(--shadow-sm)&#x27; : &#x27;none&#x27; }}&gt;
       &lt;div style={{ display: &#x27;flex&#x27;, alignItems: &#x27;center&#x27;, gap: 8, padding: 8 }}&gt;
         &lt;span {...attributes} {...listeners} style={{ cursor: &#x27;grab&#x27;, color: &#x27;var(--text-faint)&#x27;, fontSize: 15, padding: &#x27;0 2px&#x27; }} title=&quot;Geser untuk atur urutan&quot;&gt;⠿&lt;/span&gt;
         &lt;span style={{ fontSize: 11, color: &#x27;var(--text-faint)&#x27;, fontWeight: 600, whiteSpace: &#x27;nowrap&#x27; }}&gt;#{slide.number}{slide.sourceSlideNo ? ` · PPTX ${slide.sourceSlideNo}` : &#x27;&#x27;}&lt;/span&gt;
@@ -4004,7 +4140,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
 <section class="file" id="app-src-components-BlockEditor-tsx">
   <div class="file-head">
     <div class="file-path"><span class="dir">app/src/components/</span><span class="base">BlockEditor.tsx</span></div>
-    <div class="file-meta"><span class="lang">tsx</span><span class="lines">975 baris</span></div>
+    <div class="file-meta"><span class="lang">tsx</span><span class="lines">987 baris</span></div>
   </div>
   <pre class="code lang-tsx"><code>import { useState } from &#x27;react&#x27;;
 import type { CSSProperties } from &#x27;react&#x27;;
@@ -4347,6 +4483,18 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial&
         &lt;EmojiPicker value={block.icon || &#x27;📝&#x27;} onChange={icon =&gt; onChange({ icon })} /&gt;
         &lt;input style={inp} placeholder=&quot;Judul tombol &amp; popup (mis. Rincian Tambahan)&quot; value={block.heading || &#x27;&#x27;} onChange={e =&gt; onChange({ heading: e.target.value })} /&gt;
         &lt;RichTextarea style={{ ...ta, minHeight: 120 }} placeholder=&quot;Isi popup (HTML/teks, boleh tabel dtable dll)&quot; value={block.bodyHtml || &#x27;&#x27;} onChange={v =&gt; onChange({ bodyHtml: v })} /&gt;
+        {/* Gambar OPSIONAL di dalam popup. Dua-duanya boleh diisi sekaligus:
+            gambar tampil di atas, teks di bawahnya — pola yang biasa dipakai
+            buat bagan/diagram plus penjelasannya. Isi salah satu saja juga
+            sah: popup teks saja, atau popup gambar saja. */}
+        &lt;label style={{ display: &#x27;block&#x27;, fontSize: 11, fontWeight: 600, color: &#x27;var(--text-dim)&#x27;, margin: &#x27;8px 0 3px&#x27; }}&gt;
+          Gambar di dalam popup (opsional)
+        &lt;/label&gt;
+        &lt;ImageUploadField value={block.src || &#x27;&#x27;} onUploaded={src =&gt; onChange({ src })} /&gt;
+        {block.src &amp;&amp; (
+          &lt;button className=&quot;btn-sm btn-danger&quot; style={{ marginBottom: 6 }}
+            onClick={() =&gt; onChange({ src: &#x27;&#x27; })}&gt;Hapus gambar&lt;/button&gt;
+        )}
       &lt;/&gt;;
     default:
       return null;
@@ -5732,7 +5880,7 @@ function ModalDemo() {
 <section class="file" id="app-src-components-EmojiPicker-tsx">
   <div class="file-head">
     <div class="file-path"><span class="dir">app/src/components/</span><span class="base">EmojiPicker.tsx</span></div>
-    <div class="file-meta"><span class="lang">tsx</span><span class="lines">105 baris</span></div>
+    <div class="file-meta"><span class="lang">tsx</span><span class="lines">117 baris</span></div>
   </div>
   <pre class="code lang-tsx"><code>import { useState, useRef, useEffect } from &#x27;react&#x27;;
 import { EMOJI_CATEGORIES } from &#x27;../emojiData&#x27;;
@@ -5769,19 +5917,31 @@ export default function EmojiPicker({ value, onChange, placeholder }: Props) {
     setOpen(false);
   }
 
+  // Kolomnya teks bebas, jadi apa pun bisa masuk - termasuk kalimat, waktu
+  // orang mengira ini kolom judul. Yang dipratinjau cuma GLYPH PERTAMA:
+  // tombolnya kotak 40x34, dan tanpa ini isinya tumpah keluar kotak lalu
+  // menabrak kolom di sebelah &amp; baris di bawahnya. Array.from, bukan value[0],
+  // supaya emoji di luar BMP (yang dihitung 2 char oleh JS) gak kepotong
+  // separuh jadi karakter rusak.
+  const glyph = Array.from(value)[0] || &#x27;&#x27;;
+
   return (
     &lt;div ref={wrapRef} style={{ position: &#x27;relative&#x27;, marginBottom: 6 }}&gt;
       &lt;div style={{ display: &#x27;flex&#x27;, gap: 6 }}&gt;
         &lt;button
           type=&quot;button&quot;
           onClick={() =&gt; setOpen(o =&gt; !o)}
-          style={{ fontSize: 18, width: 40, height: 34, display: &#x27;flex&#x27;, alignItems: &#x27;center&#x27;, justifyContent: &#x27;center&#x27; }}
+          style={{
+            fontSize: 18, width: 40, height: 34, flex: &#x27;none&#x27;, padding: 0,
+            display: &#x27;flex&#x27;, alignItems: &#x27;center&#x27;, justifyContent: &#x27;center&#x27;,
+            overflow: &#x27;hidden&#x27;, whiteSpace: &#x27;nowrap&#x27;, lineHeight: 1,
+          }}
           title=&quot;Pilih ikon&quot;
         &gt;
-          {value || &#x27;➕&#x27;}
+          {glyph || &#x27;➕&#x27;}
         &lt;/button&gt;
         &lt;input
-          style={{ flex: 1 }}
+          style={{ flex: 1, minWidth: 0 }}
           placeholder={placeholder || &#x27;Icon (simbol, opsional)&#x27;}
           value={value}
           onChange={e =&gt; onChange(e.target.value)}
@@ -6824,14 +6984,31 @@ export default function SlidePreview({ module, slideNumber, target = &#x27;slide
 <section class="file" id="app-src-components-PreviewExport-tsx">
   <div class="file-head">
     <div class="file-path"><span class="dir">app/src/components/</span><span class="base">PreviewExport.tsx</span></div>
-    <div class="file-meta"><span class="lang">tsx</span><span class="lines">343 baris</span></div>
+    <div class="file-meta"><span class="lang">tsx</span><span class="lines">410 baris</span></div>
   </div>
-  <pre class="code lang-tsx"><code>import { useRef, useState } from &#x27;react&#x27;;
+  <pre class="code lang-tsx"><code>import { useMemo, useRef, useState } from &#x27;react&#x27;;
 import type { ModuleData } from &#x27;../types&#x27;;
 import { normalizeModule, moduleFromJson, slugify } from &#x27;../types&#x27;;
 import { generateHtml, listDrafts, loadDraft, saveDraft, renameDraft, copyDraft, deleteDraft } from &#x27;../api&#x27;;
 import { articulateBlocks, exportScormZip, type ZipProgress } from &#x27;../scormZip&#x27;;
 import { sematkanGambarDataUri } from &#x27;../assetEmbed&#x27;;
+
+/** Menyorot bagian nama draft yang cocok dengan ketikan, supaya alasan sebuah
+ *  baris ikut tampil kelihatan langsung — bukan cuma &quot;percaya saja&quot;. */
+function SorotCocok({ teks, cari }: { teks: string; cari: string }) {
+  const q = cari.trim().toLowerCase();
+  const i = q ? teks.toLowerCase().indexOf(q) : -1;
+  if (i &lt; 0) return &lt;&gt;{teks}&lt;/&gt;;
+  return (
+    &lt;&gt;
+      {teks.slice(0, i)}
+      &lt;mark style={{ background: &#x27;var(--ink-soft)&#x27;, color: &#x27;var(--text)&#x27;, fontWeight: 700, borderRadius: 3 }}&gt;
+        {teks.slice(i, i + q.length)}
+      &lt;/mark&gt;
+      {teks.slice(i + q.length)}
+    &lt;/&gt;
+  );
+}
 
 interface Props {
   module: ModuleData;
@@ -6861,6 +7038,10 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
     try { return JSON.parse(localStorage.getItem(&#x27;pe:draft-order&#x27;) || &#x27;[]&#x27;); } catch { return []; }
   });
   const dragFrom = useRef&lt;string | null&gt;(null);
+  // Kotak cari daftar draft. Menyaring sejak huruf PERTAMA diketik — daftarnya
+  // sudah puluhan nama yang berpola mirip (`nama_topik-mtxxxxx-n`), jadi
+  // menunggu 2-3 huruf cuma bikin orang mengetik nama lengkap.
+  const [cariDraft, setCariDraft] = useState(&#x27;&#x27;);
 
   const MANAGE_PASSWORD = &#x27;PasswordPE100%&#x27;;
 
@@ -6874,6 +7055,25 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
       return ia - ib;
     });
   }
+  // Daftar yang benar-benar dirender: urutan rak pribadi, lalu disaring &amp;
+  // diperingkat ulang oleh ketikan. Nama yang DIAWALI ketikan naik ke atas,
+  // sisanya (cocok di tengah nama) menyusul dengan urutan aslinya utuh —
+  // makin panjang yang diketik, makin sedikit yang lolos saringan.
+  const draftTampil = useMemo(() =&gt; {
+    const urut = sortByOrder(drafts);
+    const q = cariDraft.trim().toLowerCase();
+    if (!q) return urut;
+    const cocok = urut.filter(d =&gt; d.toLowerCase().includes(q));
+    return cocok.sort((a, b) =&gt;
+      Number(!a.toLowerCase().startsWith(q)) - Number(!b.toLowerCase().startsWith(q)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drafts, draftOrder, cariDraft]);
+
+  // Seret-atur-urutan dimatikan selama menyaring: yang kelihatan cuma sebagian
+  // daftar, jadi menjatuhkan satu baris ke baris lain menghasilkan urutan yang
+  // gak bisa ditebak dari layar.
+  const bisaSeret = manage &amp;&amp; !cariDraft.trim();
+
   function persistOrder(next: string[]) {
     setDraftOrder(next);
     try { localStorage.setItem(&#x27;pe:draft-order&#x27;, JSON.stringify(next)); } catch { /* kuota penuh — urutan gak kesimpen, fitur tetap jalan */ }
@@ -7125,40 +7325,67 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
           Seret &lt;strong&gt;⠿&lt;/strong&gt; buat atur urutan, &lt;strong&gt;🗑&lt;/strong&gt; buat hapus permanen.
         &lt;/p&gt;
       )}
+      {/* Dulu semua draft ditumpuk sebagai chip yang membungkus ke bawah. Dengan
+          puluhan nama berpola mirip, hasilnya dinding teks tanpa titik pijak:
+          gak ada kolom yang lurus buat dipindai, dan nama yang dicari cuma bisa
+          ditemukan dengan menyapu mata baris demi baris. Sekarang daftar satu
+          kolom yang bisa disaring sambil mengetik. */}
       {drafts.length &gt; 0 &amp;&amp; (
-        &lt;div style={{ display: &#x27;flex&#x27;, flexWrap: &#x27;wrap&#x27;, gap: 6, marginBottom: 14 }}&gt;
-          {sortByOrder(drafts).map(d =&gt; (
-            &lt;div
-              key={d}
-              onDragOver={manage ? (e) =&gt; e.preventDefault() : undefined}
-              onDrop={manage ? (e) =&gt; { e.preventDefault(); reorder(e.dataTransfer.getData(&#x27;text/plain&#x27;), d); dragFrom.current = null; } : undefined}
-              style={{
-                display: &#x27;flex&#x27;, alignItems: &#x27;stretch&#x27;,
-                border: `1px solid ${manage ? &#x27;var(--border-strong)&#x27; : &#x27;var(--border)&#x27;}`,
-                borderRadius: &#x27;var(--radius-sm)&#x27;, overflow: &#x27;hidden&#x27;,
-              }}
-            &gt;
-              {manage &amp;&amp; (
-                &lt;span
-                  draggable
-                  onDragStart={(e) =&gt; { dragFrom.current = d; e.dataTransfer.setData(&#x27;text/plain&#x27;, d); e.dataTransfer.effectAllowed = &#x27;move&#x27;; }}
-                  onDragEnd={() =&gt; { dragFrom.current = null; }}
-                  className=&quot;btn-sm&quot;
-                  style={{ display: &#x27;flex&#x27;, alignItems: &#x27;center&#x27;, padding: &#x27;0 6px&#x27;, cursor: &#x27;grab&#x27;, color: &#x27;var(--text-faint)&#x27;, userSelect: &#x27;none&#x27; }}
-                  title=&quot;Seret buat atur urutan&quot;
-                &gt;⠿&lt;/span&gt;
-              )}
-              &lt;button className=&quot;btn-sm&quot; style={{ border: &#x27;none&#x27;, borderRadius: 0, borderLeft: manage ? &#x27;1px solid var(--border)&#x27; : &#x27;none&#x27; }} onClick={() =&gt; doLoad(d)}&gt;{d}&lt;/button&gt;
-              &lt;button className=&quot;btn-sm&quot; style={{ border: &#x27;none&#x27;, borderRadius: 0, borderLeft: &#x27;1px solid var(--border)&#x27;, padding: &#x27;0 8px&#x27; }}
-                title=&quot;Duplikat draft ini&quot; onClick={() =&gt; doCopy(d)}&gt;⧉&lt;/button&gt;
-              &lt;button className=&quot;btn-sm&quot; style={{ border: &#x27;none&#x27;, borderRadius: 0, borderLeft: &#x27;1px solid var(--border)&#x27;, padding: &#x27;0 8px&#x27; }}
-                title=&quot;Ganti nama draft ini&quot; onClick={() =&gt; doRename(d)}&gt;✎&lt;/button&gt;
-              {manage &amp;&amp; (
-                &lt;button className=&quot;btn-sm&quot; style={{ border: &#x27;none&#x27;, borderRadius: 0, borderLeft: &#x27;1px solid var(--border)&#x27;, padding: &#x27;0 8px&#x27;, color: &#x27;var(--danger)&#x27; }}
-                  title=&quot;Hapus draft ini (permanen)&quot; onClick={() =&gt; doDelete(d)}&gt;🗑&lt;/button&gt;
-              )}
+        &lt;div style={{ marginBottom: 14, maxWidth: 620 }}&gt;
+          &lt;div style={{ display: &#x27;flex&#x27;, alignItems: &#x27;center&#x27;, gap: 8, marginBottom: 6 }}&gt;
+            &lt;input
+              value={cariDraft}
+              onChange={e =&gt; setCariDraft(e.target.value)}
+              placeholder=&quot;Cari draft…&quot;
+              aria-label=&quot;Cari draft&quot;
+              style={{ flex: 1, minWidth: 0 }}
+            /&gt;
+            {cariDraft &amp;&amp; (
+              &lt;button className=&quot;btn-sm btn-ghost&quot; onClick={() =&gt; setCariDraft(&#x27;&#x27;)} title=&quot;Hapus pencarian&quot;&gt;✕&lt;/button&gt;
+            )}
+            &lt;span className=&quot;hint&quot; style={{ fontSize: 11.5, whiteSpace: &#x27;nowrap&#x27; }}&gt;
+              {cariDraft.trim() ? `${draftTampil.length} dari ${drafts.length}` : `${drafts.length} draft`}
+            &lt;/span&gt;
+          &lt;/div&gt;
+
+          {draftTampil.length === 0 ? (
+            &lt;p className=&quot;hint&quot; style={{ fontSize: 12, margin: &#x27;8px 0 0&#x27; }}&gt;
+              Gak ada draft yang namanya mengandung “{cariDraft.trim()}”.
+            &lt;/p&gt;
+          ) : (
+            &lt;div className=&quot;draft-list&quot;&gt;
+              {draftTampil.map(d =&gt; (
+                &lt;div
+                  key={d}
+                  className=&quot;draft-row&quot;
+                  onDragOver={bisaSeret ? (e) =&gt; e.preventDefault() : undefined}
+                  onDrop={bisaSeret ? (e) =&gt; { e.preventDefault(); reorder(e.dataTransfer.getData(&#x27;text/plain&#x27;), d); dragFrom.current = null; } : undefined}
+                &gt;
+                  {manage &amp;&amp; (
+                    &lt;span
+                      draggable={bisaSeret}
+                      onDragStart={bisaSeret ? (e) =&gt; { dragFrom.current = d; e.dataTransfer.setData(&#x27;text/plain&#x27;, d); e.dataTransfer.effectAllowed = &#x27;move&#x27;; } : undefined}
+                      onDragEnd={() =&gt; { dragFrom.current = null; }}
+                      className=&quot;draft-grip&quot;
+                      style={{ cursor: bisaSeret ? &#x27;grab&#x27; : &#x27;not-allowed&#x27;, opacity: bisaSeret ? 1 : 0.35 }}
+                      title={bisaSeret ? &#x27;Seret buat atur urutan&#x27; : &#x27;Kosongkan kotak cari dulu buat atur urutan&#x27;}
+                    &gt;⠿&lt;/span&gt;
+                  )}
+                  &lt;button className=&quot;draft-name&quot; onClick={() =&gt; doLoad(d)} title={`Muat draft &quot;${d}&quot;`}&gt;
+                    &lt;SorotCocok teks={d} cari={cariDraft} /&gt;
+                  &lt;/button&gt;
+                  &lt;span className=&quot;draft-actions&quot;&gt;
+                    &lt;button className=&quot;btn-icon btn-sm btn-ghost&quot; title=&quot;Duplikat draft ini&quot; onClick={() =&gt; doCopy(d)}&gt;⧉&lt;/button&gt;
+                    &lt;button className=&quot;btn-icon btn-sm btn-ghost&quot; title=&quot;Ganti nama draft ini&quot; onClick={() =&gt; doRename(d)}&gt;✎&lt;/button&gt;
+                    {manage &amp;&amp; (
+                      &lt;button className=&quot;btn-icon btn-sm btn-ghost&quot; style={{ color: &#x27;var(--danger)&#x27; }}
+                        title=&quot;Hapus draft ini (permanen)&quot; onClick={() =&gt; doDelete(d)}&gt;🗑&lt;/button&gt;
+                    )}
+                  &lt;/span&gt;
+                &lt;/div&gt;
+              ))}
             &lt;/div&gt;
-          ))}
+          )}
         &lt;/div&gt;
       )}
       {error &amp;&amp; &lt;p style={{ color: &#x27;var(--danger)&#x27; }}&gt;{error}&lt;/p&gt;}
@@ -8812,7 +9039,7 @@ def extract(path):
 <section class="file" id="server-api-generator-py">
   <div class="file-head">
     <div class="file-path"><span class="dir">server/api/</span><span class="base">generator.py</span></div>
-    <div class="file-meta"><span class="lang">py</span><span class="lines">1259 baris</span></div>
+    <div class="file-meta"><span class="lang">py</span><span class="lines">1268 baris</span></div>
   </div>
   <pre class="code lang-py"><code>&quot;&quot;&quot;
 Generator: turns a ModuleData JSON (built via the drag-drop app) into a single
@@ -9338,12 +9565,21 @@ def render_modal(b):
     title = esc(b.get(&#x27;heading&#x27;, &#x27;Info Tambahan&#x27;))
     body = nl2br(b.get(&#x27;bodyHtml&#x27;, &#x27;&#x27;))
     icon = b.get(&#x27;icon&#x27;) or &#x27;📝&#x27;
+    # Gambar opsional di dalam popup (field `src`, dipakai bareng blok Gambar
+    # &amp; Media - lihat catatannya di types.ts). Ditaruh DI ATAS teks: kalau
+    # keduanya diisi, yang lazim itu bagan dulu baru penjelasannya. Blok lama
+    # tanpa `src` menghasilkan HTML yang sama persis seperti sebelum ini ada.
+    #
+    # &lt;img&gt; biasa dengan URL absolut, bukan background-image: itu yang dipindai
+    # urlGambar() waktu export, jadi gambarnya ikut tersemat ke HTML tunggal
+    # dan ikut disalin ke paket SCORM tanpa penanganan khusus.
+    img = f&#x27;&lt;img class=&quot;modal-img&quot; src=&quot;{esc(b[&quot;src&quot;])}&quot; alt=&quot;&quot;&gt;&#x27; if b.get(&#x27;src&#x27;) else &#x27;&#x27;
     return (
         f&#x27;&lt;button class=&quot;modal-trigger&quot; onclick=&quot;openModal(\&#x27;{modal_id}\&#x27;)&quot;&gt;&#x27;
         f&#x27;&lt;span class=&quot;ic&quot;&gt;{icon}&lt;/span&gt;&lt;span&gt;{title}&lt;/span&gt;&lt;span class=&quot;chevron&quot;&gt;›&lt;/span&gt;&lt;/button&gt;&#x27;
         f&#x27;&lt;div class=&quot;modal-overlay&quot; id=&quot;{modal_id}&quot; onclick=&quot;if(event.target===this) closeModal(\&#x27;{modal_id}\&#x27;)&quot;&gt;&#x27;
         f&#x27;&lt;div class=&quot;modal-box&quot;&gt;&lt;button class=&quot;modal-close&quot; onclick=&quot;closeModal(\&#x27;{modal_id}\&#x27;)&quot;&gt;✕&lt;/button&gt;&#x27;
-        f&#x27;&lt;h3&gt;{title}&lt;/h3&gt;{body}&lt;/div&gt;&lt;/div&gt;&#x27;
+        f&#x27;&lt;h3&gt;{title}&lt;/h3&gt;{img}{body}&lt;/div&gt;&lt;/div&gt;&#x27;
     )
 
 
@@ -11472,7 +11708,7 @@ def presign(method, key, expires=3600):
 <section class="file" id="server-api-shell-template-html">
   <div class="file-head">
     <div class="file-path"><span class="dir">server/api/</span><span class="base">shell-template.html</span></div>
-    <div class="file-meta"><span class="lang">html</span><span class="lines">4422 baris</span></div>
+    <div class="file-meta"><span class="lang">html</span><span class="lines">4430 baris</span></div>
   </div>
   <pre class="code lang-html"><code>&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;id&quot;&gt;
@@ -12342,6 +12578,14 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 }
 .modal-overlay.open .modal-box{transform:translateY(0) scale(1);opacity:1;}
 .modal-box h3{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:16px;padding-right:30px;}
+/* Gambar opsional di dalam popup. max-width:100% + height:auto supaya gambar
+   besar mengecil mengikuti kotak popup, bukan melebar keluar dan bikin
+   .modal-box (yang cuma overflow-y) menggulir menyamping. */
+.modal-box .modal-img{
+  display:block;width:100%;max-width:100%;height:auto;
+  border-radius:var(--radius-md);margin:0 0 16px;
+  border:1px solid var(--border);background:var(--surface-2);
+}
 .modal-close{
   position:absolute;top:18px;right:18px;width:30px;height:30px;border-radius:50%;
   background:var(--surface-2);border:none;color:var(--text-dim);font-size:14px;cursor:pointer;
