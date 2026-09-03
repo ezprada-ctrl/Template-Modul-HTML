@@ -279,3 +279,59 @@ code {
 .opt-note.is-ok   { background: var(--success-soft); color: var(--success); box-shadow: inset 3px 0 0 var(--success); }
 .opt-note.is-warn { background: var(--danger-soft);  color: var(--danger);  box-shadow: inset 3px 0 0 var(--danger); }
 .opt-note .opt-note-aside { color: var(--text-faint); }
+
+/* ---- Daftar draft (tab Preview & Export) ----
+   Satu kolom, bukan chip yang membungkus: dengan puluhan nama berpola mirip,
+   susunan mengalir gak menyisakan tepi lurus buat dipindai mata. Tinggi dibatasi
+   supaya daftar yang panjang gak mendorong isi tab lain keluar layar. */
+.draft-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  max-height: 340px;
+  overflow-y: auto;
+}
+.draft-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 0 4px;
+  transition: background var(--ease);
+}
+.draft-row + .draft-row { border-top: 1px solid var(--border); }
+.draft-row:hover { background: var(--surface-2); }
+
+.draft-grip {
+  flex: none;
+  padding: 0 4px;
+  color: var(--text-faint);
+  user-select: none;
+  font-size: 13px;
+}
+
+/* Nama draft = tombol muat, dan sengaja memenuhi sisa baris supaya seluruh
+   lebar baris bisa diklik, bukan cuma tulisannya. */
+.draft-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 8px 8px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.draft-name:hover { color: var(--ink); }
+
+/* Tombol aksi diredupkan sampai barisnya disentuh: yang dicari mata waktu
+   memindai daftar itu NAMA, bukan tiga ikon yang berulang di tiap baris.
+   Tetap tampil penuh saat difokus lewat keyboard. */
+.draft-actions { display: flex; gap: 2px; flex: none; opacity: 0; transition: opacity var(--ease); }
+.draft-row:hover .draft-actions,
+.draft-actions:focus-within { opacity: 1; }
+@media (hover: none) { .draft-actions { opacity: 1; } }

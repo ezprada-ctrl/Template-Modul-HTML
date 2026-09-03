@@ -1,9 +1,26 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ModuleData } from '../types';
 import { normalizeModule, moduleFromJson, slugify } from '../types';
 import { generateHtml, listDrafts, loadDraft, saveDraft, renameDraft, copyDraft, deleteDraft } from '../api';
 import { articulateBlocks, exportScormZip, type ZipProgress } from '../scormZip';
 import { sematkanGambarDataUri } from '../assetEmbed';
+
+/** Menyorot bagian nama draft yang cocok dengan ketikan, supaya alasan sebuah
+ *  baris ikut tampil kelihatan langsung — bukan cuma "percaya saja". */
+function SorotCocok({ teks, cari }: { teks: string; cari: string }) {
+  const q = cari.trim().toLowerCase();
+  const i = q ? teks.toLowerCase().indexOf(q) : -1;
+  if (i < 0) return <>{teks}</>;
+  return (
+    <>
+      {teks.slice(0, i)}
+      <mark style={{ background: 'var(--ink-soft)', color: 'var(--text)', fontWeight: 700, borderRadius: 3 }}>
+        {teks.slice(i, i + q.length)}
+      </mark>
+      {teks.slice(i + q.length)}
+    </>
+  );
+}
 
 interface Props {
   module: ModuleData;
@@ -33,6 +50,10 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
     try { return JSON.parse(localStorage.getItem('pe:draft-order') || '[]'); } catch { return []; }
   });
   const dragFrom = useRef<string | null>(null);
+  // Kotak cari daftar draft. Menyaring sejak huruf PERTAMA diketik — daftarnya
+  // sudah puluhan nama yang berpola mirip (`nama_topik-mtxxxxx-n`), jadi
+  // menunggu 2-3 huruf cuma bikin orang mengetik nama lengkap.
+  const [cariDraft, setCariDraft] = useState('');
 
   const MANAGE_PASSWORD = 'PasswordPE100%';
 
@@ -46,6 +67,25 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
       return ia - ib;
     });
   }
+  // Daftar yang benar-benar dirender: urutan rak pribadi, lalu disaring &
+  // diperingkat ulang oleh ketikan. Nama yang DIAWALI ketikan naik ke atas,
+  // sisanya (cocok di tengah nama) menyusul dengan urutan aslinya utuh —
+  // makin panjang yang diketik, makin sedikit yang lolos saringan.
+  const draftTampil = useMemo(() => {
+    const urut = sortByOrder(drafts);
+    const q = cariDraft.trim().toLowerCase();
+    if (!q) return urut;
+    const cocok = urut.filter(d => d.toLowerCase().includes(q));
+    return cocok.sort((a, b) =>
+      Number(!a.toLowerCase().startsWith(q)) - Number(!b.toLowerCase().startsWith(q)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drafts, draftOrder, cariDraft]);
+
+  // Seret-atur-urutan dimatikan selama menyaring: yang kelihatan cuma sebagian
+  // daftar, jadi menjatuhkan satu baris ke baris lain menghasilkan urutan yang
+  // gak bisa ditebak dari layar.
+  const bisaSeret = manage && !cariDraft.trim();
+
   function persistOrder(next: string[]) {
     setDraftOrder(next);
     try { localStorage.setItem('pe:draft-order', JSON.stringify(next)); } catch { /* kuota penuh — urutan gak kesimpen, fitur tetap jalan */ }
@@ -297,40 +337,67 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
           Seret <strong>⠿</strong> buat atur urutan, <strong>🗑</strong> buat hapus permanen.
         </p>
       )}
+      {/* Dulu semua draft ditumpuk sebagai chip yang membungkus ke bawah. Dengan
+          puluhan nama berpola mirip, hasilnya dinding teks tanpa titik pijak:
+          gak ada kolom yang lurus buat dipindai, dan nama yang dicari cuma bisa
+          ditemukan dengan menyapu mata baris demi baris. Sekarang daftar satu
+          kolom yang bisa disaring sambil mengetik. */}
       {drafts.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-          {sortByOrder(drafts).map(d => (
-            <div
-              key={d}
-              onDragOver={manage ? (e) => e.preventDefault() : undefined}
-              onDrop={manage ? (e) => { e.preventDefault(); reorder(e.dataTransfer.getData('text/plain'), d); dragFrom.current = null; } : undefined}
-              style={{
-                display: 'flex', alignItems: 'stretch',
-                border: `1px solid ${manage ? 'var(--border-strong)' : 'var(--border)'}`,
-                borderRadius: 'var(--radius-sm)', overflow: 'hidden',
-              }}
-            >
-              {manage && (
-                <span
-                  draggable
-                  onDragStart={(e) => { dragFrom.current = d; e.dataTransfer.setData('text/plain', d); e.dataTransfer.effectAllowed = 'move'; }}
-                  onDragEnd={() => { dragFrom.current = null; }}
-                  className="btn-sm"
-                  style={{ display: 'flex', alignItems: 'center', padding: '0 6px', cursor: 'grab', color: 'var(--text-faint)', userSelect: 'none' }}
-                  title="Seret buat atur urutan"
-                >⠿</span>
-              )}
-              <button className="btn-sm" style={{ border: 'none', borderRadius: 0, borderLeft: manage ? '1px solid var(--border)' : 'none' }} onClick={() => doLoad(d)}>{d}</button>
-              <button className="btn-sm" style={{ border: 'none', borderRadius: 0, borderLeft: '1px solid var(--border)', padding: '0 8px' }}
-                title="Duplikat draft ini" onClick={() => doCopy(d)}>⧉</button>
-              <button className="btn-sm" style={{ border: 'none', borderRadius: 0, borderLeft: '1px solid var(--border)', padding: '0 8px' }}
-                title="Ganti nama draft ini" onClick={() => doRename(d)}>✎</button>
-              {manage && (
-                <button className="btn-sm" style={{ border: 'none', borderRadius: 0, borderLeft: '1px solid var(--border)', padding: '0 8px', color: 'var(--danger)' }}
-                  title="Hapus draft ini (permanen)" onClick={() => doDelete(d)}>🗑</button>
-              )}
+        <div style={{ marginBottom: 14, maxWidth: 620 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <input
+              value={cariDraft}
+              onChange={e => setCariDraft(e.target.value)}
+              placeholder="Cari draft…"
+              aria-label="Cari draft"
+              style={{ flex: 1, minWidth: 0 }}
+            />
+            {cariDraft && (
+              <button className="btn-sm btn-ghost" onClick={() => setCariDraft('')} title="Hapus pencarian">✕</button>
+            )}
+            <span className="hint" style={{ fontSize: 11.5, whiteSpace: 'nowrap' }}>
+              {cariDraft.trim() ? `${draftTampil.length} dari ${drafts.length}` : `${drafts.length} draft`}
+            </span>
+          </div>
+
+          {draftTampil.length === 0 ? (
+            <p className="hint" style={{ fontSize: 12, margin: '8px 0 0' }}>
+              Gak ada draft yang namanya mengandung “{cariDraft.trim()}”.
+            </p>
+          ) : (
+            <div className="draft-list">
+              {draftTampil.map(d => (
+                <div
+                  key={d}
+                  className="draft-row"
+                  onDragOver={bisaSeret ? (e) => e.preventDefault() : undefined}
+                  onDrop={bisaSeret ? (e) => { e.preventDefault(); reorder(e.dataTransfer.getData('text/plain'), d); dragFrom.current = null; } : undefined}
+                >
+                  {manage && (
+                    <span
+                      draggable={bisaSeret}
+                      onDragStart={bisaSeret ? (e) => { dragFrom.current = d; e.dataTransfer.setData('text/plain', d); e.dataTransfer.effectAllowed = 'move'; } : undefined}
+                      onDragEnd={() => { dragFrom.current = null; }}
+                      className="draft-grip"
+                      style={{ cursor: bisaSeret ? 'grab' : 'not-allowed', opacity: bisaSeret ? 1 : 0.35 }}
+                      title={bisaSeret ? 'Seret buat atur urutan' : 'Kosongkan kotak cari dulu buat atur urutan'}
+                    >⠿</span>
+                  )}
+                  <button className="draft-name" onClick={() => doLoad(d)} title={`Muat draft "${d}"`}>
+                    <SorotCocok teks={d} cari={cariDraft} />
+                  </button>
+                  <span className="draft-actions">
+                    <button className="btn-icon btn-sm btn-ghost" title="Duplikat draft ini" onClick={() => doCopy(d)}>⧉</button>
+                    <button className="btn-icon btn-sm btn-ghost" title="Ganti nama draft ini" onClick={() => doRename(d)}>✎</button>
+                    {manage && (
+                      <button className="btn-icon btn-sm btn-ghost" style={{ color: 'var(--danger)' }}
+                        title="Hapus draft ini (permanen)" onClick={() => doDelete(d)}>🗑</button>
+                    )}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
       {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
