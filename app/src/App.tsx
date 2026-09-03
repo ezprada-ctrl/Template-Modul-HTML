@@ -22,6 +22,11 @@ const TABS: { id: Tab; label: string; hint: string }[] = [
 
 const LAST_SLUG_KEY = 'modul-builder-last-slug';
 const THEME_KEY = 'modul-builder-theme';
+// Tab yang terakhir dibuka. Draft & tema sudah bertahan menyeberangi muat
+// ulang, tapi tab-nya enggak — jadi tiap Ctrl+Shift+R (atau peramban yang
+// tertutup sendiri) melempar orang balik ke "Import PPTX", tab yang justru
+// paling jarang dipakai setelah slide-nya masuk.
+const TAB_KEY = 'modul-builder-last-tab';
 
 const HISTORY_CAP = 50;
 // Edits landing within this window (e.g. typing) collapse into one undo step
@@ -90,7 +95,16 @@ function useModuleHistory(initial: ModuleData) {
 }
 
 function App() {
-  const [tab, setTab] = useState<Tab>('bank');
+  const [tab, setTab] = useState<Tab>(() => {
+    try {
+      const tersimpan = localStorage.getItem(TAB_KEY);
+      // Dicocokkan ke daftar TABS, bukan dipercaya apa adanya: kalau id tab
+      // pernah berubah atau dihapus, nilai lama bikin isi tab gak kerender
+      // sama sekali — layar kosong tanpa pesan apa pun.
+      if (tersimpan && TABS.some(t => t.id === tersimpan)) return tersimpan as Tab;
+    } catch { /* localStorage diblokir (mode privat) — mulai dari tab pertama */ }
+    return 'bank';
+  });
   const { module, setModule, undo, redo, resetHistory, canUndo, canRedo } = useModuleHistory(emptyModule());
   const [bank, setBank] = useState<DraftSlide[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -115,6 +129,11 @@ function App() {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
+
+  // Ingat tab yang lagi dibuka, biar muat ulang balik ke tempat yang sama.
+  useEffect(() => {
+    try { localStorage.setItem(TAB_KEY, tab); } catch { /* kuota penuh / mode privat — cuma ingatannya yang hilang */ }
+  }, [tab]);
 
   // On first load: try to restore the last-worked-on draft automatically.
   // If there's no local record of a previous project, ask for a name so
