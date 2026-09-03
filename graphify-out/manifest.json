@@ -60,10 +60,10 @@
     "semantic_hash": ""
   },
   "app/src/components/EmojiPicker.tsx": {
-    "mtime": 1784091584.112843,
-    "seen": 1787222015.9428322,
-    "ast_hash": "8dd92df60e4a3aec64a7fcbc3b9f4666",
-    "semantic_hash": "8dd92df60e4a3aec64a7fcbc3b9f4666"
+    "mtime": 1788402597.3956242,
+    "seen": 1788402684.1586494,
+    "ast_hash": "488c1f3c57dce349c30ced424a418391",
+    "semantic_hash": ""
   },
   "app/src/components/GraphicStyleSelect.tsx": {
     "mtime": 1785599707.430141,
