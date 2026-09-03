@@ -48,17 +48,17 @@ const BLOCK_CARD_STYLES = `
    waktu mengedit blok sebelahnya. */
 .block-card.is-active{
   background:var(--surface);
-  border-color:var(--border-strong);
-  box-shadow:0 0 0 3px var(--ring);
+  border-color:var(--edit);
+  box-shadow:0 0 0 3px var(--edit-soft);
 }
 .block-card.is-active::before{
   content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
   border-radius:var(--radius-sm) 0 0 var(--radius-sm);
-  background:var(--ink);
+  background:var(--edit);
 }
 .block-card-aktif{
   font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-  color:var(--on-ink);background:var(--ink);
+  color:#fff;background:var(--edit);
   padding:1px 7px;border-radius:999px;white-space:nowrap;flex-shrink:0;
 }
 

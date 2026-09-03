@@ -97,7 +97,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-head">
       <p class="sidebar-title">Template Modul Ikram</p>
-      <p class="sidebar-sub">49 file / 16630 baris kode</p>
+      <p class="sidebar-sub">49 file / 16643 baris kode</p>
     </div>
     <div class="filter-box"><input id="filterInput" type="text" placeholder="Cari nama file..." autocomplete="off"></div>
     <div class="fgroup"><div class="fgroup-label">Frontend — masuk &amp; setup</div>
@@ -167,7 +167,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
     <div class="intro">
       <h1>Seluruh source code, satu halaman</h1>
       <p>Semua file penting di repo <code>ezprada-ctrl/Template-Modul-HTML</code> digabung berurutan: frontend (React/TypeScript) dulu, lalu backend (Python), lalu file konfigurasi. Klik nama file di sidebar buat langsung lompat ke situ, atau ketik di kolom cari. Klik judul tiap file buat lipat/buka isinya.</p>
-      <p class="stats">49 file / 16630 baris kode &middot; commit <code>78782fc</code> &middot; dicetak 03 September 2026 &middot; perbarui dengan <code>python tools/build_source_printout.py</code></p>
+      <p class="stats">49 file / 16643 baris kode &middot; commit <code>c343082</code> &middot; dicetak 03 September 2026 &middot; perbarui dengan <code>python tools/build_source_printout.py</code></p>
     </div>
 
 <section class="file" id="app-src-main-tsx">
@@ -783,7 +783,7 @@ button {
 <section class="file" id="app-src-index-css">
   <div class="file-head">
     <div class="file-path"><span class="dir">app/src/</span><span class="base">index.css</span></div>
-    <div class="file-meta"><span class="lang">css</span><span class="lines">338 baris</span></div>
+    <div class="file-meta"><span class="lang">css</span><span class="lines">351 baris</span></div>
   </div>
   <pre class="code lang-css"><code>/* ============================================================================
    Design tokens — monochrome neutral builder UI, light + dark.
@@ -819,6 +819,14 @@ button {
   --danger-soft:   rgba(192, 57, 44, 0.09);
   --success:       #2f8f57;
   --success-soft:  rgba(47, 143, 87, 0.12);
+
+  /* Penanda &quot;blok yang lagi digarap&quot; di editor slide. Satu-satunya warna
+     non-semantik di chrome builder — sengaja indigo yang diredam, bukan warna
+     jenuh: dia menyala di sebelah puluhan field abu-abu tanpa ikut menuntut
+     perhatian seperti --danger. Ditaruh sebagai token supaya nadanya bisa
+     digeser di satu tempat, bukan tersebar di beberapa aturan. */
+  --edit:          #6f76d6;
+  --edit-soft:     rgba(111, 118, 214, 0.16);
 
   --radius-sm: 7px;
   --radius:    10px;
@@ -861,6 +869,11 @@ button {
   --danger-soft:   rgba(236, 106, 94, 0.14);
   --success:       #4cbd7d;
   --success-soft:  rgba(76, 189, 125, 0.16);
+
+  /* Dinaikkan terangnya buat tema gelap — nada terang mode siang terlalu
+     tenggelam di atas --surface yang gelap. */
+  --edit:          #9aa2f2;
+  --edit-soft:     rgba(154, 162, 242, 0.20);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow:    0 4px 18px -6px rgba(0, 0, 0, 0.55);
@@ -4192,17 +4205,17 @@ const BLOCK_CARD_STYLES = `
    waktu mengedit blok sebelahnya. */
 .block-card.is-active{
   background:var(--surface);
-  border-color:var(--border-strong);
-  box-shadow:0 0 0 3px var(--ring);
+  border-color:var(--edit);
+  box-shadow:0 0 0 3px var(--edit-soft);
 }
 .block-card.is-active::before{
   content:&#x27;&#x27;;position:absolute;left:0;top:0;bottom:0;width:3px;
   border-radius:var(--radius-sm) 0 0 var(--radius-sm);
-  background:var(--ink);
+  background:var(--edit);
 }
 .block-card-aktif{
   font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-  color:var(--on-ink);background:var(--ink);
+  color:#fff;background:var(--edit);
   padding:1px 7px;border-radius:999px;white-space:nowrap;flex-shrink:0;
 }
 

@@ -33,6 +33,14 @@
   --success:       #2f8f57;
   --success-soft:  rgba(47, 143, 87, 0.12);
 
+  /* Penanda "blok yang lagi digarap" di editor slide. Satu-satunya warna
+     non-semantik di chrome builder — sengaja indigo yang diredam, bukan warna
+     jenuh: dia menyala di sebelah puluhan field abu-abu tanpa ikut menuntut
+     perhatian seperti --danger. Ditaruh sebagai token supaya nadanya bisa
+     digeser di satu tempat, bukan tersebar di beberapa aturan. */
+  --edit:          #6f76d6;
+  --edit-soft:     rgba(111, 118, 214, 0.16);
+
   --radius-sm: 7px;
   --radius:    10px;
   --radius-lg: 14px;
@@ -74,6 +82,11 @@
   --danger-soft:   rgba(236, 106, 94, 0.14);
   --success:       #4cbd7d;
   --success-soft:  rgba(76, 189, 125, 0.16);
+
+  /* Dinaikkan terangnya buat tema gelap — nada terang mode siang terlalu
+     tenggelam di atas --surface yang gelap. */
+  --edit:          #9aa2f2;
+  --edit-soft:     rgba(154, 162, 242, 0.20);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow:    0 4px 18px -6px rgba(0, 0, 0, 0.55);
