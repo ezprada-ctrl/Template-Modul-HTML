@@ -396,7 +396,26 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
   // ulang — lihat SLIDE_TERBUKA_KEY di Canvas().
   return (
     <div id={`slide-row-${slide.id}`} ref={setNodeRef} style={{ ...style, border: `1px solid ${open ? 'var(--border-strong)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', background: 'var(--surface)', boxShadow: open ? 'var(--shadow-sm)' : 'none' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8 }}>
+      {/* Kepala baris dipatok ke atas layar SELAMA editornya kebuka. Isi satu
+          slide bisa belasan blok — begitu digulir ke bawah, kepala barisnya
+          hilang dan gak ada lagi yang memberi tahu ini slide & section mana,
+          juga gak ada jalan ke "Tutup"/"Hapus" tanpa menggulir balik ke atas.
+
+          Cuma waktu kebuka: kalau semua baris dipatok, baris-baris yang
+          terlipat bakal saling menumpuk jadi tembok kepala waktu digulir.
+
+          z-index 5 — di atas kartu blok (yang position:relative tanpa
+          z-index), tapi DI BAWAH menu "+ Tambah blok" (50) supaya daftar
+          tipe bloknya tetap terbuka di atas kepala ini, bukan ketutupan. */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8, padding: 8,
+        ...(open ? {
+          position: 'sticky' as const, top: 0, zIndex: 5,
+          background: 'var(--surface)',
+          borderBottom: '1px solid var(--border)',
+          borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0',
+        } : null),
+      }}>
         <span {...attributes} {...listeners} style={{ cursor: 'grab', color: 'var(--text-faint)', fontSize: 15, padding: '0 2px' }} title="Geser untuk atur urutan">⠿</span>
         <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, whiteSpace: 'nowrap' }}>#{slide.number}{slide.sourceSlideNo ? ` · PPTX ${slide.sourceSlideNo}` : ''}</span>
         {/* Cuma nampilin nama slide di sini (bukan input) - diedit di dalam

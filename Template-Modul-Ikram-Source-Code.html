@@ -97,7 +97,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-head">
       <p class="sidebar-title">Template Modul Ikram</p>
-      <p class="sidebar-sub">49 file / 16643 baris kode</p>
+      <p class="sidebar-sub">49 file / 16662 baris kode</p>
     </div>
     <div class="filter-box"><input id="filterInput" type="text" placeholder="Cari nama file..." autocomplete="off"></div>
     <div class="fgroup"><div class="fgroup-label">Frontend — masuk &amp; setup</div>
@@ -167,7 +167,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
     <div class="intro">
       <h1>Seluruh source code, satu halaman</h1>
       <p>Semua file penting di repo <code>ezprada-ctrl/Template-Modul-HTML</code> digabung berurutan: frontend (React/TypeScript) dulu, lalu backend (Python), lalu file konfigurasi. Klik nama file di sidebar buat langsung lompat ke situ, atau ketik di kolom cari. Klik judul tiap file buat lipat/buka isinya.</p>
-      <p class="stats">49 file / 16643 baris kode &middot; commit <code>c343082</code> &middot; dicetak 03 September 2026 &middot; perbarui dengan <code>python tools/build_source_printout.py</code></p>
+      <p class="stats">49 file / 16662 baris kode &middot; commit <code>b102219</code> &middot; dicetak 03 September 2026 &middot; perbarui dengan <code>python tools/build_source_printout.py</code></p>
     </div>
 
 <section class="file" id="app-src-main-tsx">
@@ -3688,7 +3688,7 @@ export default function SlideBank({ bank, setBank, module, setModule }: Props) {
 <section class="file" id="app-src-components-Canvas-tsx">
   <div class="file-head">
     <div class="file-path"><span class="dir">app/src/components/</span><span class="base">Canvas.tsx</span></div>
-    <div class="file-meta"><span class="lang">tsx</span><span class="lines">458 baris</span></div>
+    <div class="file-meta"><span class="lang">tsx</span><span class="lines">477 baris</span></div>
   </div>
   <pre class="code lang-tsx"><code>import { useEffect, useRef, useState } from &#x27;react&#x27;;
 import {
@@ -4088,7 +4088,26 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
   // ulang — lihat SLIDE_TERBUKA_KEY di Canvas().
   return (
     &lt;div id={`slide-row-${slide.id}`} ref={setNodeRef} style={{ ...style, border: `1px solid ${open ? &#x27;var(--border-strong)&#x27; : &#x27;var(--border)&#x27;}`, borderRadius: &#x27;var(--radius-sm)&#x27;, background: &#x27;var(--surface)&#x27;, boxShadow: open ? &#x27;var(--shadow-sm)&#x27; : &#x27;none&#x27; }}&gt;
-      &lt;div style={{ display: &#x27;flex&#x27;, alignItems: &#x27;center&#x27;, gap: 8, padding: 8 }}&gt;
+      {/* Kepala baris dipatok ke atas layar SELAMA editornya kebuka. Isi satu
+          slide bisa belasan blok — begitu digulir ke bawah, kepala barisnya
+          hilang dan gak ada lagi yang memberi tahu ini slide &amp; section mana,
+          juga gak ada jalan ke &quot;Tutup&quot;/&quot;Hapus&quot; tanpa menggulir balik ke atas.
+
+          Cuma waktu kebuka: kalau semua baris dipatok, baris-baris yang
+          terlipat bakal saling menumpuk jadi tembok kepala waktu digulir.
+
+          z-index 5 — di atas kartu blok (yang position:relative tanpa
+          z-index), tapi DI BAWAH menu &quot;+ Tambah blok&quot; (50) supaya daftar
+          tipe bloknya tetap terbuka di atas kepala ini, bukan ketutupan. */}
+      &lt;div style={{
+        display: &#x27;flex&#x27;, alignItems: &#x27;center&#x27;, gap: 8, padding: 8,
+        ...(open ? {
+          position: &#x27;sticky&#x27; as const, top: 0, zIndex: 5,
+          background: &#x27;var(--surface)&#x27;,
+          borderBottom: &#x27;1px solid var(--border)&#x27;,
+          borderRadius: &#x27;var(--radius-sm) var(--radius-sm) 0 0&#x27;,
+        } : null),
+      }}&gt;
         &lt;span {...attributes} {...listeners} style={{ cursor: &#x27;grab&#x27;, color: &#x27;var(--text-faint)&#x27;, fontSize: 15, padding: &#x27;0 2px&#x27; }} title=&quot;Geser untuk atur urutan&quot;&gt;⠿&lt;/span&gt;
         &lt;span style={{ fontSize: 11, color: &#x27;var(--text-faint)&#x27;, fontWeight: 600, whiteSpace: &#x27;nowrap&#x27; }}&gt;#{slide.number}{slide.sourceSlideNo ? ` · PPTX ${slide.sourceSlideNo}` : &#x27;&#x27;}&lt;/span&gt;
         {/* Cuma nampilin nama slide di sini (bukan input) - diedit di dalam
