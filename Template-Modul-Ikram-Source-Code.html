@@ -97,7 +97,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-head">
       <p class="sidebar-title">Template Modul Ikram</p>
-      <p class="sidebar-sub">49 file / 16568 baris kode</p>
+      <p class="sidebar-sub">49 file / 16630 baris kode</p>
     </div>
     <div class="filter-box"><input id="filterInput" type="text" placeholder="Cari nama file..." autocomplete="off"></div>
     <div class="fgroup"><div class="fgroup-label">Frontend — masuk &amp; setup</div>
@@ -167,7 +167,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
     <div class="intro">
       <h1>Seluruh source code, satu halaman</h1>
       <p>Semua file penting di repo <code>ezprada-ctrl/Template-Modul-HTML</code> digabung berurutan: frontend (React/TypeScript) dulu, lalu backend (Python), lalu file konfigurasi. Klik nama file di sidebar buat langsung lompat ke situ, atau ketik di kolom cari. Klik judul tiap file buat lipat/buka isinya.</p>
-      <p class="stats">49 file / 16568 baris kode &middot; commit <code>e407a92</code> &middot; dicetak 03 September 2026 &middot; perbarui dengan <code>python tools/build_source_printout.py</code></p>
+      <p class="stats">49 file / 16630 baris kode &middot; commit <code>78782fc</code> &middot; dicetak 03 September 2026 &middot; perbarui dengan <code>python tools/build_source_printout.py</code></p>
     </div>
 
 <section class="file" id="app-src-main-tsx">
@@ -4140,7 +4140,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
 <section class="file" id="app-src-components-BlockEditor-tsx">
   <div class="file-head">
     <div class="file-path"><span class="dir">app/src/components/</span><span class="base">BlockEditor.tsx</span></div>
-    <div class="file-meta"><span class="lang">tsx</span><span class="lines">987 baris</span></div>
+    <div class="file-meta"><span class="lang">tsx</span><span class="lines">1049 baris</span></div>
   </div>
   <pre class="code lang-tsx"><code>import { useState } from &#x27;react&#x27;;
 import type { CSSProperties } from &#x27;react&#x27;;
@@ -4166,7 +4166,45 @@ interface Props {
 }
 
 const BLOCK_CARD_STYLES = `
-.block-card{position:relative;}
+/* Tampilan dasar kartu blok ditaruh di sini, BUKAN di style inline: aturan
+   .is-active di bawah perlu menimpa latar &amp; tepinya, dan style inline selalu
+   menang atas kelas CSS. */
+.block-card{
+  position:relative;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:11px;
+  background:var(--surface-2);
+  transition:background var(--ease),border-color var(--ease),box-shadow var(--ease);
+}
+
+/* Blok yang lagi digarap.
+
+   Kotak besar .slide-workspace sudah membingkai SELURUH slide, tapi di
+   dalamnya bisa ada belasan blok yang bentuknya sama persis. Begitu banyak,
+   batas antar blok jadi kabur: waktu mengetik di satu field, gak ada yang
+   memberi tahu sampai mana blok itu dan dari mana blok tetangganya mulai.
+
+   Blok yang barusan disentuh diangkat: latarnya jadi terang (lawan
+   --surface-2 milik blok diam), tepinya menguat, plus pita tegak di sisi
+   kiri yang memberi batas atas-bawah blok itu dalam satu tarikan mata.
+   Yang lain sengaja TIDAK diredupkan — masih sering dibaca sebagai rujukan
+   waktu mengedit blok sebelahnya. */
+.block-card.is-active{
+  background:var(--surface);
+  border-color:var(--border-strong);
+  box-shadow:0 0 0 3px var(--ring);
+}
+.block-card.is-active::before{
+  content:&#x27;&#x27;;position:absolute;left:0;top:0;bottom:0;width:3px;
+  border-radius:var(--radius-sm) 0 0 var(--radius-sm);
+  background:var(--ink);
+}
+.block-card-aktif{
+  font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--on-ink);background:var(--ink);
+  padding:1px 7px;border-radius:999px;white-space:nowrap;flex-shrink:0;
+}
 
 /* The whole workspace (kicker, subjudul, every block - including ones added
    later, since they&#x27;re all inside this same container) is framed as one
@@ -4197,6 +4235,12 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
   // UI so they read as distinct from top-level blocks, not a new concept -
   // same data shape, same editor, just which level you&#x27;re adding to.
   const nested = columns !== undefined;
+  // Blok yang terakhir disentuh — penanda &quot;kamu lagi di sini&quot;. Sengaja gak
+  // dikosongkan waktu fokus keluar: kalau dihapus tiap blur, penandanya
+  // berkedip-kedip waktu pindah antar field DI DALAM blok yang sama, dan
+  // hilang persis waktu orangnya menoleh ke panel preview. Yang berpindah
+  // cuma kalau blok LAIN disentuh.
+  const [blokAktif, setBlokAktif] = useState&lt;string | null&gt;(null);
   const [collapsed, setCollapsed] = useState&lt;Set&lt;string&gt;&gt;(new Set());
   function toggleCollapse(id: string) {
     setCollapsed(prev =&gt; {
@@ -4237,9 +4281,22 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
         const isCollapsed = collapsed.has(b.id);
         const summary = isCollapsed ? blockSummary(b) : &#x27;&#x27;;
         return (
-          &lt;div key={b.id} className=&quot;block-card&quot; style={{ border: &#x27;1px solid var(--border)&#x27;, borderRadius: &#x27;var(--radius-sm)&#x27;, padding: 11, background: &#x27;var(--surface-2)&#x27; }}&gt;
+          &lt;div
+            key={b.id}
+            className={`block-card${blokAktif === b.id ? &#x27; is-active&#x27; : &#x27;&#x27;}`}
+            // Capture, bukan bubble biasa: fokus di elemen sedalam apa pun di
+            // dalam blok (termasuk sub-blok Grid) tetap terbaca sebagai
+            // &quot;blok ini yang lagi digarap&quot;. onMouseDown melengkapi buat area
+            // yang gak bisa difokus, mis. mengklik latar kartunya sendiri.
+            onFocusCapture={() =&gt; setBlokAktif(b.id)}
+            onMouseDown={() =&gt; setBlokAktif(b.id)}
+          &gt;
             &lt;div style={{ display: &#x27;flex&#x27;, justifyContent: &#x27;space-between&#x27;, alignItems: &#x27;center&#x27;, gap: 8, marginBottom: isCollapsed ? 0 : 8, flexWrap: &#x27;wrap&#x27; }}&gt;
-              &lt;div style={{ display: &#x27;flex&#x27;, alignItems: &#x27;center&#x27;, gap: 6, minWidth: 0 }}&gt;
+              {/* flexWrap: label &quot;sedang diedit&quot; dan nama tipe blok sama-sama
+                  gak boleh menyusut (keduanya flex-shrink:0), jadi di kartu
+                  sempit barisnya meluap keluar tepi kartu kalau gak boleh
+                  turun ke baris berikutnya. */}
+              &lt;div style={{ display: &#x27;flex&#x27;, alignItems: &#x27;center&#x27;, gap: 6, minWidth: 0, flexWrap: &#x27;wrap&#x27; }}&gt;
                 &lt;button
                   className=&quot;btn-icon btn-sm&quot;
                   title={nested ? (isCollapsed ? &#x27;Buka sub-blok ini&#x27; : &#x27;Tutup sub-blok ini&#x27;) : (isCollapsed ? &#x27;Buka blok ini&#x27; : &#x27;Tutup blok ini&#x27;)}
@@ -4270,6 +4327,11 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
                     &lt;option key={type} value={type}&gt;{label}&lt;/option&gt;
                   ))}
                 &lt;/select&gt;
+                {blokAktif === b.id &amp;&amp; (
+                  &lt;span className=&quot;block-card-aktif&quot; title=&quot;Blok inilah yang lagi kamu kerjakan&quot;&gt;
+                    sedang diedit
+                  &lt;/span&gt;
+                )}
                 {summary &amp;&amp; (
                   &lt;span style={{ fontSize: 12, color: &#x27;var(--text-faint)&#x27;, overflow: &#x27;hidden&#x27;, textOverflow: &#x27;ellipsis&#x27;, whiteSpace: &#x27;nowrap&#x27;, minWidth: 0 }}&gt;
                     {summary}
