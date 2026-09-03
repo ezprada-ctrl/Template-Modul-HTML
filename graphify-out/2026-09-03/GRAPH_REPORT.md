@@ -1,29 +1,29 @@
 # Graph Report - Template Modul Ikram  (2026-09-03)
 
 ## Corpus Check
-- 50 files · ~171,359 words
+- 50 files · ~173,090 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 795 nodes · 1360 edges · 50 communities (35 shown, 15 thin omitted)
-- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 156 edges (avg confidence: 0.84)
+- 795 nodes · 1356 edges · 52 communities (35 shown, 17 thin omitted)
+- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 156 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d0c4570a`
+- Built from commit: `997df432`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - PreviewExport.tsx
-- Knowledge Check Gate
+- Identity Resolution & NIP Capture
 - generator.py
 - index.py
 - Buffer an activity tracking event
 - Canvas
 - devDependencies
 - api.ts
-- checkNetwork
+- Articulate 360 Block Runtime
 - compilerOptions
 - activity_store.py
 - compilerOptions
@@ -51,6 +51,7 @@
 - plugins
 - Navigate to a NAV index, enforcing all gating rules
 - BlockEditor.tsx
+- KnowledgeFields
 - DtableFields
 - BlockEditor
 - EmojiPicker.tsx
@@ -59,8 +60,9 @@
 - supabase_setup.sql
 - supabase_activity_setup.sql
 - types.ts
+- RichTextarea
 - r2.py
-- BlockAddMenu
+- 14 Jenis Blok Konten
 
 ## God Nodes (most connected - your core abstractions)
 1. `App()` - 25 edges
@@ -75,15 +77,15 @@
 10. `compilerOptions` - 15 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Preview & Export (Tahap 5)` --references--> `generate_html()`  [INFERRED]
-  Panduan-Fitur-Template-Modul-Ikram.html → server/api/generator.py
 - `14 Jenis Blok Konten` --references--> `render_block()`  [INFERRED]
+  Panduan-Fitur-Template-Modul-Ikram.html → server/api/generator.py
+- `Preview & Export (Tahap 5)` --references--> `generate_html()`  [INFERRED]
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/generator.py
 - `Import PPTX (Tahap 1)` --references--> `extract()`  [INFERRED]
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/pptx_extract.py
 - `Render Service: modul-builder-backend` --semantically_similar_to--> `server/vercel.json`  [INFERRED] [semantically similar]
   render.yaml → Template-Modul-Ikram-Source-Code.html
-- `Alat "Cek Rekam Aktivitas"` --references--> `Send a live preflight event to verify activity recording works`  [INFERRED]
+- `Keandalan Pencatatan Data (Outbox Offline)` --references--> `Push failed activity rows back into the outbox queue`  [INFERRED]
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/shell-template.html
 
 ## Import Cycles
@@ -96,15 +98,15 @@
 - **Articulate SCORM-in-SCORM containment** — server_api_shell_template_artmakeshim, server_api_shell_template_scormfindapi, server_api_shell_template_concept_articulate_runtime [INFERRED 0.85]
 - **Research Basis for Idle/Reading-speed Thresholds** — panduan_fitur_template_modul_ikram_ambang_ditinggal_4_menit, panduan_fitur_template_modul_ikram_ambang_dibaca_238wpm, server_api_shell_template_actidlethresholdms, server_api_generator [INFERRED 0.85]
 
-## Communities (50 total, 15 thin omitted)
+## Communities (52 total, 17 thin omitted)
 
 ### Community 0 - "PreviewExport.tsx"
 Cohesion: 0.09
 Nodes (34): copyDraft(), deleteDraft(), fetchArticulateZip(), generateHtml(), generateHtmlForZip(), renameDraft(), saveDraft(), blobKeDataUri() (+26 more)
 
-### Community 1 - "Knowledge Check Gate"
-Cohesion: 0.39
-Nodes (12): Knowledge Check Gate, Check whether all Knowledge Check items on a slide are answered, Record a Knowledge Check answer, handle retry-until-correct, Apply the final locked result state for a KC question, Close the KC popup and resume pending navigation, Find a Knowledge Check question by block/index, Mark one KC option button as tried-and-wrong, Open the Knowledge Check popup for a slide (+4 more)
+### Community 1 - "Identity Resolution & NIP Capture"
+Cohesion: 0.18
+Nodes (17): Identitas Peserta Lintas Modul, Keandalan Pencatatan Data (Outbox Offline), Sisi Peserta — Yang Dialami Peserta (Tahap 6), Return from identity confirmation to the entry form, Identity Resolution & NIP Capture, Confirm and commit pending identity, start activity session, Group NIP digits per PNS NIP structure, Live-format the NIP input field while preserving caret (+9 more)
 
 ### Community 2 - "generator.py"
 Cohesion: 0.06
@@ -115,8 +117,8 @@ Cohesion: 0.05
 Nodes (61): delete, get, Import PPTX (Tahap 1), post, Render Service: modul-builder-backend, delete_draft(), _headers(), list_drafts() (+53 more)
 
 ### Community 4 - "Buffer an activity tracking event"
-Cohesion: 0.05
-Nodes (68): Alat "Cek Rekam Aktivitas", Command Center — Rekam Aktivitas & Analitik (Tahap 7), Deteksi Otomatis Data Janggal, Identitas Peserta Lintas Modul, Keandalan Pencatatan Data (Outbox Offline), Peringatan Kecepatan Baca, Sisi Peserta — Yang Dialami Peserta (Tahap 6), Accordion block renderer (+60 more)
+Cohesion: 0.07
+Nodes (49): Alat "Cek Rekam Aktivitas", Command Center — Rekam Aktivitas & Analitik (Tahap 7), Deteksi Otomatis Data Janggal, Accordion block renderer, Bind global activity listeners for idle detection, Boot activity tracking: resume outbox, resolve identity, start/gate, Check elapsed time against idle threshold, pause segment, Close out timing for the previous slide and emit slide_view (+41 more)
 
 ### Community 5 - "Canvas"
 Cohesion: 0.15
@@ -127,12 +129,12 @@ Cohesion: 0.05
 Nodes (37): dependencies, @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, react, react-dom, @zip.js/zip.js, devDependencies (+29 more)
 
 ### Community 7 - "api.ts"
-Cohesion: 0.06
-Nodes (44): ActivityLearner, ActivityModule, ActivitySession, ArticulateInfo, ccCocreation(), ccListLearners(), ccListModules(), ccListSessions() (+36 more)
+Cohesion: 0.07
+Nodes (41): ActivityLearner, ActivityModule, ActivitySession, ArticulateInfo, ccCocreation(), ccListLearners(), ccListModules(), ccListSessions() (+33 more)
 
-### Community 8 - "checkNetwork"
-Cohesion: 0.29
-Nodes (6): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-probe/README.md — Uji Koneksi LMS Guide
+### Community 8 - "Articulate 360 Block Runtime"
+Cohesion: 0.11
+Nodes (27): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-probe/README.md — Uji Koneksi LMS Guide, Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide (+19 more)
 
 ### Community 9 - "compilerOptions"
 Cohesion: 0.08
@@ -167,8 +169,8 @@ Cohesion: 0.62
 Nodes (7): bluesky-icon symbol, discord-icon symbol, documentation-icon symbol, github-icon symbol, social-icon symbol (generic profile/star icon), icons.svg (SVG sprite sheet), x-icon symbol (X/Twitter logo)
 
 ### Community 17 - "BlockPreview.tsx"
-Cohesion: 0.18
-Nodes (13): BLOCK_LABELS, BLOCK_TYPES, Props, AccordionDemo(), BLOCK_PREVIEW_STYLES, BlockPreviewCard(), FlowDemo(), LOREM (+5 more)
+Cohesion: 0.12
+Nodes (14): BLOCK_LABELS, BLOCK_TYPES, BlockAddMenu(), Props, AccordionDemo(), BLOCK_PREVIEW_STYLES, BlockPreviewCard(), FlowDemo() (+6 more)
 
 ### Community 18 - "api/index.py"
 Cohesion: 0.33
@@ -187,12 +189,12 @@ Cohesion: 0.22
 Nodes (8): plugins, rules, react/only-export-components, react/rules-of-hooks, $schema, oxc, typescript, warn
 
 ### Community 36 - "Navigate to a NAV index, enforcing all gating rules"
-Cohesion: 0.06
-Nodes (67): Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Show/hide the progress block per HIDE_PROGRESS, Inject/play per-slide voiceover audio, Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide, Toggle fullscreen for an Articulate iframe block (+59 more)
+Cohesion: 0.07
+Nodes (60): Peringatan Kecepatan Baca, Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Show/hide the progress block per HIDE_PROGRESS, Inject/play per-slide voiceover audio, Group a section's NAV items into singles/bundles/quiz, Handle 'go back and reread' from reading warning (+52 more)
 
 ### Community 37 - "BlockEditor.tsx"
-Cohesion: 0.13
-Nodes (10): detectPngTransparency(), FieldStyle, ImageUploadField(), KnowledgeFields(), Props, RichTextarea(), Block, KcQuestion (+2 more)
+Cohesion: 0.18
+Nodes (9): deleteArticulate(), ArticulateFields(), pilihFile(), detectPngTransparency(), FieldStyle, ImageUploadField(), Props, Block (+1 more)
 
 ### Community 40 - "BlockEditor"
 Cohesion: 0.22
@@ -223,20 +225,20 @@ Cohesion: 0.25
 Nodes (10): _creds(), is_configured(), presign(), _quote(), Cloudflare R2 — penanda tangan URL (presigned URL) buat paket Articulate.…, Apakah kredensial R2 lengkap terpasang di environment backend? Dipakai frontend…, Encoding yang dipakai SigV4. Slash SENGAJA dibiarkan di canonical URI…, URL bertanda tangan buat satu objek. `method` 'PUT' (upload), 'GET' (unduh),… (+2 more)
 
 ## Knowledge Gaps
-- **146 isolated node(s):** `Props`, `HasilSemat`, `Props`, `Props`, `GraphicStylePreviewSet` (+141 more)
+- **146 isolated node(s):** `FieldStyle`, `HasilSemat`, `Props`, `Props`, `GraphicStylePreviewSet` (+141 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Template Modul Ikram — Source Code (Full Repo Printout)` connect `index.py` to `types.ts`, `generator.py`?**
-  _High betweenness centrality (0.131) - this node is a cross-community bridge._
+  _High betweenness centrality (0.134) - this node is a cross-community bridge._
 - **Why does `react` connect `types.ts` to `PreviewExport.tsx`, `plugins`, `BlockEditor.tsx`, `api.ts`, `EmojiPicker.tsx`, `GraphicStyleSelect.tsx`, `BlockPreview.tsx`?**
-  _High betweenness centrality (0.042) - this node is a cross-community bridge._
-- **Why does `14 Jenis Blok Konten` connect `BlockEditor.tsx` to `generator.py`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
-- **What connects `Props`, `HasilSemat`, `Props` to the rest of the system?**
+  _High betweenness centrality (0.046) - this node is a cross-community bridge._
+- **Why does `14 Jenis Blok Konten` connect `14 Jenis Blok Konten` to `generator.py`, `BlockEditor.tsx`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+- **What connects `FieldStyle`, `HasilSemat`, `Props` to the rest of the system?**
   _146 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `PreviewExport.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.09390243902439024 - nodes in this community are weakly interconnected._
