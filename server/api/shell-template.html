@@ -1707,6 +1707,56 @@ function scormSetValue(name, value){
 function scormCommit(){
   try{ if(scorm.inited) (scorm.version==='1.2' ? scorm.api.LMSCommit('') : scorm.api.Commit('')); }catch(e){}
 }
+
+/* ---- Status penyelesaian yang dilaporkan ke LMS ----
+
+   Sebelum ini modul cuma mengirim cmi.suspend_data — progres internal buat
+   melanjutkan di perangkat lain. Modul TIDAK PERNAH punya pendapat soal
+   selesai atau belum, jadi satu-satunya penentu di LMS adalah tombol
+   "Unit telah diselesaikan" yang diklik peserta sendiri, kapan pun dia mau.
+
+   Sekarang modul melapor sendiri. Kalau unit di LMS disetel mengikuti status
+   SCORM, tombol manualnya jadi gak menentukan. Kalau tetap manual, catatan
+   SCORM-nya minimal BERTENTANGAN dengan klaim peserta — dan itu kelihatan di
+   laporan LMS tanpa perlu percaya siapa pun.
+
+   Nama datanya beda antar versi: SCORM 1.2 pakai cmi.core.lesson_status,
+   2004 pakai cmi.completion_status. */
+function scormStatusKey(){
+  return scorm.version==='1.2' ? 'cmi.core.lesson_status' : 'cmi.completion_status';
+}
+
+/* Selesai = tiap slide & sampul sudah DIBUKA, dan tiap kuis section sudah
+   lulus. isQuizPassed() sendiri mengembalikan true buat section yang memang
+   gak punya kuis, jadi modul tanpa kuis cukup dinilai dari slide-nya —
+   gak perlu cabang khusus. Layar "Selesai" (summary) sengaja gak ikut
+   disyaratkan: dia layar penutup, bukan materi. */
+function modulSelesai(){
+  const materiTuntas = NAV
+    .filter(it => it.kind==='slide' || it.kind==='hero')
+    .every(it => state.visited[itemKey(it)]);
+  if(!materiTuntas) return false;
+  return SECTIONS.every(sec => isQuizPassed(sec.id));
+}
+
+/* Dipanggil tiap state disimpan. Sengaja TIDAK pernah menurunkan status yang
+   sudah 'completed'/'passed' jadi 'incomplete': kalau unit di LMS ternyata
+   digerbangi status SCORM, menurunkannya bakal MENGUNCI BALIK peserta yang
+   sudah sah menyelesaikan modul di sesi sebelumnya. Naik boleh, turun tidak. */
+function scormLaporStatus(){
+  if(!scorm.inited) return;
+  const key = scormStatusKey();
+  const sekarang = String(scormGetValue(key) || '').toLowerCase();
+  if(sekarang === 'completed' || sekarang === 'passed') return;
+  const target = modulSelesai() ? 'completed' : 'incomplete';
+  if(sekarang === target) return;
+  scormSetValue(key, target);
+  /* 2004 memisahkan "sudah dikerjakan" dari "lulus". Cuma diisi kalau modulnya
+     memang punya kuis — tanpa kuis, gak ada yang bisa dinilai lulus/gagal. */
+  if(scorm.version!=='1.2' && target==='completed' && SECTIONS.some(s=>(QUIZZES[s.id]||[]).length)){
+    scormSetValue('cmi.success_status', 'passed');
+  }
+}
 function scormFinish(){
   try{ if(scorm.inited) (scorm.version==='1.2' ? scorm.api.LMSFinish('') : scorm.api.Terminate('')); }catch(e){}
 }
@@ -1938,6 +1988,7 @@ function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
   if(scorm.inited){
     scormSetValue('cmi.suspend_data', JSON.stringify(state));
+    scormLaporStatus();
     scormCommit();
   }
 }

@@ -97,7 +97,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-head">
       <p class="sidebar-title">Template Modul Ikram</p>
-      <p class="sidebar-sub">49 file / 16517 baris kode</p>
+      <p class="sidebar-sub">49 file / 16568 baris kode</p>
     </div>
     <div class="filter-box"><input id="filterInput" type="text" placeholder="Cari nama file..." autocomplete="off"></div>
     <div class="fgroup"><div class="fgroup-label">Frontend — masuk &amp; setup</div>
@@ -167,7 +167,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Bl
     <div class="intro">
       <h1>Seluruh source code, satu halaman</h1>
       <p>Semua file penting di repo <code>ezprada-ctrl/Template-Modul-HTML</code> digabung berurutan: frontend (React/TypeScript) dulu, lalu backend (Python), lalu file konfigurasi. Klik nama file di sidebar buat langsung lompat ke situ, atau ketik di kolom cari. Klik judul tiap file buat lipat/buka isinya.</p>
-      <p class="stats">49 file / 16517 baris kode &middot; commit <code>fca2527</code> &middot; dicetak 03 September 2026 &middot; perbarui dengan <code>python tools/build_source_printout.py</code></p>
+      <p class="stats">49 file / 16568 baris kode &middot; commit <code>e407a92</code> &middot; dicetak 03 September 2026 &middot; perbarui dengan <code>python tools/build_source_printout.py</code></p>
     </div>
 
 <section class="file" id="app-src-main-tsx">
@@ -11708,7 +11708,7 @@ def presign(method, key, expires=3600):
 <section class="file" id="server-api-shell-template-html">
   <div class="file-head">
     <div class="file-path"><span class="dir">server/api/</span><span class="base">shell-template.html</span></div>
-    <div class="file-meta"><span class="lang">html</span><span class="lines">4430 baris</span></div>
+    <div class="file-meta"><span class="lang">html</span><span class="lines">4481 baris</span></div>
   </div>
   <pre class="code lang-html"><code>&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;id&quot;&gt;
@@ -13419,6 +13419,56 @@ function scormSetValue(name, value){
 function scormCommit(){
   try{ if(scorm.inited) (scorm.version===&#x27;1.2&#x27; ? scorm.api.LMSCommit(&#x27;&#x27;) : scorm.api.Commit(&#x27;&#x27;)); }catch(e){}
 }
+
+/* ---- Status penyelesaian yang dilaporkan ke LMS ----
+
+   Sebelum ini modul cuma mengirim cmi.suspend_data — progres internal buat
+   melanjutkan di perangkat lain. Modul TIDAK PERNAH punya pendapat soal
+   selesai atau belum, jadi satu-satunya penentu di LMS adalah tombol
+   &quot;Unit telah diselesaikan&quot; yang diklik peserta sendiri, kapan pun dia mau.
+
+   Sekarang modul melapor sendiri. Kalau unit di LMS disetel mengikuti status
+   SCORM, tombol manualnya jadi gak menentukan. Kalau tetap manual, catatan
+   SCORM-nya minimal BERTENTANGAN dengan klaim peserta — dan itu kelihatan di
+   laporan LMS tanpa perlu percaya siapa pun.
+
+   Nama datanya beda antar versi: SCORM 1.2 pakai cmi.core.lesson_status,
+   2004 pakai cmi.completion_status. */
+function scormStatusKey(){
+  return scorm.version===&#x27;1.2&#x27; ? &#x27;cmi.core.lesson_status&#x27; : &#x27;cmi.completion_status&#x27;;
+}
+
+/* Selesai = tiap slide &amp; sampul sudah DIBUKA, dan tiap kuis section sudah
+   lulus. isQuizPassed() sendiri mengembalikan true buat section yang memang
+   gak punya kuis, jadi modul tanpa kuis cukup dinilai dari slide-nya —
+   gak perlu cabang khusus. Layar &quot;Selesai&quot; (summary) sengaja gak ikut
+   disyaratkan: dia layar penutup, bukan materi. */
+function modulSelesai(){
+  const materiTuntas = NAV
+    .filter(it =&gt; it.kind===&#x27;slide&#x27; || it.kind===&#x27;hero&#x27;)
+    .every(it =&gt; state.visited[itemKey(it)]);
+  if(!materiTuntas) return false;
+  return SECTIONS.every(sec =&gt; isQuizPassed(sec.id));
+}
+
+/* Dipanggil tiap state disimpan. Sengaja TIDAK pernah menurunkan status yang
+   sudah &#x27;completed&#x27;/&#x27;passed&#x27; jadi &#x27;incomplete&#x27;: kalau unit di LMS ternyata
+   digerbangi status SCORM, menurunkannya bakal MENGUNCI BALIK peserta yang
+   sudah sah menyelesaikan modul di sesi sebelumnya. Naik boleh, turun tidak. */
+function scormLaporStatus(){
+  if(!scorm.inited) return;
+  const key = scormStatusKey();
+  const sekarang = String(scormGetValue(key) || &#x27;&#x27;).toLowerCase();
+  if(sekarang === &#x27;completed&#x27; || sekarang === &#x27;passed&#x27;) return;
+  const target = modulSelesai() ? &#x27;completed&#x27; : &#x27;incomplete&#x27;;
+  if(sekarang === target) return;
+  scormSetValue(key, target);
+  /* 2004 memisahkan &quot;sudah dikerjakan&quot; dari &quot;lulus&quot;. Cuma diisi kalau modulnya
+     memang punya kuis — tanpa kuis, gak ada yang bisa dinilai lulus/gagal. */
+  if(scorm.version!==&#x27;1.2&#x27; &amp;&amp; target===&#x27;completed&#x27; &amp;&amp; SECTIONS.some(s=&gt;(QUIZZES[s.id]||[]).length)){
+    scormSetValue(&#x27;cmi.success_status&#x27;, &#x27;passed&#x27;);
+  }
+}
 function scormFinish(){
   try{ if(scorm.inited) (scorm.version===&#x27;1.2&#x27; ? scorm.api.LMSFinish(&#x27;&#x27;) : scorm.api.Terminate(&#x27;&#x27;)); }catch(e){}
 }
@@ -13650,6 +13700,7 @@ function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
   if(scorm.inited){
     scormSetValue(&#x27;cmi.suspend_data&#x27;, JSON.stringify(state));
+    scormLaporStatus();
     scormCommit();
   }
 }
