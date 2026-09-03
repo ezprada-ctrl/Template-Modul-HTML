@@ -1,13 +1,13 @@
 {
   "0": "PreviewExport.tsx",
-  "1": "Knowledge Check Gate",
+  "1": "Identity Resolution & NIP Capture",
   "2": "generator.py",
   "3": "index.py",
   "4": "Buffer an activity tracking event",
   "5": "Canvas",
   "6": "devDependencies",
   "7": "api.ts",
-  "8": "checkNetwork",
+  "8": "Articulate 360 Block Runtime",
   "9": "compilerOptions",
   "10": "activity_store.py",
   "11": "compilerOptions",
@@ -37,6 +37,7 @@
   "35": "plugins",
   "36": "Navigate to a NAV index, enforcing all gating rules",
   "37": "BlockEditor.tsx",
+  "38": "KnowledgeFields",
   "39": "DtableFields",
   "40": "BlockEditor",
   "41": "EmojiPicker.tsx",
@@ -47,6 +48,7 @@
   "46": "supabase_storage_media_setup.sql",
   "47": "supabase_storage_setup.sql",
   "48": "types.ts",
+  "49": "RichTextarea",
   "50": "r2.py",
-  "55": "BlockAddMenu"
+  "51": "14 Jenis Blok Konten"
 }

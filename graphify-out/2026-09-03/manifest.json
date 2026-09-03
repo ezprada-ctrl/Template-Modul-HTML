@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "app/src/components/Canvas.tsx": {
-    "mtime": 1788257703.1275442,
-    "seen": 1788257787.3542423,
-    "ast_hash": "bad176fff5c2a536f3a5ff83bd3e4a6b",
+    "mtime": 1788403712.8703322,
+    "seen": 1788403858.4301624,
+    "ast_hash": "40198114da82a1a91b6de2f64214f627",
     "semantic_hash": ""
   },
   "app/src/components/CommandCenter.tsx": {

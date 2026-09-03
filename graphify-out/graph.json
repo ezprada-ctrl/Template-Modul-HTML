@@ -214,7 +214,7 @@
       "file_type": "code",
       "norm_label": "fieldstyle",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L561"
+      "source_location": "L573"
     },
     {
       "id": "app_src_components_blockeditor_props",
@@ -396,7 +396,7 @@
       "file_type": "code",
       "norm_label": "draftslide",
       "source_file": "app/src/types.ts",
-      "source_location": "L246"
+      "source_location": "L250"
     },
     {
       "id": "app_src_types_moduledata",
@@ -409,7 +409,7 @@
       "file_type": "code",
       "norm_label": "moduledata",
       "source_file": "app/src/types.ts",
-      "source_location": "L171"
+      "source_location": "L175"
     },
     {
       "id": "app_src_types_quizquestion",
@@ -422,7 +422,7 @@
       "file_type": "code",
       "norm_label": "quizquestion",
       "source_file": "app/src/types.ts",
-      "source_location": "L164"
+      "source_location": "L168"
     },
     {
       "id": "app_src_types_section",
@@ -435,7 +435,7 @@
       "file_type": "code",
       "norm_label": "section",
       "source_file": "app/src/types.ts",
-      "source_location": "L140"
+      "source_location": "L144"
     },
     {
       "id": "app_src_types_slide",
@@ -448,7 +448,7 @@
       "file_type": "code",
       "norm_label": "slide",
       "source_file": "app/src/types.ts",
-      "source_location": "L148"
+      "source_location": "L152"
     },
     {
       "id": "app_src_api_activitylearner",
@@ -1337,6 +1337,78 @@
       "source_location": "L68"
     },
     {
+      "id": "app_src_components_blockaddmenu_blockaddmenu",
+      "label": "BlockAddMenu()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "BlockPreview.tsx",
+      "file_type": "code",
+      "norm_label": "blockaddmenu()",
+      "source_file": "app/src/components/BlockAddMenu.tsx",
+      "source_location": "L37"
+    },
+    {
+      "id": "app_src_components_blockaddmenu_blockaddmenu_cancelhover",
+      "label": "cancelHover()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "BlockPreview.tsx",
+      "file_type": "code",
+      "norm_label": "cancelhover()",
+      "source_file": "app/src/components/BlockAddMenu.tsx",
+      "source_location": "L93"
+    },
+    {
+      "id": "app_src_components_blockaddmenu_blockaddmenu_onclickoutside",
+      "label": "onClickOutside()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "BlockPreview.tsx",
+      "file_type": "code",
+      "norm_label": "onclickoutside()",
+      "source_file": "app/src/components/BlockAddMenu.tsx",
+      "source_location": "L47"
+    },
+    {
+      "id": "app_src_components_blockaddmenu_blockaddmenu_onkeydown",
+      "label": "onKeyDown()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "BlockPreview.tsx",
+      "file_type": "code",
+      "norm_label": "onkeydown()",
+      "source_file": "app/src/components/BlockAddMenu.tsx",
+      "source_location": "L104"
+    },
+    {
+      "id": "app_src_components_blockaddmenu_blockaddmenu_pick",
+      "label": "pick()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "BlockPreview.tsx",
+      "file_type": "code",
+      "norm_label": "pick()",
+      "source_file": "app/src/components/BlockAddMenu.tsx",
+      "source_location": "L98"
+    },
+    {
+      "id": "app_src_components_blockaddmenu_blockaddmenu_schedulehover",
+      "label": "scheduleHover()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "BlockPreview.tsx",
+      "file_type": "code",
+      "norm_label": "schedulehover()",
+      "source_file": "app/src/components/BlockAddMenu.tsx",
+      "source_location": "L81"
+    },
+    {
       "id": "app_src_components_blockpreview_accordiondemo",
       "label": "AccordionDemo()",
       "_callable": true,
@@ -1466,7 +1538,7 @@
       "file_type": "code",
       "norm_label": "build_nav()",
       "source_file": "server/api/generator.py",
-      "source_location": "L953"
+      "source_location": "L962"
     },
     {
       "id": "server_api_generator_caption_html",
@@ -1490,7 +1562,7 @@
       "file_type": "code",
       "norm_label": "clamp_brightness()",
       "source_file": "server/api/generator.py",
-      "source_location": "L611"
+      "source_location": "L620"
     },
     {
       "id": "server_api_generator_count_articulate",
@@ -1502,7 +1574,7 @@
       "file_type": "code",
       "norm_label": "count_articulate()",
       "source_file": "server/api/generator.py",
-      "source_location": "L563"
+      "source_location": "L572"
     },
     {
       "id": "server_api_generator_count_interaktif",
@@ -1514,7 +1586,7 @@
       "file_type": "code",
       "norm_label": "count_interaktif()",
       "source_file": "server/api/generator.py",
-      "source_location": "L581"
+      "source_location": "L590"
     },
     {
       "id": "server_api_generator_count_words",
@@ -1526,7 +1598,7 @@
       "file_type": "code",
       "norm_label": "count_words()",
       "source_file": "server/api/generator.py",
-      "source_location": "L928"
+      "source_location": "L937"
     },
     {
       "id": "server_api_generator_esc",
@@ -1550,7 +1622,7 @@
       "file_type": "code",
       "norm_label": "generate_html()",
       "source_file": "server/api/generator.py",
-      "source_location": "L993"
+      "source_location": "L1002"
     },
     {
       "id": "server_api_generator_hex_to_rgba",
@@ -1658,7 +1730,7 @@
       "file_type": "code",
       "norm_label": "render_bg_image_layer()",
       "source_file": "server/api/generator.py",
-      "source_location": "L622"
+      "source_location": "L631"
     },
     {
       "id": "server_api_generator_render_block",
@@ -1670,7 +1742,7 @@
       "file_type": "code",
       "norm_label": "render_block()",
       "source_file": "server/api/generator.py",
-      "source_location": "L556"
+      "source_location": "L565"
     },
     {
       "id": "server_api_generator_render_callout",
@@ -1742,7 +1814,7 @@
       "file_type": "code",
       "norm_label": "render_graphic_deco()",
       "source_file": "server/api/generator.py",
-      "source_location": "L865"
+      "source_location": "L874"
     },
     {
       "id": "server_api_generator_render_grid",
@@ -1838,7 +1910,7 @@
       "file_type": "code",
       "norm_label": "render_slide_html()",
       "source_file": "server/api/generator.py",
-      "source_location": "L903"
+      "source_location": "L912"
     },
     {
       "id": "server_api_generator_render_tabs",
@@ -1886,7 +1958,7 @@
       "file_type": "code",
       "norm_label": "_responsive_geometry()",
       "source_file": "server/api/generator.py",
-      "source_location": "L675"
+      "source_location": "L684"
     },
     {
       "id": "server_api_generator_slide_min_read_ms",
@@ -1898,7 +1970,7 @@
       "file_type": "code",
       "norm_label": "slide_min_read_ms()",
       "source_file": "server/api/generator.py",
-      "source_location": "L938"
+      "source_location": "L947"
     },
     {
       "id": "server_api_generator_slugify",
@@ -1910,7 +1982,7 @@
       "file_type": "code",
       "norm_label": "slugify()",
       "source_file": "server/api/generator.py",
-      "source_location": "L948"
+      "source_location": "L957"
     },
     {
       "id": "server_api_generator_youtube_id",
@@ -2381,6 +2453,42 @@
       "source_location": "L13"
     },
     {
+      "id": "app_src_api_deletearticulate",
+      "label": "deleteArticulate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "BlockEditor.tsx",
+      "file_type": "code",
+      "norm_label": "deletearticulate()",
+      "source_file": "app/src/api.ts",
+      "source_location": "L668"
+    },
+    {
+      "id": "app_src_components_blockeditor_articulatefields",
+      "label": "ArticulateFields()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "BlockEditor.tsx",
+      "file_type": "code",
+      "norm_label": "articulatefields()",
+      "source_file": "app/src/components/BlockEditor.tsx",
+      "source_location": "L716"
+    },
+    {
+      "id": "app_src_components_blockeditor_articulatefields_pilihfile",
+      "label": "pilihFile()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 37,
+      "community_name": "BlockEditor.tsx",
+      "file_type": "code",
+      "norm_label": "pilihfile()",
+      "source_file": "app/src/components/BlockEditor.tsx",
+      "source_location": "L723"
+    },
+    {
       "id": "app_src_components_blockeditor_blockfields",
       "label": "BlockFields()",
       "_callable": true,
@@ -2402,7 +2510,7 @@
       "file_type": "code",
       "norm_label": "detectpngtransparency()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L358"
+      "source_location": "L370"
     },
     {
       "id": "app_src_components_blockeditor_gridfields",
@@ -2414,7 +2522,7 @@
       "file_type": "code",
       "norm_label": "gridfields()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L496"
+      "source_location": "L508"
     },
     {
       "id": "app_src_components_blockeditor_imagefields",
@@ -2426,7 +2534,7 @@
       "file_type": "code",
       "norm_label": "imagefields()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L432"
+      "source_location": "L444"
     },
     {
       "id": "app_src_components_blockeditor_imageuploadfield",
@@ -2438,31 +2546,7 @@
       "file_type": "code",
       "norm_label": "imageuploadfield()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L390"
-    },
-    {
-      "id": "app_src_components_blockeditor_knowledgefields",
-      "label": "KnowledgeFields()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "BlockEditor.tsx",
-      "file_type": "code",
-      "norm_label": "knowledgefields()",
-      "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L877"
-    },
-    {
-      "id": "app_src_components_blockeditor_knowledgefields_patchitem",
-      "label": "patchItem()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 37,
-      "community_name": "BlockEditor.tsx",
-      "file_type": "code",
-      "norm_label": "patchitem()",
-      "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L879"
+      "source_location": "L402"
     },
     {
       "id": "app_src_components_blockeditor_mediafields",
@@ -2474,31 +2558,31 @@
       "file_type": "code",
       "norm_label": "mediafields()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L801"
+      "source_location": "L813"
     },
     {
-      "id": "app_src_components_blockeditor_richtextarea",
-      "label": "RichTextarea()",
+      "id": "app_src_components_blockeditor_knowledgefields",
+      "label": "KnowledgeFields()",
       "_callable": true,
       "_origin": "ast",
-      "community": 37,
-      "community_name": "BlockEditor.tsx",
+      "community": 38,
+      "community_name": "KnowledgeFields",
       "file_type": "code",
-      "norm_label": "richtextarea()",
+      "norm_label": "knowledgefields()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L156"
+      "source_location": "L889"
     },
     {
-      "id": "app_src_components_blockeditor_richtextarea_togglewrap",
-      "label": "toggleWrap()",
+      "id": "app_src_components_blockeditor_knowledgefields_patchitem",
+      "label": "patchItem()",
       "_callable": true,
       "_origin": "ast",
-      "community": 37,
-      "community_name": "BlockEditor.tsx",
+      "community": 38,
+      "community_name": "KnowledgeFields",
       "file_type": "code",
-      "norm_label": "togglewrap()",
+      "norm_label": "patchitem()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L162"
+      "source_location": "L891"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields",
@@ -2510,7 +2594,7 @@
       "file_type": "code",
       "norm_label": "dtablefields()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L580"
+      "source_location": "L592"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_addcolumn",
@@ -2522,7 +2606,7 @@
       "file_type": "code",
       "norm_label": "addcolumn()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L590"
+      "source_location": "L602"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_addgroup",
@@ -2534,7 +2618,7 @@
       "file_type": "code",
       "norm_label": "addgroup()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L632"
+      "source_location": "L644"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_addrow",
@@ -2546,7 +2630,7 @@
       "file_type": "code",
       "norm_label": "addrow()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L610"
+      "source_location": "L622"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_growrow",
@@ -2558,7 +2642,7 @@
       "file_type": "code",
       "norm_label": "growrow()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L616"
+      "source_location": "L628"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_removecolumn",
@@ -2570,7 +2654,7 @@
       "file_type": "code",
       "norm_label": "removecolumn()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L597"
+      "source_location": "L609"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_removegroup",
@@ -2582,7 +2666,7 @@
       "file_type": "code",
       "norm_label": "removegroup()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L635"
+      "source_location": "L647"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_removerow",
@@ -2594,7 +2678,7 @@
       "file_type": "code",
       "norm_label": "removerow()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L613"
+      "source_location": "L625"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_setcell",
@@ -2606,7 +2690,7 @@
       "file_type": "code",
       "norm_label": "setcell()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L607"
+      "source_location": "L619"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_setgroup",
@@ -2618,7 +2702,7 @@
       "file_type": "code",
       "norm_label": "setgroup()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L629"
+      "source_location": "L641"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_setheader",
@@ -2630,7 +2714,7 @@
       "file_type": "code",
       "norm_label": "setheader()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L587"
+      "source_location": "L599"
     },
     {
       "id": "app_src_components_blockeditor_dtablefields_shrinkrow",
@@ -2642,7 +2726,7 @@
       "file_type": "code",
       "norm_label": "shrinkrow()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L619"
+      "source_location": "L631"
     },
     {
       "id": "app_src_components_blockeditor_blockeditor",
@@ -2750,7 +2834,7 @@
       "file_type": "code",
       "norm_label": "gridcellpreview()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L525"
+      "source_location": "L537"
     },
     {
       "id": "app_src_types_extractblocktext",
@@ -2762,7 +2846,7 @@
       "file_type": "code",
       "norm_label": "extractblocktext()",
       "source_file": "app/src/types.ts",
-      "source_location": "L417"
+      "source_location": "L421"
     },
     {
       "id": "app_src_types_isblockempty",
@@ -2774,7 +2858,7 @@
       "file_type": "code",
       "norm_label": "isblockempty()",
       "source_file": "app/src/types.ts",
-      "source_location": "L456"
+      "source_location": "L460"
     },
     {
       "id": "app_src_components_emojipicker_emojipicker",
@@ -3230,7 +3314,7 @@
       "file_type": "code",
       "norm_label": "videouploadfield()",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L851"
+      "source_location": "L863"
     },
     {
       "id": "app_src_components_canvas_bundleanimateddemo",
@@ -3410,7 +3494,7 @@
       "file_type": "code",
       "norm_label": "applyblocktext()",
       "source_file": "app/src/types.ts",
-      "source_location": "L472"
+      "source_location": "L476"
     },
     {
       "id": "app_src_types_buildprojectslugprefix",
@@ -3422,7 +3506,7 @@
       "file_type": "code",
       "norm_label": "buildprojectslugprefix()",
       "source_file": "app/src/types.ts",
-      "source_location": "L268"
+      "source_location": "L272"
     },
     {
       "id": "app_src_types_changeblocktype",
@@ -3434,7 +3518,7 @@
       "file_type": "code",
       "norm_label": "changeblocktype()",
       "source_file": "app/src/types.ts",
-      "source_location": "L524"
+      "source_location": "L528"
     },
     {
       "id": "app_src_types_emptymodule",
@@ -3446,7 +3530,7 @@
       "file_type": "code",
       "norm_label": "emptymodule()",
       "source_file": "app/src/types.ts",
-      "source_location": "L274"
+      "source_location": "L278"
     },
     {
       "id": "app_src_types_modulefromjson",
@@ -3458,7 +3542,7 @@
       "file_type": "code",
       "norm_label": "modulefromjson()",
       "source_file": "app/src/types.ts",
-      "source_location": "L317"
+      "source_location": "L321"
     },
     {
       "id": "app_src_types_newblock",
@@ -3470,7 +3554,7 @@
       "file_type": "code",
       "norm_label": "newblock()",
       "source_file": "app/src/types.ts",
-      "source_location": "L390"
+      "source_location": "L394"
     },
     {
       "id": "app_src_types_normalizemodule",
@@ -3482,7 +3566,7 @@
       "file_type": "code",
       "norm_label": "normalizemodule()",
       "source_file": "app/src/types.ts",
-      "source_location": "L307"
+      "source_location": "L311"
     },
     {
       "id": "app_src_types_slugify",
@@ -3494,7 +3578,7 @@
       "file_type": "code",
       "norm_label": "slugify()",
       "source_file": "app/src/types.ts",
-      "source_location": "L256"
+      "source_location": "L260"
     },
     {
       "id": "app_src_types_uid",
@@ -3506,7 +3590,31 @@
       "file_type": "code",
       "norm_label": "uid()",
       "source_file": "app/src/types.ts",
-      "source_location": "L383"
+      "source_location": "L387"
+    },
+    {
+      "id": "app_src_components_blockeditor_richtextarea",
+      "label": "RichTextarea()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "RichTextarea",
+      "file_type": "code",
+      "norm_label": "richtextarea()",
+      "source_file": "app/src/components/BlockEditor.tsx",
+      "source_location": "L156"
+    },
+    {
+      "id": "app_src_components_blockeditor_richtextarea_togglewrap",
+      "label": "toggleWrap()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "RichTextarea",
+      "file_type": "code",
+      "norm_label": "togglewrap()",
+      "source_file": "app/src/components/BlockEditor.tsx",
+      "source_location": "L162"
     },
     {
       "id": "app_src_components_canvas_canvas",
@@ -3758,7 +3866,7 @@
       "file_type": "code",
       "norm_label": "renumbermodule()",
       "source_file": "app/src/types.ts",
-      "source_location": "L347"
+      "source_location": "L351"
     },
     {
       "id": "server_api_r2_creds",
@@ -3831,78 +3939,6 @@
       "norm_label": "_signing_key()",
       "source_file": "server/api/r2.py",
       "source_location": "L65"
-    },
-    {
-      "id": "app_src_components_blockaddmenu_blockaddmenu",
-      "label": "BlockAddMenu()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 55,
-      "community_name": "BlockAddMenu",
-      "file_type": "code",
-      "norm_label": "blockaddmenu()",
-      "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L37"
-    },
-    {
-      "id": "app_src_components_blockaddmenu_blockaddmenu_cancelhover",
-      "label": "cancelHover()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 55,
-      "community_name": "BlockAddMenu",
-      "file_type": "code",
-      "norm_label": "cancelhover()",
-      "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L93"
-    },
-    {
-      "id": "app_src_components_blockaddmenu_blockaddmenu_onclickoutside",
-      "label": "onClickOutside()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 55,
-      "community_name": "BlockAddMenu",
-      "file_type": "code",
-      "norm_label": "onclickoutside()",
-      "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L47"
-    },
-    {
-      "id": "app_src_components_blockaddmenu_blockaddmenu_onkeydown",
-      "label": "onKeyDown()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 55,
-      "community_name": "BlockAddMenu",
-      "file_type": "code",
-      "norm_label": "onkeydown()",
-      "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L104"
-    },
-    {
-      "id": "app_src_components_blockaddmenu_blockaddmenu_pick",
-      "label": "pick()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 55,
-      "community_name": "BlockAddMenu",
-      "file_type": "code",
-      "norm_label": "pick()",
-      "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L98"
-    },
-    {
-      "id": "app_src_components_blockaddmenu_blockaddmenu_schedulehover",
-      "label": "scheduleHover()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 55,
-      "community_name": "BlockAddMenu",
-      "file_type": "code",
-      "norm_label": "schedulehover()",
-      "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L81"
     },
     {
       "id": "app_src_api_cccocreation",
@@ -3987,18 +4023,6 @@
       "norm_label": "compressimagetodatauri()",
       "source_file": "app/src/api.ts",
       "source_location": "L463"
-    },
-    {
-      "id": "app_src_api_deletearticulate",
-      "label": "deleteArticulate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "deletearticulate()",
-      "source_file": "app/src/api.ts",
-      "source_location": "L668"
     },
     {
       "id": "app_src_api_extractpptx",
@@ -4095,30 +4119,6 @@
       "norm_label": "uploadpptxtostorage()",
       "source_file": "app/src/api.ts",
       "source_location": "L444"
-    },
-    {
-      "id": "app_src_components_blockeditor_articulatefields",
-      "label": "ArticulateFields()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "articulatefields()",
-      "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L704"
-    },
-    {
-      "id": "app_src_components_blockeditor_articulatefields_pilihfile",
-      "label": "pilihFile()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "api.ts",
-      "file_type": "code",
-      "norm_label": "pilihfile()",
-      "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L711"
     },
     {
       "id": "app_src_components_commandcenter_cocreationmodulview",
@@ -5253,7 +5253,7 @@
       "source_location": "L459"
     },
     {
-      "id": "server_api_generator_rationale_564",
+      "id": "server_api_generator_rationale_573",
       "label": "Berapa blok Articulate di modul ini, termasuk yang bersarang di Grid. Penyebut\u2026",
       "_origin": "ast",
       "community": 2,
@@ -5261,10 +5261,10 @@
       "file_type": "rationale",
       "norm_label": "berapa blok articulate di modul ini, termasuk yang bersarang di grid. penyebut...",
       "source_file": "server/api/generator.py",
-      "source_location": "L564"
+      "source_location": "L573"
     },
     {
-      "id": "server_api_generator_rationale_582",
+      "id": "server_api_generator_rationale_591",
       "label": "Berapa banyak \"menu tersembunyi\" yang HARUS diklik peserta buat kebuka. Ini\u2026",
       "_origin": "ast",
       "community": 2,
@@ -5272,10 +5272,10 @@
       "file_type": "rationale",
       "norm_label": "berapa banyak \"menu tersembunyi\" yang harus diklik peserta buat kebuka. ini...",
       "source_file": "server/api/generator.py",
-      "source_location": "L582"
+      "source_location": "L591"
     },
     {
-      "id": "server_api_generator_rationale_612",
+      "id": "server_api_generator_rationale_621",
       "label": "0-100, dipakai buat gambar latar sampul & slide penutup. `default` beda-beda\u2026",
       "_origin": "ast",
       "community": 2,
@@ -5283,10 +5283,10 @@
       "file_type": "rationale",
       "norm_label": "0-100, dipakai buat gambar latar sampul & slide penutup. `default` beda-beda...",
       "source_file": "server/api/generator.py",
-      "source_location": "L612"
+      "source_location": "L621"
     },
     {
-      "id": "server_api_generator_rationale_623",
+      "id": "server_api_generator_rationale_632",
       "label": "Div lapisan gambar latar dengan filter:brightness() DI LAYER GAMBARNYA SENDIRI,\u2026",
       "_origin": "ast",
       "community": 2,
@@ -5294,10 +5294,10 @@
       "file_type": "rationale",
       "norm_label": "div lapisan gambar latar dengan filter:brightness() di layer gambarnya sendiri,...",
       "source_file": "server/api/generator.py",
-      "source_location": "L623"
+      "source_location": "L632"
     },
     {
-      "id": "server_api_generator_rationale_676",
+      "id": "server_api_generator_rationale_685",
       "label": "Ubah tiap `prop:Npx` (skala panel mockup) jadi dua deklarasi berurutan: px\u2026",
       "_origin": "ast",
       "community": 2,
@@ -5305,10 +5305,10 @@
       "file_type": "rationale",
       "norm_label": "ubah tiap `prop:npx` (skala panel mockup) jadi dua deklarasi berurutan: px...",
       "source_file": "server/api/generator.py",
-      "source_location": "L676"
+      "source_location": "L685"
     },
     {
-      "id": "server_api_generator_rationale_866",
+      "id": "server_api_generator_rationale_875",
       "label": "Dekorasi grafis opsional (ModuleData.graphicStyle) buat satu bagian modul.\u2026",
       "_origin": "ast",
       "community": 2,
@@ -5316,10 +5316,10 @@
       "file_type": "rationale",
       "norm_label": "dekorasi grafis opsional (moduledata.graphicstyle) buat satu bagian modul....",
       "source_file": "server/api/generator.py",
-      "source_location": "L866"
+      "source_location": "L875"
     },
     {
-      "id": "server_api_generator_rationale_929",
+      "id": "server_api_generator_rationale_938",
       "label": "Perkiraan jumlah kata dari HTML yang sudah dirender: buang semua tag, hitung\u2026",
       "_origin": "ast",
       "community": 2,
@@ -5327,10 +5327,10 @@
       "file_type": "rationale",
       "norm_label": "perkiraan jumlah kata dari html yang sudah dirender: buang semua tag, hitung...",
       "source_file": "server/api/generator.py",
-      "source_location": "L929"
+      "source_location": "L938"
     },
     {
-      "id": "server_api_generator_rationale_939",
+      "id": "server_api_generator_rationale_948",
       "label": "Waktu minimum buat SECARA MASUK AKAL membaca slide ini, berdasar kecepatan baca\u2026",
       "_origin": "ast",
       "community": 2,
@@ -5338,7 +5338,7 @@
       "file_type": "rationale",
       "norm_label": "waktu minimum buat secara masuk akal membaca slide ini, berdasar kecepatan baca...",
       "source_file": "server/api/generator.py",
-      "source_location": "L939"
+      "source_location": "L948"
     },
     {
       "id": "app_tsconfig",
@@ -6925,182 +6925,258 @@
       "source_location": "L7"
     },
     {
-      "id": "server_api_shell_template_kcallansweredforslide",
-      "label": "Check whether all Knowledge Check items on a slide are answered",
+      "id": "server_api_shell_template_backtoidentityform",
+      "label": "Return from identity confirmation to the entry form",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "check whether all knowledge check items on a slide are answered",
+      "norm_label": "return from identity confirmation to the entry form",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3397",
+      "source_location": "line 1848",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_kcanswer",
-      "label": "Record a Knowledge Check answer, handle retry-until-correct",
+      "id": "server_api_shell_template_confirmidentity",
+      "label": "Confirm and commit pending identity, start activity session",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "record a knowledge check answer, handle retry-until-correct",
+      "norm_label": "confirm and commit pending identity, start activity session",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3434",
+      "source_location": "line 1855",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_kcapply",
-      "label": "Apply the final locked result state for a KC question",
+      "id": "server_api_shell_template_formatnip",
+      "label": "Group NIP digits per PNS NIP structure",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "apply the final locked result state for a kc question",
+      "norm_label": "group nip digits per pns nip structure",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3517",
+      "source_location": "line 1810",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_kccontinue",
-      "label": "Close the KC popup and resume pending navigation",
+      "id": "server_api_shell_template_formatnipinput",
+      "label": "Live-format the NIP input field while preserving caret",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "close the kc popup and resume pending navigation",
+      "norm_label": "live-format the nip input field while preserving caret",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3553",
+      "source_location": "line 1816",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_kcfinditem",
-      "label": "Find a Knowledge Check question by block/index",
+      "id": "server_api_shell_template_identityfromscorm",
+      "label": "Read learner name/id from the SCORM API",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "find a knowledge check question by block/index",
+      "norm_label": "read learner name/id from the scorm api",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3402",
+      "source_location": "line 1698",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_kcmarkattempt",
-      "label": "Mark one KC option button as tried-and-wrong",
+      "id": "server_api_shell_template_loadsharedidentity",
+      "label": "Load cross-module cached learner identity",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "mark one kc option button as tried-and-wrong",
+      "norm_label": "load cross-module cached learner identity",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3472",
+      "source_location": "line 1724",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_kcopenpopup",
-      "label": "Open the Knowledge Check popup for a slide",
+      "id": "server_api_shell_template_nipdigits",
+      "label": "Strip non-digit characters from a NIP string",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "open the knowledge check popup for a slide",
+      "norm_label": "strip non-digit characters from a nip string",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3406",
+      "source_location": "line 1804",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_kcrestoreattempts",
-      "label": "Restore prior wrong KC attempts on popup reopen",
+      "id": "server_api_shell_template_openidentitygate",
+      "label": "Show the identity entry overlay",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "restore prior wrong kc attempts on popup reopen",
+      "norm_label": "show the identity entry overlay",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3503",
+      "source_location": "line 1780",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_kcshowattemptfeedback",
-      "label": "Show per-option feedback for a wrong KC attempt",
+      "id": "server_api_shell_template_resolveidentity",
+      "label": "Resolve learner identity from state/SCORM/shared cache",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "show per-option feedback for a wrong kc attempt",
+      "norm_label": "resolve learner identity from state/scorm/shared cache",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3478",
+      "source_location": "line 1746",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_kcupdatecontinuebtn",
-      "label": "Show/hide the KC popup continue button",
+      "id": "server_api_shell_template_savesharedidentity",
+      "label": "Persist cross-module cached learner identity",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "show/hide the kc popup continue button",
+      "norm_label": "persist cross-module cached learner identity",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3548",
+      "source_location": "line 1731",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_kcverdicthtml",
-      "label": "Render the Benar/Salah verdict + feedback HTML",
+      "id": "server_api_shell_template_scormnametonatural",
+      "label": "Reformat 'Last, First' SCORM name to natural order",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "render the benar/salah verdict + feedback html",
+      "norm_label": "reformat 'last, first' scorm name to natural order",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 3493",
+      "source_location": "line 1683",
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_concept_knowledge_check_gate",
-      "label": "Knowledge Check Gate",
+      "id": "server_api_shell_template_showidentityerror",
+      "label": "Display identity form validation error",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 1,
-      "community_name": "Knowledge Check Gate",
+      "community_name": "Identity Resolution & NIP Capture",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "display identity form validation error",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1775",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_submitidentity",
+      "label": "Validate and stage manually entered identity for confirmation",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Identity Resolution & NIP Capture",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "validate and stage manually entered identity for confirmation",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1826",
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_identitas_peserta",
+      "label": "Identitas Peserta Lintas Modul",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Identity Resolution & NIP Capture",
       "contributor": null,
       "file_type": "concept",
-      "norm_label": "knowledge check gate",
+      "norm_label": "identitas peserta lintas modul",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_sisi_peserta",
+      "label": "Sisi Peserta \u2014 Yang Dialami Peserta (Tahap 6)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Identity Resolution & NIP Capture",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "sisi peserta \u2014 yang dialami peserta (tahap 6)",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_concept_identity_resolution",
+      "label": "Identity Resolution & NIP Capture",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Identity Resolution & NIP Capture",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "identity resolution & nip capture",
+      "rationale": "NIP is the sole cross-module identity key; a learner accepted with a name but no NIP would fragment into an unlinkable '(no identity)' bucket in Command Center, so identity is only auto-accepted when a NIP is present. Resolution order: state already saved in this module -> full SCORM identity (has NIP) -> cross-module shared-identity cache (has NIP) -> manual form (SCORM name, if any, only prefills the form). SCORM-reported IDs are not assumed to be a NIP (LMS internal IDs vary), so each session records identity_source to distinguish manually entered NIPs from LMS-supplied IDs during analysis.",
       "source_file": "server/api/shell-template.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_keandalan_pencatatan",
+      "label": "Keandalan Pencatatan Data (Outbox Offline)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 1,
+      "community_name": "Identity Resolution & NIP Capture",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "keandalan pencatatan data (outbox offline)",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
       "source_location": null,
       "source_url": null
     },
@@ -7915,186 +7991,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_artapplystatus",
-      "label": "Render completion status text for active Articulate blocks",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "render completion status text for active articulate blocks",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1500",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artbindslide",
-      "label": "Bind Articulate blocks active on the current slide",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "bind articulate blocks active on the current slide",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1484",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artfullscreen",
-      "label": "Toggle fullscreen for an Articulate iframe block",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "toggle fullscreen for an articulate iframe block",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1511",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artloadcmi",
-      "label": "Load an Articulate block's stored CMI data",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "load an articulate block's stored cmi data",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1393",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artmakeshim",
-      "label": "Build a fake SCORM 1.2/2004 API shim for embedded Articulate content",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "build a fake scorm 1.2/2004 api shim for embedded articulate content",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1425",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artmakeshim_getvalue",
-      "label": "Articulate shim LMSGetValue/GetValue implementation",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "articulate shim lmsgetvalue/getvalue implementation",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1426",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artmakeshim_setvalue",
-      "label": "Articulate shim LMSSetValue/SetValue implementation",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "articulate shim lmssetvalue/setvalue implementation",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1441",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artmarkdone",
-      "label": "Mark an Articulate block as completed",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "mark an articulate block as completed",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1412",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artpendingonslide",
-      "label": "Find a locked, unfinished Articulate block on a slide",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "find a locked, unfinished articulate block on a slide",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1519",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artresolveblock",
-      "label": "Resolve which Articulate block is the current SCORM API caller",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "resolve which articulate block is the current scorm api caller",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1420",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artsavecmi",
-      "label": "Persist an Articulate block's CMI data",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "persist an articulate block's cmi data",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1400",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_artstorekey",
-      "label": "Build localStorage key for an Articulate block's CMI data",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "build localstorage key for an articulate block's cmi data",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1391",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_buildnavgroups",
       "label": "Group a section's NAV items into singles/bundles/quiz",
       "_origin": "semantic",
@@ -8107,6 +8003,21 @@
       "norm_label": "group a section's nav items into singles/bundles/quiz",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 2369",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_choosereadingwarningkembali",
+      "label": "Handle 'go back and reread' from reading warning",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "handle 'go back and reread' from reading warning",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3281",
       "source_url": null
     },
     {
@@ -8245,8 +8156,8 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_loadstate",
-      "label": "Load learner progress state from SCORM or localStorage",
+      "id": "server_api_shell_template_kcallansweredforslide",
+      "label": "Check whether all Knowledge Check items on a slide are answered",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -8254,9 +8165,159 @@
       "community_name": "Navigate to a NAV index, enforcing all gating rules",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "load learner progress state from scorm or localstorage",
+      "norm_label": "check whether all knowledge check items on a slide are answered",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 1537",
+      "source_location": "line 3397",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_kcanswer",
+      "label": "Record a Knowledge Check answer, handle retry-until-correct",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "record a knowledge check answer, handle retry-until-correct",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3434",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_kcapply",
+      "label": "Apply the final locked result state for a KC question",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "apply the final locked result state for a kc question",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3517",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_kccontinue",
+      "label": "Close the KC popup and resume pending navigation",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "close the kc popup and resume pending navigation",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3553",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_kcfinditem",
+      "label": "Find a Knowledge Check question by block/index",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "find a knowledge check question by block/index",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3402",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_kcmarkattempt",
+      "label": "Mark one KC option button as tried-and-wrong",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "mark one kc option button as tried-and-wrong",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3472",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_kcopenpopup",
+      "label": "Open the Knowledge Check popup for a slide",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "open the knowledge check popup for a slide",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3406",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_kcrestoreattempts",
+      "label": "Restore prior wrong KC attempts on popup reopen",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "restore prior wrong kc attempts on popup reopen",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3503",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_kcshowattemptfeedback",
+      "label": "Show per-option feedback for a wrong KC attempt",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "show per-option feedback for a wrong kc attempt",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3478",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_kcupdatecontinuebtn",
+      "label": "Show/hide the KC popup continue button",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "show/hide the kc popup continue button",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3548",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_kcverdicthtml",
+      "label": "Render the Benar/Salah verdict + feedback HTML",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render the benar/salah verdict + feedback html",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3493",
       "source_url": null
     },
     {
@@ -8302,6 +8363,21 @@
       "norm_label": "show the dev-mode password modal",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 2326",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_openreadingwarning",
+      "label": "Show the reading-speed warning overlay",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "show the reading-speed warning overlay",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 3259",
       "source_url": null
     },
     {
@@ -8500,21 +8576,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_retryquiz",
-      "label": "Reset a section quiz for a retry",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "reset a section quiz for a retry",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3378",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_rushedslidesinsection",
       "label": "List slides in a section flagged as rushed",
       "_origin": "semantic",
@@ -8542,96 +8603,6 @@
       "norm_label": "persist learner progress state to localstorage and scorm",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1561",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_scormcommit",
-      "label": "SCORM LMSCommit/Commit wrapper",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "scorm lmscommit/commit wrapper",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1354",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_scormfindapi",
-      "label": "Walk window/parent chain to find SCORM API",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "walk window/parent chain to find scorm api",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1311",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_scormfinish",
-      "label": "SCORM LMSFinish/Terminate wrapper",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "scorm lmsfinish/terminate wrapper",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1357",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_scormgetapi",
-      "label": "Resolve SCORM API via window or opener",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "resolve scorm api via window or opener",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1326",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_scormgetvalue",
-      "label": "SCORM LMSGetValue/GetValue wrapper",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "scorm lmsgetvalue/getvalue wrapper",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1341",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_scorminit",
-      "label": "Initialize SCORM session",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "initialize scorm session",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1331",
       "source_url": null
     },
     {
@@ -8770,8 +8741,8 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_concept_articulate_runtime",
-      "label": "Articulate 360 Block Runtime",
+      "id": "panduan_fitur_template_modul_ikram_peringatan_kecepatan_baca",
+      "label": "Peringatan Kecepatan Baca",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -8779,9 +8750,8 @@
       "community_name": "Navigate to a NAV index, enforcing all gating rules",
       "contributor": null,
       "file_type": "concept",
-      "norm_label": "articulate 360 block runtime",
-      "rationale": "Articulate/Storyline SCORM content climbs window.parent looking for a real SCORM API and would otherwise write lesson_status/score/suspend_data straight to the LMS, colliding with this module's own completion tracking (Storyline could mark the module 'completed' the moment its own last slide passes, even if the learner is still early in this module). artMakeShim intentionally walls off all SCORM calls from embedded Articulate packages: only student_name/student_id are read through (never written back); everything else (lesson_status, suspend_data, quiz score) is redirected to a block-scoped localStorage key via artStoreKey/artLoadCmi/artSaveCmi and never reaches the LMS. Articulate's own suspend_data can run tens of KB, far past SCORM 1.2's ~4096-char cmi.suspend_data limit, which is the other reason it can't be folded into this module's own state. window.API/API_1484_11 are only installed when HAS_ART is true, so modules without Articulate content never gain a fake SCORM object on window.",
-      "source_file": "server/api/shell-template.html",
+      "norm_label": "peringatan kecepatan baca",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
       "source_location": null,
       "source_url": null
     },
@@ -8796,6 +8766,21 @@
       "contributor": null,
       "file_type": "concept",
       "norm_label": "dev mode panel",
+      "source_file": "server/api/shell-template.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_concept_knowledge_check_gate",
+      "label": "Knowledge Check Gate",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 36,
+      "community_name": "Navigate to a NAV index, enforcing all gating rules",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "knowledge check gate",
       "source_file": "server/api/shell-template.html",
       "source_location": null,
       "source_url": null
@@ -8816,22 +8801,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_concept_scorm_wrapper",
-      "label": "SCORM API Wrapper",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 36,
-      "community_name": "Navigate to a NAV index, enforcing all gating rules",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "scorm api wrapper",
-      "rationale": "Auto-detects SCORM 1.2 (window.API) or SCORM 2004 (window.API_1484_11) by walking the window/parent/opener chain. Explicitly skips any API object flagged __modulShim so that once the Articulate shim (artMakeShim) is installed on window.API, this module's own scormFindAPI does not mistake its own shim for the real LMS API and fail to find the genuine one further up the chain.",
-      "source_file": "server/api/shell-template.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_concept_sidebar_navigation",
       "label": "Sidebar & Slide Navigation",
       "_origin": "semantic",
@@ -8843,36 +8812,6 @@
       "file_type": "concept",
       "norm_label": "sidebar & slide navigation",
       "source_file": "server/api/shell-template.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_14_jenis_blok",
-      "label": "14 Jenis Blok Konten",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 37,
-      "community_name": "BlockEditor.tsx",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "14 jenis blok konten",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_susun_modul",
-      "label": "Susun Modul (Tahap 2)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 37,
-      "community_name": "BlockEditor.tsx",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "susun modul (tahap 2)",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
       "source_location": null,
       "source_url": null
     },
@@ -9102,21 +9041,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_backtoidentityform",
-      "label": "Return from identity confirmation to the entry form",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "return from identity confirmation to the entry form",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1848",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_barchartsvg",
       "label": "SVG bar chart renderer",
       "_origin": "semantic",
@@ -9129,21 +9053,6 @@
       "norm_label": "svg bar chart renderer",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1159",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_choosereadingwarningkembali",
-      "label": "Handle 'go back and reread' from reading warning",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "handle 'go back and reread' from reading warning",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3281",
       "source_url": null
     },
     {
@@ -9162,21 +9071,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_confirmidentity",
-      "label": "Confirm and commit pending identity, start activity session",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "confirm and commit pending identity, start activity session",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1855",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_flowdiagram",
       "label": "Flow diagram block renderer",
       "_origin": "semantic",
@@ -9189,51 +9083,6 @@
       "norm_label": "flow diagram block renderer",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1177",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_formatnip",
-      "label": "Group NIP digits per PNS NIP structure",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "group nip digits per pns nip structure",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1810",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_formatnipinput",
-      "label": "Live-format the NIP input field while preserving caret",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "live-format the nip input field while preserving caret",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1816",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_identityfromscorm",
-      "label": "Read learner name/id from the SCORM API",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "read learner name/id from the scorm api",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1698",
       "source_url": null
     },
     {
@@ -9252,51 +9101,6 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_loadsharedidentity",
-      "label": "Load cross-module cached learner identity",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "load cross-module cached learner identity",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1724",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_nipdigits",
-      "label": "Strip non-digit characters from a NIP string",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "strip non-digit characters from a nip string",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1804",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_openidentitygate",
-      "label": "Show the identity entry overlay",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "show the identity entry overlay",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1780",
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_openmodal",
       "label": "Open modal block",
       "_origin": "semantic",
@@ -9309,21 +9113,6 @@
       "norm_label": "open modal block",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 1224",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_openreadingwarning",
-      "label": "Show the reading-speed warning overlay",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "show the reading-speed warning overlay",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 3259",
       "source_url": null
     },
     {
@@ -9522,8 +9311,8 @@
       "source_url": null
     },
     {
-      "id": "server_api_shell_template_resolveidentity",
-      "label": "Resolve learner identity from state/SCORM/shared cache",
+      "id": "server_api_shell_template_retryquiz",
+      "label": "Reset a section quiz for a retry",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
@@ -9531,9 +9320,9 @@
       "community_name": "Buffer an activity tracking event",
       "contributor": null,
       "file_type": "code",
-      "norm_label": "resolve learner identity from state/scorm/shared cache",
+      "norm_label": "reset a section quiz for a retry",
       "source_file": "server/api/shell-template.html",
-      "source_location": "line 1746",
+      "source_location": "line 3378",
       "source_url": null
     },
     {
@@ -9549,66 +9338,6 @@
       "norm_label": "send a live preflight event to verify activity recording works",
       "source_file": "server/api/shell-template.html",
       "source_location": "line 2238",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_savesharedidentity",
-      "label": "Persist cross-module cached learner identity",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "persist cross-module cached learner identity",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1731",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_scormnametonatural",
-      "label": "Reformat 'Last, First' SCORM name to natural order",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "reformat 'last, first' scorm name to natural order",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1683",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_showidentityerror",
-      "label": "Display identity form validation error",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "display identity form validation error",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1775",
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_submitidentity",
-      "label": "Validate and stage manually entered identity for confirmation",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "code",
-      "norm_label": "validate and stage manually entered identity for confirmation",
-      "source_file": "server/api/shell-template.html",
-      "source_location": "line 1826",
       "source_url": null
     },
     {
@@ -9762,51 +9491,6 @@
       "source_url": null
     },
     {
-      "id": "panduan_fitur_template_modul_ikram_identitas_peserta",
-      "label": "Identitas Peserta Lintas Modul",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "identitas peserta lintas modul",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_peringatan_kecepatan_baca",
-      "label": "Peringatan Kecepatan Baca",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "peringatan kecepatan baca",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "panduan_fitur_template_modul_ikram_sisi_peserta",
-      "label": "Sisi Peserta \u2014 Yang Dialami Peserta (Tahap 6)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "sisi peserta \u2014 yang dialami peserta (tahap 6)",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
       "id": "server_api_shell_template_concept_activity_tracking",
       "label": "Learner Activity Tracking",
       "_origin": "semantic",
@@ -9818,22 +9502,6 @@
       "file_type": "concept",
       "norm_label": "learner activity tracking",
       "rationale": "Writes activity events directly to Supabase (not through SCORM cmi.suspend_data, which is capped ~4096 chars and would silently truncate per-slide duration data for long modules). The anon key is visible in shipped source by design: Supabase RLS grants the anon role INSERT-only, zero SELECT, so the key cannot be used to read other learners' data (see server/supabase_activity_setup.sql).",
-      "source_file": "server/api/shell-template.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "server_api_shell_template_concept_identity_resolution",
-      "label": "Identity Resolution & NIP Capture",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "identity resolution & nip capture",
-      "rationale": "NIP is the sole cross-module identity key; a learner accepted with a name but no NIP would fragment into an unlinkable '(no identity)' bucket in Command Center, so identity is only auto-accepted when a NIP is present. Resolution order: state already saved in this module -> full SCORM identity (has NIP) -> cross-module shared-identity cache (has NIP) -> manual form (SCORM name, if any, only prefills the form). SCORM-reported IDs are not assumed to be a NIP (LMS internal IDs vary), so each session records identity_source to distinguish manually entered NIPs from LMS-supplied IDs during analysis.",
       "source_file": "server/api/shell-template.html",
       "source_location": null,
       "source_url": null
@@ -9887,21 +9555,6 @@
       "source_url": null
     },
     {
-      "id": "panduan_fitur_template_modul_ikram_keandalan_pencatatan",
-      "label": "Keandalan Pencatatan Data (Outbox Offline)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 4,
-      "community_name": "Buffer an activity tracking event",
-      "contributor": null,
-      "file_type": "rationale",
-      "norm_label": "keandalan pencatatan data (outbox offline)",
-      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
       "id": "app_src_app_handlecreateproject",
       "label": "handleCreateProject()",
       "_origin": "semantic",
@@ -9932,13 +9585,43 @@
       "source_url": null
     },
     {
+      "id": "panduan_fitur_template_modul_ikram_14_jenis_blok",
+      "label": "14 Jenis Blok Konten",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 51,
+      "community_name": "14 Jenis Blok Konten",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "14 jenis blok konten",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "panduan_fitur_template_modul_ikram_susun_modul",
+      "label": "Susun Modul (Tahap 2)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 51,
+      "community_name": "14 Jenis Blok Konten",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "susun modul (tahap 2)",
+      "source_file": "Panduan-Fitur-Template-Modul-Ikram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
       "id": "lms_probe_index_checknetwork",
       "label": "checkNetwork()",
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
       "community": 8,
-      "community_name": "checkNetwork",
+      "community_name": "Articulate 360 Block Runtime",
       "contributor": null,
       "file_type": "code",
       "norm_label": "checknetwork()",
@@ -9953,7 +9636,7 @@
       "author": null,
       "captured_at": null,
       "community": 8,
-      "community_name": "checkNetwork",
+      "community_name": "Articulate 360 Block Runtime",
       "contributor": null,
       "file_type": "code",
       "norm_label": "checkscorm()",
@@ -9968,7 +9651,7 @@
       "author": null,
       "captured_at": null,
       "community": 8,
-      "community_name": "checkNetwork",
+      "community_name": "Articulate 360 Block Runtime",
       "contributor": null,
       "file_type": "code",
       "norm_label": "findapi()",
@@ -9983,7 +9666,7 @@
       "author": null,
       "captured_at": null,
       "community": 8,
-      "community_name": "checkNetwork",
+      "community_name": "Articulate 360 Block Runtime",
       "contributor": null,
       "file_type": "code",
       "norm_label": "rows()",
@@ -9998,7 +9681,7 @@
       "author": null,
       "captured_at": null,
       "community": 8,
-      "community_name": "checkNetwork",
+      "community_name": "Articulate 360 Block Runtime",
       "contributor": null,
       "file_type": "code",
       "norm_label": "sessionid()",
@@ -10013,7 +9696,7 @@
       "author": null,
       "captured_at": null,
       "community": 8,
-      "community_name": "checkNetwork",
+      "community_name": "Articulate 360 Block Runtime",
       "contributor": null,
       "file_type": "code",
       "norm_label": "setverdict()",
@@ -10028,11 +9711,328 @@
       "author": null,
       "captured_at": null,
       "community": 8,
-      "community_name": "checkNetwork",
+      "community_name": "Articulate 360 Block Runtime",
       "contributor": null,
       "file_type": "code",
       "norm_label": "showerror()",
       "source_file": "lms-probe/index.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artapplystatus",
+      "label": "Render completion status text for active Articulate blocks",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "render completion status text for active articulate blocks",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1500",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artbindslide",
+      "label": "Bind Articulate blocks active on the current slide",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "bind articulate blocks active on the current slide",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1484",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artfullscreen",
+      "label": "Toggle fullscreen for an Articulate iframe block",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "toggle fullscreen for an articulate iframe block",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1511",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artloadcmi",
+      "label": "Load an Articulate block's stored CMI data",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "load an articulate block's stored cmi data",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1393",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artmakeshim",
+      "label": "Build a fake SCORM 1.2/2004 API shim for embedded Articulate content",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "build a fake scorm 1.2/2004 api shim for embedded articulate content",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1425",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artmakeshim_getvalue",
+      "label": "Articulate shim LMSGetValue/GetValue implementation",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "articulate shim lmsgetvalue/getvalue implementation",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1426",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artmakeshim_setvalue",
+      "label": "Articulate shim LMSSetValue/SetValue implementation",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "articulate shim lmssetvalue/setvalue implementation",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1441",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artmarkdone",
+      "label": "Mark an Articulate block as completed",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "mark an articulate block as completed",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1412",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artpendingonslide",
+      "label": "Find a locked, unfinished Articulate block on a slide",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "find a locked, unfinished articulate block on a slide",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1519",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artresolveblock",
+      "label": "Resolve which Articulate block is the current SCORM API caller",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "resolve which articulate block is the current scorm api caller",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1420",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artsavecmi",
+      "label": "Persist an Articulate block's CMI data",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "persist an articulate block's cmi data",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1400",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_artstorekey",
+      "label": "Build localStorage key for an Articulate block's CMI data",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "build localstorage key for an articulate block's cmi data",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1391",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_loadstate",
+      "label": "Load learner progress state from SCORM or localStorage",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "load learner progress state from scorm or localstorage",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1537",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_scormcommit",
+      "label": "SCORM LMSCommit/Commit wrapper",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "scorm lmscommit/commit wrapper",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1354",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_scormfindapi",
+      "label": "Walk window/parent chain to find SCORM API",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "walk window/parent chain to find scorm api",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1311",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_scormfinish",
+      "label": "SCORM LMSFinish/Terminate wrapper",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "scorm lmsfinish/terminate wrapper",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1357",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_scormgetapi",
+      "label": "Resolve SCORM API via window or opener",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "resolve scorm api via window or opener",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1326",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_scormgetvalue",
+      "label": "SCORM LMSGetValue/GetValue wrapper",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "scorm lmsgetvalue/getvalue wrapper",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1341",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_scorminit",
+      "label": "Initialize SCORM session",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "code",
+      "norm_label": "initialize scorm session",
+      "source_file": "server/api/shell-template.html",
+      "source_location": "line 1331",
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_concept_articulate_runtime",
+      "label": "Articulate 360 Block Runtime",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "articulate 360 block runtime",
+      "rationale": "Articulate/Storyline SCORM content climbs window.parent looking for a real SCORM API and would otherwise write lesson_status/score/suspend_data straight to the LMS, colliding with this module's own completion tracking (Storyline could mark the module 'completed' the moment its own last slide passes, even if the learner is still early in this module). artMakeShim intentionally walls off all SCORM calls from embedded Articulate packages: only student_name/student_id are read through (never written back); everything else (lesson_status, suspend_data, quiz score) is redirected to a block-scoped localStorage key via artStoreKey/artLoadCmi/artSaveCmi and never reaches the LMS. Articulate's own suspend_data can run tens of KB, far past SCORM 1.2's ~4096-char cmi.suspend_data limit, which is the other reason it can't be folded into this module's own state. window.API/API_1484_11 are only installed when HAS_ART is true, so modules without Articulate content never gain a fake SCORM object on window.",
+      "source_file": "server/api/shell-template.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "server_api_shell_template_concept_scorm_wrapper",
+      "label": "SCORM API Wrapper",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 8,
+      "community_name": "Articulate 360 Block Runtime",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "scorm api wrapper",
+      "rationale": "Auto-detects SCORM 1.2 (window.API) or SCORM 2004 (window.API_1484_11) by walking the window/parent/opener chain. Explicitly skips any API object flagged __modulShim so that once the Articulate shim (artMakeShim) is installed on window.API, this module's own scormFindAPI does not mistake its own shim for the real LMS API and fail to find the genuine one further up the chain.",
+      "source_file": "server/api/shell-template.html",
       "source_location": null,
       "source_url": null
     },
@@ -10043,7 +10043,7 @@
       "author": null,
       "captured_at": null,
       "community": 8,
-      "community_name": "checkNetwork",
+      "community_name": "Articulate 360 Block Runtime",
       "contributor": null,
       "file_type": "document",
       "norm_label": "lms-probe/readme.md \u2014 uji koneksi lms guide",
@@ -10402,30 +10402,6 @@
       "weight": 1.0
     },
     {
-      "source": "app_src_components_blockeditor_articulatefields",
-      "target": "app_src_api_uploadarticulate",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L716",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_components_blockeditor_articulatefields",
-      "target": "app_src_api_deletearticulate",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L731",
-      "weight": 1.0
-    },
-    {
       "source": "app_src_components_blockeditor_articulatefields_pilihfile",
       "target": "app_src_api_uploadarticulate",
       "relation": "calls",
@@ -10434,7 +10410,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L716",
+      "source_location": "L728",
       "weight": 1.0
     },
     {
@@ -10446,7 +10422,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L731",
+      "source_location": "L743",
       "weight": 1.0
     },
     {
@@ -10530,7 +10506,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L537",
+      "source_location": "L549",
       "weight": 1.0
     },
     {
@@ -10542,7 +10518,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L416",
+      "source_location": "L428",
       "weight": 1.0
     },
     {
@@ -10554,7 +10530,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L417",
+      "source_location": "L429",
       "weight": 1.0
     },
     {
@@ -10566,7 +10542,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L862",
+      "source_location": "L874",
       "weight": 1.0
     },
     {
@@ -11526,7 +11502,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L513",
+      "source_location": "L517",
       "weight": 1.0
     },
     {
@@ -11538,7 +11514,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L269",
+      "source_location": "L273",
       "weight": 1.0
     },
     {
@@ -11550,7 +11526,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L526",
+      "source_location": "L530",
       "weight": 1.0
     },
     {
@@ -11562,7 +11538,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L527",
+      "source_location": "L531",
       "weight": 1.0
     },
     {
@@ -11574,7 +11550,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L527",
+      "source_location": "L531",
       "weight": 1.0
     },
     {
@@ -11586,7 +11562,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L280",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -11598,7 +11574,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L467",
+      "source_location": "L471",
       "weight": 1.0
     },
     {
@@ -11610,7 +11586,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L331",
+      "source_location": "L335",
       "weight": 1.0
     },
     {
@@ -11622,7 +11598,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L331",
+      "source_location": "L335",
       "weight": 1.0
     },
     {
@@ -11634,7 +11610,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L391",
+      "source_location": "L395",
       "weight": 1.0
     },
     {
@@ -11646,7 +11622,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/types.ts",
-      "source_location": "L308",
+      "source_location": "L312",
       "weight": 1.0
     },
     {
@@ -12090,7 +12066,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1005",
+      "source_location": "L1014",
       "weight": 1.0
     },
     {
@@ -12102,7 +12078,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1012",
+      "source_location": "L1021",
       "weight": 1.0
     },
     {
@@ -12114,7 +12090,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1015",
+      "source_location": "L1024",
       "weight": 1.0
     },
     {
@@ -12126,7 +12102,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1030",
+      "source_location": "L1039",
       "weight": 1.0
     },
     {
@@ -12138,7 +12114,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1031",
+      "source_location": "L1040",
       "weight": 1.0
     },
     {
@@ -12150,7 +12126,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1032",
+      "source_location": "L1041",
       "weight": 1.0
     },
     {
@@ -12162,7 +12138,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1034",
+      "source_location": "L1043",
       "weight": 1.0
     },
     {
@@ -12174,7 +12150,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1037",
+      "source_location": "L1046",
       "weight": 1.0
     },
     {
@@ -12186,7 +12162,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1050",
+      "source_location": "L1059",
       "weight": 1.0
     },
     {
@@ -12198,7 +12174,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1053",
+      "source_location": "L1062",
       "weight": 1.0
     },
     {
@@ -12210,7 +12186,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1053",
+      "source_location": "L1062",
       "weight": 1.0
     },
     {
@@ -12222,7 +12198,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1076",
+      "source_location": "L1085",
       "weight": 1.0
     },
     {
@@ -12234,7 +12210,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1137",
+      "source_location": "L1146",
       "weight": 1.0
     },
     {
@@ -12246,7 +12222,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1144",
+      "source_location": "L1153",
       "weight": 1.0
     },
     {
@@ -12258,7 +12234,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1168",
+      "source_location": "L1177",
       "weight": 1.0
     },
     {
@@ -12270,7 +12246,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L1215",
+      "source_location": "L1224",
       "weight": 1.0
     },
     {
@@ -12486,7 +12462,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L895",
+      "source_location": "L904",
       "weight": 1.0
     },
     {
@@ -12606,7 +12582,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L910",
+      "source_location": "L919",
       "weight": 1.0
     },
     {
@@ -12618,7 +12594,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L911",
+      "source_location": "L920",
       "weight": 1.0
     },
     {
@@ -12630,7 +12606,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "server/api/generator.py",
-      "source_location": "L914",
+      "source_location": "L923",
       "weight": 1.0
     },
     {
@@ -13086,7 +13062,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L711",
+      "source_location": "L723",
       "weight": 1.0
     },
     {
@@ -13158,7 +13134,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L587",
+      "source_location": "L599",
       "weight": 1.0
     },
     {
@@ -13170,7 +13146,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L597",
+      "source_location": "L609",
       "weight": 1.0
     },
     {
@@ -13182,7 +13158,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L607",
+      "source_location": "L619",
       "weight": 1.0
     },
     {
@@ -13194,7 +13170,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L613",
+      "source_location": "L625",
       "weight": 1.0
     },
     {
@@ -13206,7 +13182,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L616",
+      "source_location": "L628",
       "weight": 1.0
     },
     {
@@ -13218,7 +13194,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L619",
+      "source_location": "L631",
       "weight": 1.0
     },
     {
@@ -13230,7 +13206,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L629",
+      "source_location": "L641",
       "weight": 1.0
     },
     {
@@ -13242,7 +13218,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L635",
+      "source_location": "L647",
       "weight": 1.0
     },
     {
@@ -13254,7 +13230,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L879",
+      "source_location": "L891",
       "weight": 1.0
     },
     {
@@ -14519,31 +14495,7 @@
     },
     {
       "source": "app_src_components_blockeditor",
-      "target": "app_src_components_emojipicker_emojipicker",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L6",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_components_blockeditor",
       "target": "app_src_components_blockaddmenu_block_labels",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L7",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_components_blockeditor",
-      "target": "app_src_components_blockaddmenu_blockaddmenu",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -17329,7 +17281,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L358",
+      "source_location": "L370",
       "weight": 1.0
     },
     {
@@ -17340,7 +17292,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L390",
+      "source_location": "L402",
       "weight": 1.0
     },
     {
@@ -17362,7 +17314,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L432",
+      "source_location": "L444",
       "weight": 1.0
     },
     {
@@ -17384,7 +17336,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L496",
+      "source_location": "L508",
       "weight": 1.0
     },
     {
@@ -17395,7 +17347,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L525",
+      "source_location": "L537",
       "weight": 1.0
     },
     {
@@ -17406,7 +17358,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L561",
+      "source_location": "L573",
       "weight": 1.0
     },
     {
@@ -17417,7 +17369,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L580",
+      "source_location": "L592",
       "weight": 1.0
     },
     {
@@ -17428,7 +17380,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L704",
+      "source_location": "L716",
       "weight": 1.0
     },
     {
@@ -17439,7 +17391,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L801",
+      "source_location": "L813",
       "weight": 1.0
     },
     {
@@ -17450,7 +17402,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L851",
+      "source_location": "L863",
       "weight": 1.0
     },
     {
@@ -17461,7 +17413,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L877",
+      "source_location": "L889",
       "weight": 1.0
     },
     {
@@ -17483,7 +17435,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L590",
+      "source_location": "L602",
       "weight": 1.0
     },
     {
@@ -17494,7 +17446,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L610",
+      "source_location": "L622",
       "weight": 1.0
     },
     {
@@ -17505,7 +17457,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockEditor.tsx",
-      "source_location": "L632",
+      "source_location": "L644",
       "weight": 1.0
     },
     {
@@ -18594,7 +18546,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L140",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -18605,7 +18557,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L148",
+      "source_location": "L152",
       "weight": 1.0
     },
     {
@@ -18616,7 +18568,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L164",
+      "source_location": "L168",
       "weight": 1.0
     },
     {
@@ -18627,7 +18579,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L171",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -18649,7 +18601,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L246",
+      "source_location": "L250",
       "weight": 1.0
     },
     {
@@ -18660,7 +18612,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L256",
+      "source_location": "L260",
       "weight": 1.0
     },
     {
@@ -18671,7 +18623,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L268",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -18682,7 +18634,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L274",
+      "source_location": "L278",
       "weight": 1.0
     },
     {
@@ -18704,7 +18656,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L307",
+      "source_location": "L311",
       "weight": 1.0
     },
     {
@@ -18715,18 +18667,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L317",
-      "weight": 1.0
-    },
-    {
-      "source": "app_src_types",
-      "target": "app_src_types_renumbermodule",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "app/src/types.ts",
-      "source_location": "L347",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -18742,13 +18683,24 @@
     },
     {
       "source": "app_src_types",
+      "target": "app_src_types_renumbermodule",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/src/types.ts",
+      "source_location": "L351",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_types",
       "target": "app_src_types_uid",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L383",
+      "source_location": "L387",
       "weight": 1.0
     },
     {
@@ -18759,7 +18711,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L390",
+      "source_location": "L394",
       "weight": 1.0
     },
     {
@@ -18770,7 +18722,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L417",
+      "source_location": "L421",
       "weight": 1.0
     },
     {
@@ -18781,7 +18733,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L456",
+      "source_location": "L460",
       "weight": 1.0
     },
     {
@@ -18792,7 +18744,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L472",
+      "source_location": "L476",
       "weight": 1.0
     },
     {
@@ -18803,7 +18755,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/types.ts",
-      "source_location": "L524",
+      "source_location": "L528",
       "weight": 1.0
     },
     {
@@ -19501,6 +19453,17 @@
     },
     {
       "source": "server_api_generator",
+      "target": "server_api_generator_generate_html",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "server/api/generator.py",
+      "source_location": "L1002",
+      "weight": 1.0
+    },
+    {
+      "source": "server_api_generator",
       "target": "server_api_generator_hex_to_rgba",
       "relation": "contains",
       "_origin": "ast",
@@ -19606,7 +19569,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L556",
+      "source_location": "L565",
       "weight": 1.0
     },
     {
@@ -19617,7 +19580,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L563",
+      "source_location": "L572",
       "weight": 1.0
     },
     {
@@ -19628,7 +19591,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L581",
+      "source_location": "L590",
       "weight": 1.0
     },
     {
@@ -19639,7 +19602,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L611",
+      "source_location": "L620",
       "weight": 1.0
     },
     {
@@ -19650,7 +19613,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L622",
+      "source_location": "L631",
       "weight": 1.0
     },
     {
@@ -19661,7 +19624,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L675",
+      "source_location": "L684",
       "weight": 1.0
     },
     {
@@ -19672,7 +19635,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L865",
+      "source_location": "L874",
       "weight": 1.0
     },
     {
@@ -19683,7 +19646,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L903",
+      "source_location": "L912",
       "weight": 1.0
     },
     {
@@ -19694,7 +19657,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L928",
+      "source_location": "L937",
       "weight": 1.0
     },
     {
@@ -19705,7 +19668,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L938",
+      "source_location": "L947",
       "weight": 1.0
     },
     {
@@ -19716,7 +19679,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L948",
+      "source_location": "L957",
       "weight": 1.0
     },
     {
@@ -19727,18 +19690,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L953",
-      "weight": 1.0
-    },
-    {
-      "source": "server_api_generator",
-      "target": "server_api_generator_generate_html",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "server/api/generator.py",
-      "source_location": "L993",
+      "source_location": "L962",
       "weight": 1.0
     },
     {
@@ -20743,91 +20695,91 @@
       "weight": 1.0
     },
     {
-      "source": "server_api_generator_rationale_564",
+      "source": "server_api_generator_rationale_573",
       "target": "server_api_generator_count_articulate",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L564",
+      "source_location": "L573",
       "weight": 1.0
     },
     {
-      "source": "server_api_generator_rationale_582",
+      "source": "server_api_generator_rationale_591",
       "target": "server_api_generator_count_interaktif",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L582",
+      "source_location": "L591",
       "weight": 1.0
     },
     {
-      "source": "server_api_generator_rationale_612",
+      "source": "server_api_generator_rationale_621",
       "target": "server_api_generator_clamp_brightness",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L612",
+      "source_location": "L621",
       "weight": 1.0
     },
     {
-      "source": "server_api_generator_rationale_623",
+      "source": "server_api_generator_rationale_632",
       "target": "server_api_generator_render_bg_image_layer",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L623",
+      "source_location": "L632",
       "weight": 1.0
     },
     {
-      "source": "server_api_generator_rationale_676",
+      "source": "server_api_generator_rationale_685",
       "target": "server_api_generator_responsive_geometry",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L676",
+      "source_location": "L685",
       "weight": 1.0
     },
     {
-      "source": "server_api_generator_rationale_866",
+      "source": "server_api_generator_rationale_875",
       "target": "server_api_generator_render_graphic_deco",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L866",
+      "source_location": "L875",
       "weight": 1.0
     },
     {
-      "source": "server_api_generator_rationale_929",
+      "source": "server_api_generator_rationale_938",
       "target": "server_api_generator_count_words",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L929",
+      "source_location": "L938",
       "weight": 1.0
     },
     {
-      "source": "server_api_generator_rationale_939",
+      "source": "server_api_generator_rationale_948",
       "target": "server_api_generator_slide_min_read_ms",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "server/api/generator.py",
-      "source_location": "L939",
+      "source_location": "L948",
       "weight": 1.0
     },
     {
@@ -21153,7 +21105,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L535",
+      "source_location": "L544",
       "weight": 1.0
     },
     {
@@ -21165,7 +21117,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L536",
+      "source_location": "L545",
       "weight": 1.0
     },
     {
@@ -21177,7 +21129,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L537",
+      "source_location": "L546",
       "weight": 1.0
     },
     {
@@ -21189,7 +21141,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L538",
+      "source_location": "L547",
       "weight": 1.0
     },
     {
@@ -21201,7 +21153,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L539",
+      "source_location": "L548",
       "weight": 1.0
     },
     {
@@ -21213,7 +21165,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L540",
+      "source_location": "L549",
       "weight": 1.0
     },
     {
@@ -21225,7 +21177,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L541",
+      "source_location": "L550",
       "weight": 1.0
     },
     {
@@ -21237,7 +21189,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L542",
+      "source_location": "L551",
       "weight": 1.0
     },
     {
@@ -21249,7 +21201,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L543",
+      "source_location": "L552",
       "weight": 1.0
     },
     {
@@ -21261,7 +21213,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L544",
+      "source_location": "L553",
       "weight": 1.0
     },
     {
@@ -21273,7 +21225,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L545",
+      "source_location": "L554",
       "weight": 1.0
     },
     {
@@ -21285,7 +21237,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L546",
+      "source_location": "L555",
       "weight": 1.0
     },
     {
@@ -21297,7 +21249,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L547",
+      "source_location": "L556",
       "weight": 1.0
     },
     {
@@ -21309,7 +21261,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L548",
+      "source_location": "L557",
       "weight": 1.0
     },
     {
@@ -21321,7 +21273,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L549",
+      "source_location": "L558",
       "weight": 1.0
     },
     {
@@ -21333,7 +21285,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L550",
+      "source_location": "L559",
       "weight": 1.0
     },
     {
@@ -21345,7 +21297,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L551",
+      "source_location": "L560",
       "weight": 1.0
     },
     {
@@ -21357,7 +21309,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "server/api/generator.py",
-      "source_location": "L552",
+      "source_location": "L561",
       "weight": 1.0
     },
     {
@@ -25621,5 +25573,5 @@
       "source_file": "Panduan-Fitur-Template-Modul-Ikram.html"
     }
   ],
-  "built_at_commit": "d0c4570a57d86c30a6631db23358bd874863aa12"
+  "built_at_commit": "997df4325a95e77d64d415ff369fda533b5e5396"
 }
