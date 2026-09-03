@@ -40,10 +40,6 @@ export default function EmojiPicker({ value, onChange, placeholder }: Props) {
   // supaya emoji di luar BMP (yang dihitung 2 char oleh JS) gak kepotong
   // separuh jadi karakter rusak.
   const glyph = Array.from(value)[0] || '';
-  // Lebih dari satu glyph berarti isinya bukan simbol lagi. Dikasih tau di
-  // sini, bukan didiamkan sampai export: di modul, .callout .ic itu
-  // flex-shrink:0 - teks panjang di situ bakal mendesak isi catatannya.
-  const kepanjangan = Array.from(value).length > 1;
 
   return (
     <div ref={wrapRef} style={{ position: 'relative', marginBottom: 6 }}>
@@ -67,12 +63,6 @@ export default function EmojiPicker({ value, onChange, placeholder }: Props) {
           onChange={e => onChange(e.target.value)}
         />
       </div>
-      {kepanjangan && (
-        <p className="hint" style={{ fontSize: 11, margin: '4px 0 0 46px', color: 'var(--danger)', lineHeight: 1.5 }}>
-          ⚠ Kolom ini buat <b>satu simbol</b>. Isinya tetap dipakai utuh saat modul di-export
-          dan bakal mendesak isi bloknya — taruh teksnya di kolom isi atau badge.
-        </p>
-      )}
       {open && (
         <div style={{
           position: 'absolute', zIndex: 50, top: 42, left: 0, width: 340,
