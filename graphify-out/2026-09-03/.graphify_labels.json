@@ -1,6 +1,5 @@
 {
   "0": "PreviewExport.tsx",
-  "1": "CoverForm.tsx",
   "2": "generator.py",
   "3": "index.py",
   "4": "Buffer an activity tracking event",
@@ -37,7 +36,6 @@
   "35": "plugins",
   "36": "Navigate to a NAV index, enforcing all gating rules",
   "37": "BlockEditor.tsx",
-  "38": "Canvas.tsx",
   "39": "DtableFields",
   "40": "BlockEditor",
   "41": "EmojiPicker.tsx",
@@ -47,10 +45,7 @@
   "45": "supabase_activity_setup.sql",
   "46": "supabase_storage_media_setup.sql",
   "47": "supabase_storage_setup.sql",
-  "48": "App.tsx",
+  "48": "types.ts",
   "50": "r2.py",
-  "51": "types.ts",
-  "54": "normalizeModule",
-  "55": "BlockAddMenu",
-  "56": "SlideBank"
+  "55": "BlockAddMenu"
 }
