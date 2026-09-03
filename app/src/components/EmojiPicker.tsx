@@ -33,24 +33,46 @@ export default function EmojiPicker({ value, onChange, placeholder }: Props) {
     setOpen(false);
   }
 
+  // Kolomnya teks bebas, jadi apa pun bisa masuk - termasuk kalimat, waktu
+  // orang mengira ini kolom judul. Yang dipratinjau cuma GLYPH PERTAMA:
+  // tombolnya kotak 40x34, dan tanpa ini isinya tumpah keluar kotak lalu
+  // menabrak kolom di sebelah & baris di bawahnya. Array.from, bukan value[0],
+  // supaya emoji di luar BMP (yang dihitung 2 char oleh JS) gak kepotong
+  // separuh jadi karakter rusak.
+  const glyph = Array.from(value)[0] || '';
+  // Lebih dari satu glyph berarti isinya bukan simbol lagi. Dikasih tau di
+  // sini, bukan didiamkan sampai export: di modul, .callout .ic itu
+  // flex-shrink:0 - teks panjang di situ bakal mendesak isi catatannya.
+  const kepanjangan = Array.from(value).length > 1;
+
   return (
     <div ref={wrapRef} style={{ position: 'relative', marginBottom: 6 }}>
       <div style={{ display: 'flex', gap: 6 }}>
         <button
           type="button"
           onClick={() => setOpen(o => !o)}
-          style={{ fontSize: 18, width: 40, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{
+            fontSize: 18, width: 40, height: 34, flex: 'none', padding: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden', whiteSpace: 'nowrap', lineHeight: 1,
+          }}
           title="Pilih ikon"
         >
-          {value || '➕'}
+          {glyph || '➕'}
         </button>
         <input
-          style={{ flex: 1 }}
+          style={{ flex: 1, minWidth: 0 }}
           placeholder={placeholder || 'Icon (simbol, opsional)'}
           value={value}
           onChange={e => onChange(e.target.value)}
         />
       </div>
+      {kepanjangan && (
+        <p className="hint" style={{ fontSize: 11, margin: '4px 0 0 46px', color: 'var(--danger)', lineHeight: 1.5 }}>
+          ⚠ Kolom ini buat <b>satu simbol</b>. Isinya tetap dipakai utuh saat modul di-export
+          dan bakal mendesak isi bloknya — taruh teksnya di kolom isi atau badge.
+        </p>
+      )}
       {open && (
         <div style={{
           position: 'absolute', zIndex: 50, top: 42, left: 0, width: 340,
