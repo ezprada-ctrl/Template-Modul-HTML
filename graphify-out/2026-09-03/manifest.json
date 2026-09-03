@@ -72,9 +72,9 @@
     "semantic_hash": "eed7df3598eec0c886ba0a162ed69b13"
   },
   "app/src/components/PreviewExport.tsx": {
-    "mtime": 1788400334.484394,
-    "seen": 1788400473.7753837,
-    "ast_hash": "9c9f603c0a68a73a8cbb7ab6f51431f4",
+    "mtime": 1788257720.7769055,
+    "seen": 1788257787.354246,
+    "ast_hash": "46659453a31a9bfa65f7d5ea6c17d4b0",
     "semantic_hash": ""
   },
   "app/src/components/QuizBuilder.tsx": {
@@ -325,8 +325,8 @@
   },
   ".claude/settings.json": {
     "mtime": 1787022108.759704,
-    "seen": 1788400473.7753627,
-    "ast_hash": "095c71e3ebb04d33915f4e0bbdb50ded",
+    "seen": 1788243530.3929446,
+    "ast_hash": "",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -361,8 +361,8 @@
   },
   ".claude/launch.json": {
     "mtime": 1788172433.8440406,
-    "seen": 1788400473.775357,
-    "ast_hash": "3e6b6747a22aa61bec0bcecc764a4711",
+    "seen": 1788243530.3929412,
+    "ast_hash": "",
     "semantic_hash": ""
   },
   "tools/build_source_printout.py": {
