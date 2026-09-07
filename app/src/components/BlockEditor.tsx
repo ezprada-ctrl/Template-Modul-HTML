@@ -305,6 +305,46 @@ function RichInput({ value, onChange, style, placeholder }: {
   );
 }
 
+// Judul opsional + simbol opsional, dipakai bareng Daftar Bercentang & Tabs
+// (dirender _blok_heading di generator.py). Satu komponen buat dua blok
+// supaya formnya gak pelan-pelan beda sendiri - persis alasan .tick-heading
+// dan .tabs-heading digabung jadi satu aturan CSS.
+//
+// Judulnya <input> polos, BUKAN RichInput: generator meng-esc field ini
+// (sama seperti judul Kartu), jadi kalau dikasih shortcut Ctrl+B tag
+// <strong>-nya malah nongol mentah sebagai teks di modul.
+//
+// Simbolnya sengaja cuma tampil kalau judulnya sudah diisi - di render,
+// simbol nempel pada judul, jadi simbol tanpa judul gak akan kelihatan
+// di modul dan cuma bikin bingung kalau dibiarkan bisa dipilih.
+function JudulOpsional({ block, onChange, inp, label }: {
+  block: Block;
+  onChange: (p: Partial<Block>) => void;
+  inp: CSSProperties;
+  label: string;
+}) {
+  return (
+    <>
+      <input
+        style={inp}
+        placeholder={label}
+        value={block.heading || ''}
+        onChange={e => onChange({ heading: e.target.value })}
+      />
+      {block.heading ? (
+        <EmojiPicker
+          value={block.icon || ''}
+          onChange={icon => onChange({ icon })}
+          placeholder="Simbol di depan judul (opsional)"
+        />
+      ) : null}
+      <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
+        Kosongkan kalau gak perlu judul.
+      </p>
+    </>
+  );
+}
+
 function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<Block>) => void }) {
   const ta = { width: '100%', minHeight: 60, fontFamily: 'inherit', fontSize: 13, resize: 'vertical' as const };
   const inp = { width: '100%', fontSize: 13, marginBottom: 4 };
@@ -340,10 +380,8 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       </>;
     case 'ticklist':
       return <>
-        <input style={inp} placeholder="Judul daftar (opsional)" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
-        <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-          Kosongkan kalau daftarnya gak perlu judul.
-        </p>
+        <JudulOpsional block={block} onChange={onChange} inp={inp} label="Judul daftar (opsional)" />
+
         <label style={{ fontSize: 12, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
           <input type="checkbox" checked={!!block.ordered} onChange={e => onChange({ ordered: e.target.checked })} />
           bernomor
@@ -375,6 +413,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       </>;
     case 'tabs':
       return <>
+        <JudulOpsional block={block} onChange={onChange} inp={inp} label="Judul tabs (opsional)" />
         {(block.tabItems || []).map((it, i) => (
           <div key={i} style={{ border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 8, marginBottom: 6 }}>
             <input style={inp} placeholder="Label tab" value={it.label} onChange={e => {

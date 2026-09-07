@@ -74,14 +74,17 @@ export interface Block {
   // pullquote
   num?: string;
   text?: string;
-  // ticklist — `heading` (reuses card's field above) is optional: kosong =
-  // cuma daftarnya tampil sendiri (perilaku lama, draft lama gak berubah).
+  // ticklist & tabs — `heading` + `icon` (dua-duanya pakai ulang field
+  // Kartu di atas) sama-sama OPSIONAL dan berdiri sendiri: kosong = cuma
+  // daftar/tab-nya tampil sendiri, persis perilaku lama, jadi draft lama
+  // gak berubah sedikit pun. `icon` nempel pada judul — simbol tanpa judul
+  // gak dirender (lihat _blok_heading di generator.py).
   ordered?: boolean;
   stacked?: boolean;
   items?: string[];
   // accordion
   accItems?: { h: string; b: string }[];
-  // tabs
+  // tabs — lihat catatan `heading`/`icon` di atas.
   tabItems?: { label: string; content: string }[];
   // timeline
   tlItems?: { time: string; title: string; desc: string }[];

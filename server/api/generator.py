@@ -85,14 +85,33 @@ def render_pullquote(b):
             f'<span class="pq-text">{nl2br(b.get("text",""))}</span></div>')
 
 
+def _blok_heading(b, cls):
+    """Judul opsional di atas sebuah blok (pakai ulang field `heading` +
+    `icon` milik Kartu). Balikin '' kalau judulnya kosong - jadi blok yang
+    gak diisi judul render persis seperti sebelum field ini ada, dan draft
+    lama gak berubah sedikit pun.
+
+    Simbolnya sendiri juga opsional dan berdiri sendiri dari judulnya: ada
+    judul tanpa simbol, atau judul dengan simbol - dua-duanya sah. Tapi
+    simbol TANPA judul sengaja gak dirender: yang jadi wadahnya di sini
+    judul, jadi simbol sendirian gak punya tempat berdiri.
+
+    esc() dipakai di judulnya (beda dari isi tab/daftar yang dirender
+    mentah) supaya konsisten sama render_card, yang juga meng-esc `heading`
+    - judul bukan tempat naruh HTML."""
+    if not b.get('heading'):
+        return ''
+    ikon = f'<span class="hic">{b["icon"]}</span>' if b.get('icon') else ''
+    return f'<div class="{cls}">{ikon}{esc(b.get("heading", ""))}</div>'
+
+
 def render_ticklist(b):
     tag = 'ol' if b.get('ordered') else 'ul'
     stacked = ' tick-stacked' if b.get('stacked') else ''
     items = ''.join(f'<li>{item}</li>' for item in b.get('items', []))
     # Opsional (reuses card's `heading` field) - kosong = cuma daftarnya
     # tampil sendiri, persis perilaku sebelum field ini ada.
-    heading = f'<div class="tick-heading">{esc(b.get("heading",""))}</div>' if b.get('heading') else ''
-    return f'{heading}<{tag} class="tick{stacked}">{items}</{tag}>'
+    return f'{_blok_heading(b, "tick-heading")}<{tag} class="tick{stacked}">{items}</{tag}>'
 
 
 def render_accordion(b):
@@ -121,7 +140,9 @@ def render_tabs(b):
         head += f'<button class="tab-btn{active}" onclick="switchTab(\'{prefix}\',{i})">{esc(t.get("label",""))}</button>'
         body += f'<div class="tab-panel{active}" id="{prefix}-panel-{i}">{nl2br(t.get("content",""))}</div>'
     head += '</div>'
-    return f'<div class="tabs-wrap" id="{prefix}-wrap">{head}{body}</div>'
+    # Judul opsional, sama persis perlakuannya dengan Daftar Bercentang -
+    # kosong = langsung deretan tombol tab seperti sebelum field ini ada.
+    return f'<div class="tabs-wrap" id="{prefix}-wrap">{_blok_heading(b, "tabs-heading")}{head}{body}</div>'
 
 
 def render_timeline(b):
