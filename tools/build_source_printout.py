@@ -87,7 +87,6 @@ GRUP = [
         'server/supabase_activity_setup.sql',
         'server/supabase_storage_setup.sql',
         'server/supabase_storage_media_setup.sql',
-        'render.yaml',
     ]),
 ]
 
