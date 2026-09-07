@@ -392,6 +392,31 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: slide.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+  // Tinggi kepala baris, DIUKUR - bukan angka tetap. Kepala itu dipatok di
+  // top:0 selama editornya kebuka, jadi panel preview di sebelah kanan (yang
+  // juga dipatok) harus berhenti PERSIS di bawahnya. Dulu preview-nya dipatok
+  // di top:12 - lebih tinggi dari kepalanya sendiri - jadi begitu digulir ke
+  // blok-blok bawah, bagian atas panel preview masuk ke kolong kepala dan
+  // tombol zoom-nya ketutupan: kelihatan panelnya, tapi kendalinya gak bisa
+  // dipencet lagi.
+  //
+  // Diukur, karena tingginya gak tetap: judul slide yang panjang, layar yang
+  // sempit, atau nama section yang bikin <select>-nya melar semuanya bisa
+  // bikin kepalanya jadi dua baris. Angka mati bakal benar cuma di satu
+  // ukuran layar dan salah lagi di ukuran lain.
+  const kepalaRef = useRef<HTMLDivElement>(null);
+  const [tinggiKepala, setTinggiKepala] = useState(0);
+  useEffect(() => {
+    const el = kepalaRef.current;
+    // Cuma relevan waktu kebuka - kepala baris yang terlipat gak dipatok,
+    // jadi gak ada yang perlu dihindari.
+    if (!open || !el) return;
+    const ukur = () => setTinggiKepala(el.offsetHeight);
+    ukur();
+    const ro = new ResizeObserver(ukur);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [open]);
   // id-nya dipakai buat menggulir balik ke editor yang dipulihkan setelah muat
   // ulang — lihat SLIDE_TERBUKA_KEY di Canvas().
   return (
@@ -407,7 +432,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
           z-index 5 — di atas kartu blok (yang position:relative tanpa
           z-index), tapi DI BAWAH menu "+ Tambah blok" (50) supaya daftar
           tipe bloknya tetap terbuka di atas kepala ini, bukan ketutupan. */}
-      <div style={{
+      <div ref={kepalaRef} style={{
         display: 'flex', alignItems: 'center', gap: 8, padding: 8,
         ...(open ? {
           position: 'sticky' as const, top: 0, zIndex: 5,
@@ -466,7 +491,10 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
             <SlideAudioField slide={slide} onUpdate={onUpdate} />
             <BlockEditor blocks={slide.blocks} onChange={blocks => onUpdate({ blocks })} />
           </div>
-          <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
+          {/* top = tinggi kepala baris + jarak nafas, supaya panel ini
+              berhenti PERSIS di bawah kepala yang dipatok itu - bukan masuk
+              ke kolongnya. Lihat catatan tinggiKepala di atas. */}
+          <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: tinggiKepala + 12, alignSelf: 'flex-start' }}>
             <SlidePreview module={module} slideNumber={slide.number} />
           </div>
         </div>
