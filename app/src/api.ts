@@ -66,10 +66,29 @@ export async function listDrafts(): Promise<string[]> {
   return data.drafts;
 }
 
+// Muat draft berdasarkan NAMA PENYIMPANANNYA di server (slug = primary key
+// tabel modul_drafts). Slug yang dipakai aplikasi SELALU diambil dari `name`
+// ini, bukan dari field `slug` yang kebetulan ikut tersimpan di dalam JSON-nya.
+//
+// Kenapa dipaksa di sini, satu tempat, bukan di tiap pemanggil: slug modul
+// hidup di DUA tempat - (a) key baris di server, dan (b) field `slug` di dalam
+// data JSON-nya. Yang dipakai autosave buat nentuin mau nulis ke mana adalah
+// (b) (lihat saveDraft(module.slug, module) di App.tsx). Begitu keduanya
+// nyimpang, buka draft B lalu ketik satu huruf = autosave-nya nimpa draft A.
+// Dulu nyimpang beneran kejadian: rename_draft cuma ganti key (a), dan
+// copyDraft nyalin JSON apa adanya sehingga (b) masih nama sumbernya.
+// Dengan stempel di sini, key server jadi satu-satunya sumber kebenaran dan
+// draft lama yang terlanjur nyimpang ikut kebenerin sendiri begitu dibuka
+// (autosave berikutnya nulis balik slug yang sudah benar).
+//
+// `name` di sini selalu key asli - pemanggilnya dapat dari listDrafts() atau
+// dari LAST_SLUG_KEY yang isinya juga key asli - jadi aman dari _safe_name()
+// server yang mungkin menyanitasi nama ketikan manusia.
 export async function loadDraft(name: string): Promise<ModuleData> {
   const res = await fetch(`${BASE}/api/drafts/${encodeURIComponent(name)}`);
   if (!res.ok) throw new Error('Draft tidak ditemukan');
-  return res.json();
+  const data = await res.json();
+  return { ...data, slug: name };
 }
 
 export async function saveDraft(name: string, module: ModuleData): Promise<void> {
@@ -114,7 +133,10 @@ export async function copyDraft(name: string, newName: string): Promise<void> {
   const check = await fetch(`${BASE}/api/drafts/${encodeURIComponent(newName)}`);
   if (check.ok) throw new Error(`Nama "${newName}" sudah dipakai draft lain`);
   const data = await loadDraft(name);
-  await saveDraft(newName, data);
+  // Salinan HARUS bawa slug barunya sendiri. Kalau `slug` di dalam JSON masih
+  // nama sumbernya, salinan ini jadi bom waktu: dibuka, diketik sedikit, lalu
+  // autosave-nya nimpa draft SUMBER - bukan salinannya. Lihat loadDraft.
+  await saveDraft(newName, { ...data, slug: newName });
 }
 
 // ---------------------------------------------------------- Command Center

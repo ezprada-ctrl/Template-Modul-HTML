@@ -132,12 +132,26 @@ def rename_draft(old_name, new_name):
     if load_draft(new_slug) is not None:
         raise ValueError(f'Nama "{new_slug}" sudah dipakai draft lain')
 
+    # Slug modul tersimpan di DUA tempat: kolom `slug` (key baris) DAN field
+    # `slug` di dalam blob `data`. Keduanya WAJIB ikut berubah. Dulu yang
+    # dipindah cuma kolomnya, jadi isi JSON-nya masih nyebut nama lama -
+    # dan karena autosave di klien nulis ke `module.slug` (yang diambil dari
+    # dalam JSON itu), draft hasil rename berubah jadi jebakan: dibuka,
+    # diedit, autosave-nya malah nimpa draft bernama lama. Klien sekarang
+    # juga menstempel slug saat memuat (lihat loadDraft di app/src/api.ts),
+    # tapi diberesin di sumbernya juga supaya data di server konsisten
+    # apa pun yang membacanya.
+    data = load_draft(old_slug)
+
     if USE_SUPABASE:
+        payload = {'slug': new_slug}
+        if isinstance(data, dict) and 'slug' in data:
+            payload['data'] = {**data, 'slug': new_slug}
         res = requests.patch(
             f'{SUPABASE_URL}/rest/v1/modul_drafts',
             params={'slug': f'eq.{old_slug}'},
             headers=_headers(),
-            json={'slug': new_slug},
+            json=payload,
             timeout=10,
         )
         res.raise_for_status()
@@ -147,6 +161,9 @@ def rename_draft(old_name, new_name):
     new_path = os.path.join(LOCAL_DRAFTS_DIR, new_slug + '.json')
     if os.path.exists(old_path):
         os.rename(old_path, new_path)
+        if isinstance(data, dict) and 'slug' in data:
+            with open(new_path, 'w', encoding='utf-8') as f:
+                json.dump({**data, 'slug': new_slug}, f, ensure_ascii=False, indent=2)
     return new_slug
 
 
