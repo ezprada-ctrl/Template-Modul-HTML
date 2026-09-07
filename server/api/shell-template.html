@@ -857,6 +857,14 @@ ul.tick li b, ol.tick li b{color:var(--text);}
    depan mata. Di bawah 900px sidebar-nya jadi panel geser (off-canvas) dan
    kolom isi memenuhi layar, jadi offset-nya dibalikin ke 0 di media query
    mobile di bawah. */
+/* Dipasang sekejap oleh restoreUI() waktu panel preview di editor memasang
+   balik keadaan yang tadi kebuka (lihat snapshotUI/restoreUI di bawah).
+   Tanpa ini popup terbang-masuk lagi dan panel tab ber-riseIn lagi TIAP
+   ketikan. Cuma hidup dua frame, dan gak pernah nyala di modul jadinya -
+   yang manggil cuma preview. */
+html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
+  transition:none!important;animation:none!important;
+}
 .modal-overlay{
   position:fixed;inset:0 0 0 314px;background:rgba(15,18,26,.55);backdrop-filter:blur(2px);
   display:flex;align-items:center;justify-content:center;padding:24px;
@@ -1611,6 +1619,93 @@ function switchTab(prefix, idx){
   wrap.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', i===idx));
   wrap.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active', i===idx));
   actInteraksi('tabs', prefix, idx);
+}
+
+/* ---------------- Dukungan preview langsung (dipakai SlidePreview.tsx) ------
+   Panel preview di sebelah editor membangun ULANG seluruh dokumen ini tiap
+   kali penyusun modul berhenti mengetik setengah detik (srcDoc diganti =
+   navigasi iframe penuh, dokumennya benar-benar baru). Akibatnya semua yang
+   lagi kebuka - popup, accordion, tab, langkah alur - balik ke keadaan awal.
+   Yang paling kerasa: lagi menyusun ISI sebuah popup, tiap nambah satu item
+   popup-nya nutup sendiri dan harus dibuka lagi cuma buat lihat hasilnya.
+
+   Dua fungsi di bawah yang bikin keadaan itu bertahan: satu memotret, satu
+   memasang balik. Sengaja tinggal DI SINI, bukan di React-nya, karena yang
+   tahu bentuk DOM tiap blok cuma berkas ini - kalau markup-nya berubah, yang
+   ikut berubah cuma sebelah sini juga.
+
+   SENGAJA gak lewat toggleAcc/openModal/switchTab/toggleFlow: keempatnya ikut
+   mencatat actInteraksi(), padahal memasang balik keadaan bukan perbuatan
+   peserta. Kalau dipanggil, satu sesi menyusun modul bisa menyuntik ratusan
+   interaksi palsu ke rekaman aktivitas - dan rasio interaktif di Command
+   Center jadi ngawur. Jadi yang disentuh cuma class-nya. */
+function snapshotUI(){
+  const s = { acc: [], modal: [], tabs: {}, flow: {} };
+  document.querySelectorAll('.acc-item.open[id]').forEach(el => s.acc.push(el.id));
+  document.querySelectorAll('.modal-overlay.open[id]').forEach(el => s.modal.push(el.id));
+  /* Tab bawaannya SELALU indeks 0, jadi 0 gak perlu ikut dipotret - yang
+     dipasang balik cuma kalau penyusunnya memang pindah tab. */
+  document.querySelectorAll('.tabs[id]').forEach(t => {
+    const prefix = t.id.replace(/-tabs$/, '');
+    const btns = [...t.querySelectorAll('.tab-btn')];
+    const i = btns.findIndex(b => b.classList.contains('active'));
+    if(i > 0) s.tabs[prefix] = i;
+  });
+  /* Alur bawaannya GAK ADA langkah yang aktif (detailnya nampilin langkah
+     pertama), jadi yang dipotret cuma kalau ada yang benar-benar diklik. */
+  document.querySelectorAll('.flow-detail[id]').forEach(d => {
+    const base = d.id.replace(/-detail$/, '');
+    const steps = [...document.querySelectorAll('#'+CSS.escape(base)+'-wrap .flow-step')];
+    const i = steps.findIndex(el => el.classList.contains('active'));
+    if(i >= 0) s.flow[base] = i;
+  });
+  return s;
+}
+function restoreUI(s){
+  if(!s) return;
+  /* Tanpa ini tiap ketikan bikin popup terbang-masuk lagi dan panel tab
+     ber-riseIn lagi - keadaannya benar, tapi kelihatan berkedip terus.
+     Transisinya dimatikan sekejap, dinyalakan lagi di frame berikutnya
+     supaya klik SUNGGUHAN sesudah ini tetap dapat animasinya. */
+  document.documentElement.classList.add('pv-restoring');
+  (s.acc || []).forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.classList.add('open');
+  });
+  (s.modal || []).forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+  Object.entries(s.tabs || {}).forEach(([prefix, idx]) => {
+    const wrap = document.getElementById(prefix+'-wrap');
+    if(!wrap) return;
+    wrap.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', i===idx));
+    wrap.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active', i===idx));
+  });
+  Object.entries(s.flow || {}).forEach(([base, idx]) => {
+    const steps = document.querySelectorAll('#'+CSS.escape(base)+'-wrap .flow-step');
+    if(!steps.length) return;
+    steps.forEach((el,i)=>el.classList.toggle('active', i===idx));
+    /* Detailnya gak ikut kebawa class - isinya disuntik dari _flowData,
+       persis seperti toggleFlow. Kalau langkahnya sudah kehapus dari
+       editor, _flowData-nya ikut hilang: biarkan detail bawaannya. */
+    const d = document.getElementById(base+'-detail');
+    const data = (window._flowData || {})[base];
+    if(d && data && data[idx]) d.innerHTML = data[idx].detail;
+  });
+  /* Dua jalan lepas, sengaja dua-duanya dipasang. requestAnimationFrame yang
+     dipakai kalau panelnya kelihatan - dua frame, mata gak sempat nangkap.
+     Tapi rAF SAMA SEKALI gak jalan di tab yang lagi disembunyikan (browser
+     membekukannya), dan penyusun modul pindah tab sambil ngetik itu hal biasa
+     - tanpa jaring kedua, class ini nyangkut dan preview balik-balik jadi mati
+     animasi tanpa sebab yang kelihatan. setTimeout tetap jalan di tab
+     tersembunyi (cuma dilambatkan), jadi dia yang jadi jaringnya.
+     classList.remove aman dipanggil dua kali. */
+  const lepas = () => document.documentElement.classList.remove('pv-restoring');
+  requestAnimationFrame(() => requestAnimationFrame(lepas));
+  setTimeout(lepas, 250);
 }
 
 /* ---------------- Slide content: SECTION A — GAMBARAN UMUM ---------------- */

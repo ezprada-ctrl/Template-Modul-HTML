@@ -77,6 +77,20 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
   // this, someone scrolled down to see a block they just added gets yanked
   // back to the top on every single keystroke-triggered re-render.
   const scrollTopRef = useRef(0);
+  // Keadaan "lagi kebuka" di dalam preview - popup mana yang lagi tampil,
+  // accordion mana yang lagi mekar, tab & langkah alur mana yang lagi aktif.
+  // Alasannya sama persis dengan scrollTopRef di atas: tiap edit mengganti
+  // srcDoc, dan itu navigasi iframe penuh yang bikin dokumen baru dengan
+  // semuanya balik tertutup. Tanpa ini, penyusun yang lagi menyusun ISI
+  // sebuah popup harus buka popup itu lagi tiap nambah satu item cuma buat
+  // lihat hasilnya.
+  //
+  // Bentuk isinya ditentukan snapshotUI() di shell-template.html - sengaja
+  // dianggap kotak hitam di sini: yang tahu bentuk DOM tiap blok berkas itu,
+  // bukan komponen ini. Sebagai useRef (bukan nilai bersama satu tab seperti
+  // devModeDipilihPenyusun) supaya pindah slide = mulai bersih; keadaan
+  // kebuka itu milik slide yang lagi disunting, bukan milik sesi.
+  const bukaanRef = useRef<unknown>(null);
   // Panel preview ikut melar/menyusut (layout editor, jendela di-resize), jadi
   // ukurannya diukur ulang - bukan konstanta.
   const wadahRef = useRef<HTMLDivElement>(null);
@@ -209,10 +223,26 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
         viewport.scrollTop = scrollTopRef.current;
         viewport.addEventListener('scroll', () => { scrollTopRef.current = viewport.scrollTop; });
       }
+      // Pasang balik apa yang tadi kebuka SEBELUM pengamat di bawah dipasang,
+      // supaya pemasangan-balik ini sendiri gak kebaca sebagai "penyusunnya
+      // barusan membuka sesuatu". bawaPopupKeLayar() dipanggil manual di sini
+      // karena alasan yang sama - pengamatnya belum ada waktu popup-nya
+      // dipasang balik, jadi gak ada yang memicu penggeseran panelnya.
+      if (bukaanRef.current && typeof win.restoreUI === 'function') {
+        win.restoreUI(bukaanRef.current);
+        bawaPopupKeLayar();
+      }
       // Popup dibuka/ditutup lewat class .open, bukan lewat event yang bisa
       // didengarkan - jadi perubahan class-nya yang diamati. Dipasang ulang
       // tiap iframe dimuat karena srcDoc bikin dokumen yang benar-benar baru.
-      const pengamat = new win.MutationObserver(() => bawaPopupKeLayar());
+      // Pengamat yang sama sekalian dipakai buat memotret keadaan kebuka:
+      // keempat blok itu (popup/accordion/tab/alur) semuanya menandai
+      // keadaannya lewat class, jadi mutasi class memang persis sinyal yang
+      // dibutuhkan - gak perlu pengamat kedua.
+      const pengamat = new win.MutationObserver(() => {
+        if (typeof win.snapshotUI === 'function') bukaanRef.current = win.snapshotUI();
+        bawaPopupKeLayar();
+      });
       pengamat.observe(win.document.body, {
         subtree: true, attributes: true, attributeFilter: ['class'],
       });
