@@ -227,15 +227,15 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
 // <strong>…</strong>, Ctrl/Cmd+I dengan <em>…</em> — toggle: kalau yang terpilih
 // PERSIS sudah terbungkus tag itu, tag-nya dilepas. Biar user gak perlu ngetik
 // tag sendiri. Selain shortcut, ini textarea biasa.
-function RichTextarea({ value, onChange, style, placeholder }: {
-  value: string;
-  onChange: (v: string) => void;
-  style?: CSSProperties;
-  placeholder?: string;
-}) {
-  function toggleWrap(el: HTMLTextAreaElement, tag: 'strong' | 'em') {
-    const s = el.selectionStart;
-    const e = el.selectionEnd;
+// Pembungkus tag dipakai bareng <textarea> dan <input>: keduanya sama-sama
+// punya selectionStart/End, jadi logikanya identik - yang beda cuma elemennya.
+// Dipisah ke sini supaya field satu baris yang isinya JUGA dirender mentah
+// (mis. item Daftar Bercentang: render_ticklist bikin <li>{item}</li> tanpa
+// escape) ikut kebagian shortcut, bukan cuma textarea.
+function pembungkusTag(value: string, onChange: (v: string) => void) {
+  function toggleWrap(el: HTMLTextAreaElement | HTMLInputElement, tag: 'strong' | 'em') {
+    const s = el.selectionStart ?? 0;
+    const e = el.selectionEnd ?? 0;
     const sel = value.slice(s, e);
     const open = `<${tag}>`;
     const close = `</${tag}>`;
@@ -256,19 +256,51 @@ function RichTextarea({ value, onChange, style, placeholder }: {
     // Kembalikan seleksi ke potongan teks yang sama setelah React re-render.
     requestAnimationFrame(() => { el.focus(); el.setSelectionRange(a, b); });
   }
+  return (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+    if (e.altKey || !(e.ctrlKey || e.metaKey)) return;
+    const k = e.key.toLowerCase();
+    if (k === 'b') { e.preventDefault(); toggleWrap(e.currentTarget, 'strong'); }
+    else if (k === 'i') { e.preventDefault(); toggleWrap(e.currentTarget, 'em'); }
+  };
+}
+
+const JUDUL_SHORTCUT = 'Ctrl+B: tebal (<strong>) · Ctrl+I: miring (<em>)';
+
+function RichTextarea({ value, onChange, style, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  style?: CSSProperties;
+  placeholder?: string;
+}) {
   return (
     <textarea
       style={style}
       placeholder={placeholder}
       value={value}
       onChange={e => onChange(e.target.value)}
-      onKeyDown={e => {
-        if (e.altKey || !(e.ctrlKey || e.metaKey)) return;
-        const k = e.key.toLowerCase();
-        if (k === 'b') { e.preventDefault(); toggleWrap(e.currentTarget, 'strong'); }
-        else if (k === 'i') { e.preventDefault(); toggleWrap(e.currentTarget, 'em'); }
-      }}
-      title="Ctrl+B: tebal (&lt;strong&gt;) · Ctrl+I: miring (&lt;em&gt;)"
+      onKeyDown={pembungkusTag(value, onChange)}
+      title={JUDUL_SHORTCUT}
+    />
+  );
+}
+
+// Versi satu baris. HANYA buat field yang isinya dirender MENTAH di
+// generator.py - kalau field-nya lewat esc() (mis. judul daftar, judul kartu),
+// tag hasil shortcut malah muncul sebagai teks apa adanya di modul.
+function RichInput({ value, onChange, style, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  style?: CSSProperties;
+  placeholder?: string;
+}) {
+  return (
+    <input
+      style={style}
+      placeholder={placeholder}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      onKeyDown={pembungkusTag(value, onChange)}
+      title={JUDUL_SHORTCUT}
     />
   );
 }
@@ -318,8 +350,8 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
         </label>
         {(block.items || []).map((item, i) => (
           <div key={i} style={{ display: 'flex', gap: 4 }}>
-            <input style={inp} value={item} onChange={e => {
-              const items = [...(block.items || [])]; items[i] = e.target.value; onChange({ items });
+            <RichInput style={inp} value={item} onChange={v => {
+              const items = [...(block.items || [])]; items[i] = v; onChange({ items });
             }} />
             <button onClick={() => onChange({ items: (block.items || []).filter((_, x) => x !== i) })}>×</button>
           </div>
