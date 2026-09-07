@@ -201,4 +201,14 @@ def main():
     print(f'{CETAKAN.name}: {len(berkas)} file / {total_baris} baris (commit {komit})')
 
 
-main()
+# Dijaga, BUKAN main() telanjang. Skrip ini menimpa berkas yang dilacak git
+# (17rb baris), dan tanpa penjaga ini sekadar MENGIMPOR modulnya sudah cukup
+# buat menjalankan penimpaan itu - bukan skenario karangan: itu benar-benar
+# kejadian waktu daftar GRUP mau diperiksa, dan cetakannya ketimpa diam-diam
+# padahal yang diminta cuma membaca daftarnya.
+#
+# Dengan penjaga ini, membaca isi modul (impor, alat bantu editor, autodoc)
+# aman; menyegarkan cetakan tetap butuh dijalankan sendiri:
+#     python tools/build_source_printout.py
+if __name__ == '__main__':
+    main()
