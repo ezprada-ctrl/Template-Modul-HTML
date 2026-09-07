@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
 } from '@dnd-kit/core';
@@ -406,6 +406,45 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
   // ukuran layar dan salah lagi di ukuran lain.
   const kepalaRef = useRef<HTMLDivElement>(null);
   const [tinggiKepala, setTinggiKepala] = useState(0);
+
+  // Di mana kepala baris ini berada di layar PERSIS sebelum editornya dilipat.
+  // null = gak ada yang perlu dibetulkan (lagi membuka, atau baru dimuat).
+  //
+  // Kenapa perlu: editor yang kebuka itu tinggi - gampang 2000px lebih. Waktu
+  // "Tutup" dipencet, tinggi itu hilang seketika dari aliran halaman, tapi
+  // browser mempertahankan scrollY apa adanya. Akibatnya semua yang tadinya
+  // ADA DI BAWAH editor naik melewati layar, dan yang kelihatan jadi bagian
+  // halaman yang jauh lebih bawah - kerasanya "kelempar 2-3 section ke bawah",
+  // padahal yang pindah isinya, bukan gulirannya.
+  //
+  // Yang dipatok kepala barisnya, BUKAN atas barisnya: selama editornya kebuka
+  // kepala itu sticky, jadi atas baris bisa ada jauh di atas layar (nilainya
+  // minus ribuan piksel) sementara kepalanya sendiri nempel di atas. Memulihkan
+  // "atas baris" ke posisi lamanya malah bikin barisnya terlempar ke luar layar
+  // - yang benar mengembalikan barisnya ke tempat KEPALANYA tadi terlihat.
+  const patokanTutupRef = useRef<number | null>(null);
+
+  function alihkanEditor() {
+    if (open) patokanTutupRef.current = kepalaRef.current?.getBoundingClientRect().top ?? 0;
+    onToggle();
+  }
+
+  // useLayoutEffect, bukan useEffect: pembetulannya harus terjadi SEBELUM
+  // browser menggambar, supaya gak ada satu frame pun yang sempat kelihatan
+  // melompat.
+  useLayoutEffect(() => {
+    if (open) return;
+    const patokan = patokanTutupRef.current;
+    if (patokan === null) return;
+    patokanTutupRef.current = null;
+    const baris = document.getElementById(`slide-row-${slide.id}`);
+    if (!baris) return;
+    // Selisihnya, bukan posisi mutlak - halaman ini bisa punya guliran yang
+    // sudah bergeser sendiri. Kalau dokumennya jadi terlalu pendek buat
+    // menampung geseran ini, browser membatasi sendiri ke ujung bawah, dan itu
+    // sudah sedekat mungkin dengan yang diminta.
+    window.scrollBy({ top: baris.getBoundingClientRect().top - patokan, behavior: 'auto' });
+  }, [open, slide.id]);
   useEffect(() => {
     const el = kepalaRef.current;
     // Cuma relevan waktu kebuka - kepala baris yang terlipat gak dipatok,
@@ -451,10 +490,10 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
             urutan tampilnya di slide (kicker dulu, judul belakangan),
             membingungkan penyusun modul. Klik teksnya buat langsung expand. */}
         <span
-          onClick={onToggle}
+          onClick={alihkanEditor}
           role="button"
           tabIndex={0}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alihkanEditor(); } }}
           title="Klik untuk edit judul & isi slide"
           style={{ flex: 1, cursor: 'pointer', color: slide.title ? 'var(--text)' : 'var(--text-faint)', fontStyle: slide.title ? 'normal' : 'italic' }}
         >
@@ -463,7 +502,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
         <select value={slide.sectionId} onChange={e => onUpdate({ sectionId: e.target.value })} title="Pindah ke section lain">
           {module.sections.map(sec => <option key={sec.id} value={sec.id}>{sec.icon}. {sec.short}</option>)}
         </select>
-        <button className={open ? 'btn-primary btn-sm' : 'btn-sm'} onClick={onToggle}>{open ? 'Tutup' : 'Edit blok'}</button>
+        <button className={open ? 'btn-primary btn-sm' : 'btn-sm'} onClick={alihkanEditor}>{open ? 'Tutup' : 'Edit blok'}</button>
         <button className="btn-danger btn-sm" onClick={onRemove}>Hapus</button>
       </div>
       {open && (
