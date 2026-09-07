@@ -82,8 +82,13 @@ export interface Block {
   ordered?: boolean;
   stacked?: boolean;
   items?: string[];
-  // accordion
-  accItems?: { h: string; b: string }[];
+  // accordion — `icon` per item cuma kepakai waktu accBadge==='simbol'.
+  accItems?: { h: string; b: string; icon?: string }[];
+  // Penanda tiap item accordion. Kosong/undefined = 'nomor', jadi blok lama
+  // yang gak punya field ini render persis seperti sebelumnya.
+  // 'simbol' = pakai `icon` tiap item; 'polos' = gak ada penanda sama sekali.
+  // Lihat render_accordion di generator.py buat perlakuan awalan "a. ".
+  accBadge?: 'nomor' | 'simbol' | 'polos';
   // tabs — lihat catatan `heading`/`icon` di atas.
   tabItems?: { label: string; content: string }[];
   // timeline

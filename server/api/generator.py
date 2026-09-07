@@ -115,16 +115,39 @@ def render_ticklist(b):
 
 
 def render_accordion(b):
+    """Tiga cara menandai tiap item, dipilih lewat `accBadge`:
+
+    - 'nomor' (bawaan, JUGA buat blok lama yang gak punya field ini sama
+      sekali): lingkaran berisi nomor urut - atau huruf, kalau judulnya
+      diketik berawalan "a. " / "a-b. ". Awalan itu dipindah ke lingkarannya
+      lalu dibuang dari teks judul. Perilaku lama, gak berubah sedikit pun.
+    - 'simbol': lingkarannya diisi simbol pilihan penyusun, sendiri-sendiri
+      tiap item. Item yang simbolnya belum dipilih tampil polos - lebih baik
+      daripada lingkaran kosong yang kelihatan seperti bug.
+    - 'polos': gak ada lingkaran sama sekali.
+
+    Di 'simbol' dan 'polos' awalan "a. " SENGAJA gak dibuang dari judul.
+    Membuangnya cuma masuk akal kalau ada lingkaran tempat memindahkannya;
+    tanpa itu, membuang berarti huruf yang diketik penyusun HILANG dari layar
+    tanpa dia pernah minta.
+    """
     prefix = b.get('id', 'acc')
     items = b.get('accItems', [])
+    mode = b.get('accBadge') or 'nomor'
     out = ''
     for i, it in enumerate(items):
-        m = re.match(r'^([a-z](?:-[a-z])?)\.\s*(.*)$', it.get('h', ''), re.I)
-        badge = m.group(1) if m else str(i + 1)
-        label = m.group(2) if m else it.get('h', '')
+        if mode == 'nomor':
+            m = re.match(r'^([a-z](?:-[a-z])?)\.\s*(.*)$', it.get('h', ''), re.I)
+            badge = m.group(1) if m else str(i + 1)
+            label = m.group(2) if m else it.get('h', '')
+            badge_html = f'<span class="acc-n">{esc(badge)}</span>'
+        else:
+            label = it.get('h', '')
+            badge_html = (f'<span class="acc-n acc-n-ikon">{it["icon"]}</span>'
+                          if mode == 'simbol' and it.get('icon') else '')
         out += (f'<div class="acc-item" id="{prefix}-{i}">'
                 f'<button class="acc-head" onclick="toggleAcc(\'{prefix}-{i}\')">'
-                f'<span class="acc-n">{esc(badge)}</span><span>{esc(label)}</span>'
+                f'{badge_html}<span>{esc(label)}</span>'
                 f'<span class="acc-chevron">⌄</span></button>'
                 f'<div class="acc-body"><div class="acc-body-inner">{nl2br(it.get("b",""))}</div></div></div>')
     return f'<div class="acc-group">{out}</div>'

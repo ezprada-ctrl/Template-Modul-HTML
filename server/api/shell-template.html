@@ -530,6 +530,12 @@ ul.tick li b, ol.tick li b{color:var(--text);}
   background:transparent;border:none;cursor:pointer;color:var(--text);font-size:13.5px;font-weight:600;
 }
 .acc-head .acc-n{min-width:26px;height:26px;padding:0 6px;border-radius:8px;background:var(--accent-soft);color:var(--accent-2);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:lowercase;}
+/* Mode simbol (accBadge:'simbol' - lihat render_accordion). Lingkarannya sama,
+   isinya yang beda: text-transform:lowercase warisan mode nomor gak ada
+   gunanya buat emoji, dan 12px kekecilan - simbol perlu sedikit lebih besar
+   biar kebaca sejelas hurufnya. Item tanpa simbol gak dapat lingkaran sama
+   sekali, jadi gak ada aturan buat "lingkaran kosong". */
+.acc-head .acc-n.acc-n-ikon{text-transform:none;font-size:15px;font-weight:400;}
 .acc-head .acc-chevron{margin-left:auto;color:var(--text-faint);transition:transform .2s;font-size:11px;}
 .acc-item.open .acc-chevron{transform:rotate(180deg);}
 .acc-body{max-height:0;overflow:hidden;transition:max-height .35s ease;}

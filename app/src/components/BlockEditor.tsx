@@ -305,6 +305,18 @@ function RichInput({ value, onChange, style, placeholder }: {
   );
 }
 
+// Sakelar pilihan-berjejer. Dipakai bareng mode isi Modal Popup ("Tulis
+// bebas"/"Pakai blok lain") dan penanda item Accordion (nomor/simbol/polos),
+// jadi satu tempat - alasan yang sama dengan JudulOpsional di bawah: dua
+// sakelar yang kelihatannya sama gak boleh pelan-pelan beda sendiri.
+const segBtn = (aktif: boolean): CSSProperties => ({
+  flex: 1, padding: '7px 10px', fontSize: 12, fontWeight: aktif ? 700 : 500,
+  border: '1px solid ' + (aktif ? 'var(--ink)' : 'var(--border)'),
+  background: aktif ? 'var(--surface)' : 'transparent',
+  color: aktif ? 'var(--text)' : 'var(--text-dim)',
+  borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+});
+
 // Judul opsional + simbol opsional, dipakai bareng Daftar Bercentang & Tabs
 // (dirender _blok_heading di generator.py). Satu komponen buat dua blok
 // supaya formnya gak pelan-pelan beda sendiri - persis alasan .tick-heading
@@ -396,11 +408,47 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
         ))}
         <button onClick={() => onChange({ items: [...(block.items || []), ''] })}>+ item</button>
       </>;
-    case 'accordion':
+    case 'accordion': {
+      // Kosong = 'nomor', sama seperti yang dibaca render_accordion - jadi
+      // blok lama yang belum punya field ini kebaca sebagai mode lamanya.
+      const badge = block.accBadge || 'nomor';
       return <>
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '0 0 4px' }}>
+          Penanda tiap item
+        </label>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+          <button type="button" style={segBtn(badge === 'nomor')} onClick={() => onChange({ accBadge: 'nomor' })}>
+            Nomor urut
+          </button>
+          <button type="button" style={segBtn(badge === 'simbol')} onClick={() => onChange({ accBadge: 'simbol' })}>
+            Simbol
+          </button>
+          <button type="button" style={segBtn(badge === 'polos')} onClick={() => onChange({ accBadge: 'polos' })}>
+            Polos
+          </button>
+        </div>
+        <p className="hint" style={{ fontSize: 11, margin: '0 0 8px' }}>
+          {badge === 'nomor'
+            ? 'Dinomori otomatis. Kalau judulnya diketik berawalan “a. ”, huruf itu yang dipakai dan dibuang dari judulnya.'
+            : badge === 'simbol'
+              ? 'Pilih simbol sendiri tiap item. Item yang simbolnya dikosongkan tampil polos.'
+              : 'Tanpa penanda — langsung judulnya saja.'}
+        </p>
         {(block.accItems || []).map((it, i) => (
           <div key={i} style={{ border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 8, marginBottom: 6 }}>
-            <input style={inp} placeholder="a. Judul" value={it.h} onChange={e => {
+            {badge === 'simbol' && (
+              <EmojiPicker
+                value={it.icon || ''}
+                onChange={icon => {
+                  const accItems = [...(block.accItems || [])]; accItems[i] = { ...it, icon }; onChange({ accItems });
+                }}
+                placeholder="Simbol item ini (opsional)"
+              />
+            )}
+            {/* Contoh di placeholder ikut mode: awalan "a. " cuma berarti di
+                mode nomor - di mode lain dia gak dibuang, jadi menyarankannya
+                cuma bikin penyusun ngetik huruf yang gak dia maksud. */}
+            <input style={inp} placeholder={badge === 'nomor' ? 'a. Judul' : 'Judul'} value={it.h} onChange={e => {
               const accItems = [...(block.accItems || [])]; accItems[i] = { ...it, h: e.target.value }; onChange({ accItems });
             }} />
             <RichTextarea style={ta} placeholder="Isi" value={it.b} onChange={v => {
@@ -411,6 +459,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
         ))}
         <button onClick={() => onChange({ accItems: [...(block.accItems || []), { h: '', b: '' }] })}>+ item accordion</button>
       </>;
+    }
     case 'tabs':
       return <>
         <JudulOpsional block={block} onChange={onChange} inp={inp} label="Judul tabs (opsional)" />
@@ -642,13 +691,6 @@ function ModalFields({ block, onChange, inp, ta }: {
   block: Block; onChange: (p: Partial<Block>) => void; inp: CSSProperties; ta: CSSProperties;
 }) {
   const mode = block.modalMode === 'blok' ? 'blok' : 'teks';
-  const segBtn = (aktif: boolean): CSSProperties => ({
-    flex: 1, padding: '7px 10px', fontSize: 12, fontWeight: aktif ? 700 : 500,
-    border: '1px solid ' + (aktif ? 'var(--ink)' : 'var(--border)'),
-    background: aktif ? 'var(--surface)' : 'transparent',
-    color: aktif ? 'var(--text)' : 'var(--text-dim)',
-    borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-  });
   return (
     <>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 6px' }}>
