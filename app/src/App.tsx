@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { ModuleData, DraftSlide } from './types';
 import { emptyModule, normalizeModule, buildProjectSlugPrefix, moduleFromJson } from './types';
 import { listDrafts, loadDraft, saveDraft } from './api';
@@ -275,10 +276,27 @@ function App() {
 
   return (
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: '28px 28px 80px' }}>
-      {/* Kepala aplikasi dipatok ke atas layar. Yang dipatok BERTIGA sekaligus
-          - judul + baris project + tab - karena ketiganya yang bikin orang
-          tahu "aku ada di project mana, di tahap mana", dan itu justru paling
-          dibutuhkan waktu lagi menggulir jauh ke bawah menyusun blok.
+      {/* Baris judul SENGAJA di luar bagian yang dipatok. Dia 60px dan isinya
+          murni identitas aplikasi - sekali dibaca, gak dibutuhkan lagi selama
+          bekerja. Membekukannya bikin kepala halaman makan 26% layar 900px;
+          tanpa dia tinggal 20%, dan 60px itu balik jadi ruang kerja.
+
+          Yang TIDAK ikut dikorbankan: kendali di kanannya (status simpan,
+          undo/redo, tema). Itu dipakai terus sepanjang menyusun, jadi mereka
+          pindah ke baris project di bawah - yang tetap dipatok. Kalau ikut
+          hanyut bareng judulnya, undo/redo malah hilang persis waktu paling
+          sering dipakai. */}
+      <header style={{ marginBottom: 22, paddingTop: 4 }}>
+        <h1 style={{ margin: '0 0 4px' }}>Ekosistem Modul Interaktif</h1>
+        <p className="hint" style={{ margin: 0 }}>
+          Muhamad Ikram · Pengembang Teknologi Pembelajaran
+        </p>
+      </header>
+
+      {/* Kepala aplikasi dipatok ke atas layar: baris project + tab. Keduanya
+          yang bikin orang tahu "aku ada di project mana, di tahap mana", dan
+          itu justru paling dibutuhkan waktu lagi menggulir jauh ke bawah
+          menyusun blok.
 
           Latarnya WAJIB tidak tembus pandang: isi halaman lewat persis di
           bawahnya waktu digulir.
@@ -296,23 +314,14 @@ function App() {
       <div ref={chromeRef} style={{
         position: 'sticky', top: 0, zIndex: 40, background: 'var(--bg-2)',
       }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 22, paddingTop: 4 }}>
-        <div>
-          <h1 style={{ margin: '0 0 4px' }}>Ekosistem Modul Interaktif</h1>
-          <p className="hint" style={{ margin: 0 }}>
-            Muhamad Ikram · Pengembang Teknologi Pembelajaran
-          </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          <AutosaveIndicator status={autosaveStatus} />
-          <UndoRedo canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
-          <ThemeToggle theme={theme} onToggle={() => setTheme(t => (t === 'light' ? 'dark' : 'light'))} />
-        </div>
-      </header>
-
       <ProjectBar
         module={module}
         onNewProject={() => setShowNewProjectModal(true)}
+        kendali={<>
+          <AutosaveIndicator status={autosaveStatus} />
+          <UndoRedo canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
+          <ThemeToggle theme={theme} onToggle={() => setTheme(t => (t === 'light' ? 'dark' : 'light'))} />
+        </>}
       />
 
       <nav style={{
@@ -382,7 +391,14 @@ function App() {
   );
 }
 
-function ProjectBar({ module, onNewProject }: { module: ModuleData; onNewProject: () => void }) {
+// `kendali` = status simpan + undo/redo + tema. Dulu mereka duduk di baris
+// judul, tapi baris itu sekarang ikut hanyut waktu digulir (lihat catatannya
+// di atas) - padahal ketiganya dipakai terus sepanjang menyusun modul. Ditaruh
+// di sini supaya ikut dipatok, bukan supaya rapi: undo/redo yang cuma bisa
+// dipencet setelah menggulir balik ke atas praktis bukan undo/redo.
+function ProjectBar({ module, onNewProject, kendali }: {
+  module: ModuleData; onNewProject: () => void; kendali?: ReactNode;
+}) {
   return (
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16,
@@ -404,9 +420,12 @@ function ProjectBar({ module, onNewProject }: { module: ModuleData; onNewProject
           Tiap orang otomatis dapat project sendiri.
         </p>
       </div>
-      <button className="btn-sm" onClick={onNewProject} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
-        + Mulai Project Baru
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        {kendali}
+        <button className="btn-sm" onClick={onNewProject} style={{ whiteSpace: 'nowrap' }}>
+          + Mulai Project Baru
+        </button>
+      </div>
     </div>
   );
 }
