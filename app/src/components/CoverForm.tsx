@@ -199,7 +199,7 @@ export default function CoverForm({ module, setModule }: Props) {
             onRemove={() => setModule({ ...module, coverImageDataUri: '', coverImageBrightness: undefined })}
           />
         </div>
-        <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
+        <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 'calc(var(--h-chrome, 0px) + 12px)', alignSelf: 'flex-start' }}>
           <SlidePreview module={module} target="hero" />
         </div>
       </div>
@@ -237,7 +237,7 @@ export default function CoverForm({ module, setModule }: Props) {
             onRemove={() => setModule({ ...module, endingImageDataUri: '', endingImageBrightness: undefined })}
           />
         </div>
-        <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 12, alignSelf: 'flex-start' }}>
+        <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: 'calc(var(--h-chrome, 0px) + 12px)', alignSelf: 'flex-start' }}>
           <SlidePreview module={module} target="summary" />
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ModuleData, DraftSlide } from './types';
 import { emptyModule, normalizeModule, buildProjectSlugPrefix, moduleFromJson } from './types';
 import { listDrafts, loadDraft, saveDraft } from './api';
@@ -214,6 +214,30 @@ function App() {
     setPendingTab(null);
   }
 
+  // Tinggi kepala aplikasi yang dipatok, diumumkan ke seluruh halaman sebagai
+  // --h-chrome. Apa pun yang ikut dipatok di bawahnya harus berhenti DI BAWAH
+  // kepala ini, bukan di kolongnya - persis pelajaran dari panel preview yang
+  // dulu dipatok di top:12 lalu ketutupan kepala baris slide.
+  //
+  // Diukur, bukan angka mati, dan alasannya nyata: tingginya berubah menurut
+  // lebar layar (judul project yang panjang bikin baris project jadi dua
+  // baris, tab bisa melipat), dan berubah juga waktu tema diganti. Ditaruh di
+  // <html> supaya bisa dibaca komponen mana pun tanpa perlu dioper lewat props
+  // berlapis-lapis.
+  const chromeRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = chromeRef.current;
+    if (!el) return;
+    const ukur = () => document.documentElement.style.setProperty('--h-chrome', `${el.offsetHeight}px`);
+    ukur();
+    const ro = new ResizeObserver(ukur);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty('--h-chrome');
+    };
+  }, []);
+
   // Global undo/redo shortcuts. Kept at document level (not per-field) so it
   // covers every kind of builder edit — deleting a block, reordering slides,
   // changing a block type — not just text fields. Coalescing (above) keeps a
@@ -251,7 +275,28 @@ function App() {
 
   return (
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: '28px 28px 80px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 22 }}>
+      {/* Kepala aplikasi dipatok ke atas layar. Yang dipatok BERTIGA sekaligus
+          - judul + baris project + tab - karena ketiganya yang bikin orang
+          tahu "aku ada di project mana, di tahap mana", dan itu justru paling
+          dibutuhkan waktu lagi menggulir jauh ke bawah menyusun blok.
+
+          Latarnya WAJIB tidak tembus pandang: isi halaman lewat persis di
+          bawahnya waktu digulir.
+
+          z-index 40 dipilih di antara dua tetangganya, bukan asal besar: DI
+          ATAS kepala baris slide (5) supaya baris-baris itu lewat di
+          kolongnya, tapi DI BAWAH menu "+ Tambah blok" & pemilih emoji (50)
+          supaya daftar yang mereka buka tetap tampil di atas kepala ini -
+          kalau dibalik, memilih tipe blok di dekat atas layar jadi ketutupan.
+
+          Tingginya diumumkan ke seluruh halaman lewat --h-chrome (diukur di
+          bawah): apa pun yang ikut dipatok di halaman ini harus berhenti DI
+          BAWAH kepala ini, bukan di kolongnya. Lihat pemakaiannya di
+          Canvas.tsx (kepala baris slide & panel preview). */}
+      <div ref={chromeRef} style={{
+        position: 'sticky', top: 0, zIndex: 40, background: 'var(--bg-2)',
+      }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 22, paddingTop: 4 }}>
         <div>
           <h1 style={{ margin: '0 0 4px' }}>Ekosistem Modul Interaktif</h1>
           <p className="hint" style={{ margin: 0 }}>
@@ -269,23 +314,6 @@ function App() {
         module={module}
         onNewProject={() => setShowNewProjectModal(true)}
       />
-
-      {showNewProjectModal && (
-        <NewProjectModal
-          onCreate={handleCreateProject}
-          onSkip={handleSkipNewProject}
-          onOpenExisting={handleOpenExistingDraft}
-          onImportJson={handleImportJson}
-        />
-      )}
-
-      {pendingTab && (
-        <LeaveImportWarningModal
-          unaddedCount={bank.filter(s => !module.slides.some(sl => sl.sourceSlideNo === s.slideNo)).length}
-          onConfirm={confirmLeaveImport}
-          onCancel={cancelLeaveImport}
-        />
-      )}
 
       <nav style={{
         display: 'flex', gap: 4, marginBottom: 22,
@@ -321,6 +349,28 @@ function App() {
           );
         })}
       </nav>
+      </div>
+
+      {/* Sengaja DI LUAR pembungkus yang dipatok di atas. Dua modal ini
+          position:fixed dan menutup seluruh layar - menaruhnya di dalam
+          pembungkus ber-z-index cuma mengurung mereka di tumpukan kepala
+          halaman, padahal mereka memang harus berdiri di atas segalanya. */}
+      {showNewProjectModal && (
+        <NewProjectModal
+          onCreate={handleCreateProject}
+          onSkip={handleSkipNewProject}
+          onOpenExisting={handleOpenExistingDraft}
+          onImportJson={handleImportJson}
+        />
+      )}
+
+      {pendingTab && (
+        <LeaveImportWarningModal
+          unaddedCount={bank.filter(s => !module.slides.some(sl => sl.sourceSlideNo === s.slideNo)).length}
+          onConfirm={confirmLeaveImport}
+          onCancel={cancelLeaveImport}
+        />
+      )}
 
       {tab === 'bank' && <SlideBank bank={bank} setBank={setBank} module={module} setModule={setModule} />}
       {tab === 'canvas' && <Canvas module={module} setModule={setModule} />}

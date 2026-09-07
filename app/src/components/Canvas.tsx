@@ -474,7 +474,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
       <div ref={kepalaRef} style={{
         display: 'flex', alignItems: 'center', gap: 8, padding: 8,
         ...(open ? {
-          position: 'sticky' as const, top: 0, zIndex: 5,
+          position: 'sticky' as const, top: 'var(--h-chrome, 0px)', zIndex: 5,
           background: 'var(--surface)',
           borderBottom: '1px solid var(--border)',
           borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0',
@@ -533,7 +533,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
           {/* top = tinggi kepala baris + jarak nafas, supaya panel ini
               berhenti PERSIS di bawah kepala yang dipatok itu - bukan masuk
               ke kolongnya. Lihat catatan tinggiKepala di atas. */}
-          <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: tinggiKepala + 12, alignSelf: 'flex-start' }}>
+          <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: `calc(var(--h-chrome, 0px) + ${tinggiKepala + 12}px)`, alignSelf: 'flex-start' }}>
             <SlidePreview module={module} slideNumber={slide.number} />
           </div>
         </div>
