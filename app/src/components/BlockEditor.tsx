@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { Block, BlockType } from '../types';
-import { newBlock, changeBlockType, isBlockEmpty, extractBlockText } from '../types';
+import { newBlock, changeBlockType, isBlockEmpty, extractBlockText, POPUP_BLOCK_TYPES } from '../types';
 import type { KcQuestion } from '../types';
 import EmojiPicker from './EmojiPicker';
 import BlockAddMenu, { BLOCK_LABELS } from './BlockAddMenu';
@@ -19,6 +19,13 @@ interface Props {
   // numpuk/kepotong. Label teks jauh lebih aman - form tetap lebar penuh
   // (mudah diisi), tapi "bakal jadi sel kolom keberapa" tetap kejawab jelas.
   columns?: 2 | 3;
+  // Batasi tipe blok yang boleh ditambahkan di level ini. Dipakai isi popup
+  // (Modal mode 'blok') dengan POPUP_BLOCK_TYPES. Tidak diisi = semua tipe.
+  allow?: BlockType[];
+  // Kata "blok" di tombol tambah & konfirmasi hapus. Grid memakai "sub-blok",
+  // isi popup memakai "blok isi popup" - beda level, beda sebutan, tapi
+  // konsepnya sama supaya tidak terasa seperti fitur baru.
+  nounLabel?: string;
 }
 
 const BLOCK_CARD_STYLES = `
@@ -83,14 +90,19 @@ function blockSummary(block: Block): string {
   return flat.length > 70 ? flat.slice(0, 70) + '…' : flat;
 }
 
-export default function BlockEditor({ blocks, onChange, columns }: Props) {
+export default function BlockEditor({ blocks, onChange, columns, allow, nounLabel }: Props) {
   // `columns` is ONLY ever passed by GridFields (top-level callers in
   // Canvas.tsx/CoverForm.tsx never set it) - reused here as the "am I
   // nested inside a Grid" signal instead of adding a second prop that
   // would just duplicate it. Nested blocks get called "sub-blok" in the
   // UI so they read as distinct from top-level blocks, not a new concept -
   // same data shape, same editor, just which level you're adding to.
-  const nested = columns !== undefined;
+  // `nested` sekarang juga menyala buat isi popup (yang tidak punya
+  // `columns`), jadi patokannya bukan lagi cuma Grid. `noun` yang dipakai
+  // di semua teks UI supaya sebutannya cocok dengan levelnya.
+  const nested = columns !== undefined || nounLabel !== undefined;
+  const noun = nounLabel ?? (columns !== undefined ? 'sub-blok' : 'blok');
+  const nounCap = noun.charAt(0).toUpperCase() + noun.slice(1);
   // Blok yang terakhir disentuh — penanda "kamu lagi di sini". Sengaja gak
   // dikosongkan waktu fokus keluar: kalau dihapus tiap blur, penandanya
   // berkedip-kedip waktu pindah antar field DI DALAM blok yang sama, dan
@@ -111,7 +123,7 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
     onChange(next);
   }
   function remove(i: number) {
-    if (!isBlockEmpty(blocks[i]) && !confirm(nested ? 'Sub-blok ini masih ada isinya, yakin mau dihapus?' : 'Blok ini masih ada isinya, yakin mau dihapus?')) return;
+    if (!isBlockEmpty(blocks[i]) && !confirm(`${nounCap} ini masih ada isinya, yakin mau dihapus?`)) return;
     onChange(blocks.filter((_, idx) => idx !== i));
   }
   function changeType(i: number, newType: BlockType) {
@@ -155,7 +167,7 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flexWrap: 'wrap' }}>
                 <button
                   className="btn-icon btn-sm"
-                  title={nested ? (isCollapsed ? 'Buka sub-blok ini' : 'Tutup sub-blok ini') : (isCollapsed ? 'Buka blok ini' : 'Tutup blok ini')}
+                  title={isCollapsed ? `Buka ${noun} ini` : `Tutup ${noun} ini`}
                   onClick={() => toggleCollapse(b.id)}
                   style={{ flexShrink: 0, transform: isCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform var(--ease)' }}
                 >▾</button>
@@ -172,7 +184,7 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
                   className="block-card-label"
                   value={b.type}
                   onChange={e => changeType(i, e.target.value as BlockType)}
-                  title={nested ? 'Ganti tipe sub-blok ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang' : 'Ganti tipe blok ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang'}
+                  title={`Ganti tipe ${noun} ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang`}
                   style={{
                     fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
                     color: 'var(--text-faint)', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0,
@@ -204,7 +216,7 @@ export default function BlockEditor({ blocks, onChange, columns }: Props) {
           </div>
         );
       })}
-      <BlockAddMenu onAdd={add} label={nested ? '+ Tambah sub-blok…' : undefined} />
+      <BlockAddMenu onAdd={add} allow={allow} label={nested ? `+ Tambah ${noun}…` : undefined} />
     </div>
   );
 }
@@ -394,26 +406,7 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
     case 'articulate':
       return <ArticulateFields block={block} onChange={onChange} inp={inp} />;
     case 'modal':
-      return <>
-        <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-          Detail tambahan; muncul jadi tombol, isinya kelihatan setelah diklik.
-        </p>
-        <EmojiPicker value={block.icon || '📝'} onChange={icon => onChange({ icon })} />
-        <input style={inp} placeholder="Judul tombol & popup (mis. Rincian Tambahan)" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
-        <RichTextarea style={{ ...ta, minHeight: 120 }} placeholder="Isi popup (HTML/teks, boleh tabel dtable dll)" value={block.bodyHtml || ''} onChange={v => onChange({ bodyHtml: v })} />
-        {/* Gambar OPSIONAL di dalam popup. Dua-duanya boleh diisi sekaligus:
-            gambar tampil di atas, teks di bawahnya — pola yang biasa dipakai
-            buat bagan/diagram plus penjelasannya. Isi salah satu saja juga
-            sah: popup teks saja, atau popup gambar saja. */}
-        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' }}>
-          Gambar di dalam popup (opsional)
-        </label>
-        <ImageUploadField value={block.src || ''} onUploaded={src => onChange({ src })} />
-        {block.src && (
-          <button className="btn-sm btn-danger" style={{ marginBottom: 6 }}
-            onClick={() => onChange({ src: '' })}>Hapus gambar</button>
-        )}
-      </>;
+      return <ModalFields block={block} onChange={onChange} inp={inp} ta={ta} />;
     default:
       return null;
   }
@@ -567,6 +560,85 @@ function ImageFields({ block, onChange, inp }: { block: Block; onChange: (p: Par
 // BlockEditor secara rekursif buat ngedit isinya, bukan bikin UI field baru -
 // setiap tipe blok yang udah ada (termasuk Grid lagi, kalau mau) otomatis
 // bisa ditaruh di dalam sel tanpa kerja tambahan.
+// Blok Modal punya DUA cara mengisi popup, dipilih lewat sakelar di bawah:
+//   'teks' - judul + isi bebas + gambar opsional (perilaku lama, tetap bawaan)
+//   'blok' - isi popup disusun dari blok lain, dirender dengan gaya blok itu
+//            sendiri. Yang boleh dipakai dibatasi POPUP_BLOCK_TYPES; alasan
+//            tiap pengecualian ada di konstanta itu (types.ts).
+// Judul & ikon SELALU tampil di form karena keduanya milik TOMBOL pemicunya,
+// bukan isi popup - tombol tetap butuh label di mode mana pun.
+function ModalFields({ block, onChange, inp, ta }: {
+  block: Block; onChange: (p: Partial<Block>) => void; inp: CSSProperties; ta: CSSProperties;
+}) {
+  const mode = block.modalMode === 'blok' ? 'blok' : 'teks';
+  const segBtn = (aktif: boolean): CSSProperties => ({
+    flex: 1, padding: '7px 10px', fontSize: 12, fontWeight: aktif ? 700 : 500,
+    border: '1px solid ' + (aktif ? 'var(--ink)' : 'var(--border)'),
+    background: aktif ? 'var(--surface)' : 'transparent',
+    color: aktif ? 'var(--text)' : 'var(--text-dim)',
+    borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+  });
+  return (
+    <>
+      <p className="hint" style={{ fontSize: 11, margin: '-2px 0 6px' }}>
+        Detail tambahan; muncul jadi tombol, isinya kelihatan setelah diklik.
+      </p>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+        <button type="button" style={segBtn(mode === 'teks')} onClick={() => onChange({ modalMode: 'teks' })}>
+          Tulis bebas
+        </button>
+        <button type="button" style={segBtn(mode === 'blok')} onClick={() => onChange({ modalMode: 'blok' })}>
+          Pakai blok lain
+        </button>
+      </div>
+      <p className="hint" style={{ fontSize: 11, margin: '0 0 8px' }}>
+        {mode === 'teks'
+          ? 'Isi popup diketik sendiri di sini, boleh HTML.'
+          : 'Isi popup disusun dari blok yang sudah ada — tampil dengan gaya blok itu sendiri.'}
+      </p>
+      <EmojiPicker value={block.icon || '📝'} onChange={icon => onChange({ icon })} />
+      <input style={inp} placeholder="Judul tombol & popup (mis. Rincian Tambahan)" value={block.heading || ''}
+        onChange={e => onChange({ heading: e.target.value })} />
+
+      {mode === 'teks' ? (
+        <>
+          <RichTextarea style={{ ...ta, minHeight: 120 }} placeholder="Isi popup (HTML/teks, boleh tabel dtable dll)"
+            value={block.bodyHtml || ''} onChange={v => onChange({ bodyHtml: v })} />
+          {/* Gambar OPSIONAL di dalam popup. Dua-duanya boleh diisi sekaligus:
+              gambar tampil di atas, teks di bawahnya — pola yang biasa dipakai
+              buat bagan/diagram plus penjelasannya. Isi salah satu saja juga
+              sah: popup teks saja, atau popup gambar saja. */}
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' }}>
+            Gambar di dalam popup (opsional)
+          </label>
+          <ImageUploadField value={block.src || ''} onUploaded={src => onChange({ src })} />
+          {block.src && (
+            <button className="btn-sm btn-danger" style={{ marginBottom: 6 }}
+              onClick={() => onChange({ src: '' })}>Hapus gambar</button>
+          )}
+        </>
+      ) : (
+        <>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: 'var(--text-dim)', margin: '8px 0 6px', cursor: 'pointer' }}>
+            <input type="checkbox" checked={!block.modalHideTitle}
+              onChange={e => onChange({ modalHideTitle: !e.target.checked })} />
+            <span>Tampilkan judul di dalam popup</span>
+          </label>
+          <p className="hint" style={{ fontSize: 11, margin: '0 0 8px' }}>
+            Dimatikan = popup langsung menampilkan bloknya saja; judul tetap ada di tombol pemicunya.
+          </p>
+          <BlockEditor
+            blocks={block.blocks || []}
+            onChange={blocks => onChange({ blocks })}
+            allow={POPUP_BLOCK_TYPES}
+            nounLabel="blok isi popup"
+          />
+        </>
+      )}
+    </>
+  );
+}
+
 function GridFields({ block, onChange }: { block: Block; onChange: (p: Partial<Block>) => void }) {
   const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
   const columns = (block.columns as 2 | 3) || 2;

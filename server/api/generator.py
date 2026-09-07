@@ -531,12 +531,28 @@ def render_modal(b):
     # urlGambar() waktu export, jadi gambarnya ikut tersemat ke HTML tunggal
     # dan ikut disalin ke paket SCORM tanpa penanganan khusus.
     img = f'<img class="modal-img" src="{esc(b["src"])}" alt="">' if b.get('src') else ''
+
+    # Mode 'blok': isi popup disusun dari blok lain. Dirender lewat
+    # render_block() yang SAMA dengan blok di badan slide, jadi gayanya persis
+    # gaya blok itu sendiri - bukan ditiru ulang di sini. Tipe yang boleh masuk
+    # dibatasi di sisi editor (POPUP_BLOCK_TYPES, app/src/types.ts).
+    if b.get('modalMode') == 'blok':
+        inner = ''.join(render_block(sub) for sub in b.get('blocks', []))
+    else:
+        inner = f'{img}{body}'
+
+    # Judul DI DALAM popup boleh disembunyikan; judul di TOMBOL pemicunya tetap.
+    # Kelasnya .modal-title, bukan <h3> polos: .modal-box h3 dan .card h3
+    # spesifisitasnya sama persis (0,1,1) dan .modal-box h3 ditulis belakangan,
+    # jadi <h3> polos di sini akan menang atas judul blok Kartu yang bersarang
+    # di dalam popup dan merusak tata letak ikonnya.
+    head = '' if b.get('modalHideTitle') else f'<h3 class="modal-title">{title}</h3>'
     return (
         f'<button class="modal-trigger" onclick="openModal(\'{modal_id}\')">'
         f'<span class="ic">{icon}</span><span>{title}</span><span class="chevron">›</span></button>'
         f'<div class="modal-overlay" id="{modal_id}" onclick="if(event.target===this) closeModal(\'{modal_id}\')">'
         f'<div class="modal-box"><button class="modal-close" onclick="closeModal(\'{modal_id}\')">✕</button>'
-        f'<h3>{title}</h3>{img}{body}</div></div>'
+        f'{head}{inner}</div></div>'
     )
 
 
@@ -582,7 +598,10 @@ def count_articulate(blocks):
         t = b.get('type')
         if t == 'articulate' and (b.get('artUrl') or b.get('artPath')):
             total += 1
-        elif t == 'grid':
+        elif t in ('grid', 'modal'):
+            # Modal ikut ditelusuri walau editor melarang Articulate masuk popup:
+            # kalau JSON disunting tangan, lebih baik kehitung daripada hilang
+            # diam-diam dari penyebut Command Center.
             total += count_articulate(b.get('blocks', []))
     return total
 
@@ -606,7 +625,13 @@ def count_interaktif(blocks):
         if t == 'accordion':
             total += len(b.get('accItems', []))
         elif t == 'modal':
-            total += 1
+            # Tombol popup-nya sendiri = 1 (openModal -> actInteraksi('modal', id)).
+            # Mode 'blok' bisa berisi accordion/tabs/flow yang MASING-MASING juga
+            # mengirim interaction sendiri; tanpa rekursi ini penyebutnya ketinggalan
+            # dan peserta bisa dapat rasio 5/4. Kunci uniknya aman dari tabrakan:
+            # id tiap elemen diturunkan dari id blok anaknya (unik global), bukan
+            # dari posisinya di slide.
+            total += 1 + count_interaktif(b.get('blocks', []))
         elif t == 'tabs':
             total += max(0, len(b.get('tabItems', [])) - 1)
         elif t == 'flow':
@@ -1103,7 +1128,7 @@ def generate_html(module):
                     'lock': b.get('artLock', True) is not False,
                     'nama': b.get('artName') or 'Konten Articulate',
                 })
-            elif b.get('type') == 'grid':
+            elif b.get('type') in ('grid', 'modal'):
                 found.extend(_art_in(b.get('blocks', [])))
         return found
 

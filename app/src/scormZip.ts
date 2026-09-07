@@ -56,7 +56,10 @@ export function articulateBlocks(module: ModuleData): Block[] {
   const walk = (blocks?: Block[]) => {
     for (const b of blocks || []) {
       if (b.type === 'articulate' && (b.artUrl || b.artPath)) out.push(b);
-      else if (b.type === 'grid') walk(b.blocks);
+      // Grid DAN Modal sama-sama wadah berisi `blocks`. Modal ikut
+      // ditelusuri walau editor melarang Articulate masuk popup: kalau
+      // JSON disunting tangan, paketnya harus tetap ikut terbungkus.
+      else if (b.type === 'grid' || b.type === 'modal') walk(b.blocks);
     }
   };
   for (const s of module.slides || []) walk(s.blocks);

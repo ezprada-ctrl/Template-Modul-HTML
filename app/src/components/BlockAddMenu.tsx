@@ -32,9 +32,16 @@ interface Props {
   // reads distinctly from the top-level "+ Tambah blok…" - same button,
   // same picker, just a wording cue about which level you're adding to.
   label?: string;
+  // Batasi tipe yang boleh dipilih. Dipakai isi popup (Modal mode 'blok'),
+  // yang cuma menerima POPUP_BLOCK_TYPES - lihat alasan tiap pengecualian
+  // di konstanta itu (types.ts). Tidak diisi = semua tipe, perilaku lama.
+  allow?: BlockType[];
 }
 
-export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…' }: Props) {
+export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow }: Props) {
+  // Urutannya tetap ikut BLOCK_LABELS (bukan urutan `allow`), biar posisi
+  // tiap tipe di daftar sama saja mau dibatasi atau tidak.
+  const types = allow ? BLOCK_TYPES.filter(t => allow.includes(t)) : BLOCK_TYPES;
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState<BlockType | null>(null);
   const [tooltipTop, setTooltipTop] = useState(0);
@@ -124,7 +131,7 @@ export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…' }: Prop
             boxShadow: 'var(--shadow-lg)', padding: 5, maxHeight: 320, overflowY: 'auto',
           }}
         >
-          {BLOCK_TYPES.map(type => (
+          {types.map(type => (
             <button
               key={type}
               type="button"

@@ -865,7 +865,17 @@ ul.tick li b, ol.tick li b{color:var(--text);}
   transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .3s ease;
 }
 .modal-overlay.open .modal-box{transform:translateY(0) scale(1);opacity:1;}
-.modal-box h3{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:16px;padding-right:30px;}
+/* Judul popup dipersempit ke kelasnya sendiri, BUKAN `h3` polos. Dulu
+   `.modal-box h3` (0,1,1) seimbang dengan `.card h3` (0,1,1) tapi ditulis
+   BELAKANGAN, jadi dia menang - begitu blok Kartu bersarang di dalam popup
+   (mode 'blok'), judul kartunya kehilangan display:flex + tata letak ikon.
+   Dengan kelas sendiri, judul popup dan judul blok di dalamnya tidak lagi
+   berebut. */
+.modal-box .modal-title{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:16px;padding-right:30px;}
+/* Blok terakhir di dalam popup tidak perlu jarak bawah - .modal-box sudah
+   punya padding sendiri, jadi margin blok (mis. .dtable 18px) cuma bikin
+   ruang kosong menggantung di dasar kotak. */
+.modal-box > *:last-child{margin-bottom:0;}
 /* Gambar opsional di dalam popup. max-width:100% + height:auto supaya gambar
    besar mengecil mengikuti kotak popup, bukan melebar keluar dan bikin
    .modal-box (yang cuma overflow-y) menggulir menyamping. */

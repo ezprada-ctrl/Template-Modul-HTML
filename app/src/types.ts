@@ -5,6 +5,30 @@ export type BlockType =
   | 'accordion' | 'tabs' | 'timeline' | 'dtable' | 'flow' | 'grid' | 'image' | 'badgeref' | 'html' | 'modal'
   | 'media' | 'knowledge' | 'articulate';
 
+// Blok yang boleh jadi ISI popup (blok Modal mode 'blok'). Daftar putih,
+// bukan daftar hitam: tipe baru harus sengaja dimasukkan setelah dicek, biar
+// tidak ada yang lolos diam-diam. Yang SENGAJA tidak ada di sini:
+//   modal      - popup di dalam popup. .modal-overlay itu position:fixed;
+//                bersarang di .modal-box (overflow-y:auto) dia lepas dari
+//                kotaknya dan rebutan z-index. Rusak, bukan cuma jelek.
+//   knowledge  - punya alur popup sendiri (#kc-popup-overlay), dipicu saat
+//                pindah slide, mengunci navigasi, dan merekam kc_answer.
+//                Di dalam modal seluruh mekanisme itu putus.
+//   articulate - iframe + shim SCORM, dan bisa MENGUNCI perpindahan slide
+//                (artPendingOnSlide). Di dalam popup penguncian itu tak
+//                bermakna: peserta tinggal menutup popupnya.
+//   grid       - wadah di dalam wadah; dirancang untuk lebar slide, sempit
+//                di kotak 720px berpadding, dan bersarang makin dalam tanpa
+//                manfaat.
+//   media      - pemutar dibuat saat slide dirender & tracking-nya per-slide;
+//                di popup butuh siklus hidup sendiri (jeda saat ditutup).
+//                Ditunda sampai itu digarap.
+export const POPUP_BLOCK_TYPES: BlockType[] = [
+  'card', 'callout', 'definition', 'pullquote', 'ticklist',
+  'dtable', 'timeline', 'image', 'badgeref', 'html',
+  'accordion', 'tabs', 'flow',
+];
+
 // One question inside a Knowledge Check block. Same shape idea as
 // QuizQuestion but no requirement of exactly 4 options — 2 options
 // (benar/salah) is valid. Two feedback modes, chosen per question by
@@ -96,6 +120,17 @@ export interface Block {
   refText?: string;
   // html
   raw?: string;
+  // modal — dua cara mengisi popup:
+  //   'teks' (bawaan, juga untuk blok lama yang tidak punya field ini):
+  //           judul + bodyHtml + gambar opsional, persis seperti sebelumnya.
+  //   'blok' : isi popup disusun dari blok lain (pakai `blocks`, field yang
+  //           sama dengan Grid). Yang boleh dipakai dibatasi POPUP_BLOCK_TYPES
+  //           — lihat alasan tiap pengecualian di konstanta itu.
+  modalMode?: 'teks' | 'blok';
+  // Sembunyikan judul DI DALAM popup (judul di tombol pemicunya tetap ada).
+  // Sengaja "hide" bukan "show": tidak diisi = tampil, jadi blok lama tetap
+  // menampilkan judulnya seperti sekarang.
+  modalHideTitle?: boolean;
   // media (single block, source picked via mediaSource)
   // - 'video': uploaded file, URL in `src` (reuses image's src field)
   // - 'youtube' / 'instagram': raw page URL pasted by author, in `embedUrl`
@@ -409,7 +444,7 @@ export function newBlock(type: BlockType): Block {
     case 'html': return { id, type, raw: '' };
     case 'media': return { id, type, mediaSource: 'video', src: '', embedUrl: '', caption: '' };
     case 'knowledge': return { id, type, kcItems: [{ q: '', opts: ['', ''], correct: 0, feedback: '' }] };
-    case 'modal': return { id, type, heading: 'Info Tambahan', bodyHtml: '', icon: '📝' };
+    case 'modal': return { id, type, heading: 'Info Tambahan', bodyHtml: '', icon: '📝', modalMode: 'teks', blocks: [] };
     case 'articulate': return { id, type, artRatio: '16:9', artLock: true, caption: '' };
     default: return { id, type: 'card', heading: '', bodyHtml: '' };
   }
@@ -420,8 +455,15 @@ export function newBlock(type: BlockType): Block {
 // and to carry content across a type change instead of losing it.
 export function extractBlockText(block: Block): string {
   switch (block.type) {
-    case 'card': case 'callout': case 'definition': case 'modal':
+    case 'card': case 'callout': case 'definition':
       return block.bodyHtml || '';
+    // Popup mode 'blok': isinya ada di anak-anaknya, bukan di bodyHtml —
+    // tanpa cabang ini popup berisi blok kebaca KOSONG dan bisa terhapus
+    // tanpa konfirmasi (isBlockEmpty di bawah bersandar pada fungsi ini).
+    case 'modal':
+      return block.modalMode === 'blok'
+        ? (block.blocks || []).map(extractBlockText).filter(Boolean).join('\n')
+        : (block.bodyHtml || '');
     case 'pullquote':
       return block.text || '';
     case 'html':
@@ -460,6 +502,10 @@ export function extractBlockText(block: Block): string {
 export function isBlockEmpty(block: Block): boolean {
   if (block.type === 'image') return !block.src;
   if (block.type === 'grid') return !(block.blocks && block.blocks.length);
+  // Sama alasannya dengan Grid: yang bikin popup mode 'blok' berarti itu
+  // ADANYA anak, bukan isi teks anaknya — sub-blok yang baru ditambah dan
+  // masih kosong tetap harus minta konfirmasi sebelum induknya dihapus.
+  if (block.type === 'modal' && block.modalMode === 'blok') return !(block.blocks && block.blocks.length);
   // Media has no free text — it's "empty" only when neither an uploaded
   // video nor an embed URL has been provided.
   if (block.type === 'media') return !block.src && !block.embedUrl;
