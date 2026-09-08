@@ -90,6 +90,22 @@ function blockSummary(block: Block): string {
   return flat.length > 70 ? flat.slice(0, 70) + '…' : flat;
 }
 
+// Blok yang lagi disentuh, diumumkan ke panel preview supaya preview-nya ikut
+// menggulir ke blok itu (lihat SlidePreview.tsx).
+//
+// Nilai bersama satu tab, BUKAN prop yang dioper: editor blok bersarang
+// sedalam apa pun - sub-blok di Grid, blok di dalam popup - sama-sama perlu
+// mengumumkan hal ini, dan mengoper callback lewat GridFields & ModalFields
+// cuma buat diteruskan lagi bikin dua komponen itu ikut tahu soal panel
+// preview, padahal mereka gak ada urusannya. Aman dipakai bersama karena yang
+// "lagi diedit" memang cuma pernah ada satu di seluruh aplikasi.
+// Pola yang sama sudah dipakai devModeDipilihPenyusun di SlidePreview.tsx.
+const pendengarBlokAktif = new Set<(id: string) => void>();
+export function langgananBlokAktif(fn: (id: string) => void) {
+  pendengarBlokAktif.add(fn);
+  return () => { pendengarBlokAktif.delete(fn); };
+}
+
 export default function BlockEditor({ blocks, onChange, columns, allow, nounLabel }: Props) {
   // `columns` is ONLY ever passed by GridFields (top-level callers in
   // Canvas.tsx/CoverForm.tsx never set it) - reused here as the "am I
@@ -109,6 +125,13 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
   // hilang persis waktu orangnya menoleh ke panel preview. Yang berpindah
   // cuma kalau blok LAIN disentuh.
   const [blokAktif, setBlokAktif] = useState<string | null>(null);
+  // Satu pintu buat menandai blok aktif: state lokal (buat penanda "sedang
+  // diedit" di kartu) DAN pengumuman ke panel preview selalu jalan bareng,
+  // jadi gak mungkin salah satunya kelupaan waktu ada pemicu baru.
+  function tandaiAktif(id: string) {
+    setBlokAktif(id);
+    pendengarBlokAktif.forEach(fn => fn(id));
+  }
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   function toggleCollapse(id: string) {
     setCollapsed(prev => {
@@ -156,8 +179,8 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
             // dalam blok (termasuk sub-blok Grid) tetap terbaca sebagai
             // "blok ini yang lagi digarap". onMouseDown melengkapi buat area
             // yang gak bisa difokus, mis. mengklik latar kartunya sendiri.
-            onFocusCapture={() => setBlokAktif(b.id)}
-            onMouseDown={() => setBlokAktif(b.id)}
+            onFocusCapture={() => tandaiAktif(b.id)}
+            onMouseDown={() => tandaiAktif(b.id)}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: isCollapsed ? 0 : 8, flexWrap: 'wrap' }}>
               {/* flexWrap: label "sedang diedit" dan nama tipe blok sama-sama

@@ -915,6 +915,30 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
   transition:none!important;animation:none!important;
 }
+
+/* Sorotan sekejap pada blok yang lagi diedit di panel kiri editor - dipasang
+   & dilepas SlidePreview.tsx waktu preview-nya ikut pindah ke blok itu.
+   Gunanya nunjukin blok MANA yang barusan dituju: kalau cuma digulir, blok
+   yang bentuknya mirip tetangganya gak kebedain.
+   outline, bukan border: outline gak ikut menghitung tata letak, jadi
+   memasangnya gak menggeser apa pun sepiksel pun - kalau pakai border, tiap
+   ganti blok seluruh isi slide bakal bergeser turun sedikit lalu balik lagi.
+   Cuma hidup di panel preview; di modul jadinya kelas ini gak pernah
+   dipasang siapa pun. */
+[data-blok].blok-disorot{
+  outline:2px solid var(--accent);
+  outline-offset:3px;
+  border-radius:2px;
+  animation:sorot-blok 1.2s ease-out;
+}
+@keyframes sorot-blok{
+  0%   { outline-color:var(--accent); }
+  70%  { outline-color:var(--accent); }
+  100% { outline-color:transparent; }
+}
+@media (prefers-reduced-motion:reduce){
+  [data-blok].blok-disorot{ animation:none; }
+}
 .modal-overlay{
   position:fixed;inset:0 0 0 314px;background:rgba(15,18,26,.55);backdrop-filter:blur(2px);
   display:flex;align-items:center;justify-content:center;padding:24px;

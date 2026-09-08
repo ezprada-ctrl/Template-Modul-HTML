@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ModuleData } from '../types';
 import { generateHtml } from '../api';
+import { langgananBlokAktif } from './BlockEditor';
 
 interface Props {
   module: ModuleData;
@@ -91,6 +92,52 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
   // devModeDipilihPenyusun) supaya pindah slide = mulai bersih; keadaan
   // kebuka itu milik slide yang lagi disunting, bukan milik sesi.
   const bukaanRef = useRef<unknown>(null);
+  // Blok yang lagi diedit di panel kiri, dikabarkan BlockEditor. Disimpan di
+  // ref, bukan state: nilainya cuma dipakai buat menggulir, gak ada yang perlu
+  // dirender ulang gara-gara ini.
+  const blokAktifRef = useRef<string | null>(null);
+  // Blok yang TERAKHIR sudah digulirin. Ini yang bikin preview cuma ikut
+  // pindah waktu blok yang diedit BERGANTI - bukan tiap kali halaman dibangun
+  // ulang. Tanpa pembeda ini, tiap ketikan bakal menyeret preview balik ke
+  // blok itu terus, dan panelnya gak bisa digulir manual sama sekali karena
+  // setengah detik kemudian ditarik lagi.
+  const blokTergulirRef = useRef<string | null>(null);
+
+  // Menggulir isi preview ke blok yang lagi diedit. Dipanggil dua tempat:
+  // waktu bloknya berganti (iframe-nya masih itu-itu juga), dan sesudah
+  // iframe dimuat ulang (dokumennya baru, elemennya baru).
+  function gulirKeBlokAktif() {
+    const id = blokAktifRef.current;
+    if (!id || id === blokTergulirRef.current) return;
+    const doc = iframeRef.current?.contentDocument;
+    const viewport = doc?.getElementById('viewport');
+    if (!doc || !viewport) return;
+    const el = doc.querySelector(`[data-blok="${CSS.escape(id)}"]`) as HTMLElement | null;
+    // Blok yang belum ada di slide ini (baru ditambah, HTML-nya belum dibangun
+    // ulang) dibiarkan - jangan tandai sudah tergulir, biar dicoba lagi sesudah
+    // pembangunan berikutnya.
+    if (!el) return;
+    blokTergulirRef.current = id;
+    // Dihitung dari selisih posisi, bukan scrollIntoView(): scrollIntoView
+    // ikut menggulirkan HALAMAN EDITOR di luar iframe supaya iframe-nya
+    // kelihatan, dan itu bikin panel kiri ikut melompat tiap ganti blok.
+    const selisih = el.getBoundingClientRect().top - viewport.getBoundingClientRect().top;
+    // Disisakan sepertiga layar di atasnya: blok yang mepet ke tepi atas
+    // kelihatan seperti terpotong, dan judul yang menaunginya sering justru
+    // ada di atas blok itu.
+    viewport.scrollTop += selisih - viewport.clientHeight / 3;
+    scrollTopRef.current = viewport.scrollTop;
+    // Kedipan singkat, supaya kelihatan blok MANA yang barusan dituju - kalau
+    // cuma digulir, blok yang mirip dengan tetangganya gak kebedain.
+    el.classList.add('blok-disorot');
+    setTimeout(() => el.classList.remove('blok-disorot'), 1200);
+  }
+
+  useEffect(() => langgananBlokAktif(id => {
+    blokAktifRef.current = id;
+    gulirKeBlokAktif();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), []);
   // Panel preview ikut melar/menyusut (layout editor, jendela di-resize), jadi
   // ukurannya diukur ulang - bukan konstanta.
   const wadahRef = useRef<HTMLDivElement>(null);
@@ -239,6 +286,13 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
       // keempat blok itu (popup/accordion/tab/alur) semuanya menandai
       // keadaannya lewat class, jadi mutasi class memang persis sinyal yang
       // dibutuhkan - gak perlu pengamat kedua.
+      // Dokumen ini baru, jadi blok yang tadi sudah dituju belum tentu ada
+      // lagi di sini - patokannya dilupakan supaya gulirannya diulang.
+      // TAPI cuma kalau bloknya memang berganti; kalau penyusunnya cuma
+      // mengetik di blok yang sama, blokTergulirRef tetap sama dengan
+      // blokAktifRef dan gulirKeBlokAktif() gak melakukan apa-apa - posisi
+      // guliran hasil restore di atas yang dipakai.
+      gulirKeBlokAktif();
       const pengamat = new win.MutationObserver(() => {
         if (typeof win.snapshotUI === 'function') bukaanRef.current = win.snapshotUI();
         bawaPopupKeLayar();

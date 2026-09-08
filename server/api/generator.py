@@ -722,7 +722,25 @@ def render_block(b):
     fn = BLOCK_RENDERERS.get(b.get('type'))
     if not fn:
         return ''
-    return fn(b)
+    html = fn(b)
+    # Penanda blok, dipakai panel preview di editor buat menggulir ke blok yang
+    # LAGI DIEDIT (lihat blokAktif di SlidePreview.tsx). Tanpa ini gak ada cara
+    # menemukan satu blok di dalam slide: sebagian besar blok (Kartu, Catatan,
+    # Tabel) render tanpa id sama sekali.
+    #
+    # Disisipkan ke tag PERTAMA yang sudah ada, bukan dibungkus <div> baru:
+    # membungkus bakal menyisipkan satu lapis elemen di antara induk dan blok,
+    # dan itu mematahkan pemilih anak-langsung yang dipakai tata letak (mis.
+    # .grid2 > *, .modal-box > *:last-child). Atribut gak mengubah struktur
+    # sama sekali, jadi tampilannya persis sama.
+    #
+    # Kalau bloknya gak punya tag pembuka (mis. HTML Bebas yang diisi teks
+    # polos), dibiarkan apa adanya - gak ada yang bisa ditandai, dan itu jauh
+    # lebih baik daripada memaksa membungkusnya.
+    bid = b.get('id')
+    if bid and html.startswith('<'):
+        html = re.sub(r'^<([a-zA-Z][\w-]*)', rf'<\1 data-blok="{esc(str(bid))}"', html, count=1)
+    return html
 
 
 def count_articulate(blocks):
