@@ -1,16 +1,16 @@
 # Graph Report - Template Modul Ikram  (2026-09-08)
 
 ## Corpus Check
-- 50 files · ~185,240 words
+- 50 files · ~185,254 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 813 nodes · 1382 edges · 55 communities (39 shown, 16 thin omitted)
+- 813 nodes · 1383 edges · 55 communities (39 shown, 16 thin omitted)
 - Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 155 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6eecf0b8`
+- Built from commit: `bba74dee`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -239,7 +239,7 @@ Cohesion: 0.07
 Nodes (42): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-probe/README.md — Uji Koneksi LMS Guide, Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide (+34 more)
 
 ## Knowledge Gaps
-- **153 isolated node(s):** `Props`, `HasilSemat`, `Props`, `Props`, `ImportMeta` (+148 more)
+- **153 isolated node(s):** `BLOCK_TYPES`, `Props`, `Props`, `pendengarBlokAktif`, `FieldStyle` (+148 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -247,12 +247,12 @@ Nodes (42): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-p
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Template Modul Ikram — Source Code (Full Repo Printout)` connect `index.py` to `types.ts`, `generator.py`?**
-  _High betweenness centrality (0.130) - this node is a cross-community bridge._
+  _High betweenness centrality (0.128) - this node is a cross-community bridge._
 - **Why does `react` connect `types.ts` to `PreviewExport.tsx`, `plugins`, `BlockEditor.tsx`, `api.ts`, `EmojiPicker.tsx`, `BlockPreview.tsx`, `GraphicStyleSelect.tsx`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+  _High betweenness centrality (0.047) - this node is a cross-community bridge._
 - **Why does `14 Jenis Blok Konten` connect `14 Jenis Blok Konten` to `generator.py`, `BlockEditor.tsx`?**
-  _High betweenness centrality (0.030) - this node is a cross-community bridge._
-- **What connects `Props`, `HasilSemat`, `Props` to the rest of the system?**
+  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+- **What connects `BLOCK_TYPES`, `Props`, `Props` to the rest of the system?**
   _153 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `PreviewExport.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.09390243902439024 - nodes in this community are weakly interconnected._

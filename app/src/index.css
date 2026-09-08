@@ -341,7 +341,7 @@ button:disabled:hover { background: var(--surface-2); border-color: var(--border
   transition: background var(--ease), color var(--ease);
 }
 .pemicu-tipe-blok::after {
-  content: ' BE';               /* panah bawah - bahasa yang sama dengan
+  content: ' ▾';               /* panah bawah - bahasa yang sama dengan
                                       tombol lipat di sebelah kirinya */
   opacity: 0.55;
 }

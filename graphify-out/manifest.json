@@ -24,15 +24,15 @@
     "semantic_hash": ""
   },
   "app/src/components/BlockAddMenu.tsx": {
-    "mtime": 1788851593.9323378,
-    "seen": 1788851924.3915513,
-    "ast_hash": "45c41a748fd2fa05733a524df2768304",
+    "mtime": 1788876226.6648774,
+    "seen": 1788876240.2456908,
+    "ast_hash": "728d0097583f4661f8913ce497e3b8d0",
     "semantic_hash": ""
   },
   "app/src/components/BlockEditor.tsx": {
-    "mtime": 1788852385.5191991,
-    "seen": 1788852831.7300127,
-    "ast_hash": "638c4d430e92be36ef865129edd7e0e0",
+    "mtime": 1788876226.6668756,
+    "seen": 1788876240.245692,
+    "ast_hash": "c508bb9c06b4cf5017cc2973ad4e4eca",
     "semantic_hash": ""
   },
   "app/src/components/BlockPreview.tsx": {

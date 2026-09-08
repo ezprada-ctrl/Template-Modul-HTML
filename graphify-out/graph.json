@@ -1347,7 +1347,7 @@
       "file_type": "code",
       "norm_label": "blockaddmenu()",
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L55"
+      "source_location": "L58"
     },
     {
       "id": "app_src_components_blockaddmenu_blockaddmenu_cancelhover",
@@ -1359,7 +1359,7 @@
       "file_type": "code",
       "norm_label": "cancelhover()",
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L114"
+      "source_location": "L117"
     },
     {
       "id": "app_src_components_blockaddmenu_blockaddmenu_onclickoutside",
@@ -1371,7 +1371,7 @@
       "file_type": "code",
       "norm_label": "onclickoutside()",
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L68"
+      "source_location": "L71"
     },
     {
       "id": "app_src_components_blockaddmenu_blockaddmenu_onkeydown",
@@ -1383,7 +1383,7 @@
       "file_type": "code",
       "norm_label": "onkeydown()",
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L125"
+      "source_location": "L128"
     },
     {
       "id": "app_src_components_blockaddmenu_blockaddmenu_pick",
@@ -1395,7 +1395,7 @@
       "file_type": "code",
       "norm_label": "pick()",
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L119"
+      "source_location": "L122"
     },
     {
       "id": "app_src_components_blockaddmenu_blockaddmenu_schedulehover",
@@ -1407,7 +1407,7 @@
       "file_type": "code",
       "norm_label": "schedulehover()",
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L102"
+      "source_location": "L105"
     },
     {
       "id": "app_src_components_blockpreview_accordiondemo",
@@ -13403,7 +13403,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L102",
+      "source_location": "L105",
       "weight": 1.0
     },
     {
@@ -13415,7 +13415,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L119",
+      "source_location": "L122",
       "weight": 1.0
     },
     {
@@ -14873,6 +14873,18 @@
     {
       "source": "app_src_components_blockeditor",
       "target": "app_src_components_blockaddmenu_block_labels",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "app/src/components/BlockEditor.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "app_src_components_blockeditor",
+      "target": "app_src_components_blockaddmenu_blockaddmenu",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -17581,7 +17593,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L55",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -17603,7 +17615,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L114",
+      "source_location": "L117",
       "weight": 1.0
     },
     {
@@ -17614,7 +17626,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L125",
+      "source_location": "L128",
       "weight": 1.0
     },
     {
@@ -21587,7 +21599,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "app/src/components/BlockAddMenu.tsx",
-      "source_location": "L74",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -26082,5 +26094,5 @@
       "source_file": "Panduan-Fitur-Template-Modul-Ikram.html"
     }
   ],
-  "built_at_commit": "6eecf0b87f992807273fe01eca05fa381a9a65c9"
+  "built_at_commit": "bba74deec6a24df163c3af1ff8a0990d73902bb4"
 }
