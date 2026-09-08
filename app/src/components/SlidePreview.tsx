@@ -471,7 +471,9 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
           bernapas pelan lewat opacity: cukup kebaca kalau matanya mampir,
           gak menuntut apa-apa kalau lagi fokus ke isinya. */}
       {onPilihSlide && (
-        <div className="pv-petunjuk-strip">Klik 2× slide di daftar — langsung terbuka di editor</div>
+        <div className="pv-petunjuk-strip">
+          Klik 2× slide di <i>sidebar</i> — langsung terbuka di editor
+        </div>
       )}
       {error && <p style={{ color: 'var(--danger)', fontSize: 12, padding: 10 }}>{error}</p>}
       <div
