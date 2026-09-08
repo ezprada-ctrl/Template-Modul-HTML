@@ -1993,22 +1993,101 @@ function modulSelesai(){
   return SECTIONS.every(sec => isQuizPassed(sec.id));
 }
 
+/* Apakah modul ini punya kuis sama sekali. Tanpa kuis gak ada yang bisa
+   dinilai lulus/gagal, dan modul begitu gak boleh melaporkan nilai apa pun ke
+   LMS - nilai 0 dari modul tanpa kuis bakal kebaca sebagai peserta yang gagal. */
+function modulPunyaKuis(){
+  return SECTIONS.some(s => (QUIZZES[s.id]||[]).length);
+}
+
+/* GAGAL FINAL - bukan sekadar "belum lulus".
+   Bedanya penting: peserta yang belum mengerjakan kuis juga belum lulus, tapi
+   dia belum gagal apa-apa. Yang dilaporkan gagal ke LMS cuma yang jatah
+   mengerjakannya SUDAH HABIS dan nilai tertingginya tetap di bawah ambang -
+   pada titik itu hasilnya sudah tidak bisa berubah lagi dari dalam modul.
+   Section dengan jatah tak terbatas (maksPercobaan 0) gak pernah bikin gagal
+   final: selama masih boleh mengulang, hasilnya masih terbuka. */
+function modulGagal(){
+  if(!modulPunyaKuis()) return false;
+  return SECTIONS.some(sec => {
+    const qs = QUIZZES[sec.id] || [];
+    if(!qs.length) return false;
+    if(!quizMaksPercobaan(sec.id)) return false;
+    return quizSisaPercobaan(sec.id) <= 0 && !isQuizPassed(sec.id);
+  });
+}
+
+/* Nilai akhir modul, 0-100. Rata-rata persen TERBAIK tiap kuis section -
+   definisinya sengaja sama persis dengan yang dipakai Command Center, biar
+   angka di rapor LMS dan angka di rekap penyusun gak pernah beda.
+   Bukan (total benar / total soal): section dengan 20 soal bakal
+   menenggelamkan section dengan 5 soal, padahal dua-duanya satu gerbang
+   kelulusan yang setara. */
+function modulNilai(){
+  const persen = SECTIONS
+    .filter(sec => (QUIZZES[sec.id]||[]).length)
+    .map(sec => Math.round(quizSkorTerbaik(sec.id) / QUIZZES[sec.id].length * 100));
+  if(!persen.length) return null;
+  return Math.round(persen.reduce((a,b)=>a+b,0) / persen.length);
+}
+
+/* Nilai ke LMS. Cuma NAIK - nilainya cerminan skor tertinggi, dan mengulang
+   dengan hasil lebih jelek gak boleh menurunkan angka yang sudah tercatat di
+   rapor. Nama datanya beda antar versi, jadi ditulis sesuai versi yang kepakai. */
+function scormLaporNilai(){
+  if(!scorm.inited || !modulPunyaKuis()) return;
+  const nilai = modulNilai();
+  if(nilai === null) return;
+  const key = scorm.version==='1.2' ? 'cmi.core.score.raw' : 'cmi.score.raw';
+  const lama = parseFloat(scormGetValue(key));
+  if(!isNaN(lama) && lama >= nilai) return;
+  scormSetValue(key, String(nilai));
+  if(scorm.version==='1.2'){
+    scormSetValue('cmi.core.score.min', '0');
+    scormSetValue('cmi.core.score.max', '100');
+  }else{
+    scormSetValue('cmi.score.min', '0');
+    scormSetValue('cmi.score.max', '100');
+    /* 2004 menilai kelulusan dari score.scaled (0-1) dibanding
+       scaled_passing_score di manifest. Diisi juga supaya LMS yang
+       menggerbangkan unit berikutnya lewat NILAI - bukan lewat success_status -
+       tetap dapat angka yang bisa dia bandingkan. */
+    scormSetValue('cmi.score.scaled', String(nilai / 100));
+  }
+}
+
 /* Dipanggil tiap state disimpan. Sengaja TIDAK pernah menurunkan status yang
    sudah 'completed'/'passed' jadi 'incomplete': kalau unit di LMS ternyata
    digerbangi status SCORM, menurunkannya bakal MENGUNCI BALIK peserta yang
-   sudah sah menyelesaikan modul di sesi sebelumnya. Naik boleh, turun tidak. */
+   sudah sah menyelesaikan modul di sesi sebelumnya. Naik boleh, turun tidak.
+
+   'failed' TIDAK ikut aturan itu - dia bukan penurunan, dia hasil akhir yang
+   memang harus sampai ke LMS. Dan dia tetap boleh ditimpa 'passed' nanti
+   (mis. section lain masih punya jatah dan akhirnya lulus), karena penjagaan
+   di atas cuma menahan yang sudah completed/passed. */
 function scormLaporStatus(){
   if(!scorm.inited) return;
+  scormLaporNilai();
   const key = scormStatusKey();
   const sekarang = String(scormGetValue(key) || '').toLowerCase();
   if(sekarang === 'completed' || sekarang === 'passed') return;
-  const target = modulSelesai() ? 'completed' : 'incomplete';
-  if(sekarang === target) return;
-  scormSetValue(key, target);
+  const gagal = modulGagal();
+  /* SCORM 1.2 cuma punya SATU data buat dua hal (sudah dikerjakan & lulus),
+     jadi 'failed' ditulis langsung ke lesson_status. 2004 memisahkannya:
+     completion_status tetap bicara soal "sudah dikerjakan", kegagalannya
+     lewat success_status di bawah. */
+  const target = scorm.version==='1.2'
+    ? (modulSelesai() ? 'completed' : (gagal ? 'failed' : 'incomplete'))
+    : (modulSelesai() ? 'completed' : 'incomplete');
+  if(sekarang !== target) scormSetValue(key, target);
   /* 2004 memisahkan "sudah dikerjakan" dari "lulus". Cuma diisi kalau modulnya
      memang punya kuis — tanpa kuis, gak ada yang bisa dinilai lulus/gagal. */
-  if(scorm.version!=='1.2' && target==='completed' && SECTIONS.some(s=>(QUIZZES[s.id]||[]).length)){
-    scormSetValue('cmi.success_status', 'passed');
+  if(scorm.version!=='1.2' && modulPunyaKuis()){
+    const sukses = String(scormGetValue('cmi.success_status') || '').toLowerCase();
+    if(sukses !== 'passed'){
+      if(modulSelesai()) scormSetValue('cmi.success_status', 'passed');
+      else if(gagal) scormSetValue('cmi.success_status', 'failed');
+    }
   }
 }
 function scormFinish(){
