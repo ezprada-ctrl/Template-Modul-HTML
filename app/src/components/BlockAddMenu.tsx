@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import type { BlockType } from '../types';
 import BlockPreviewCard, { BLOCK_PREVIEW_STYLES } from './BlockPreview';
 
@@ -36,9 +37,22 @@ interface Props {
   // yang cuma menerima POPUP_BLOCK_TYPES - lihat alasan tiap pengecualian
   // di konstanta itu (types.ts). Tidak diisi = semua tipe, perilaku lama.
   allow?: BlockType[];
+  // Tiga prop di bawah ini yang bikin komponen yang sama bisa dipakai buat
+  // GANTI TIPE blok yang sudah ada, bukan cuma menambah blok baru. Sengaja
+  // dipakai ulang, bukan disalin jadi picker kedua: pratinjau tiap jenis blok
+  // cuma berguna kalau dua tempat itu menampilkan hal yang sama persis, dan
+  // dua salinan pasti pelan-pelan beda sendiri.
+  //
+  // triggerStyle: pemicunya di sana bukan tombol selebar kolom, tapi label
+  // kecil huruf besar di kepala kartu blok.
+  triggerStyle?: CSSProperties;
+  // active: tipe yang SEDANG dipakai, ditandai di daftar. Waktu menambah blok
+  // baru gak ada yang aktif, jadi dibiarkan kosong.
+  active?: BlockType;
+  title?: string;
 }
 
-export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow }: Props) {
+export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow, triggerStyle, active, title }: Props) {
   // Urutannya tetap ikut BLOCK_LABELS (bukan urutan `allow`), biar posisi
   // tiap tipe di daftar sama saja mau dibatasi atau tidak.
   const types = allow ? BLOCK_TYPES.filter(t => allow.includes(t)) : BLOCK_TYPES;
@@ -113,12 +127,16 @@ export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow 
   }
 
   return (
-    <div ref={wrapRef} style={{ position: 'relative' }} onKeyDown={onKeyDown}>
+    <div ref={wrapRef} style={{ position: 'relative', flexShrink: 0, minWidth: 0, maxWidth: '100%' }} onKeyDown={onKeyDown}>
       <style>{BLOCK_PREVIEW_STYLES}</style>
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        style={{ width: '100%', textAlign: 'left', padding: '9px 12px', fontWeight: 600, color: 'var(--text-dim)' }}
+        title={title}
+        style={{
+          width: '100%', textAlign: 'left', padding: '9px 12px', fontWeight: 600, color: 'var(--text-dim)',
+          ...triggerStyle,
+        }}
       >
         {label}
       </button>
@@ -139,13 +157,22 @@ export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow 
               onMouseEnter={e => scheduleHover(type, e.currentTarget)}
               onMouseLeave={cancelHover}
               style={{
-                display: 'block', width: '100%', textAlign: 'left', padding: '8px 10px',
+                display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left', padding: '8px 10px',
                 fontSize: 13, borderRadius: 'var(--radius-sm)',
-                color: hovered === type ? 'var(--text)' : 'var(--text-dim)',
-                fontWeight: hovered === type ? 600 : 500,
+                color: hovered === type || type === active ? 'var(--text)' : 'var(--text-dim)',
+                fontWeight: hovered === type || type === active ? 600 : 500,
                 background: hovered === type ? 'var(--surface-3)' : 'transparent', border: 'none',
               }}
             >
+              {/* Penanda tipe yang sedang dipakai. Tempatnya selalu ada
+                  (spasi kosong kalau bukan yang aktif) supaya label semua
+                  baris tetap lurus - kalau centangnya cuma muncul di satu
+                  baris, baris itu sendiri yang jadi menggeser. */}
+              {active !== undefined && (
+                <span style={{ width: 10, flexShrink: 0, color: 'var(--text-faint)' }}>
+                  {type === active ? '•' : ''}
+                </span>
+              )}
               {BLOCK_LABELS[type]}
             </button>
           ))}

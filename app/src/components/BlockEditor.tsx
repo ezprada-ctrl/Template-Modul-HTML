@@ -180,21 +180,25 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
                     Kolom {(i % columns) + 1}
                   </span>
                 )}
-                <select
-                  className="block-card-label"
-                  value={b.type}
-                  onChange={e => changeType(i, e.target.value as BlockType)}
+                {/* Dulu <select> bawaan. Diganti picker yang SAMA PERSIS
+                    dengan "+ Tambah blok…" supaya pratinjau tiap jenis blok
+                    ikut muncul di sini: memilih tipe pengganti tanpa lihat
+                    bentuknya itu justru saat pratinjau paling dibutuhkan -
+                    orangnya lagi menimbang bentuk lain, bukan sekadar
+                    menambah blok kosong.
+                    <select> bawaan gak bisa dipakai buat ini: isi <option>
+                    cuma boleh teks, gak bisa memuat kartu pratinjau. */}
+                <BlockAddMenu
+                  onAdd={type => changeType(i, type)}
+                  label={BLOCK_LABELS[b.type]}
+                  active={b.type}
                   title={`Ganti tipe ${noun} ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang`}
-                  style={{
+                  triggerStyle={{
                     fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
-                    color: 'var(--text-faint)', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', flexShrink: 0,
-                    maxWidth: '100%',
+                    color: 'var(--text-faint)', border: 'none', background: 'transparent',
+                    padding: 0, cursor: 'pointer', whiteSpace: 'nowrap',
                   }}
-                >
-                  {Object.entries(BLOCK_LABELS).map(([type, label]) => (
-                    <option key={type} value={type}>{label}</option>
-                  ))}
-                </select>
+                />
                 {blokAktif === b.id && (
                   <span className="block-card-aktif" title="Blok inilah yang lagi kamu kerjakan">
                     sedang diedit
