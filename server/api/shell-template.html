@@ -4707,6 +4707,25 @@ if(HAS_YOUTUBE){
   ys.src = 'https://www.youtube.com/iframe_api';
   document.body.appendChild(ys);
 }
+/* Slide awal untuk panel preview di editor.
+   Panel preview dulu membiarkan halaman ini mulai dari sampul, baru sesudah
+   iframe-nya selesai dimuat dia manggil goTo() ke slide yang lagi disunting.
+   Akibatnya tiap ketikan bikin sampul KEDIP dulu sepersekian detik sebelum
+   slide yang benar muncul - mengganggu, karena yang berubah cuma satu kata.
+   Sekarang panel preview menaruh window.__PV_START (lihat SlidePreview.tsx)
+   SEBELUM berkas ini jalan, jadi render pertama langsung slide yang benar dan
+   sampulnya gak pernah sempat kelihatan. Gerbang section sengaja gak disentuh
+   di sini: ini cuma memilih titik awal, sama seperti devMode-sekejap yang
+   dulu dipakai buat menembusnya. */
+if(window.__PV_START){
+  try{
+    const t = window.__PV_START;
+    const idx = NAV.findIndex(it => t.kind === 'slide'
+      ? (it.kind === 'slide' && it.num === t.num)
+      : it.kind === t.kind);
+    if(idx >= 0) currentIdx = idx;
+  }catch(e){}
+}
 render();
 /* Setelah render: kalau modul ini ngerekam aktivitas, mulai sesinya (atau
    tampilkan gerbang identitas dulu kalau identitasnya belum ketahuan). */

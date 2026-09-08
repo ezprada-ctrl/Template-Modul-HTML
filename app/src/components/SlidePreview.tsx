@@ -270,7 +270,11 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
       win.eval(`
         devMode = true;
         const idx = NAV.findIndex(it => ${findExpr});
-        if (idx >= 0) goTo(idx);
+        // Biasanya halaman ini SUDAH mulai di slide yang benar - __PV_START
+        // (disuntik di bawah) sudah menaruh currentIdx sebelum render pertama.
+        // Kalau begitu, goTo() cuma bikin render ulang percuma yang mereset
+        // guliran; dilewati saja.
+        if (idx >= 0 && idx !== currentIdx) goTo(idx);
         // Dev Mode was only needed to jump straight here past section/quiz
         // gates that don't matter for "how does this one slide look" - left
         // on, it also silently skips every OTHER gate (Knowledge Check's
@@ -421,6 +425,20 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
     }
   }
 
+  // Slide yang mau dituju, dititipkan ke halaman preview SEBELUM skripnya
+  // jalan. Tanpa ini halaman mulai dari sampul dan baru dilompatkan sesudah
+  // iframe selesai dimuat - dan karena tiap ketikan mengganti srcDoc (navigasi
+  // iframe penuh), sampul itu KEDIP dulu tiap kali. Dengan titipan ini render
+  // pertama sudah di slide yang benar, jadi yang terlihat cuma isinya berubah.
+  const htmlSiap = html
+    ? html.replace(
+        '<head>',
+        '<head><scr' + 'ipt>window.__PV_START='
+          + JSON.stringify(target === 'slide' ? { kind: 'slide', num: slideNumber } : { kind: target })
+          + ';</scr' + 'ipt>',
+      )
+    : '';
+
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', height: '100%', minHeight: 420, display: 'flex', flexDirection: 'column', background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
       <div style={{ padding: '8px 12px', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--text-faint)', display: 'flex', justifyContent: 'space-between' }}>
@@ -472,14 +490,14 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
           alignContent: 'safe center',
         }}
       >
-        {html && (
+        {htmlSiap && (
           // transform:scale() gak mengubah ukuran yang DIHITUNG layout, jadi
           // wadah scroll-nya gak bakal tau preview-nya membesar. Kotak ini yang
           // memegang ukuran hasil-perkecilan itu, supaya scrollbar-nya muncul.
           <div style={{ width: LEBAR_LOGIS * skala, height: TINGGI_LOGIS * skala, position: 'relative' }}>
             <iframe
               ref={iframeRef}
-              srcDoc={html}
+              srcDoc={htmlSiap}
               onLoad={jumpToSlide}
               allow="autoplay; encrypted-media; picture-in-picture; clipboard-write"
               style={{
