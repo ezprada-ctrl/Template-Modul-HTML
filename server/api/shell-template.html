@@ -509,6 +509,39 @@ ul.tick li b, ol.tick li b{color:var(--text);}
    the same navy background. */
 .dtable th.dtable-group{text-align:center;border-bottom:1px solid rgba(255,255,255,.15);}
 
+/* Rata teks pilihan penyusun. Kelasnya nempel di <table>, jadi satu kelas
+   mengatur seluruh sel sejenis - gak perlu atribut di tiap sel, dan tabel
+   yang penyusunnya belum memilih apa-apa gak dapat kelas ini sama sekali
+   (outputnya byte-identik dengan sebelum fitur ini ada).
+   'rata' = justify; cuma masuk akal buat sel isi yang kalimatnya panjang,
+   tapi tetap disediakan buat judul karena judul panjang juga ada. */
+.dtable.th-kiri th,.dtable.th-kiri th.dtable-group{text-align:left;}
+.dtable.th-tengah th,.dtable.th-tengah th.dtable-group{text-align:center;}
+.dtable.th-kanan th,.dtable.th-kanan th.dtable-group{text-align:right;}
+.dtable.th-rata th,.dtable.th-rata th.dtable-group{text-align:justify;}
+.dtable.td-kiri td{text-align:left;}
+.dtable.td-tengah td{text-align:center;}
+.dtable.td-kanan td{text-align:right;}
+.dtable.td-rata td{text-align:justify;}
+
+/* Kolom grup VERTIKAL di paling kiri (lihat dtableRowGroups di
+   render_dtable). Gayanya sengaja disamakan dengan kepala kolom - orang
+   membacanya sebagai "judul", bukan sebagai isi - tapi ditengahkan secara
+   tegak karena satu label menaungi beberapa baris sekaligus, jadi kalau
+   nempel di atas dia kelihatan lepas dari baris-baris bawahannya.
+   Rata teksnya SENGAJA gak ikut .th-* di atas: pilihan itu buat judul kolom
+   yang berjejer mendatar, sementara kolom ini sempit dan hampir selalu lebih
+   enak di tengah. */
+.dtable th.dtable-rowgroup{
+  background:var(--navy);color:#f6d998;font-weight:700;font-size:12px;
+  text-transform:uppercase;letter-spacing:.05em;padding:12px 14px;
+  text-align:center;vertical-align:middle;
+  border-top:1px solid rgba(255,255,255,.15);
+}
+/* Sel pojok kiri-atas: pertemuan kepala kolom dan kolom grup. Sengaja polos
+   - dia gak mewakili kolom mana pun maupun baris mana pun. */
+.dtable th.dtable-corner{background:var(--navy);}
+
 /* timeline */
 .timeline{display:flex;flex-direction:column;gap:0;margin:10px 0 18px;}
 .tl-item{display:flex;gap:18px;position:relative;padding-bottom:28px;}

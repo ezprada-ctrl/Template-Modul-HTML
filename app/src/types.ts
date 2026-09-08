@@ -56,6 +56,11 @@ export interface KcQuestion {
   optFeedback?: string[];
 }
 
+// Rata teks yang bisa dipilih di blok Tabel Data. Nilainya bahasa Indonesia
+// biar sama dengan yang tampil di form; pemetaannya ke text-align CSS ada di
+// render_dtable (generator.py), satu tempat.
+export type RataTeks = 'kiri' | 'tengah' | 'kanan' | 'rata';
+
 export interface Block {
   id: string;
   type: BlockType;
@@ -106,6 +111,19 @@ export interface Block {
   // Undefined/empty = no group row at all, table looks exactly like before
   // this field existed.
   dtableGroups?: { label: string; span: number }[];
+  // Pasangan VERTIKAL dari dtableGroups: kolom judul di paling KIRI, tiap
+  // label menaungi beberapa BARIS (rowspan) - bukan beberapa kolom. Bentuk
+  // datanya sengaja sama persis dengan dtableGroups supaya editornya bisa
+  // dipakai ulang apa adanya dan dua arah itu terbaca sebagai satu konsep.
+  // Undefined/kosong = kolomnya gak ada sama sekali, tabel persis seperti
+  // sebelum field ini ada.
+  dtableRowGroups?: { label: string; span: number }[];
+  // Rata teks tabel, dipisah judul vs isi karena keduanya memang beda
+  // kebutuhan: judul sering pendek dan enak di tengah, isi sering kalimat
+  // panjang yang lebih enak rata kiri. Undefined = perilaku lama (kiri),
+  // jadi tabel lama render byte-identik.
+  dtableAlignHead?: RataTeks;
+  dtableAlignBody?: RataTeks;
   // flow
   steps?: { n: number; title: string; detail: string; badge?: string }[];
   // grid

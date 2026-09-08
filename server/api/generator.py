@@ -189,13 +189,36 @@ def render_dtable(b):
     # before this existed have no 'dtableGroups' key at all, so this whole
     # <tr> is simply absent and the table looks byte-identical to before.
     groups = b.get('dtableGroups') or []
-    group_row = ''
-    if groups:
-        cells = ''.join(
-            f'<th colspan="{max(1, int(g.get("span", 1)))}" class="dtable-group">{esc(g.get("label", ""))}</th>'
-            for g in groups
-        )
-        group_row = f'<tr>{cells}</tr>'
+    sel_grup = ''.join(
+        f'<th colspan="{max(1, int(g.get("span", 1)))}" class="dtable-group">{esc(g.get("label", ""))}</th>'
+        for g in groups
+    )
+
+    # Pasangan VERTIKAL dari group_row di atas: kolom judul di paling kiri,
+    # tiap label menaungi beberapa BARIS (rowspan). Kalau ada, seluruh thead
+    # butuh satu sel pojok kosong di kiri supaya kolomnya sejajar - dan sel
+    # itu harus menembus SEMUA baris kepala (1 atau 2, tergantung ada
+    # group_row atau enggak), bukan cuma barisnya sendiri.
+    row_groups = b.get('dtableRowGroups') or []
+    daftar_baris = b.get('rows', [])
+    mulai_grup = {}
+    if row_groups:
+        i = 0
+        for g in row_groups:
+            if i >= len(daftar_baris):
+                break  # span-nya sudah melewati jumlah baris - sisanya diabaikan
+            span = max(1, int(g.get('span', 1)))
+            mulai_grup[i] = (esc(g.get('label', '')), min(span, len(daftar_baris) - i))
+            i += span
+        # Baris yang gak kebagian grup TETAP butuh sel di kolom ini. Tanpa
+        # penambal ini, begitu span-nya gak menutupi semua baris, baris sisanya
+        # kehilangan satu sel dan SELURUH selnya bergeser masuk ke kolom grup -
+        # tabelnya kelihatan rusak, bukan cuma kurang label.
+        if i < len(daftar_baris):
+            mulai_grup[i] = ('', len(daftar_baris) - i)
+
+    baris_kepala = (1 if groups else 0) + 1
+    pojok = f'<th class="dtable-corner" rowspan="{baris_kepala}"></th>' if row_groups else ''
 
     headers = ''.join(f'<th>{esc(h)}</th>' for h in b.get('headers', []))
 
@@ -206,8 +229,11 @@ def render_dtable(b):
     # shrink/grow a row to produce this). A full-length row's colspan is
     # always 1, so tables authored before this existed render unchanged.
     rows = ''
-    for row in b.get('rows', []):
+    for ri, row in enumerate(daftar_baris):
         cells = ''
+        if ri in mulai_grup:
+            label, span = mulai_grup[ri]
+            cells += f'<th class="dtable-rowgroup" rowspan="{span}">{label}</th>'
         last = len(row) - 1
         for i, cell in enumerate(row):
             span = n_cols - len(row) + 1 if i == last and len(row) < n_cols else 1
@@ -215,7 +241,25 @@ def render_dtable(b):
             cells += f'<td{colspan_attr}>{esc(cell)}</td>'
         rows += f'<tr>{cells}</tr>'
 
-    return f'<table class="dtable"><thead>{group_row}<tr>{headers}</tr></thead><tbody>{rows}</tbody></table>'
+    # Rata teks: kelas ditaruh di <table>, bukan di tiap sel - satu tempat,
+    # dan output tabel lama tetap byte-identik karena kelasnya cuma muncul
+    # kalau penyusunnya benar-benar memilih. 'kiri' pun ikut ditulis supaya
+    # pilihan eksplisit tetap menang atas apa pun aturan bawaan.
+    kelas = ['dtable']
+    if b.get('dtableAlignHead'):
+        kelas.append('th-' + b['dtableAlignHead'])
+    if b.get('dtableAlignBody'):
+        kelas.append('td-' + b['dtableAlignBody'])
+    cls = ' '.join(kelas)
+
+    # Pojok nempel di baris kepala PERTAMA - baris grup kalau ada, kalau gak
+    # ada ya baris kolom - karena dari situ rowspan-nya turun menembus sisanya.
+    if sel_grup:
+        head = f'<tr>{pojok}{sel_grup}</tr><tr>{headers}</tr>'
+    else:
+        head = f'<tr>{pojok}{headers}</tr>'
+
+    return f'<table class="{cls}"><thead>{head}</thead><tbody>{rows}</tbody></table>'
 
 
 FLOW_DATA = {}  # collected across the whole generation pass, flushed after SLIDES map

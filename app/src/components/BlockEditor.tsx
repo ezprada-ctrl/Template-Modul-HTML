@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { Block, BlockType } from '../types';
+import type { Block, BlockType, RataTeks } from '../types';
 import { newBlock, changeBlockType, isBlockEmpty, extractBlockText, POPUP_BLOCK_TYPES } from '../types';
 import type { KcQuestion } from '../types';
 import EmojiPicker from './EmojiPicker';
@@ -836,10 +836,36 @@ type FieldStyle = CSSProperties;
 // blank cell to grow back out. Repeat "− gabung" to merge more than two -
 // e.g. on a 4-column row, two clicks turns [a,b,c,d] into [a, "b c d"],
 // matching a label column (a) next to one cell spanning the other 3.
+// Pemilih rata teks. <select> yang ringkas, bukan empat tombol berjejer:
+// pilihannya saling meniadakan dan jarang diutak-atik, jadi tombol cuma makan
+// lebar di form yang sudah paling padat di antara semua blok.
+// Nilai kosong = "Kiri" - itu memang tampilan bawaannya, dan menuliskannya
+// begitu lebih jujur daripada label "Bawaan" yang gak bilang bawaannya apa.
+const PILIHAN_RATA: { v: RataTeks; t: string }[] = [
+  { v: 'kiri', t: 'Kiri' },
+  { v: 'tengah', t: 'Tengah' },
+  { v: 'kanan', t: 'Kanan' },
+  { v: 'rata', t: 'Rata kanan-kiri' },
+];
+function PilihRata({ label, nilai, onPilih }: {
+  label: string; nilai?: RataTeks; onPilih: (v: RataTeks) => void;
+}) {
+  return (
+    <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-dim)' }}>
+      {label}
+      <select style={{ fontSize: 12, padding: '2px 4px' }} value={nilai || 'kiri'}
+        onChange={e => onPilih(e.target.value as RataTeks)}>
+        {PILIHAN_RATA.map(o => <option key={o.v} value={o.v}>{o.t}</option>)}
+      </select>
+    </label>
+  );
+}
+
 function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle }) {
   const headers = block.headers || [];
   const rows = block.rows || [];
   const groups = block.dtableGroups || [];
+  const rowGroups = block.dtableRowGroups || [];
   const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
   const cellInp: FieldStyle = { ...inp, flex: 1, minWidth: 0, marginBottom: 0 };
 
@@ -885,14 +911,44 @@ function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Pa
     });
   }
 
-  function setGroup(i: number, patch: Partial<{ label: string; span: number }>) {
-    onChange({ dtableGroups: groups.map((g, x) => (x === i ? { ...g, ...patch } : g)) });
-  }
-  function addGroup() {
-    onChange({ dtableGroups: [...groups, { label: '', span: 1 }] });
-  }
-  function removeGroup(i: number) {
-    onChange({ dtableGroups: groups.filter((_, x) => x !== i) });
+  // Satu penyunting buat DUA arah grup (mendatar di atas kolom, tegak di kiri
+  // baris). Bentuk datanya identik, jadi menyalin-tempel dua blok JSX yang
+  // sama cuma bikin keduanya pelan-pelan beda sendiri - persis alasan segBtn
+  // dan JudulOpsional dijadikan satu.
+  function DaftarGrup({ arah, daftar, batas, judul, petunjukSpan }: {
+    arah: 'dtableGroups' | 'dtableRowGroups';
+    daftar: { label: string; span: number }[];
+    batas: number;
+    judul: string;
+    petunjukSpan: string;
+  }) {
+    const ubah = (i: number, patch: Partial<{ label: string; span: number }>) =>
+      onChange({ [arah]: daftar.map((g, x) => (x === i ? { ...g, ...patch } : g)) } as Partial<Block>);
+    return (
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 11, color: 'var(--text-faint)', margin: '0 0 3px' }}>{judul}</div>
+        {daftar.map((g, i) => (
+          <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 4, alignItems: 'center' }}>
+            <input
+              style={{ ...inp, flex: 1, marginBottom: 0 }}
+              placeholder="Label (boleh kosong)"
+              title="Kosongkan buat sel kosong — biasanya pojok kiri tabel"
+              value={g.label}
+              onChange={e => ubah(i, { label: e.target.value })}
+            />
+            <input
+              type="number" min={1} max={batas || 1} style={{ width: 50, fontSize: 13 }} value={g.span}
+              title={petunjukSpan}
+              onChange={e => ubah(i, { span: Math.max(1, parseInt(e.target.value, 10) || 1) })}
+            />
+            <button title="Hapus grup ini"
+              onClick={() => onChange({ [arah]: daftar.filter((_, x) => x !== i) } as Partial<Block>)}>×</button>
+          </div>
+        ))}
+        <button style={{ fontSize: 11 }}
+          onClick={() => onChange({ [arah]: [...daftar, { label: '', span: 1 }] } as Partial<Block>)}>+ grup</button>
+      </div>
+    );
   }
 
   return (
@@ -908,23 +964,26 @@ function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Pa
       </div>
       <button onClick={addColumn} style={{ marginBottom: 10 }}>+ kolom</button>
 
+      {/* Rata teks: satu baris, dua pilihan. Sengaja gak dikasih paragraf
+          penjelas - label "Judul"/"Isi" plus isi pilihannya sudah menjelaskan
+          dirinya sendiri, dan form tabel ini sudah paling padat di antara
+          semua blok. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 10px', flexWrap: 'wrap' }}>
+        <span style={{ ...lbl, margin: 0 }}>Rata teks</span>
+        <PilihRata label="Judul" nilai={block.dtableAlignHead} onPilih={v => onChange({ dtableAlignHead: v })} />
+        <PilihRata label="Isi" nilai={block.dtableAlignBody} onPilih={v => onChange({ dtableAlignBody: v })} />
+      </div>
+
       <label style={lbl}>
         Header grup (opsional)
         <span style={{ display: 'block', fontWeight: 400, color: 'var(--text-faint)', marginTop: 2 }}>
-          Baris judul tambahan DI ATAS baris kolom di atas — buat menaungi beberapa kolom sekaligus (mis. "Mitra Transaksi" menaungi 3 kolom SPDN/SPLN di bawahnya). Kosongkan label + span 1 buat sel kosong (biasanya kolom paling kiri, yang isinya label baris).
+          Menaungi beberapa kolom atau baris.
         </span>
       </label>
-      {groups.map((g, i) => (
-        <div key={i} style={{ display: 'flex', gap: 4, marginBottom: 4, alignItems: 'center' }}>
-          <input style={{ ...inp, flex: 1, marginBottom: 0 }} placeholder="Label grup (boleh kosong)" value={g.label}
-            onChange={e => setGroup(i, { label: e.target.value })} />
-          <input type="number" min={1} max={headers.length || 1} style={{ width: 50, fontSize: 13 }} value={g.span}
-            title="Jumlah kolom yang dinaungi label ini"
-            onChange={e => setGroup(i, { span: Math.max(1, parseInt(e.target.value, 10) || 1) })} />
-          <button title="Hapus grup ini" onClick={() => removeGroup(i)}>×</button>
-        </div>
-      ))}
-      <button onClick={addGroup} style={{ marginBottom: 10 }}>+ grup header</button>
+      <DaftarGrup arah="dtableGroups" daftar={groups} batas={headers.length}
+        judul="↔ Mendatar, di atas kolom" petunjukSpan="Jumlah kolom yang dinaungi label ini" />
+      <DaftarGrup arah="dtableRowGroups" daftar={rowGroups} batas={rows.length}
+        judul="↕ Tegak, di kiri baris" petunjukSpan="Jumlah baris yang dinaungi label ini" />
 
       <label style={lbl}>Baris</label>
       {rows.map((row, ri) => {
