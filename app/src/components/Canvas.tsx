@@ -559,6 +559,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove, onPilihSl
           tabIndex={0}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alihkanEditor(); } }}
           title="Klik untuk edit judul & isi slide"
+          className={open ? 'judul-disunting' : undefined}
           /* Judul slide yang lagi digarap ditebalkan & sedikit dibesarkan,
              plus garis bawah tipis sewarna --edit. Sengaja BUKAN blok warna
              penuh: kepala baris ini menempel di atas layar selama menyunting,

@@ -40,6 +40,10 @@
      digeser di satu tempat, bukan tersebar di beberapa aturan. */
   --edit:          #6f76d6;
   --edit-soft:     rgba(111, 118, 214, 0.16);
+  /* Puncak sekeping cahaya yang lewat di judul slide yang lagi disunting -
+     lihat .judul-disunting. Putih di tema terang: yang ditiru pantulan kaca,
+     dan pantulan selalu lebih terang dari yang dipantulkan. */
+  --kilau-puncak:  rgba(255, 255, 255, 0.85);
 
   --radius-sm: 7px;
   --radius:    10px;
@@ -87,6 +91,9 @@
      tenggelam di atas --surface yang gelap. */
   --edit:          #9aa2f2;
   --edit-soft:     rgba(154, 162, 242, 0.20);
+  /* Di tema gelap putih pekat jadi lampu sorot. Yang dipakai nada --edit
+     sendiri yang diterangkan, jadi kilaunya tetap sewarna penandanya. */
+  --kilau-puncak:  rgba(196, 202, 255, 0.38);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow:    0 4px 18px -6px rgba(0, 0, 0, 0.55);
@@ -220,6 +227,63 @@ button:disabled:hover { background: var(--surface-2); border-color: var(--border
   /* Petunjuknya tetap ada, cuma diam: buat yang mematikan animasi di
      sistemnya, kehilangan denyut gak boleh berarti kehilangan pengingatnya. */
   .btn-tutup-editor { animation: none; box-shadow: 0 0 0 2px var(--ring); }
+}
+
+/* ---- Judul slide yang lagi disunting: kilau lewat + denyut garis ----
+   Kepala baris slide menempel di atas layar selama menyunting, jadi
+   penandanya harus kebaca dari sudut mata tanpa pernah menuntut dibaca
+   ulang. Dua lapis, dua-duanya tipis:
+
+   1. Sekeping cahaya bening yang lewat dari kiri ke kanan, lalu diam. Karena
+      dia BERGERAK, mata menangkapnya sekali lalu melepasnya - beda dengan
+      warna menetap yang harus terus diabaikan. Warnanya --edit-soft yang
+      diberi puncak putih tipis, jadi kesannya kaca yang kena sorot, bukan
+      pita berwarna.
+   2. Garis bawahnya bernapas antara --edit-soft dan --edit. Denyut inilah
+      yang tetap menandai slide ini di antara dua kilau.
+
+   Siklusnya 2,6 detik: kilaunya sendiri cuma ~1,2 detik, sisanya sengaja
+   diam. Kalau kilaunya beruntun tanpa jeda, yang tadinya penanda berubah
+   jadi kerlip yang bikin gak betah. */
+.judul-disunting {
+  position: relative;
+  overflow: hidden;
+  animation: denyut-garis-judul 2.6s ease-in-out infinite;
+}
+.judul-disunting::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;   /* teksnya tetap bisa diklik buat buka/tutup */
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    var(--edit-soft) 38%,
+    var(--kilau-puncak) 50%,
+    var(--edit-soft) 62%,
+    transparent 100%
+  );
+  /* Dimulai di luar kiri; keluar lagi di luar kanan. 60% supaya pitanya
+     sempit - sekeping cahaya, bukan seluruh judul ikut berwarna. */
+  width: 60%;
+  transform: translateX(-180%);
+  animation: kilau-judul 2.6s ease-in-out infinite;
+}
+@keyframes kilau-judul {
+  0%        { transform: translateX(-180%); }
+  /* Sesudah 46% dia sudah di luar layar dan DIAM di sana sampai siklus
+     berikutnya - itu jedanya. */
+  46%, 100% { transform: translateX(300%); }
+}
+@keyframes denyut-garis-judul {
+  0%, 100% { border-bottom-color: var(--edit-soft); }
+  50%      { border-bottom-color: var(--edit); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Penandanya tetap ada, cuma berhenti bergerak - garis --edit yang tegas
+     menggantikan tugas kilau & denyutnya. */
+  .judul-disunting { animation: none; border-bottom-color: var(--edit) !important; }
+  .judul-disunting::after { display: none; }
 }
 
 .btn-danger { color: var(--danger); }
