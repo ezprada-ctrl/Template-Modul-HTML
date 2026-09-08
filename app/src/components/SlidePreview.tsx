@@ -31,6 +31,11 @@ const LEBAR_LOGIS = 1280;
 // sampul & kartu ikut goyang dan preview berhenti mewakili layar beneran.
 const TINGGI_LOGIS = 800;
 
+// Lebar sidebar modul dalam satuan layar logis di atas - #sidebar di
+// shell-template.html. Dipakai buat menaruh & mengukur petunjuk klik-dua-kali
+// tepat di atas sidebar itu; kalau angka di sana berubah, angka ini ikut.
+const LEBAR_SIDEBAR = 314;
+
 // Batas zoom manual. Di bawah 25% teks modulnya udah gak kebaca sama sekali;
 // di atas 300% yang kelihatan cuma piksel yang direntang - dua-duanya bukan
 // sesuatu yang berguna buat ngecek tata letak.
@@ -426,6 +431,20 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
       )
     : '';
 
+  // Petunjuk klik-dua-kali diukur & diluruskan ke sidebar di dalam iframe.
+  const lebarPetunjuk = LEBAR_SIDEBAR * skala;
+  // Jarak tepi kiri iframe dari tepi kiri panel - wadahnya menengahkan isinya
+  // (justifyContent:'safe center'), jadi begitu preview lebih kecil dari panel
+  // ada sisa di kiri yang harus ikut dihitung. Kalau preview-nya LEBIH LEBAR,
+  // sisanya nol dan petunjuknya rata kiri, sama seperti iframe-nya.
+  const offsetKiri = Math.max(0, (panel.w - LEBAR_LOGIS * skala) / 2);
+  // Kalimatnya ~48 karakter dan gak boleh patah dua baris. Rumusnya bikin
+  // hurufnya menciut mengikuti sidebar, tapi DIREM di 8,5px: di bawah itu
+  // petunjuknya berhenti terbaca dan mendingan dia meleber sedikit melewati
+  // sidebar daripada jadi garis abu-abu tanpa makna. Batas atas 11px supaya
+  // waktu preview di-zoom besar dia gak berubah jadi judul.
+  const fontPetunjuk = Math.min(11, Math.max(8.5, lebarPetunjuk / 26));
+
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', height: '100%', minHeight: 420, display: 'flex', flexDirection: 'column', background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
       <div style={{ padding: '8px 12px', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--text-faint)', display: 'flex', justifyContent: 'space-between' }}>
@@ -467,12 +486,22 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
           seperti bagian dari modul yang lagi disusun, padahal ini perkakas
           editor. Di sini dia juga gak pernah menutupi apa pun.
 
+          Diluruskan PERSIS di atas sidebar: lebarnya selebar sidebar
+          (dikalikan skala yang sama dengan iframe-nya) dan digeser sejauh
+          jarak iframe dari tepi kiri panel - jadi petunjuknya menunjuk ke
+          benda yang dimaksud, bukan mengambang di tengah panel.
+
           Nadanya sengaja samar (--text-faint di atas --surface-2) dan cuma
           bernapas pelan lewat opacity: cukup kebaca kalau matanya mampir,
           gak menuntut apa-apa kalau lagi fokus ke isinya. */}
       {onPilihSlide && (
-        <div className="pv-petunjuk-strip">
-          Klik 2× slide di <i>sidebar</i> — langsung terbuka di editor
+        <div style={{ paddingLeft: offsetKiri, background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
+          <div
+            className="pv-petunjuk-strip"
+            style={{ width: lebarPetunjuk, fontSize: fontPetunjuk }}
+          >
+            Klik 2× slide di <i>sidebar</i> — langsung terbuka di editor
+          </div>
         </div>
       )}
       {error && <p style={{ color: 'var(--danger)', fontSize: 12, padding: 10 }}>{error}</p>}

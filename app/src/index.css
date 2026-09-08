@@ -293,14 +293,16 @@ button:disabled:hover { background: var(--surface-2); border-color: var(--border
    dan bikin bingung. Yang menjaganya tetap kelihatan bukan warna, tapi napas
    opacity yang pelan (3,4 detik sekali tarikan). */
 .pv-petunjuk-strip {
-  padding: 5px 12px 6px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-2);
+  /* Lebar & ukuran hurufnya dipasang dari SlidePreview.tsx - dua-duanya ikut
+     lebar sidebar di dalam iframe, yang berubah tiap zoom & resize panel. */
+  padding: 4px 2px 5px;
   color: var(--text-faint);
-  font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   text-align: center;
+  /* Satu baris, apa pun yang terjadi: petunjuk dua baris di atas sidebar
+     kelihatan seperti paragraf dan berhenti dibaca sebagai petunjuk. */
+  white-space: nowrap;
   user-select: none;
   animation: napas-petunjuk 3.4s ease-in-out infinite;
 }
