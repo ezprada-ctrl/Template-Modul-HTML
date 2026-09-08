@@ -935,10 +935,17 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
    "dokumen ini lagi dilihat di panel editor". */
 
 [data-blok].blok-disorot{
-  outline:2px solid var(--accent);
-  outline-offset:3px;
-  border-radius:2px;
-  animation:sorot-blok 2.6s ease-in-out infinite;
+  /* Putus-putus & tipis, BUKAN garis penuh. Garis 2px yang pekat kebaca
+     sebagai bagian dari bentuk bloknya sendiri - penyusunnya mengira blok itu
+     memang punya bingkai tebal, padahal itu cuma sorotan editor. Garis
+     putus-putus gak pernah tertukar dengan bingkai beneran: gak ada blok di
+     modul ini yang digambar begitu. Karena bentuknya sudah asing, kepekatan
+     warnanya boleh diturunkan jauh tanpa bikin bloknya susah ditemukan -
+     yang menandai bentuknya, bukan tebalnya. */
+  outline:1px dashed color-mix(in srgb,var(--accent) 55%,transparent);
+  outline-offset:4px;
+  border-radius:3px;
+  animation:sorot-blok 2.8s ease-in-out infinite;
 }
 /* Berdenyut TERUS selama blok itu masih yang digarap, bukan sekali lalu padam:
    penanda "sedang diedit" di panel kiri juga menyala terus, jadi kalau yang
@@ -951,13 +958,13 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
    Gak pernah benar-benar padam (batas bawahnya masih kelihatan) supaya
    bloknya tetap ketemu kapan pun mata menoleh. */
 @keyframes sorot-blok{
-  0%,100% { outline-color:color-mix(in srgb,var(--accent) 35%,transparent); }
-  50%     { outline-color:var(--accent); }
+  0%,100% { outline-color:color-mix(in srgb,var(--accent) 22%,transparent); }
+  50%     { outline-color:color-mix(in srgb,var(--accent) 62%,transparent); }
 }
 @media (prefers-reduced-motion:reduce){
   /* Denyutnya mati, garisnya TETAP ada - kehilangan gerak gak boleh berarti
      kehilangan penandanya. */
-  [data-blok].blok-disorot{ animation:none; outline-color:var(--accent); }
+  [data-blok].blok-disorot{ animation:none; outline-color:color-mix(in srgb,var(--accent) 60%,transparent); }
 }
 .modal-overlay{
   position:fixed;inset:0 0 0 314px;background:rgba(15,18,26,.55);backdrop-filter:blur(2px);
