@@ -502,7 +502,14 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
         <select value={slide.sectionId} onChange={e => onUpdate({ sectionId: e.target.value })} title="Pindah ke section lain">
           {module.sections.map(sec => <option key={sec.id} value={sec.id}>{sec.icon}. {sec.short}</option>)}
         </select>
-        <button className={open ? 'btn-primary btn-sm' : 'btn-sm'} onClick={alihkanEditor}>{open ? 'Tutup' : 'Edit blok'}</button>
+        {/* Kelas denyutnya cuma waktu kebuka: tombol "Edit blok" gak perlu
+            diundang-undang, dan kalau semua baris ikut berdenyut daftar
+            slidenya malah jadi berkedip semua. */}
+        <button
+          className={open ? 'btn-primary btn-sm btn-tutup-editor' : 'btn-sm'}
+          onClick={alihkanEditor}
+          title={open ? 'Tutup kertas kerja slide ini' : undefined}
+        >{open ? 'Tutup' : 'Edit blok'}</button>
         <button className="btn-danger btn-sm" onClick={onRemove}>Hapus</button>
       </div>
       {open && (

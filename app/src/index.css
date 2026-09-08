@@ -194,6 +194,34 @@ button:disabled:hover { background: var(--surface-2); border-color: var(--border
 }
 .btn-primary:disabled { background: var(--surface-3); border-color: var(--border); color: var(--text-faint); }
 
+/* Tombol "Tutup" milik editor slide yang lagi kebuka.
+   Editornya panjang - gampang berpindah ke slide lain sambil meninggalkan
+   yang ini menganga, lalu bingung sendiri kenapa halamannya jadi panjang
+   banget. Denyut halus ini yang mengingatkan, tanpa perlu modal atau
+   peringatan yang menghentikan pekerjaan.
+
+   Sengaja pakai var(--ring) - warna cincin yang sudah dipakai fokus dan
+   hover di seluruh aplikasi, dan sudah punya nilai sendiri di tema terang
+   maupun gelap. Jadi denyutnya nyambung dengan bahasa visual yang ada, bukan
+   warna baru yang muncul entah dari mana.
+
+   Lambat (3s) dan mentok di 3px: yang diminta pengingat, bukan alarm. Napas
+   pelan kebaca di sudut mata sementara orangnya mengetik, sedangkan kedip
+   cepat malah bikin pengin buru-buru menutup padahal belum selesai. */
+@keyframes denyut-tutup {
+  0%, 100% { box-shadow: 0 0 0 0 var(--ring); }
+  50%      { box-shadow: 0 0 0 3px var(--ring), 0 5px 18px -5px var(--ring); }
+}
+.btn-tutup-editor { animation: denyut-tutup 3s ease-in-out infinite; }
+/* Begitu kursornya sampai, undangannya sudah selesai tugasnya - denyut yang
+   jalan terus di bawah kursor cuma bikin tombolnya kelihatan goyang. */
+.btn-tutup-editor:hover { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  /* Petunjuknya tetap ada, cuma diam: buat yang mematikan animasi di
+     sistemnya, kehilangan denyut gak boleh berarti kehilangan pengingatnya. */
+  .btn-tutup-editor { animation: none; box-shadow: 0 0 0 2px var(--ring); }
+}
+
 .btn-danger { color: var(--danger); }
 .btn-danger:hover { background: var(--danger-soft); border-color: var(--danger); color: var(--danger-hover); }
 
