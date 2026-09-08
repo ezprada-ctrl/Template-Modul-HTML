@@ -772,6 +772,10 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .cp-result.show{display:block;animation:riseIn .4s ease;}
 .cp-score{font-size:42px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;color:var(--accent-2);margin-bottom:4px;}
 .cp-score-lbl{color:var(--text-dim);font-size:13.5px;margin-bottom:20px;}
+/* Jejak percobaan di bawah skor: "Percobaan 2 dari 3. Nilai tertinggimu 8/10."
+   Sengaja lebih kecil & lebih pudar dari label skornya - ini catatan kaki
+   administratif, bukan hasil yang sedang dibaca peserta. */
+.cp-attempts{color:var(--text-faint);font-size:12px;margin:-12px 0 18px;}
 
 /* summary screen */
 .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:26px 0;}
@@ -1865,6 +1869,44 @@ const HAS_ART = ART_PACKAGED && Object.keys(SLIDE_ART).length > 0;
 /* ---------------- Quiz data ---------------- */
 const QUIZZES = __QUIZZES_JS__;
 
+/* Aturan kelulusan per section: { lulusPersen, maksPercobaan }.
+   Sudah diratakan generator (bawaan modul + timpaan section digabung di
+   sana), jadi di sini gak ada lagi urusan warisan setelan - tinggal pakai.
+   maksPercobaan 0 = tak terbatas. */
+const QUIZ_POLICY = __QUIZ_POLICY_JS__;
+function quizLulusPersen(sectionId){
+  const p = QUIZ_POLICY[sectionId];
+  return p && typeof p.lulusPersen === 'number' ? p.lulusPersen : 100;
+}
+function quizMaksPercobaan(sectionId){
+  const p = QUIZ_POLICY[sectionId];
+  return p && typeof p.maksPercobaan === 'number' ? p.maksPercobaan : 0;
+}
+/* Berapa soal MINIMAL yang harus benar. Dibulatkan ke ATAS: "lulus 70%" dari
+   10 soal artinya 7 soal, dan dari 3 soal artinya 3 - membulatkan ke bawah
+   bakal diam-diam menurunkan standar yang sudah ditetapkan wali program. */
+function quizAmbangSoal(sectionId){
+  const qs = QUIZZES[sectionId] || [];
+  return Math.ceil(qs.length * quizLulusPersen(sectionId) / 100);
+}
+function quizPercobaanTerpakai(sectionId){
+  return (state.quizAttempts || {})[sectionId] || 0;
+}
+/* Sisa jatah. Infinity kalau tak terbatas - sengaja angka, bukan null, biar
+   pemanggilnya cukup menulis `sisa > 0` tanpa cabang khusus. */
+function quizSisaPercobaan(sectionId){
+  const maks = quizMaksPercobaan(sectionId);
+  if(!maks) return Infinity;
+  return Math.max(0, maks - quizPercobaanTerpakai(sectionId));
+}
+/* Nilai TERTINGGI yang pernah dicapai di section ini (jumlah soal benar).
+   Ini yang dipakai buat menilai & menggerbang, bukan skor percobaan terakhir:
+   kebijakan kantor membolehkan mengulang walau sudah lulus, dan mengulang
+   gak boleh bisa MENGHAPUS kelulusan yang sudah sah. */
+function quizSkorTerbaik(sectionId){
+  return (state.quizBest || {})[sectionId] || 0;
+}
+
 /* Multi-slide bundles per section (tampil sebagai 1 poin expandable di sidebar) */
 const MULTI_GROUPS = __MULTI_GROUPS_JS__;
 
@@ -2170,7 +2212,11 @@ function toggleTheme(){
    resolveReadingWarning) - tetap disimpen di state biasa (bukan cuma
    activity buffer) karena harus tahan lintas sesi/reload, gak cuma
    sekali jalan. */
-let state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}, artDone:{}};
+/* quizBest & quizAttempts sengaja DIPISAH dari quizAnswers/quizSubmitted:
+   dua yang terakhir isinya percobaan yang lagi berjalan (dikosongkan tiap
+   Ulangi), dua yang baru ini riwayat yang gak boleh hilang - nilai tertinggi
+   dan berapa jatah yang sudah kepakai. */
+let state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, quizBest:{}, quizAttempts:{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}, artDone:{}};
 
 function loadState(){
   scormInit();
@@ -2858,7 +2904,12 @@ function quizScore(sectionId){
 function isQuizPassed(sectionId){
   const qs = QUIZZES[sectionId];
   if(!qs || !qs.length) return true; // no quiz authored for this section - nothing to pass, don't gate on it
-  return !!state.quizSubmitted[sectionId] && quizScore(sectionId) === qs.length;
+  // Dinilai dari skor TERBAIK sepanjang semua percobaan, bukan dari percobaan
+  // yang lagi terbuka di layar. Dua alasannya: (1) peserta yang sudah lulus
+  // lalu mengulang buat mengejar nilai gak boleh kehilangan kelulusannya di
+  // tengah percobaan baru yang belum selesai; (2) kebijakan kantor memang
+  // mengambil nilai tertinggi.
+  return quizSkorTerbaik(sectionId) >= quizAmbangSoal(sectionId);
 }
 function isQuizAccessible(sectionId){
   if(devMode) return true;
@@ -3281,8 +3332,35 @@ function renderQuiz(section){
   }
 
   const correctCount = questions.filter((q,qi)=>answers[qi]===q.correct).length;
-  const passed = correctCount===questions.length;
+  const ambang = quizAmbangSoal(section);
+  const terbaik = quizSkorTerbaik(section);
+  // Lulus di layar ini dinilai dari skor TERBAIK, bukan dari percobaan yang
+  // barusan: peserta yang sudah lulus lalu mengulang buat mengejar nilai dan
+  // hasilnya lebih jelek tetap lulus - dia gak boleh dikabari sebaliknya.
+  const passed = isQuizPassed(section);
+  const sisa = quizSisaPercobaan(section);
+  const bolehUlang = sisa > 0;
   const isLastSection = section===SECTIONS[SECTIONS.length-1].id;
+
+  /* Baris kecil di bawah skor: jatah yang kepakai & nilai terbaik. Cuma
+     ditampilkan kalau memang ADA yang perlu diketahui - modul dengan ulangan
+     tak terbatas yang baru dikerjakan sekali gak perlu diberi tahu apa-apa. */
+  const dipakai = quizPercobaanTerpakai(section);
+  const maks = quizMaksPercobaan(section);
+  let jejak = '';
+  if(maks) jejak += `Percobaan ${dipakai} dari ${maks}.`;
+  else if(dipakai > 1) jejak += `Percobaan ke-${dipakai}.`;
+  if(dipakai > 1) jejak += ` Nilai tertinggimu: ${terbaik}/${questions.length}.`;
+  const jejakHtml = jejak ? `<div class="cp-attempts">${jejak}</div>` : '';
+
+  /* Tombol ulang tetap ditawarkan ke yang SUDAH lulus - kebijakan kantor
+     membolehkan mengejar nilai lebih tinggi, dan karena yang dipakai selalu
+     nilai tertinggi, mencoba lagi gak pernah merugikan. Kalimatnya dibedakan
+     supaya gak kebaca sebagai "kamu harus mengulang". */
+  const tombolUlang = bolehUlang
+    ? `<button class="nav-btn${passed?'':' primary'}" onclick="retryQuiz('${section}')">↺ ${passed ? 'Coba lagi (kejar nilai lebih tinggi)' : 'Ulangi Kuis'}</button>`
+    : '';
+
   const resultInner = !submitted ? '' : passed ? (isLastSection ? `
     <div class="cp-final">
       <div class="cp-final-glow"></div>
@@ -3290,14 +3368,23 @@ function renderQuiz(section){
       <div class="cp-final-title">Selamat!<br>Kamu telah menyelesaikan materi<br><b>${MODULE_TITLE}</b></div>
       <div class="cp-final-sub">Seluruh section dan kuis checkpoint sudah kamu lewati dengan baik.</div>
     </div>
+    ${jejakHtml}
+    ${tombolUlang}
   ` : `
-    <div class="cp-score">${correctCount}/${questions.length}</div>
-    <div class="cp-score-lbl">Semua jawaban benar pada bagian ${secTitle} — kamu lulus.</div>
+    <div class="cp-score">${terbaik}/${questions.length}</div>
+    <div class="cp-score-lbl">Kamu lulus bagian ${secTitle} — nilai minimalnya ${ambang}/${questions.length}.</div>
+    ${jejakHtml}
     <button class="nav-btn primary" onclick="goNext()">Lanjut →</button>
-  `) : `
+    ${tombolUlang}
+  `) : bolehUlang ? `
     <div class="cp-score" style="color:var(--rose);">${correctCount}/${questions.length}</div>
-    <div class="cp-score-lbl">Belum semua jawaban benar. Pelajari kembali materi atau langsung coba kuis ini lagi.</div>
-    <button class="nav-btn primary" onclick="retryQuiz('${section}')">↺ Ulangi Kuis</button>
+    <div class="cp-score-lbl">Belum mencapai nilai minimal (${ambang}/${questions.length}). Pelajari kembali materi atau langsung coba kuis ini lagi.</div>
+    ${jejakHtml}
+    ${tombolUlang}
+  ` : `
+    <div class="cp-score" style="color:var(--rose);">${terbaik}/${questions.length}</div>
+    <div class="cp-score-lbl">Jatah mengerjakan kuis ini sudah habis (${maks}×). Nilai tertinggimu ${terbaik}/${questions.length}, sedangkan nilai minimalnya ${ambang}/${questions.length}.<br>Materi tetap bisa kamu baca ulang kapan saja — hubungi wali program untuk langkah selanjutnya.</div>
+    ${jejakHtml}
   `;
   html += `<div class="cp-result${submitted?' show':''}" id="cp-result-${section}">${resultInner}</div>`;
 
@@ -4422,12 +4509,31 @@ function answerQuiz(section, qi, oi){
 }
 function submitQuiz(section){
   state.quizSubmitted[section]=true;
+  const skor = quizScore(section);
+  const total = (QUIZZES[section]||[]).length;
+  if(!state.quizAttempts) state.quizAttempts = {};
+  if(!state.quizBest) state.quizBest = {};
+  state.quizAttempts[section] = quizPercobaanTerpakai(section) + 1;
+  // Cuma NAIK. Percobaan yang lebih jelek gak pernah menimpa yang lebih baik -
+  // itu inti "yang diambil nilai tertinggi".
+  if(skor > quizSkorTerbaik(section)) state.quizBest[section] = skor;
   saveState();
   actEvent('quiz_submit', {
     section: section,
-    skor: quizScore(section),
-    total: (QUIZZES[section]||[]).length,
-    lulus: isQuizPassed(section)
+    skor: skor,
+    total: total,
+    // Semua angka penilaian ikut dikirim mentah supaya Command Center gak
+    // perlu menebak aturan yang berlaku di modul ini: kebijakannya beda-beda
+    // per program, dan rekaman lama harus tetap bisa dibaca dengan aturan
+    // yang berlaku SAAT ITU, bukan aturan hari ini.
+    persen: total ? Math.round(skor / total * 100) : 0,
+    lulus: skor >= quizAmbangSoal(section),
+    percobaan: state.quizAttempts[section],
+    skor_terbaik: quizSkorTerbaik(section),
+    persen_terbaik: total ? Math.round(quizSkorTerbaik(section) / total * 100) : 0,
+    lulus_terbaik: isQuizPassed(section),
+    min_lulus_persen: quizLulusPersen(section),
+    maks_percobaan: quizMaksPercobaan(section)
   });
   if(isQuizPassed(section)) playQuizPassSound(); else playQuizFailSound();
   render({preserveScroll:true});
@@ -4437,6 +4543,10 @@ function submitQuiz(section){
   },100);
 }
 function retryQuiz(section){
+  // Jatah habis = tombolnya memang gak dirender, tapi tetap dijaga di sini:
+  // renderQuiz() bukan satu-satunya jalan masuk (onclick bisa dipanggil dari
+  // konsol), dan gerbang yang cuma hidup di tampilan bukan gerbang.
+  if(quizSisaPercobaan(section) <= 0) return;
   actEvent('quiz_retry', { section: section });
   state.quizAnswers[section] = {};
   state.quizSubmitted[section] = false;
@@ -4625,7 +4735,16 @@ function resetProgress(){
      orang. Kalau ikut dihapus, sesi rekam yang lagi jalan bakal lanjut tanpa
      identitas diam-diam (gerbangnya cuma muncul sekali di INIT). */
   const identity = state.identity;
-  state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}};
+  /* Nilai tertinggi & jatah yang sudah kepakai SENGAJA ikut dipertahankan,
+     sama alasannya dengan identitas di atas: ini tombol reset PROGRES BACA,
+     bukan penghapus riwayat penilaian. Kalau ikut dihapus, tombol ini jadi
+     jalan resmi buat mengulang kuis tanpa batas - jatah yang ditetapkan wali
+     program berubah jadi hiasan. (Membersihkan localStorage dari luar tetap
+     bisa, tapi yang dianggap sah adalah hitungan di Command Center, yang
+     datanya dari server dan gak bisa disentuh dari sisi peserta.) */
+  const quizBest = state.quizBest;
+  const quizAttempts = state.quizAttempts;
+  state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, quizBest:quizBest||{}, quizAttempts:quizAttempts||{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}};
   if(identity) state.identity = identity;
   saveState();
   currentIdx = 0;

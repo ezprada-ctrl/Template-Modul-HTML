@@ -431,7 +431,15 @@ export default function CommandCenter() {
         terakhir: l.terakhir,
       };
       for (const slug of semuaSlug) {
-        r[`menit_${slug}`] = l.modul[slug] ? Math.round(l.modul[slug].durasi_ms / 6000) / 10 : '';
+        const m = l.modul[slug];
+        r[`menit_${slug}`] = m ? Math.round(m.durasi_ms / 6000) / 10 : '';
+        // Nilai & status per modul - inti laporan ke wali program. Kosong
+        // (bukan 0) kalau peserta belum pernah menyerahkan kuis modul itu:
+        // "belum mengerjakan" dan "mengerjakan lalu dapat 0" dua hal yang
+        // beda, dan menyamakannya bikin rekap salah baca.
+        r[`nilai_${slug}`] = m && m.nilai != null ? m.nilai : '';
+        r[`lulus_${slug}`] = m && m.lulus != null ? (m.lulus ? 'LULUS' : 'BELUM') : '';
+        r[`percobaan_${slug}`] = m && m.percobaan_maks_terpakai != null ? m.percobaan_maks_terpakai : '';
       }
       return r;
     });
@@ -615,7 +623,7 @@ export default function CommandCenter() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
-                      {['Peserta', 'Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan'].map((h, i) => (
+                      {['Peserta', 'Modul', 'Nilai per Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan'].map((h, i) => (
                         <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)', ...(i === 0 ? TH_NAMA : {}) }}>{h}</th>
                       ))}
                     </tr>
@@ -650,6 +658,36 @@ export default function CommandCenter() {
                           <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 1, whiteSpace: 'normal', maxWidth: 190 }}>
                             {l.modul_slugs.map(slug => judulModul(slug)).join(', ')}
                           </div>
+                        </td>
+                        {/* Nilai akhir per modul - satu baris per modul, bukan satu
+                            angka gabungan: kelulusan ditetapkan PER modul oleh wali
+                            program masing-masing, jadi rata-rata lintas modul gak
+                            punya arti administratif apa pun.
+                            Nilainya diambil dari percobaan TERTINGGI tiap kuis
+                            section, sesuai kebijakan kantor. */}
+                        <td style={{ padding: '8px 11px', whiteSpace: 'normal', minWidth: 190 }}>
+                          {l.modul_slugs.filter(slug => l.modul[slug]?.nilai != null).length === 0 ? (
+                            <span style={{ color: 'var(--text-faint)' }} title="Peserta ini belum pernah menyerahkan kuis di modul mana pun">—</span>
+                          ) : l.modul_slugs.map(slug => {
+                            const m = l.modul[slug];
+                            if (!m || m.nilai == null) return null;
+                            const rincian = (m.kuis || [])
+                              .map(k => `${k.section.toUpperCase()}: ${k.skor}/${k.total} (${k.persen}%, min ${k.min_lulus}%, ${k.percobaan}${k.maks_percobaan ? ` dari ${k.maks_percobaan}` : ''}×)`)
+                              .join(String.fromCharCode(10));
+                            return (
+                              <div key={slug} style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }} title={rincian}>
+                                <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: m.lulus ? 'var(--success)' : 'var(--danger)' }}>
+                                  {m.nilai}
+                                </span>
+                                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', color: m.lulus ? 'var(--success)' : 'var(--danger)' }}>
+                                  {m.lulus ? 'LULUS' : 'BELUM'}
+                                </span>
+                                <span style={{ fontSize: 10.5, color: 'var(--text-faint)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {judulModul(slug)}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_sesi}</td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}>{l.durasi_tatap_layar_menit} m</td>

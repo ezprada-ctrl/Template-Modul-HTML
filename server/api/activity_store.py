@@ -584,6 +584,11 @@ def summarize_learners():
         kuis_dijawab = 0
         kuis_benar = 0
         kuis_gagal = 0
+        # Tiap penyerahan kuis di sesi ini, per section. Dipisah dari
+        # kuis_benar/kuis_dijawab (yang menghitung PER SOAL lintas modul):
+        # yang dibutuhkan wali program adalah NILAI per modul, dan nilai cuma
+        # ada di tingkat penyerahan, bukan di tingkat soal.
+        submit_sesi = []
         peringatan_baca_cepat = 0
         peringatan_diabaikan = 0
         kc_dijawab = 0
@@ -635,6 +640,20 @@ def summarize_learners():
             elif t == 'quiz_submit':
                 if p.get('lulus') is False:
                     kuis_gagal += 1
+                submit_sesi.append({
+                    'section': p.get('section'),
+                    'skor': p.get('skor') or 0,
+                    'total': p.get('total') or 0,
+                    # persen & min_lulus_persen baru ada sejak modul bisa
+                    # diatur ambang lulusnya. Rekaman lama gak punya keduanya:
+                    # persennya dihitung ulang dari skor/total, dan ambangnya
+                    # dianggap 100 - itu memang aturan yang berlaku waktu baris
+                    # itu dibuat, jadi nilainya tetap dibaca dengan aturan yang
+                    # benar, bukan aturan hari ini.
+                    'persen': p.get('persen'),
+                    'min_lulus': p.get('min_lulus_persen', 100),
+                    'maks_percobaan': p.get('maks_percobaan', 0),
+                })
             elif t == 'reading_warning':
                 peringatan_baca_cepat += 1
                 if p.get('choice') == 'yakin':
@@ -700,6 +719,10 @@ def summarize_learners():
             # (slug, block) - block id yang kebetulan sama di modul BEDA gak
             # boleh ketuker jadi satu paket, sama alasannya kayak _video_max.
             '_articulate_selesai': set(),
+            # (slug, section) -> nilai kuis: skor terbaik, jumlah percobaan,
+            # ambang lulus. Kunci pakai slug juga karena id section ('a','b')
+            # jelas-jelas berulang di modul yang beda.
+            '_kuis': {},
             # (slug, id) -> payload catatan TERBARU. Digabung di sini, bukan
             # per sesi: satu catatan bisa ditulis di sesi A lalu dihapus di
             # sesi B, dan yang benar adalah keadaan terakhirnya.
@@ -727,6 +750,29 @@ def summarize_learners():
             lama = L['_catatan'].get(kunci)
             if lama is None or _rev(n) > _rev(lama):
                 L['_catatan'][kunci] = n
+        for sub in submit_sesi:
+            if not sub['section'] or not sub['total']:
+                continue
+            kunci = (slug, sub['section'])
+            k = L['_kuis'].setdefault(kunci, {
+                'section': sub['section'],
+                'skor_terbaik': 0,
+                'total': sub['total'],
+                'percobaan': 0,
+                'min_lulus': sub['min_lulus'],
+                'maks_percobaan': sub['maks_percobaan'],
+            })
+            k['percobaan'] += 1
+            # Cuma naik - kebijakan kantor mengambil nilai TERTINGGI, dan
+            # percobaan yang lebih jelek gak boleh menurunkan yang sudah dicapai.
+            if sub['skor'] > k['skor_terbaik']:
+                k['skor_terbaik'] = sub['skor']
+            # Ambang yang dipakai selalu yang TERBARU: kalau wali program
+            # menaikkan standar lalu modulnya di-export ulang, penilaian ikut
+            # standar baru itu - bukan standar yang kebetulan tercatat duluan.
+            k['min_lulus'] = sub['min_lulus']
+            k['maks_percobaan'] = sub['maks_percobaan']
+            k['total'] = sub['total']
         for num in slide_unik_sesi:
             L['_slide_unik'].add((slug, num))
         for block, persen in video_max_sesi.items():
@@ -764,6 +810,38 @@ def summarize_learners():
 
     out = []
     for L in learners.values():
+        # Nilai per modul, dari nilai TERBAIK tiap kuis section di dalamnya.
+        # Section tanpa kuis gak ikut menghitung: memasukkannya sebagai 0
+        # bakal menghukum modul yang memang cuma punya kuis di sebagian
+        # section, dan memasukkannya sebagai 100 bakal mengarang nilai.
+        kuis_per_modul = {}
+        for (slug, _sec), k in L.pop('_kuis').items():
+            kuis_per_modul.setdefault(slug, []).append(k)
+        for slug, daftar in kuis_per_modul.items():
+            m = L['modul'].get(slug)
+            if m is None:
+                continue
+            rincian = []
+            for k in sorted(daftar, key=lambda x: x['section']):
+                persen = round(k['skor_terbaik'] / k['total'] * 100) if k['total'] else 0
+                rincian.append({
+                    'section': k['section'],
+                    'skor': k['skor_terbaik'],
+                    'total': k['total'],
+                    'persen': persen,
+                    'percobaan': k['percobaan'],
+                    'maks_percobaan': k['maks_percobaan'],
+                    'min_lulus': k['min_lulus'],
+                    'lulus': persen >= k['min_lulus'],
+                })
+            m['kuis'] = rincian
+            # Nilai modul = rata-rata persen terbaik seluruh kuisnya. Bukan
+            # (total benar / total soal): section dengan 20 soal bakal
+            # menenggelamkan section dengan 5 soal, padahal dua-duanya satu
+            # gerbang kelulusan yang setara.
+            m['nilai'] = round(sum(r['persen'] for r in rincian) / len(rincian))
+            m['lulus'] = all(r['lulus'] for r in rincian)
+            m['percobaan_maks_terpakai'] = max(r['percobaan'] for r in rincian)
         L['jumlah_modul'] = len(L['modul'])
         L['modul_slugs'] = sorted(L['modul'].keys())
         L['jumlah_slide_unik'] = len(L.pop('_slide_unik'))

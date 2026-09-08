@@ -215,7 +215,33 @@ export interface Section {
   short: string;
   icon: string;
   color: string;
+  // Kebijakan kuis khusus section ini - menimpa `quizPolicy` milik modul.
+  // Dua-duanya opsional SENDIRI-SENDIRI: wali program biasanya cuma mau
+  // memperketat salah satunya (mis. section terakhir minimal 80 tapi jatah
+  // ulangnya tetap ikut modul), dan memaksa mengisi keduanya bikin angka
+  // yang gak diniatkan ikut terkunci di sini.
+  quizPolicy?: Partial<QuizPolicy>;
 }
+
+// Aturan kelulusan kuis. Kantor menetapkannya per program pembelajaran, bukan
+// per aplikasi: nilai minimal & jatah mengulang beda-beda tergantung kerangka
+// acuan modulnya, jadi dua-duanya HARUS bisa diatur penyusun - bukan dipatok
+// di kode seperti dulu (lulus = benar semua, ulang tanpa batas).
+export interface QuizPolicy {
+  // Persen minimal untuk lulus, 0-100. 100 = harus benar semua, dan itu
+  // default-nya supaya modul lama yang belum punya field ini berperilaku
+  // persis seperti sebelum fitur ini ada.
+  passPercent: number;
+  // Jatah mengerjakan, termasuk percobaan pertama. 0 = tak terbatas (juga
+  // default, sama alasannya dengan di atas).
+  //
+  // Peserta yang SUDAH lulus tetap boleh memakai sisa jatahnya - kebijakan
+  // kantor membolehkan mengejar nilai lebih tinggi. Yang dipakai selalu nilai
+  // TERTINGGI, jadi mencoba lagi gak pernah merugikan.
+  maxAttempts: number;
+}
+
+export const DEFAULT_QUIZ_POLICY: QuizPolicy = { passPercent: 100, maxAttempts: 0 };
 
 export interface Slide {
   id: string;
@@ -312,6 +338,9 @@ export interface ModuleData {
   sections: Section[];
   slides: Slide[];
   quizzes: Record<string, QuizQuestion[]>;
+  // Aturan kelulusan bawaan seluruh modul; tiap section boleh menimpanya
+  // lewat Section.quizPolicy.
+  quizPolicy?: QuizPolicy;
   multiGroups: Record<string, { label: string; slides: number[] }[]>;
 }
 
@@ -370,6 +399,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     sections: [{ id: 'a', title: 'A. Bagian Satu', short: 'Bagian Satu', icon: 'A', color: '#c99a3d' }],
     slides: [],
     quizzes: {},
+    quizPolicy: { ...DEFAULT_QUIZ_POLICY },
     multiGroups: {},
   };
 }
@@ -377,7 +407,15 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
 // Merges a loaded draft with current defaults so fields added after the
 // draft was saved (e.g. `theme`) don't come back as `undefined`.
 export function normalizeModule(data: Partial<ModuleData>): ModuleData {
-  return { ...emptyModule(), ...data, theme: { ...DEFAULT_THEME, ...data.theme } };
+  return {
+    ...emptyModule(),
+    ...data,
+    theme: { ...DEFAULT_THEME, ...data.theme },
+    // Draft lama gak punya quizPolicy - diisi default yang perilakunya sama
+    // persis dengan sebelum fitur ini ada, jadi modul lama gak berubah nilai
+    // kelulusannya diam-diam waktu dibuka ulang di aplikasi yang lebih baru.
+    quizPolicy: { ...DEFAULT_QUIZ_POLICY, ...data.quizPolicy },
+  };
 }
 
 // Parses a raw JSON string (a file the user picked in "Import dari file JSON")

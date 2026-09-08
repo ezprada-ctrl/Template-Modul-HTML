@@ -1343,6 +1343,26 @@ def generate_html(module):
     quizzes = module.get('quizzes', {})
     out = out.replace('__QUIZZES_JS__', js_str(quizzes))
 
+    # Aturan kelulusan kuis. Dulu dipatok mati di shell (lulus = benar semua,
+    # ulang tanpa batas); sekarang wali program yang menentukan, dan angkanya
+    # beda tiap kerangka acuan pembelajaran. Bentuknya sudah DIRATAKAN per
+    # section di sini - shell gak perlu lagi tahu soal "bawaan modul vs
+    # timpaan section", dia tinggal baca angka jadi.
+    #
+    # Default 100% / tanpa batas: modul lama yang di-export ulang tanpa pernah
+    # menyentuh setelan ini berperilaku persis seperti sebelum fitur ini ada.
+    dasar = module.get('quizPolicy') or {}
+    lulus_dasar = dasar.get('passPercent', 100)
+    jatah_dasar = dasar.get('maxAttempts', 0)
+    quiz_policy = {}
+    for sec in sections:
+        timpa = sec.get('quizPolicy') or {}
+        quiz_policy[sec['id']] = {
+            'lulusPersen': timpa.get('passPercent', lulus_dasar),
+            'maksPercobaan': timpa.get('maxAttempts', jatah_dasar),
+        }
+    out = out.replace('__QUIZ_POLICY_JS__', js_str(quiz_policy))
+
     # Judul section yang PUNYA kuis, buat narasi rekap ("paling banyak gagal di
     # Section B (Judulnya)"). Sengaja cuma yang punya kuis, bukan semua section:
     # backend pakai map ini juga sebagai penanda "modul ini punya kuis apa

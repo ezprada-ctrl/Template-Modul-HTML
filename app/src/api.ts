@@ -270,7 +270,20 @@ export interface ActivityLearner {
   nama_varian: string[];
   nama_bervariasi: boolean;
   identity_sources: string[];
-  modul: Record<string, { sesi: number; durasi_ms: number; total_slide: number | null; total_video: number | null; total_articulate: number | null }>;
+  modul: Record<string, {
+    sesi: number; durasi_ms: number;
+    total_slide: number | null; total_video: number | null; total_articulate: number | null;
+    // Nilai kuis modul ini. Absen kalau modulnya memang gak punya kuis, atau
+    // peserta belum pernah menyerahkan satu pun - dua-duanya BUKAN nol, jadi
+    // sengaja undefined supaya tampilan bisa membedakannya dari nilai 0.
+    nilai?: number;
+    lulus?: boolean;
+    percobaan_maks_terpakai?: number;
+    kuis?: {
+      section: string; skor: number; total: number; persen: number;
+      percobaan: number; maks_percobaan: number; min_lulus: number; lulus: boolean;
+    }[];
+  }>;
   modul_slugs: string[];
   jumlah_modul: number;
   jumlah_sesi: number;

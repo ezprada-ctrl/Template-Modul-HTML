@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { ModuleData, QuizQuestion } from '../types';
+import type { ModuleData, QuizQuestion, QuizPolicy } from '../types';
+import { DEFAULT_QUIZ_POLICY } from '../types';
 
 interface Props {
   module: ModuleData;
@@ -46,6 +47,38 @@ export default function QuizBuilder({ module, setModule }: Props) {
     }));
   }
 
+  // ---- Aturan kelulusan: bawaan modul + timpaan per section ----
+  const dasar: QuizPolicy = { ...DEFAULT_QUIZ_POLICY, ...module.quizPolicy };
+  const sec = module.sections.find(x => x.id === activeSection);
+  const timpa = sec?.quizPolicy || {};
+  // Yang BENAR-BENAR berlaku di section yang lagi dibuka - dipakai buat
+  // kalimat ringkasannya, supaya penyusun gak perlu menghitung sendiri
+  // gabungan "bawaan modul + timpaan" di kepalanya.
+  const berlaku: QuizPolicy = { ...dasar, ...timpa };
+
+  function setDasar(patch: Partial<QuizPolicy>) {
+    setModule({ ...module, quizPolicy: { ...dasar, ...patch } });
+  }
+  // Timpaan yang dikosongkan DIHAPUS dari section-nya, bukan disimpan sebagai
+  // nilai yang kebetulan sama dengan bawaan modul: kalau disimpan, mengubah
+  // bawaan modul nanti gak akan menular ke section itu, padahal penyusunnya
+  // sudah mengosongkannya justru supaya ikut.
+  function setTimpa(patch: Partial<QuizPolicy>) {
+    setModule({
+      ...module,
+      sections: module.sections.map(x => {
+        if (x.id !== activeSection) return x;
+        const gabung = { ...timpa, ...patch };
+        for (const k of Object.keys(gabung) as (keyof QuizPolicy)[]) {
+          if (gabung[k] === undefined) delete gabung[k];
+        }
+        return Object.keys(gabung).length ? { ...x, quizPolicy: gabung } : { ...x, quizPolicy: undefined };
+      }),
+    });
+  }
+  // '' di kotak angka = "ikut bawaan modul", bukan nol.
+  const angka = (v: string) => (v.trim() === '' ? undefined : Math.max(0, Math.round(Number(v) || 0)));
+
   const sectionsWithoutQuiz = module.sections.filter(sec => !(module.quizzes[sec.id]?.length));
   const showMissingQuizWarning = !module.hideProgress && sectionsWithoutQuiz.length > 0;
 
@@ -75,6 +108,57 @@ export default function QuizBuilder({ module, setModule }: Props) {
             </button>
           );
         })}
+      </div>
+      {/* Aturan kelulusan. Ditaruh di ATAS daftar soal karena dia menentukan
+          arti seluruh soal di bawahnya: "10 soal" berarti lain kalau lulusnya
+          70 dibanding kalau harus benar semua. */}
+      <div className="panel" style={{ padding: 14, marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: 10 }}>
+          Aturan Kelulusan
+        </div>
+        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <label style={{ fontSize: 12.5, color: 'var(--text-dim)' }}>
+            Nilai minimal lulus (%)<br />
+            <input type="number" min={0} max={100} style={{ width: 110, marginTop: 4 }}
+              value={dasar.passPercent}
+              onChange={e => setDasar({ passPercent: Math.min(100, Math.max(0, Math.round(Number(e.target.value) || 0))) })} />
+          </label>
+          <label style={{ fontSize: 12.5, color: 'var(--text-dim)' }}>
+            Jatah mengerjakan<br />
+            <input type="number" min={0} style={{ width: 110, marginTop: 4 }}
+              value={dasar.maxAttempts}
+              onChange={e => setDasar({ maxAttempts: Math.max(0, Math.round(Number(e.target.value) || 0)) })} />
+          </label>
+          <p className="hint" style={{ margin: 0, flex: '1 1 240px', minWidth: 200 }}>
+            Jatah dihitung termasuk percobaan pertama. <b>0 = tak terbatas.</b> Peserta yang sudah lulus
+            tetap boleh memakai sisa jatahnya — yang dipakai selalu <b>nilai tertinggi</b>, jadi mencoba
+            lagi tidak pernah merugikan.
+          </p>
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--border)', margin: '12px 0 10px' }} />
+        <div style={{ fontSize: 12.5, color: 'var(--text-dim)', marginBottom: 8 }}>
+          Khusus <b style={{ color: 'var(--text)' }}>{sec?.short || activeSection}</b> — kosongkan kalau ikut aturan modul di atas.
+        </div>
+        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <label style={{ fontSize: 12.5, color: 'var(--text-dim)' }}>
+            Nilai minimal (%)<br />
+            <input type="number" min={0} max={100} placeholder={String(dasar.passPercent)} style={{ width: 110, marginTop: 4 }}
+              value={timpa.passPercent ?? ''}
+              onChange={e => setTimpa({ passPercent: angka(e.target.value) })} />
+          </label>
+          <label style={{ fontSize: 12.5, color: 'var(--text-dim)' }}>
+            Jatah mengerjakan<br />
+            <input type="number" min={0} placeholder={String(dasar.maxAttempts)} style={{ width: 110, marginTop: 4 }}
+              value={timpa.maxAttempts ?? ''}
+              onChange={e => setTimpa({ maxAttempts: angka(e.target.value) })} />
+          </label>
+          <p className="hint" style={{ margin: 0, flex: '1 1 240px', minWidth: 200 }}>
+            Berlaku di section ini: lulus mulai <b>{berlaku.passPercent}%</b>
+            {questions.length > 0 && ` (${Math.ceil(questions.length * berlaku.passPercent / 100)} dari ${questions.length} soal)`}
+            , {berlaku.maxAttempts === 0 ? 'boleh diulang tanpa batas' : `jatah ${berlaku.maxAttempts}× mengerjakan`}.
+          </p>
+        </div>
       </div>
       <button className="btn-sm" onClick={autoDistribute}>Sebar jawaban benar merata A/B/C/D</button>
       <p className="hint" style={{ margin: '6px 0 16px' }}>
