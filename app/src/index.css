@@ -316,6 +316,42 @@ button:disabled:hover { background: var(--surface-2); border-color: var(--border
   .pv-petunjuk-strip { animation: none; opacity: 0.9; }
 }
 
+/* ---- Nama tipe blok di kepala kartu, yang sekaligus tombol ganti tipe ----
+   Dulu dia teks polos: warnanya --text-faint, tanpa garis, tanpa bingkai.
+   Bentuknya sama persis dengan label mati di sekitarnya, jadi gak ada yang
+   menduga dia bisa diklik - tooltip-nya baru ketahuan sesudah kursornya
+   kebetulan lewat, dan itu kelewat telat buat sebuah jalan masuk.
+
+   Tiga penanda kecil yang bikin dia terbaca sebagai kontrol tanpa berubah
+   jadi tombol penuh (kepala kartu ini sudah padat): garis bawah putus-putus,
+   tanda panah bawah, dan latar yang muncul waktu disentuh kursor. */
+.pemicu-tipe-blok {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);          /* dinaikkan dari --text-faint: yang bisa
+                                      diklik jangan lebih pudar dari teks
+                                      mati di sebelahnya */
+  padding: 2px 6px;
+  margin-left: -6px;               /* biar tulisannya tetap lurus dengan
+                                      barisnya walau sekarang berbantal */
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: underline dotted var(--border-strong);
+  text-underline-offset: 3px;
+  transition: background var(--ease), color var(--ease);
+}
+.pemicu-tipe-blok::after {
+  content: ' BE';               /* panah bawah - bahasa yang sama dengan
+                                      tombol lipat di sebelah kirinya */
+  opacity: 0.55;
+}
+.pemicu-tipe-blok:hover,
+.pemicu-tipe-blok:focus-visible {
+  background: var(--surface-3);
+  color: var(--text);
+  text-decoration-color: var(--text-faint);
+}
+
 .btn-danger { color: var(--danger); }
 .btn-danger:hover { background: var(--danger-soft); border-color: var(--danger); color: var(--danger-hover); }
 

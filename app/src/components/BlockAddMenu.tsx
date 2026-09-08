@@ -46,13 +46,16 @@ interface Props {
   // triggerStyle: pemicunya di sana bukan tombol selebar kolom, tapi label
   // kecil huruf besar di kepala kartu blok.
   triggerStyle?: CSSProperties;
+  // Kelas buat pemicunya - dipakai tempat yang butuh keadaan hover/fokus,
+  // yang gak bisa ditulis lewat style inline.
+  triggerClass?: string;
   // active: tipe yang SEDANG dipakai, ditandai di daftar. Waktu menambah blok
   // baru gak ada yang aktif, jadi dibiarkan kosong.
   active?: BlockType;
   title?: string;
 }
 
-export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow, triggerStyle, active, title }: Props) {
+export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow, triggerStyle, triggerClass, active, title }: Props) {
   // Urutannya tetap ikut BLOCK_LABELS (bukan urutan `allow`), biar posisi
   // tiap tipe di daftar sama saja mau dibatasi atau tidak.
   const types = allow ? BLOCK_TYPES.filter(t => allow.includes(t)) : BLOCK_TYPES;
@@ -133,6 +136,7 @@ export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow,
         type="button"
         onClick={() => setOpen(o => !o)}
         title={title}
+        className={triggerClass}
         style={{
           width: '100%', textAlign: 'left', padding: '9px 12px', fontWeight: 600, color: 'var(--text-dim)',
           ...triggerStyle,

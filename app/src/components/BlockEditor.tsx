@@ -216,10 +216,10 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
                   label={BLOCK_LABELS[b.type]}
                   active={b.type}
                   title={`Ganti tipe ${noun} ini - isi teksnya dipindahkan otomatis ke tipe baru, gak hilang`}
+                  triggerClass="pemicu-tipe-blok"
                   triggerStyle={{
                     fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase',
-                    color: 'var(--text-faint)', border: 'none', background: 'transparent',
-                    padding: 0, cursor: 'pointer', whiteSpace: 'nowrap',
+                    whiteSpace: 'nowrap',
                   }}
                 />
                 {blokAktif === b.id && (

@@ -3483,7 +3483,7 @@
       "file_type": "code",
       "norm_label": "slidepreview()",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L65"
+      "source_location": "L70"
     },
     {
       "id": "app_src_components_slidepreview_slidepreview_bawapopupkelayar",
@@ -3495,7 +3495,7 @@
       "file_type": "code",
       "norm_label": "bawapopupkelayar()",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L208"
+      "source_location": "L213"
     },
     {
       "id": "app_src_components_slidepreview_slidepreview_gulirkeblokaktif",
@@ -3507,7 +3507,7 @@
       "file_type": "code",
       "norm_label": "gulirkeblokaktif()",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L114"
+      "source_location": "L119"
     },
     {
       "id": "app_src_components_slidepreview_slidepreview_jumptoslide",
@@ -3519,7 +3519,7 @@
       "file_type": "code",
       "norm_label": "jumptoslide()",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L249"
+      "source_location": "L254"
     },
     {
       "id": "app_src_components_slidepreview_slidepreview_sorotblokaktif",
@@ -3531,7 +3531,7 @@
       "file_type": "code",
       "norm_label": "sorotblokaktif()",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L146"
+      "source_location": "L151"
     },
     {
       "id": "app_src_components_slidepreview_slidepreview_ubahzoom",
@@ -3543,7 +3543,7 @@
       "file_type": "code",
       "norm_label": "ubahzoom()",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L190"
+      "source_location": "L195"
     },
     {
       "id": "app_src_components_canvas_canvas",
@@ -11615,7 +11615,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L157",
+      "source_location": "L162",
       "weight": 1.0
     },
     {
@@ -11627,7 +11627,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L234",
+      "source_location": "L239",
       "weight": 1.0
     },
     {
@@ -11639,7 +11639,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L319",
+      "source_location": "L324",
       "weight": 1.0
     },
     {
@@ -11651,7 +11651,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L334",
+      "source_location": "L339",
       "weight": 1.0
     },
     {
@@ -11663,7 +11663,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L335",
+      "source_location": "L340",
       "weight": 1.0
     },
     {
@@ -13991,7 +13991,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L114",
+      "source_location": "L119",
       "weight": 1.0
     },
     {
@@ -14003,7 +14003,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L146",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -14015,7 +14015,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L190",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -18747,7 +18747,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L65",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -18758,7 +18758,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L208",
+      "source_location": "L213",
       "weight": 1.0
     },
     {
@@ -18769,7 +18769,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app/src/components/SlidePreview.tsx",
-      "source_location": "L249",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -26082,5 +26082,5 @@
       "source_file": "Panduan-Fitur-Template-Modul-Ikram.html"
     }
   ],
-  "built_at_commit": "7ab0eca2042b5cd69a52b6d7792446b58eafe2e5"
+  "built_at_commit": "6eecf0b87f992807273fe01eca05fa381a9a65c9"
 }
