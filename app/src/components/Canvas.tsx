@@ -48,6 +48,28 @@ export default function Canvas({ module, setModule }: Props) {
     } catch { /* localStorage diblokir (mode privat) — mulai tanpa editor kebuka */ }
   }, [module.slides]);
 
+  // Membawa layar ke baris slide tertentu, berhenti PERSIS di bawah kepala
+  // aplikasi yang dipatok.
+  //
+  // Bukan scrollIntoView({block:'start'}): itu menaruh barisnya di paling atas
+  // viewport, yaitu DI KOLONG kepala yang dipatok (tingginya diumumkan sebagai
+  // --h-chrome, lihat App.tsx) - jadi baris yang barusan dituju malah
+  // ketutupan dan orangnya tetap merasa kehilangan.
+  //
+  // Halus, bukan seketika: lompatan ini dipicu dari panel SEBELAH (klik ganda
+  // di preview), jadi gerakannya sendiri yang memberi tahu "kamu dibawa ke
+  // sini" - kalau langsung teleport, layarnya berubah total tanpa petunjuk
+  // asalnya dari mana.
+  function gulirKeBaris(id: string) {
+    const el = document.getElementById(`slide-row-${id}`);
+    if (!el) return;
+    const chrome = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--h-chrome'),
+    ) || 0;
+    const atas = el.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, atas - chrome - 12), behavior: 'smooth' });
+  }
+
   // Menggulir ke editor yang dipulihkan. Editornya panjang, jadi tanpa ini
   // yang kebuka ada jauh di luar layar dan orangnya tetap merasa "kelempar".
   //
@@ -59,9 +81,7 @@ export default function Canvas({ module, setModule }: Props) {
   useEffect(() => {
     if (!perluGulir.current || !openSlideId) return;
     perluGulir.current = false;
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      document.getElementById(`slide-row-${openSlideId}`)?.scrollIntoView({ block: 'start' });
-    }));
+    requestAnimationFrame(() => requestAnimationFrame(() => gulirKeBaris(openSlideId)));
   }, [openSlideId]);
 
   // Menunggu percobaan pemulihan selesai sebelum menulis: kalau enggak, nilai
@@ -83,7 +103,24 @@ export default function Canvas({ module, setModule }: Props) {
   // baik daripada menutup editor yang lagi dipakai gara-gara satu klik.
   function bukaSlideNomor(nomor: number) {
     const target = module.slides.find(s => s.number === nomor);
-    if (target) setOpenSlideId(target.id);
+    if (!target) return;
+    if (target.id === openSlideId) {
+      // Sudah kebuka - gak ada yang berubah, jadi effect penggulir di atas
+      // gak akan jalan. Tetap dibawa ke sana: yang diminta penyusun modul itu
+      // "antar aku ke slide ini", bukan "buka slide ini".
+      gulirKeBaris(target.id);
+      return;
+    }
+    // Ditandai DULU, baru state-nya diubah. Effect penggulir di atas yang
+    // mengerjakan gulirannya, sesudah barisnya benar-benar mekar - kalau
+    // digulir dari sini, yang diukur masih tinggi baris yang terlipat.
+    //
+    // Tanpa ini editornya memang terbuka, tapi layarnya diam di tempat lama:
+    // baris yang tadi terbuka menutup (hilang ribuan piksel) dan yang baru
+    // mekar di tempat lain, jadi orangnya mendarat entah di section berapa
+    // lalu harus menggulir naik-turun mencari editornya sendiri.
+    perluGulir.current = true;
+    setOpenSlideId(target.id);
   }
 
   const sensors = useSensors(useSensor(PointerSensor));
