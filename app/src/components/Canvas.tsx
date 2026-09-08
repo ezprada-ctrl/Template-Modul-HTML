@@ -532,7 +532,20 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove, onPilihSl
         } : null),
       }}>
         <span {...attributes} {...listeners} style={{ cursor: 'grab', color: 'var(--text-faint)', fontSize: 15, padding: '0 2px' }} title="Geser untuk atur urutan">⠿</span>
-        <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, whiteSpace: 'nowrap' }}>#{slide.number}{slide.sourceSlideNo ? ` · PPTX ${slide.sourceSlideNo}` : ''}</span>
+        {/* Nomor slide jadi pil berwarna waktu editornya kebuka. Warnanya
+            --edit, token yang sama dengan lencana "SEDANG DIEDIT" di kartu
+            blok - jadi "yang lagi digarap" selalu punya satu warna di seluruh
+            aplikasi, bukan tiap tempat bikin sendiri. */}
+        <span style={{
+          fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
+          color: open ? 'var(--edit)' : 'var(--text-faint)',
+          ...(open ? {
+            background: 'var(--edit-soft)',
+            padding: '2px 7px',
+            borderRadius: 999,
+            fontVariantNumeric: 'tabular-nums' as const,
+          } : null),
+        }}>#{slide.number}{slide.sourceSlideNo ? ` · PPTX ${slide.sourceSlideNo}` : ''}</span>
         {/* Cuma nampilin nama slide di sini (bukan input) - diedit di dalam
             panel expand, DI BAWAH Kicker, biar urutan field di form ngikutin
             urutan asli di output (kicker kecil DULU, baru judul besar) -
@@ -546,7 +559,24 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove, onPilihSl
           tabIndex={0}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alihkanEditor(); } }}
           title="Klik untuk edit judul & isi slide"
-          style={{ flex: 1, cursor: 'pointer', color: slide.title ? 'var(--text)' : 'var(--text-faint)', fontStyle: slide.title ? 'normal' : 'italic' }}
+          /* Judul slide yang lagi digarap ditebalkan & sedikit dibesarkan,
+             plus garis bawah tipis sewarna --edit. Sengaja BUKAN blok warna
+             penuh: kepala baris ini menempel di atas layar selama menyunting,
+             jadi apa pun yang mencolok di sini bakal terus terlihat sepanjang
+             kerja - penandanya cukup jelas dari sudut mata, tanpa jadi
+             spanduk. Tebal & ukurannya dipatok dua-duanya (600/15 lawan
+             500/14) supaya lebar teksnya gak melompat waktu dibuka-tutup. */
+          style={{
+            flex: 1, cursor: 'pointer',
+            color: slide.title ? 'var(--text)' : 'var(--text-faint)',
+            fontStyle: slide.title ? 'normal' : 'italic',
+            fontWeight: open ? 600 : 500,
+            fontSize: open ? 15 : 14,
+            letterSpacing: open ? '-0.01em' : undefined,
+            paddingBottom: 1,
+            borderBottom: open ? '2px solid var(--edit-soft)' : '2px solid transparent',
+            transition: 'font-size var(--ease), border-color var(--ease)',
+          }}
         >
           {slide.title || '(judul belum diisi — klik untuk edit)'}
         </span>
