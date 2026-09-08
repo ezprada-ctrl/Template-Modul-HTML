@@ -74,6 +74,18 @@ export default function Canvas({ module, setModule }: Props) {
     } catch { /* kuota penuh / mode privat — cuma ingatannya yang hilang */ }
   }, [openSlideId]);
 
+  // Dipanggil waktu penyusun klik-dua-kali sebuah slide DI DALAM panel
+  // preview: editor pindah ke slide itu. Dicocokkan lewat NOMOR slide, karena
+  // itu satu-satunya penanda yang ikut terbawa ke HTML modul.
+  //
+  // Kalau nomornya gak ketemu (slide baru dihapus, atau preview-nya masih
+  // menampilkan HTML versi sebelumnya), gak melakukan apa-apa - jauh lebih
+  // baik daripada menutup editor yang lagi dipakai gara-gara satu klik.
+  function bukaSlideNomor(nomor: number) {
+    const target = module.slides.find(s => s.number === nomor);
+    if (target) setOpenSlideId(target.id);
+  }
+
   const sensors = useSensors(useSensor(PointerSensor));
 
   function addSection() {
@@ -190,6 +202,7 @@ export default function Canvas({ module, setModule }: Props) {
                     onToggle={() => setOpenSlideId(openSlideId === slide.id ? null : slide.id)}
                     onUpdate={patch => updateSlide(slide.id, patch)}
                     onRemove={() => removeSlide(slide.id)}
+                    onPilihSlideDariPreview={bukaSlideNomor}
                   />
                 ))}
               </div>
@@ -386,9 +399,10 @@ function SlideAudioField({ slide, onUpdate }: { slide: Slide; onUpdate: (p: Part
   );
 }
 
-function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
+function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove, onPilihSlideDariPreview }: {
   slide: Slide; module: ModuleData; open: boolean; onToggle: () => void;
   onUpdate: (p: Partial<Slide>) => void; onRemove: () => void;
+  onPilihSlideDariPreview?: (nomorSlide: number) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: slide.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -541,7 +555,7 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove }: {
               berhenti PERSIS di bawah kepala yang dipatok itu - bukan masuk
               ke kolongnya. Lihat catatan tinggiKepala di atas. */}
           <div style={{ flex: '1 1 50%', minWidth: 0, position: 'sticky', top: `calc(var(--h-chrome, 0px) + ${tinggiKepala + 12}px)`, alignSelf: 'flex-start' }}>
-            <SlidePreview module={module} slideNumber={slide.number} />
+            <SlidePreview module={module} slideNumber={slide.number} onPilihSlide={onPilihSlideDariPreview} />
           </div>
         </div>
       )}

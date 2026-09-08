@@ -925,19 +925,70 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
    ganti blok seluruh isi slide bakal bergeser turun sedikit lalu balik lagi.
    Cuma hidup di panel preview; di modul jadinya kelas ini gak pernah
    dipasang siapa pun. */
+/* Ajakan "slide ini bisa diklik dua kali buat dibuka di editor".
+   SELURUHNYA digantung ke html.pv-editor, yang cuma dipasang panel preview
+   (lihat SlidePreview.tsx) - modul yang diekspor gak pernah dapat kelas ini,
+   jadi peserta gak akan pernah melihat ajakan yang cuma berguna buat
+   penyusunnya.
+
+   Kenapa cuma waktu kursor di atasnya: fitur ini gak akan ketemu lewat
+   membaca, tapi tangan penyusun MEMANG bergerak ke panel kanan waktu mau
+   mencoba modulnya - dan di detik itulah petunjuknya muncul. Gak perlu
+   penjelasan panjang, dan gak ada yang menetap mengganggu waktu dia lagi
+   membaca hasil render-nya. */
+html.pv-editor #viewport{ position:relative; }
+html.pv-editor #viewport::after{
+  content:'Klik 2× → buka slide ini di editor';
+  position:absolute; right:14px; bottom:14px; z-index:200;
+  background:var(--navy); color:#f6d998;
+  font-size:11px; font-weight:700; letter-spacing:.03em;
+  padding:6px 11px; border-radius:20px;
+  box-shadow:0 6px 18px -6px rgba(0,0,0,.45);
+  pointer-events:none;                 /* jangan pernah menghalangi klik */
+  opacity:0; transform:translateY(4px);
+  transition:opacity .2s ease, transform .2s ease;
+}
+html.pv-editor #viewport:hover::after{ opacity:1; transform:translateY(0); }
+/* Menyapa sekali waktu preview baru dibuka, lalu diam - biar yang belum tahu
+   sempat melihatnya tanpa perlu menebak harus mengarahkan kursor ke mana.
+   Kelasnya dilepas sendiri oleh SlidePreview sesudah beberapa detik. */
+html.pv-editor.pv-petunjuk #viewport::after{
+  opacity:1; transform:translateY(0);
+  animation:petunjuk-dblclick 2.4s ease-in-out infinite;
+}
+@keyframes petunjuk-dblclick{
+  0%,100% { box-shadow:0 6px 18px -6px rgba(0,0,0,.45); }
+  50%     { box-shadow:0 6px 18px -6px rgba(0,0,0,.45),0 0 0 4px var(--accent-glow); }
+}
+@media (prefers-reduced-motion:reduce){
+  html.pv-editor #viewport::after{ transition:none; }
+  html.pv-editor.pv-petunjuk #viewport::after{ animation:none; }
+}
+
 [data-blok].blok-disorot{
   outline:2px solid var(--accent);
   outline-offset:3px;
   border-radius:2px;
-  animation:sorot-blok 1.2s ease-out;
+  animation:sorot-blok 2.6s ease-in-out infinite;
 }
+/* Berdenyut TERUS selama blok itu masih yang digarap, bukan sekali lalu padam:
+   penanda "sedang diedit" di panel kiri juga menyala terus, jadi kalau yang
+   di kanan padam duluan, dua panel bilang hal yang beda dan penyusunnya
+   kehilangan pasangan mata antara form dan hasilnya.
+
+   Yang didenyutkan cuma KEPEKATAN garisnya, bukan tebalnya - outline yang
+   tebalnya berubah-ubah bikin mata terus tertarik ke sana, padahal orangnya
+   sedang mengetik di panel sebelah. Ini penanda, bukan lampu peringatan.
+   Gak pernah benar-benar padam (batas bawahnya masih kelihatan) supaya
+   bloknya tetap ketemu kapan pun mata menoleh. */
 @keyframes sorot-blok{
-  0%   { outline-color:var(--accent); }
-  70%  { outline-color:var(--accent); }
-  100% { outline-color:transparent; }
+  0%,100% { outline-color:color-mix(in srgb,var(--accent) 35%,transparent); }
+  50%     { outline-color:var(--accent); }
 }
 @media (prefers-reduced-motion:reduce){
-  [data-blok].blok-disorot{ animation:none; }
+  /* Denyutnya mati, garisnya TETAP ada - kehilangan gerak gak boleh berarti
+     kehilangan penandanya. */
+  [data-blok].blok-disorot{ animation:none; outline-color:var(--accent); }
 }
 .modal-overlay{
   position:fixed;inset:0 0 0 314px;background:rgba(15,18,26,.55);backdrop-filter:blur(2px);

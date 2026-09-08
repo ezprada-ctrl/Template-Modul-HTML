@@ -77,7 +77,20 @@ export default function EmojiPicker({ value, onChange, placeholder }: Props) {
             style={{ width: '100%', marginBottom: 8 }}
           />
           {!search.trim() && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+            // Daftar kategorinya dibatasi ~3 baris lalu digulir. Sejak
+            // kategorinya jadi 25, deretan chip ini lebih tinggi daripada
+            // petak ikonnya sendiri - padahal yang dicari mata waktu mengedit
+            // itu ikonnya, bukan nama kategorinya. Dibatasi tinggi, bukan
+            // jumlah chip: chip-nya beda-beda lebar, jadi "3 baris" cuma bisa
+            // ditentukan oleh tinggi, bukan oleh berapa chip yang dipotong.
+            <div style={{
+              display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8,
+              maxHeight: 96, overflowY: 'auto',
+              // Sisa ruang buat batang gulir + jarak biar chip terakhir gak
+              // ketutupan; padding kanan, bukan margin, supaya lebar
+              // pembungkusnya gak berubah.
+              paddingRight: 4,
+            }}>
               {EMOJI_CATEGORIES.map((c, i) => (
                 <button
                   key={c.label}
@@ -91,7 +104,10 @@ export default function EmojiPicker({ value, onChange, placeholder }: Props) {
               ))}
             </div>
           )}
-          <div style={{ maxHeight: 220, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+          {/* Petak ikon dikasih ruang lebih lega (220 -> 300): ruang yang
+              barusan dihemat dari deretan kategori dikembalikan ke ikonnya,
+              karena itu yang sebenarnya dicari waktu mengedit. */}
+          <div style={{ maxHeight: 300, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             {(search.trim() ? filteredCategories.flatMap(c => c.emojis) : EMOJI_CATEGORIES[activeCategory].emojis)
               .map((e, i) => (
                 <button

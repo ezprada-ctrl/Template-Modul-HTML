@@ -8,6 +8,11 @@ interface Props {
   slideNumber?: number;
   target?: 'slide' | 'hero' | 'summary';
   label?: string;
+  // Dipanggil waktu penyusun klik-dua-kali sebuah slide DI DALAM preview:
+  // editor di panel kiri lompat ke slide itu. Nomor slide, bukan id, karena
+  // yang diketahui shell modul cuma nomor (NAV[currentIdx].num) - id blok &
+  // slide gak ikut dibawa ke HTML jadinya.
+  onPilihSlide?: (nomorSlide: number) => void;
 }
 
 // Lebar "layar" yang disimulasikan preview. Modulnya responsif: .grid3 jatuh
@@ -52,12 +57,19 @@ const LANGKAH = 1.25;
 // pengamat di jumpToSlide().
 let devModeDipilihPenyusun = false;
 
+// Apakah sapaan "klik 2x buat buka slide ini" sudah pernah ditampilkan.
+// Nilai bersama satu tab, dan SEKALI SAJA: preview dibangun ulang tiap
+// ketikan, jadi kalau ini per-pemuatan, sapaannya nongol terus-menerus dan
+// berubah dari petunjuk jadi gangguan. Sekali lihat sudah cukup - sesudah itu
+// petunjuknya tetap ada, tapi cuma waktu kursornya lewat.
+let petunjukSudahTampil = false;
+
 // Live preview of a single slide (or the cover/hero screen), rendered by
 // generating the full module HTML and jumping the embedded page straight to
 // that slide (bypassing section gating via devMode) — so editors see the
 // real output next to the fields they're editing, instead of hopping to the
 // far-away Preview & Export tab.
-export default function SlidePreview({ module, slideNumber, target = 'slide', label }: Props) {
+export default function SlidePreview({ module, slideNumber, target = 'slide', label, onPilihSlide }: Props) {
   const [html, setHtml] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -127,15 +139,32 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
     // ada di atas blok itu.
     viewport.scrollTop += selisih - viewport.clientHeight / 3;
     scrollTopRef.current = viewport.scrollTop;
-    // Kedipan singkat, supaya kelihatan blok MANA yang barusan dituju - kalau
-    // cuma digulir, blok yang mirip dengan tetangganya gak kebedain.
-    el.classList.add('blok-disorot');
-    setTimeout(() => el.classList.remove('blok-disorot'), 1200);
+  }
+
+  // Menyorot blok yang lagi diedit - dan MEMBIARKANNYA menyala selama blok itu
+  // masih yang digarap. Dulu cuma sekejap 1,2 detik, jadi begitu penyusunnya
+  // selesai mengetik satu kalimat, penanda di kanan sudah padam sementara
+  // penanda "sedang diedit" di kiri masih menyala: dua panel jadi bilang hal
+  // yang beda. Sekarang keduanya nyala bareng sampai pindah blok.
+  //
+  // Dipisah dari gulirKeBlokAktif() karena syaratnya beda: guliran cuma waktu
+  // bloknya BERGANTI (biar gak menyeret panel tiap ketikan), sorotan tiap
+  // dokumen baru dibangun (karena dokumennya baru, class-nya ikut hilang).
+  function sorotBlokAktif() {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+    const id = blokAktifRef.current;
+    // Yang lama dipadamkan dulu - tanpa ini bekas sorotan menumpuk dan
+    // beberapa blok menyala sekaligus, yang justru menghapus maknanya.
+    doc.querySelectorAll('.blok-disorot').forEach(el => el.classList.remove('blok-disorot'));
+    if (!id) return;
+    doc.querySelector(`[data-blok="${CSS.escape(id)}"]`)?.classList.add('blok-disorot');
   }
 
   useEffect(() => langgananBlokAktif(id => {
     blokAktifRef.current = id;
     gulirKeBlokAktif();
+    sorotBlokAktif();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), []);
   // Panel preview ikut melar/menyusut (layout editor, jendela di-resize), jadi
@@ -293,6 +322,50 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
       // blokAktifRef dan gulirKeBlokAktif() gak melakukan apa-apa - posisi
       // guliran hasil restore di atas yang dipakai.
       gulirKeBlokAktif();
+      sorotBlokAktif();
+
+      // Menandai dokumen ini sebagai "lagi dilihat di panel editor". Semua
+      // petunjuk khusus editor (termasuk ajakan klik-dua-kali di bawah)
+      // digantung ke kelas ini, jadi modul yang diekspor - yang gak pernah
+      // dapat kelas ini - bersih dari petunjuk yang cuma berguna waktu
+      // menyusun. Pola yang sama dengan pv-restoring.
+      win.document.documentElement.classList.add('pv-editor');
+      if (!petunjukSudahTampil) {
+        petunjukSudahTampil = true;
+        const akar = win.document.documentElement;
+        akar.classList.add('pv-petunjuk');
+        setTimeout(() => akar.classList.remove('pv-petunjuk'), 5000);
+      }
+
+      // Klik dua kali di isi slide = buka slide itu di editor kiri.
+      // Dipasang di #viewport, bukan di document: klik dua kali di sidebar
+      // atau bilah navigasi modul gak ada urusannya dengan "slide mana yang
+      // mau disunting".
+      const vpKlik = win.document.getElementById('viewport');
+      if (vpKlik && onPilihSlide) {
+        vpKlik.addEventListener('dblclick', (e: Event) => {
+          // Kontrol milik modul dibiarkan bekerja apa adanya - klik dua kali
+          // di tombol accordion/tab memang urusannya membuka-tutup, bukan
+          // pindah editor. Tanpa penjagaan ini, mencoba interaksi modul di
+          // preview malah melempar editor ke slide lain.
+          const t = e.target as HTMLElement | null;
+          if (t && t.closest('button,a,input,textarea,select,[onclick]')) return;
+          // Lewat eval, BUKAN win.NAV / win.currentIdx. Keduanya dideklarasikan
+          // let/const di shell, dan binding let/const tingkat-atas TIDAK jadi
+          // properti window - dibaca dari luar hasilnya selalu undefined, dan
+          // fitur ini bakal diam-diam gak pernah jalan tanpa error sedikit pun.
+          // eval jalan DI DALAM lingkup global iframe, jadi dia melihatnya.
+          let nomor: number | null = null;
+          try {
+            nomor = win.eval(
+              '(typeof NAV !== "undefined" && NAV[currentIdx] && NAV[currentIdx].kind === "slide")'
+              + ' ? NAV[currentIdx].num : null',
+            );
+          } catch { /* shell belum siap - klik ini diabaikan saja */ }
+          if (typeof nomor === 'number') onPilihSlide(nomor);
+        });
+      }
+
       const pengamat = new win.MutationObserver(() => {
         if (typeof win.snapshotUI === 'function') bukaanRef.current = win.snapshotUI();
         bawaPopupKeLayar();
