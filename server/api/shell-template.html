@@ -925,21 +925,20 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
    ganti blok seluruh isi slide bakal bergeser turun sedikit lalu balik lagi.
    Cuma hidup di panel preview; di modul jadinya kelas ini gak pernah
    dipasang siapa pun. */
-/* Ajakan "slide ini bisa diklik dua kali buat dibuka di editor".
+/* Ajakan "klik dua kali daftar slide buat membukanya di editor".
    SELURUHNYA digantung ke html.pv-editor, yang cuma dipasang panel preview
    (lihat SlidePreview.tsx) - modul yang diekspor gak pernah dapat kelas ini,
    jadi peserta gak akan pernah melihat ajakan yang cuma berguna buat
    penyusunnya.
 
-   Kenapa cuma waktu kursor di atasnya: fitur ini gak akan ketemu lewat
-   membaca, tapi tangan penyusun MEMANG bergerak ke panel kanan waktu mau
-   mencoba modulnya - dan di detik itulah petunjuknya muncul. Gak perlu
-   penjelasan panjang, dan gak ada yang menetap mengganggu waktu dia lagi
-   membaca hasil render-nya. */
-html.pv-editor #viewport{ position:relative; }
-html.pv-editor #viewport::after{
-  content:'Klik 2× → buka slide ini di editor';
-  position:absolute; right:14px; bottom:14px; z-index:200;
+   Digantung ke SIDEBAR, bukan ke #viewport: yang dituju penyusun waktu mau
+   lompat ke slide lain memang daftar slide di kiri, jadi di situlah tangannya
+   lewat dan di situlah petunjuknya berguna. Di badan slide petunjuknya cuma
+   nempel di tempat yang gak ada hubungannya sama gerakan itu. */
+html.pv-editor #sidebar::after{
+  content:'Klik 2× judul slide → buka di editor';
+  position:absolute; left:16px; right:16px; bottom:12px; z-index:200;
+  text-align:center;
   background:var(--navy); color:#f6d998;
   font-size:11px; font-weight:700; letter-spacing:.03em;
   padding:6px 11px; border-radius:20px;
@@ -948,11 +947,11 @@ html.pv-editor #viewport::after{
   opacity:0; transform:translateY(4px);
   transition:opacity .2s ease, transform .2s ease;
 }
-html.pv-editor #viewport:hover::after{ opacity:1; transform:translateY(0); }
+html.pv-editor #sidebar:hover::after{ opacity:1; transform:translateY(0); }
 /* Menyapa sekali waktu preview baru dibuka, lalu diam - biar yang belum tahu
    sempat melihatnya tanpa perlu menebak harus mengarahkan kursor ke mana.
    Kelasnya dilepas sendiri oleh SlidePreview sesudah beberapa detik. */
-html.pv-editor.pv-petunjuk #viewport::after{
+html.pv-editor.pv-petunjuk #sidebar::after{
   opacity:1; transform:translateY(0);
   animation:petunjuk-dblclick 2.4s ease-in-out infinite;
 }
@@ -962,7 +961,7 @@ html.pv-editor.pv-petunjuk #viewport::after{
 }
 @media (prefers-reduced-motion:reduce){
   html.pv-editor #viewport::after{ transition:none; }
-  html.pv-editor.pv-petunjuk #viewport::after{ animation:none; }
+  html.pv-editor.pv-petunjuk #sidebar::after{ animation:none; }
 }
 
 [data-blok].blok-disorot{
