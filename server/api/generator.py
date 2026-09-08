@@ -238,7 +238,16 @@ def render_dtable(b):
         for i, cell in enumerate(row):
             span = n_cols - len(row) + 1 if i == last and len(row) < n_cols else 1
             colspan_attr = f' colspan="{span}"' if span > 1 else ''
-            cells += f'<td{colspan_attr}>{esc(cell)}</td>'
+            # MENTAH (nl2br), bukan esc() - sel tabel itu ISI, dan di berkas ini
+            # isi selalu dirender mentah sementara yang di-esc cuma LABEL:
+            # bandingkan bodyHtml Kartu/Catatan, item Daftar Bercentang, isi
+            # Accordion, dan isi Tab - semuanya mentah; yang di-esc judul kartu,
+            # judul tab, label accordion. Sel tabel dulu satu-satunya isi yang
+            # ikut di-esc, dan itu bukan kehati-hatian melainkan ketidakcocokan:
+            # akibatnya <strong> yang diketik penyusun nongol sebagai TULISAN
+            # "<strong>" di layar peserta, dan &mdash; nongol sebagai
+            # "&mdash;" - bukan sebagai tebal dan tanda pisah.
+            cells += f'<td{colspan_attr}>{nl2br(cell)}</td>'
         rows += f'<tr>{cells}</tr>'
 
     # Rata teks: kelas ditaruh di <table>, bukan di tiap sel - satu tempat,

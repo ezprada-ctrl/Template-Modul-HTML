@@ -990,8 +990,14 @@ function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Pa
         const isMerged = row.length < headers.length;
         return (
           <div key={ri} style={{ display: 'flex', gap: 4, marginBottom: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* RichInput, bukan <input> polos: sel tabel dirender MENTAH di
+                generator (lihat render_dtable), jadi Ctrl+B/Ctrl+I di sini
+                menghasilkan tebal/miring sungguhan - bukan tulisan
+                "<strong>" seperti kalau field-nya lewat esc(). Judul kolom
+                sengaja TETAP <input> polos di atas, karena dia label dan
+                masih di-esc, sama seperti judul kartu & label accordion. */}
             {row.map((cell, ci) => (
-              <input
+              <RichInput
                 key={ci}
                 style={{
                   ...cellInp,
@@ -1000,7 +1006,7 @@ function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Pa
                 }}
                 placeholder={isMerged && ci === row.length - 1 ? `Melebar ${headers.length - row.length + 1} kolom` : `Kolom ${ci + 1}`}
                 value={cell}
-                onChange={e => setCell(ri, ci, e.target.value)}
+                onChange={v => setCell(ri, ci, v)}
               />
             ))}
             {headers.length > 1 && (
