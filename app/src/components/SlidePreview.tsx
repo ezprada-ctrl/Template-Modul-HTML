@@ -353,33 +353,50 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
       // Klik dua kali DI MANA PUN dalam preview = buka slide yang lagi tampil
       // itu di editor kiri.
       //
-      // Dipasang di DOCUMENT, bukan cuma di #viewport, dan tanpa mengecualikan
-      // tombol. Versi pertama memasangnya cuma di area isi slide dan
-      // mengabaikan button/a/input, dengan alasan "kontrol modul jangan
-      // diganggu". Alasannya kedengaran rapi tapi salah sasaran: tempat yang
-      // paling wajar diklik-dua-kali buat pindah slide justru DAFTAR SLIDE DI
-      // SIDEBAR preview - dan itu tombol, di luar #viewport. Jadi fiturnya
-      // kelihatan gak jalan persis di tempat orang pertama kali mencobanya.
+      // Dideteksi dari DUA KLIK BERURUTAN, bukan dari event 'dblclick'. Ini
+      // bukan selera - event dblclick memang gak bisa dipakai di sini:
+      // renderSidebar() di shell menjalankan wrap.innerHTML = '' tiap goTo(),
+      // jadi begitu klik pertama menavigasi, tombol sidebar yang lagi diklik
+      // DIMUSNAHKAN. Klik kedua mengenai tombol yang baru, dan dblclick-nya
+      // berakhir di simpul yang sudah lepas dari dokumen - gak pernah
+      // menggelembung ke document, jadi pemicunya gak pernah jalan. Persis
+      // itu sebabnya klik-ganda di sidebar kelihatan mati sementara di badan
+      // slide jalan.
       //
-      // Membiarkan tombol ikut memicu juga gak merusak apa-apa: klik pertama
-      // tetap dikerjakan modul seperti biasa (pindah slide / buka accordion),
-      // yang ditambahkan cuma "editor ikut ke slide yang SEKARANG tampil".
-      // Kalau bloknya accordion di slide yang sama, editor cuma pindah ke
-      // slide yang memang lagi dilihat - gak ada yang hilang.
+      // Menghitung klik sendiri kebal terhadap itu: tiap 'click' terjadi pada
+      // elemen yang saat itu MASIH nyambung, jadi dua-duanya selalu tercatat.
+      // Fase capture, biar tetap kehitung walau ada yang menghentikan
+      // penggelembungan di tengah jalan.
       if (onPilihSlide) {
-        win.document.addEventListener('dblclick', () => {
-          // Ditunda satu putaran: kalau yang diklik-dua-kali itu item sidebar
-          // atau tombol Sebelumnya/Selanjutnya, modul BARU pindah slide sesudah
+        let klikTerakhir = 0;
+        let xTerakhir = -999;
+        let yTerakhir = -999;
+        win.document.addEventListener('click', (e: Event) => {
+          const m = e as MouseEvent;
+          const kini = Date.now();
+          // Harus cepat DAN di tempat yang sama - dua klik buru-buru di dua
+          // tombol berbeda itu bukan klik-ganda, dan gak boleh ikut memicu.
+          // 500ms, menyamai bawaan kecepatan klik-ganda Windows. 400ms sempat
+          // dipakai dan itu lebih ketat daripada yang dianggap "klik ganda"
+          // oleh sistem - klik ganda yang santai sedikit bakal gak kebaca.
+          const cepat = kini - klikTerakhir < 500;
+          const dekat = Math.abs(m.clientX - xTerakhir) < 24 && Math.abs(m.clientY - yTerakhir) < 24;
+          klikTerakhir = kini;
+          xTerakhir = m.clientX;
+          yTerakhir = m.clientY;
+          if (!cepat || !dekat) return;
+          // Klik ketiga jangan dianggap pasangan baru dari klik kedua.
+          klikTerakhir = 0;
+          // Ditunda: kalau yang diklik item sidebar atau tombol
+          // Sebelumnya/Selanjutnya, modul BARU pindah slide sesudah
           // handler-nya sendiri jalan. Membaca NAV[currentIdx] seketika bakal
           // dapat slide LAMA - editornya lompat ke slide yang barusan
-          // ditinggalkan, yang justru bikin bingung.
+          // ditinggalkan.
           setTimeout(() => {
-            // Lewat eval, BUKAN win.NAV / win.currentIdx. Keduanya
+            // Lewat eval, BUKAN win.NAV / win.currentIdx: keduanya
             // dideklarasikan let/const di shell, dan binding let/const
             // tingkat-atas TIDAK jadi properti window - dibaca dari luar
-            // hasilnya selalu undefined, dan fitur ini bakal diam-diam gak
-            // pernah jalan tanpa error sedikit pun. eval jalan DI DALAM
-            // lingkup global iframe, jadi dia melihatnya.
+            // hasilnya selalu undefined.
             let nomor: number | null = null;
             try {
               nomor = win.eval(
@@ -388,8 +405,8 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
               );
             } catch { /* shell belum siap - klik ini diabaikan saja */ }
             if (typeof nomor === 'number') onPilihSlide(nomor);
-          }, 60);
-        });
+          }, 80);
+        }, true);
       }
 
       const pengamat = new win.MutationObserver(() => {
