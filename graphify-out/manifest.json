@@ -12,27 +12,27 @@
     "semantic_hash": "4b47bc3c199a59e52959d5b9b908353e"
   },
   "app/src/App.tsx": {
-    "mtime": 1788402937.7626536,
-    "seen": 1788403024.7378666,
-    "ast_hash": "b29a342393765ffa52d03d3798fd1ee7",
+    "mtime": 1788785711.0286689,
+    "seen": 1788785866.098638,
+    "ast_hash": "28aa36679699c9a7d8c7fd675046dba0",
     "semantic_hash": ""
   },
   "app/src/api.ts": {
-    "mtime": 1788234854.9233644,
-    "seen": 1788235096.2551491,
-    "ast_hash": "5ef5d5565ac39bb527e60a4c92cbe87c",
+    "mtime": 1788760761.3981254,
+    "seen": 1788760885.887791,
+    "ast_hash": "1f4c7e413fcca0127210a4546350dd98",
     "semantic_hash": ""
   },
   "app/src/components/BlockAddMenu.tsx": {
-    "mtime": 1787114334.317629,
-    "seen": 1787222015.9428282,
-    "ast_hash": "c07ee7e47afb9b045f2501bc40a9e09e",
-    "semantic_hash": "c07ee7e47afb9b045f2501bc40a9e09e"
+    "mtime": 1788851593.9323378,
+    "seen": 1788851924.3915513,
+    "ast_hash": "45c41a748fd2fa05733a524df2768304",
+    "semantic_hash": ""
   },
   "app/src/components/BlockEditor.tsx": {
-    "mtime": 1788423226.2191224,
-    "seen": 1788423321.6634374,
-    "ast_hash": "89d8d02d2c29cb31746a6c6e670c8e63",
+    "mtime": 1788852385.5191991,
+    "seen": 1788852831.7300127,
+    "ast_hash": "638c4d430e92be36ef865129edd7e0e0",
     "semantic_hash": ""
   },
   "app/src/components/BlockPreview.tsx": {
@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "app/src/components/Canvas.tsx": {
-    "mtime": 1788423650.3733692,
-    "seen": 1788423778.5958776,
-    "ast_hash": "9fe92eb8639b355898dad87588650d43",
+    "mtime": 1788859976.4781682,
+    "seen": 1788860153.754892,
+    "ast_hash": "adfe8475a5092e49d7033591ed9dfc15",
     "semantic_hash": ""
   },
   "app/src/components/CommandCenter.tsx": {
@@ -54,15 +54,15 @@
     "semantic_hash": ""
   },
   "app/src/components/CoverForm.tsx": {
-    "mtime": 1788257703.1265445,
-    "seen": 1788257787.3542435,
-    "ast_hash": "7d0ba1021e0ff675320f3c00b7b7274d",
+    "mtime": 1788785268.0615263,
+    "seen": 1788785364.942299,
+    "ast_hash": "59dafbda59c0c2c61c014fac3108c830",
     "semantic_hash": ""
   },
   "app/src/components/EmojiPicker.tsx": {
-    "mtime": 1788403384.6513498,
-    "seen": 1788403403.8363209,
-    "ast_hash": "ab93863d7546496dafaa5ee55042c1f5",
+    "mtime": 1788854164.414922,
+    "seen": 1788854769.2877688,
+    "ast_hash": "99fb34765f68cfc1d8523d8dd91a9f6f",
     "semantic_hash": ""
   },
   "app/src/components/GraphicStyleSelect.tsx": {
@@ -90,9 +90,9 @@
     "semantic_hash": ""
   },
   "app/src/components/SlidePreview.tsx": {
-    "mtime": 1788246014.6511948,
-    "seen": 1788246082.5434518,
-    "ast_hash": "bf70e25083ca82c840b12076284b215a",
+    "mtime": 1788874106.9377353,
+    "seen": 1788874123.6631985,
+    "ast_hash": "643c445fcc5569bb596c5701f35e019d",
     "semantic_hash": ""
   },
   "app/src/demoActivityData.ts": {
@@ -102,10 +102,10 @@
     "semantic_hash": ""
   },
   "app/src/emojiData.ts": {
-    "mtime": 1783578383.4461286,
-    "seen": 1787222015.9428365,
-    "ast_hash": "b7ddc58bc5082e76bdab038d53b325ae",
-    "semantic_hash": "b7ddc58bc5082e76bdab038d53b325ae"
+    "mtime": 1788851336.8308914,
+    "seen": 1788851447.3455086,
+    "ast_hash": "310ce9052af4885d0536893e471028c4",
+    "semantic_hash": ""
   },
   "app/src/graphicStylePreviews.ts": {
     "mtime": 1785627970.0109117,
@@ -132,9 +132,9 @@
     "semantic_hash": "0c2e9d7860102cadd11a3c82a33979b5"
   },
   "app/src/types.ts": {
-    "mtime": 1788404497.3056495,
-    "seen": 1788404661.0877573,
-    "ast_hash": "a38e900b258d8cfa5f783532b0843512",
+    "mtime": 1788848935.186872,
+    "seen": 1788849187.3781416,
+    "ast_hash": "a42265de5af3c3ac7c8e41bbc6cf2f73",
     "semantic_hash": ""
   },
   "app/src/vite-env.d.ts": {
@@ -174,15 +174,15 @@
     "semantic_hash": ""
   },
   "server/api/draft_store.py": {
-    "mtime": 1788234839.6234062,
-    "seen": 1788235096.2574747,
-    "ast_hash": "e661dfef448e193992612b21a4bd027b",
+    "mtime": 1788760776.8201818,
+    "seen": 1788760885.887812,
+    "ast_hash": "37581267c1fb8d38afc604559f01a938",
     "semantic_hash": ""
   },
   "server/api/generator.py": {
-    "mtime": 1788404522.5302503,
-    "seen": 1788404661.087768,
-    "ast_hash": "8abb589244f37d2759f745ea5f677f06",
+    "mtime": 1788852300.1513457,
+    "seen": 1788852831.7300317,
+    "ast_hash": "7efcfebc80ef034525321ac424fda130",
     "semantic_hash": ""
   },
   "server/api/index.py": {
@@ -246,9 +246,9 @@
     "semantic_hash": ""
   },
   "Template-Modul-Ikram-Source-Code.html": {
-    "mtime": 1788423777.3904536,
-    "seen": 1788423778.595902,
-    "ast_hash": "c6ae71116b0ef47cc9e93c32a8c046ff",
+    "mtime": 1788771940.7075498,
+    "seen": 1788771984.54841,
+    "ast_hash": "e9d9a0f98ea057088ae77d6ca4b54e60",
     "semantic_hash": ""
   },
   "app/README.md": {
@@ -275,16 +275,10 @@
     "ast_hash": "5cb4ab30db789846a50f7aff6a473b08",
     "semantic_hash": "5cb4ab30db789846a50f7aff6a473b08"
   },
-  "render.yaml": {
-    "mtime": 1787280590.041481,
-    "seen": 1787280592.2314012,
-    "ast_hash": "3d9058b132cd02ef9a1cb51c951f5807",
-    "semantic_hash": ""
-  },
   "server/api/shell-template.html": {
-    "mtime": 1788419901.4172053,
-    "seen": 1788423107.1755254,
-    "ast_hash": "9defb5299a978b3b75dd5605deea6d7d",
+    "mtime": 1788874058.864062,
+    "seen": 1788874123.663225,
+    "ast_hash": "98d740a079d74a8c1cacd0da09f8ab5b",
     "semantic_hash": ""
   },
   "server/requirements.txt": {
@@ -330,15 +324,15 @@
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1787022108.757722,
-    "seen": 1787222015.9428508,
-    "ast_hash": "8a6643a420fdad6bfb583523bc6cef16",
-    "semantic_hash": "8a6643a420fdad6bfb583523bc6cef16"
+    "mtime": 1788772563.3817375,
+    "seen": 1788785364.942322,
+    "ast_hash": "87697e34cdc623d00bdecdd5b741d64d",
+    "semantic_hash": ""
   },
   "app/src/scormZip.ts": {
-    "mtime": 1787300287.581572,
-    "seen": 1787300356.672123,
-    "ast_hash": "c52324550d73b073236f96e0cdb98a0d",
+    "mtime": 1788748145.2255993,
+    "seen": 1788748462.1382492,
+    "ast_hash": "944a6ecbd91a97e20a56f61ab0776710",
     "semantic_hash": ""
   },
   "server/api/r2.py": {
@@ -360,15 +354,15 @@
     "semantic_hash": ""
   },
   ".claude/launch.json": {
-    "mtime": 1788172433.8440406,
-    "seen": 1788400473.775357,
+    "mtime": 1788860007.093014,
+    "seen": 1788860153.7548728,
     "ast_hash": "3e6b6747a22aa61bec0bcecc764a4711",
     "semantic_hash": ""
   },
   "tools/build_source_printout.py": {
-    "mtime": 1788258411.1423488,
-    "seen": 1788258741.4135003,
-    "ast_hash": "6eec413b2cef80c3620d3730b29f1f62",
+    "mtime": 1788772483.978641,
+    "seen": 1788772541.5215886,
+    "ast_hash": "08347aa7fb7610aace2d5e80e5a72ba4",
     "semantic_hash": ""
   }
 }
