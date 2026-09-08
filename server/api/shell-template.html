@@ -524,6 +524,17 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .dtable.td-kanan td{text-align:right;}
 .dtable.td-rata td{text-align:justify;}
 
+/* Lebar kolom disetel penyusun (lihat dtableWidths di render_dtable).
+   table-layout:fixed bikin <colgroup> jadi perintah, bukan saran - tanpa ini
+   browser tetap boleh melebarkan kolom demi isinya dan angka yang disetel
+   kelihatan diabaikan.
+   Konsekuensinya yang harus ikut dijaga: begitu lebar dikunci, satu kata
+   panjang (URL, "pertanggungjawaban") gak lagi bisa mendorong kolomnya
+   melebar - dia jebol keluar sel dan menabrak kolom sebelah. break-word yang
+   menahannya: kata itu dipatahkan seperlunya, tetap di dalam selnya. */
+.dtable.dtable-fixed{table-layout:fixed;}
+.dtable.dtable-fixed th,.dtable.dtable-fixed td{overflow-wrap:break-word;word-break:break-word;}
+
 /* Kolom grup VERTIKAL di paling kiri (lihat dtableRowGroups di
    render_dtable). Gayanya sengaja disamakan dengan kepala kolom - orang
    membacanya sebagai "judul", bukan sebagai isi - tapi ditengahkan secara

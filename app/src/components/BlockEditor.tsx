@@ -869,6 +869,19 @@ function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Pa
   const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
   const cellInp: FieldStyle = { ...inp, flex: 1, minWidth: 0, marginBottom: 0 };
 
+  // Bobot lebar tiap kolom. Disimpan sebagai perbandingan, bukan persen -
+  // generator yang menghitung persennya, jadi jumlahnya selalu pas 100%
+  // berapa pun yang diketik di sini (lihat dtableWidths di render_dtable).
+  const bobot = (i: number) => block.dtableWidths?.[i] ?? 1;
+  const totalBobot = headers.reduce((n, _, i) => n + bobot(i), 0) || 1;
+  function setLebar(i: number, val: number) {
+    // Selalu ditulis utuh sepanjang headers: array setengah jadi bikin
+    // generator menolaknya (panjangnya harus sama dengan jumlah kolom) dan
+    // lebarnya diam-diam gak kepakai.
+    const next = headers.map((_, x) => (x === i ? val : bobot(x)));
+    onChange({ dtableWidths: next });
+  }
+
   function setHeader(i: number, val: string) {
     onChange({ headers: headers.map((h, x) => (x === i ? val : h)) });
   }
@@ -877,7 +890,13 @@ function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Pa
     // an already-merged row just ends up spanning one more column, which is
     // the whole point of being merged, not something to silently undo.
     const nextRows = rows.map(r => (r.length >= headers.length ? [...r, ''] : r));
-    onChange({ headers: [...headers, `Kolom ${headers.length + 1}`], rows: nextRows });
+    onChange({
+      headers: [...headers, `Kolom ${headers.length + 1}`],
+      rows: nextRows,
+      // Bobot ikut tumbuh HANYA kalau penyusunnya memang sudah mengatur lebar.
+      // Kalau belum, dibiarkan undefined supaya tabelnya tetap lebar otomatis.
+      ...(block.dtableWidths ? { dtableWidths: [...block.dtableWidths, 1] } : null),
+    });
   }
   function removeColumn(i: number) {
     // A merged row (row.length < headers.length) only loses a real cell if
@@ -887,7 +906,14 @@ function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Pa
     // colspan just covers one column fewer automatically once headers.length
     // drops.
     const nextRows = rows.map(r => (i < r.length ? r.filter((_, x) => x !== i) : r));
-    onChange({ headers: headers.filter((_, x) => x !== i), rows: nextRows });
+    onChange({
+      headers: headers.filter((_, x) => x !== i),
+      rows: nextRows,
+      // Bobotnya wajib ikut menyusut. Kalau enggak, panjangnya gak lagi sama
+      // dengan jumlah kolom, generator menolak seluruh pengaturan lebarnya,
+      // dan tabel yang tadinya rapi mendadak balik ke lebar otomatis.
+      ...(block.dtableWidths ? { dtableWidths: block.dtableWidths.filter((_, x) => x !== i) } : null),
+    });
   }
   function setCell(ri: number, ci: number, val: string) {
     onChange({ rows: rows.map((r, x) => (x === ri ? r.map((c, y) => (y === ci ? val : c)) : r)) });
@@ -958,6 +984,19 @@ function DtableFields({ block, onChange, inp }: { block: Block; onChange: (p: Pa
         {headers.map((h, i) => (
           <div key={i} style={{ display: 'flex', gap: 2, flex: '1 1 100px', minWidth: 90 }}>
             <input style={cellInp} placeholder={`Kolom ${i + 1}`} value={h} onChange={e => setHeader(i, e.target.value)} />
+            {/* Kotak lebar nempel di judul kolomnya - itu tempat yang paling
+                gak bikin bingung, dan gak perlu bagian baru di form yang
+                sudah padat. Isinya PERBANDINGAN (1-20), bukan persen:
+                persennya dihitung generator, jadi lebar total gak mungkin
+                meleset. Persen hasilnya ditaruh di tooltip biar tetap
+                kebaca tanpa menambah tulisan di layar. */}
+            <input
+              type="number" min={1} max={20}
+              style={{ width: 42, fontSize: 12, padding: '2px 4px' }}
+              value={bobot(i)}
+              title={`Lebar kolom (perbandingan 1-20) — sekarang ${(bobot(i) / totalBobot * 100).toFixed(0)}%`}
+              onChange={e => setLebar(i, Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 1)))}
+            />
             {headers.length > 1 && <button title="Hapus kolom ini" onClick={() => removeColumn(i)}>×</button>}
           </div>
         ))}

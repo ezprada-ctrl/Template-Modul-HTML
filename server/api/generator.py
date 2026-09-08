@@ -259,6 +259,49 @@ def render_dtable(b):
         kelas.append('th-' + b['dtableAlignHead'])
     if b.get('dtableAlignBody'):
         kelas.append('td-' + b['dtableAlignBody'])
+
+    # Lebar kolom. Yang disimpan PERBANDINGAN, bukan persen - persennya
+    # dihitung di sini dari bobot/jumlah-bobot, jadi totalnya selalu pas 100%
+    # berapa pun angka yang diketik penyusun. Lebar total mustahil rusak
+    # karena gak pernah ada yang mengetik lebar total.
+    colgroup = ''
+    bobot_mentah = b.get('dtableWidths') or []
+    if bobot_mentah and len(bobot_mentah) == n_cols and n_cols:
+        # Dibatasi 1..20: mengunci nisbah paling ekstrem di 1:20, supaya satu
+        # kolom gak bisa disetel sampai tinggal segaris.
+        bobot = [max(1, min(20, int(w or 1))) for w in bobot_mentah]
+        # Kolom grup tegak (kalau ada) ikut dihitung sebagai satu kolom
+        # berbobot 1 - dia nyata memakan tempat, jadi kalau gak ikut
+        # dinormalisasi, jumlah persennya lewat 100 dan tabelnya melar.
+        semua = ([1] if row_groups else []) + bobot
+        total = sum(semua)
+        persen = [w / total * 100 for w in semua]
+        # Lantai 4%: kolom yang jatuh di bawah itu dinaikkan, sisanya menyusut
+        # proporsional. Ini penjaga estetika yang sebenarnya - bukan totalnya,
+        # tapi kolom tunggal yang kesempitan sampai isinya patah per huruf.
+        LANTAI = 4.0
+        sempit = [i for i, p in enumerate(persen) if p < LANTAI]
+        if sempit and len(sempit) < len(persen):
+            sisa = 100 - LANTAI * len(sempit)
+            lebar_lain = sum(p for i, p in enumerate(persen) if i not in sempit) or 1
+            persen = [LANTAI if i in sempit else p / lebar_lain * sisa
+                      for i, p in enumerate(persen)]
+        # Dibulatkan DULU, lalu sisanya dijatuhkan ke kolom terakhir. Tanpa ini
+        # jaminan "total 100%" cuma benar di hitungan, bukan di HTML yang
+        # keluar: bobot 20:1 menghasilkan 95.24% + 4.762% = 100.002% gara-gara
+        # pembulatan tiap angka sendiri-sendiri. Selisihnya memang gak kelihatan
+        # mata, tapi yang dijanjikan ke penyusun modul lebar total yang dijaga
+        # sistem - jadi dibikin benar-benar pas, bukan hampir pas.
+        dibulatkan = [round(p, 2) for p in persen[:-1]]
+        dibulatkan.append(round(100 - sum(dibulatkan), 2))
+        colgroup = '<colgroup>' + ''.join(
+            f'<col style="width:{p:g}%">' for p in dibulatkan
+        ) + '</colgroup>'
+        # table-layout:fixed bikin lebar di atas jadi PERINTAH, bukan saran.
+        # Tanpa ini browser tetap boleh melebarkan kolom demi isinya, dan
+        # angka yang disetel penyusun kelihatan diabaikan.
+        kelas.append('dtable-fixed')
+
     cls = ' '.join(kelas)
 
     # Pojok nempel di baris kepala PERTAMA - baris grup kalau ada, kalau gak
@@ -268,7 +311,7 @@ def render_dtable(b):
     else:
         head = f'<tr>{pojok}{headers}</tr>'
 
-    return f'<table class="{cls}"><thead>{head}</thead><tbody>{rows}</tbody></table>'
+    return f'<table class="{cls}">{colgroup}<thead>{head}</thead><tbody>{rows}</tbody></table>'
 
 
 FLOW_DATA = {}  # collected across the whole generation pass, flushed after SLIDES map

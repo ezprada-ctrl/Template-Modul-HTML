@@ -124,6 +124,13 @@ export interface Block {
   // jadi tabel lama render byte-identik.
   dtableAlignHead?: RataTeks;
   dtableAlignBody?: RataTeks;
+  // Lebar tiap kolom sebagai PERBANDINGAN (1..20), bukan persen. Ini yang
+  // bikin lebar total gak mungkin rusak: persennya dihitung generator dari
+  // bobot/jumlah-bobot, jadi selalu pas 100% berapa pun angka yang diketik -
+  // gak ada "kelebihan 7%" atau "kurang 3%" yang bikin tabel meleot.
+  // Panjangnya mengikuti `headers`. Undefined/kosong = lebar otomatis seperti
+  // sebelum field ini ada.
+  dtableWidths?: number[];
   // flow
   steps?: { n: number; title: string; detail: string; badge?: string }[];
   // grid
