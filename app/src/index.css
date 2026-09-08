@@ -286,6 +286,34 @@ button:disabled:hover { background: var(--surface-2); border-color: var(--border
   .judul-disunting::after { display: none; }
 }
 
+/* ---- Ajakan klik-2x di kepala panel Preview Langsung ----
+   Sengaja "hantu": teks --text-faint di atas garis tipis, tanpa latar pekat
+   dan tanpa warna aksen. Petunjuk ini perkakas editor, bukan isi modul -
+   begitu dia tegas, dia kelihatan seperti komponen modul yang lagi disusun
+   dan bikin bingung. Yang menjaganya tetap kelihatan bukan warna, tapi napas
+   opacity yang pelan (3,4 detik sekali tarikan). */
+.pv-petunjuk-strip {
+  padding: 5px 12px 6px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-faint);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-align: center;
+  user-select: none;
+  animation: napas-petunjuk 3.4s ease-in-out infinite;
+}
+@keyframes napas-petunjuk {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Diam di titik paling kebaca - kehilangan napasnya jangan sampai berarti
+     kehilangan petunjuknya. */
+  .pv-petunjuk-strip { animation: none; opacity: 0.9; }
+}
+
 .btn-danger { color: var(--danger); }
 .btn-danger:hover { background: var(--danger-soft); border-color: var(--danger); color: var(--danger-hover); }
 

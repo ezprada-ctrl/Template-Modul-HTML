@@ -925,48 +925,14 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
    ganti blok seluruh isi slide bakal bergeser turun sedikit lalu balik lagi.
    Cuma hidup di panel preview; di modul jadinya kelas ini gak pernah
    dipasang siapa pun. */
-/* Ajakan "klik dua kali daftar slide buat membukanya di editor".
-   SELURUHNYA digantung ke html.pv-editor, yang cuma dipasang panel preview
-   (lihat SlidePreview.tsx) - modul yang diekspor gak pernah dapat kelas ini,
-   jadi peserta gak akan pernah melihat ajakan yang cuma berguna buat
-   penyusunnya.
-
-   Digantung ke SIDEBAR, bukan ke #viewport: yang dituju penyusun waktu mau
-   lompat ke slide lain memang daftar slide di kiri, jadi di situlah tangannya
-   lewat dan di situlah petunjuknya berguna. Di badan slide petunjuknya cuma
-   nempel di tempat yang gak ada hubungannya sama gerakan itu. */
-html.pv-editor #sidebar::after{
-  content:'Klik 2× - slide langsung terbuka di editor';
-  /* Nempel di ATAS sidebar, bukan di bawah: dasar sidebar isinya tombol
-     (Reset, Cek Rekam Aktivitas, Dev Mode) dan petunjuk yang melayang di sana
-     menutupinya persis waktu kursor lewat mau memencetnya. Di atas cuma ada
-     logo & judul modul - gak ada yang bisa terhalang. */
-  position:absolute; left:16px; right:16px; top:12px; z-index:200;
-  text-align:center;
-  background:var(--navy); color:#f6d998;
-  font-size:11px; font-weight:700; letter-spacing:.03em;
-  padding:6px 11px; border-radius:20px;
-  box-shadow:0 6px 18px -6px rgba(0,0,0,.45);
-  pointer-events:none;                 /* jangan pernah menghalangi klik */
-  opacity:0; transform:translateY(-4px);
-  transition:opacity .2s ease, transform .2s ease;
-}
-html.pv-editor #sidebar:hover::after{ opacity:1; transform:translateY(0); }
-/* Menyapa sekali waktu preview baru dibuka, lalu diam - biar yang belum tahu
-   sempat melihatnya tanpa perlu menebak harus mengarahkan kursor ke mana.
-   Kelasnya dilepas sendiri oleh SlidePreview sesudah beberapa detik. */
-html.pv-editor.pv-petunjuk #sidebar::after{
-  opacity:1; transform:translateY(0);
-  animation:petunjuk-dblclick 2.4s ease-in-out infinite;
-}
-@keyframes petunjuk-dblclick{
-  0%,100% { box-shadow:0 6px 18px -6px rgba(0,0,0,.45); }
-  50%     { box-shadow:0 6px 18px -6px rgba(0,0,0,.45),0 0 0 4px var(--accent-glow); }
-}
-@media (prefers-reduced-motion:reduce){
-  html.pv-editor #viewport::after{ transition:none; }
-  html.pv-editor.pv-petunjuk #sidebar::after{ animation:none; }
-}
+/* Ajakan "klik dua kali daftar slide buat membukanya di editor" DULU tinggal
+   di sini, sebagai pil yang melayang di dalam halaman preview. Dipindah ke
+   luar - ke kepala panel Preview Langsung di editor (lihat SlidePreview.tsx).
+   Alasannya: apa pun yang melayang DI DALAM halaman ini kelihatan seperti
+   bagian dari modul yang sedang disusun, padahal dia perkakas editor. Di
+   dalam sini dia juga selalu menutupi sesuatu - mau ditaruh di atas maupun
+   di bawah. Kelas html.pv-editor sendiri dipertahankan: dia penanda umum
+   "dokumen ini lagi dilihat di panel editor". */
 
 [data-blok].blok-disorot{
   outline:2px solid var(--accent);

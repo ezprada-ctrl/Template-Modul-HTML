@@ -57,13 +57,6 @@ const LANGKAH = 1.25;
 // pengamat di jumpToSlide().
 let devModeDipilihPenyusun = false;
 
-// Apakah sapaan "klik 2x buat buka slide ini" sudah pernah ditampilkan.
-// Nilai bersama satu tab, dan SEKALI SAJA: preview dibangun ulang tiap
-// ketikan, jadi kalau ini per-pemuatan, sapaannya nongol terus-menerus dan
-// berubah dari petunjuk jadi gangguan. Sekali lihat sudah cukup - sesudah itu
-// petunjuknya tetap ada, tapi cuma waktu kursornya lewat.
-let petunjukSudahTampil = false;
-
 // Live preview of a single slide (or the cover/hero screen), rendered by
 // generating the full module HTML and jumping the embedded page straight to
 // that slide (bypassing section gating via devMode) — so editors see the
@@ -347,12 +340,6 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
       // dapat kelas ini - bersih dari petunjuk yang cuma berguna waktu
       // menyusun. Pola yang sama dengan pv-restoring.
       win.document.documentElement.classList.add('pv-editor');
-      if (!petunjukSudahTampil) {
-        petunjukSudahTampil = true;
-        const akar = win.document.documentElement;
-        akar.classList.add('pv-petunjuk');
-        setTimeout(() => akar.classList.remove('pv-petunjuk'), 5000);
-      }
 
       // Klik dua kali DI MANA PUN dalam preview = buka slide yang lagi tampil
       // itu di editor kiri.
@@ -475,6 +462,17 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
           >+</button>
         </span>
       </div>
+      {/* Ajakan klik-dua-kali. Ditaruh di kepala panel - DI LUAR iframe -
+          karena apa pun yang melayang di dalam halaman preview kelihatan
+          seperti bagian dari modul yang lagi disusun, padahal ini perkakas
+          editor. Di sini dia juga gak pernah menutupi apa pun.
+
+          Nadanya sengaja samar (--text-faint di atas --surface-2) dan cuma
+          bernapas pelan lewat opacity: cukup kebaca kalau matanya mampir,
+          gak menuntut apa-apa kalau lagi fokus ke isinya. */}
+      {onPilihSlide && (
+        <div className="pv-petunjuk-strip">Klik 2× slide di daftar — langsung terbuka di editor</div>
+      )}
       {error && <p style={{ color: 'var(--danger)', fontSize: 12, padding: 10 }}>{error}</p>}
       <div
         ref={wadahRef}
