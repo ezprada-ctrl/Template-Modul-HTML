@@ -259,6 +259,13 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
     const findExpr = target === 'hero' ? `it.kind === 'hero'`
       : target === 'summary' ? `it.kind === 'summary'`
       : `it.kind === 'slide' && it.num === ${slideNumber}`;
+    // Lompat-ke-slide sengaja punya try SENDIRI. Dulu satu try membungkus
+    // seluruh fungsi ini, jadi kalau eval di bawah gagal - shell modulnya
+    // belum siap, atau ada satu galat kecil di modul yang besar - SEMUA yang
+    // di bawahnya ikut dilewati diam-diam: pemulihan guliran, pemulihan
+    // popup, sorotan blok, sampai pemicu klik-dua-kali. Gagal senyap yang
+    // mematikan fitur yang gak ada hubungannya sama sekali.
+    // Sekarang tiap urusan berdiri sendiri: yang gagal cuma dirinya.
     try {
       win.eval(`
         devMode = true;
@@ -275,6 +282,12 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
         if (devMode) toggleDevMode();
         ${devModeDipilihPenyusun ? 'if (typeof enableDevMode === "function") enableDevMode(false);' : ''}
       `);
+    } catch {
+      // Shell-nya belum siap menerima perintah lompat slide. Bukan alasan
+      // buat membatalkan sisanya.
+    }
+
+    try {
       // Kalau penyusun modul sendiri yang menyalakan Dev Mode di dalam preview,
       // pilihan itu miliknya - bukan sesuatu yang boleh dimatikan diam-diam
       // oleh proses generate ulang. Tombolnya dipantau lewat class .active
@@ -337,32 +350,45 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
         setTimeout(() => akar.classList.remove('pv-petunjuk'), 5000);
       }
 
-      // Klik dua kali di isi slide = buka slide itu di editor kiri.
-      // Dipasang di #viewport, bukan di document: klik dua kali di sidebar
-      // atau bilah navigasi modul gak ada urusannya dengan "slide mana yang
-      // mau disunting".
-      const vpKlik = win.document.getElementById('viewport');
-      if (vpKlik && onPilihSlide) {
-        vpKlik.addEventListener('dblclick', (e: Event) => {
-          // Kontrol milik modul dibiarkan bekerja apa adanya - klik dua kali
-          // di tombol accordion/tab memang urusannya membuka-tutup, bukan
-          // pindah editor. Tanpa penjagaan ini, mencoba interaksi modul di
-          // preview malah melempar editor ke slide lain.
-          const t = e.target as HTMLElement | null;
-          if (t && t.closest('button,a,input,textarea,select,[onclick]')) return;
-          // Lewat eval, BUKAN win.NAV / win.currentIdx. Keduanya dideklarasikan
-          // let/const di shell, dan binding let/const tingkat-atas TIDAK jadi
-          // properti window - dibaca dari luar hasilnya selalu undefined, dan
-          // fitur ini bakal diam-diam gak pernah jalan tanpa error sedikit pun.
-          // eval jalan DI DALAM lingkup global iframe, jadi dia melihatnya.
-          let nomor: number | null = null;
-          try {
-            nomor = win.eval(
-              '(typeof NAV !== "undefined" && NAV[currentIdx] && NAV[currentIdx].kind === "slide")'
-              + ' ? NAV[currentIdx].num : null',
-            );
-          } catch { /* shell belum siap - klik ini diabaikan saja */ }
-          if (typeof nomor === 'number') onPilihSlide(nomor);
+      // Klik dua kali DI MANA PUN dalam preview = buka slide yang lagi tampil
+      // itu di editor kiri.
+      //
+      // Dipasang di DOCUMENT, bukan cuma di #viewport, dan tanpa mengecualikan
+      // tombol. Versi pertama memasangnya cuma di area isi slide dan
+      // mengabaikan button/a/input, dengan alasan "kontrol modul jangan
+      // diganggu". Alasannya kedengaran rapi tapi salah sasaran: tempat yang
+      // paling wajar diklik-dua-kali buat pindah slide justru DAFTAR SLIDE DI
+      // SIDEBAR preview - dan itu tombol, di luar #viewport. Jadi fiturnya
+      // kelihatan gak jalan persis di tempat orang pertama kali mencobanya.
+      //
+      // Membiarkan tombol ikut memicu juga gak merusak apa-apa: klik pertama
+      // tetap dikerjakan modul seperti biasa (pindah slide / buka accordion),
+      // yang ditambahkan cuma "editor ikut ke slide yang SEKARANG tampil".
+      // Kalau bloknya accordion di slide yang sama, editor cuma pindah ke
+      // slide yang memang lagi dilihat - gak ada yang hilang.
+      if (onPilihSlide) {
+        win.document.addEventListener('dblclick', () => {
+          // Ditunda satu putaran: kalau yang diklik-dua-kali itu item sidebar
+          // atau tombol Sebelumnya/Selanjutnya, modul BARU pindah slide sesudah
+          // handler-nya sendiri jalan. Membaca NAV[currentIdx] seketika bakal
+          // dapat slide LAMA - editornya lompat ke slide yang barusan
+          // ditinggalkan, yang justru bikin bingung.
+          setTimeout(() => {
+            // Lewat eval, BUKAN win.NAV / win.currentIdx. Keduanya
+            // dideklarasikan let/const di shell, dan binding let/const
+            // tingkat-atas TIDAK jadi properti window - dibaca dari luar
+            // hasilnya selalu undefined, dan fitur ini bakal diam-diam gak
+            // pernah jalan tanpa error sedikit pun. eval jalan DI DALAM
+            // lingkup global iframe, jadi dia melihatnya.
+            let nomor: number | null = null;
+            try {
+              nomor = win.eval(
+                '(typeof NAV !== "undefined" && NAV[currentIdx] && NAV[currentIdx].kind === "slide")'
+                + ' ? NAV[currentIdx].num : null',
+              );
+            } catch { /* shell belum siap - klik ini diabaikan saja */ }
+            if (typeof nomor === 'number') onPilihSlide(nomor);
+          }, 60);
         });
       }
 
