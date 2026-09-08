@@ -937,14 +937,18 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
    nempel di tempat yang gak ada hubungannya sama gerakan itu. */
 html.pv-editor #sidebar::after{
   content:'Klik 2× - slide langsung terbuka di editor';
-  position:absolute; left:16px; right:16px; bottom:12px; z-index:200;
+  /* Nempel di ATAS sidebar, bukan di bawah: dasar sidebar isinya tombol
+     (Reset, Cek Rekam Aktivitas, Dev Mode) dan petunjuk yang melayang di sana
+     menutupinya persis waktu kursor lewat mau memencetnya. Di atas cuma ada
+     logo & judul modul - gak ada yang bisa terhalang. */
+  position:absolute; left:16px; right:16px; top:12px; z-index:200;
   text-align:center;
   background:var(--navy); color:#f6d998;
   font-size:11px; font-weight:700; letter-spacing:.03em;
   padding:6px 11px; border-radius:20px;
   box-shadow:0 6px 18px -6px rgba(0,0,0,.45);
   pointer-events:none;                 /* jangan pernah menghalangi klik */
-  opacity:0; transform:translateY(4px);
+  opacity:0; transform:translateY(-4px);
   transition:opacity .2s ease, transform .2s ease;
 }
 html.pv-editor #sidebar:hover::after{ opacity:1; transform:translateY(0); }

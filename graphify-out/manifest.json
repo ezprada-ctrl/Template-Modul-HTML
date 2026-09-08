@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "app/src/components/Canvas.tsx": {
-    "mtime": 1788859976.4781682,
-    "seen": 1788860153.754892,
-    "ast_hash": "adfe8475a5092e49d7033591ed9dfc15",
+    "mtime": 1788874974.4358504,
+    "seen": 1788874990.5016227,
+    "ast_hash": "537a382f7a239fc08a423d46ae07b592",
     "semantic_hash": ""
   },
   "app/src/components/CommandCenter.tsx": {
@@ -276,9 +276,9 @@
     "semantic_hash": "5cb4ab30db789846a50f7aff6a473b08"
   },
   "server/api/shell-template.html": {
-    "mtime": 1788874058.864062,
-    "seen": 1788874123.663225,
-    "ast_hash": "98d740a079d74a8c1cacd0da09f8ab5b",
+    "mtime": 1788874561.9927752,
+    "seen": 1788874803.6416442,
+    "ast_hash": "cd4fe360c48fa6743aa17c392790d4f1",
     "semantic_hash": ""
   },
   "server/requirements.txt": {
