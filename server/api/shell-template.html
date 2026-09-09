@@ -2293,6 +2293,15 @@ function artFullscreen(blockId){
 
 /* Blok Articulate wajib di slide ini yang belum kelar, atau null kalau aman. */
 function artPendingOnSlide(num){
+  /* Kalau paketnya gak ikut dibawa (Export HTML tunggal / Live Preview),
+     jangan pernah mengunci: yang tampil cuma placeholder "baru hidup di paket
+     SCORM", gak ada iframe, gak ada shim - jadi gak ada satu pun cara buat
+     menyelesaikannya. SLIDE_ART tetap dikirim generator walau art_packaged
+     mati, jadi tanpa penjaga ini peserta KEJEBAK PERMANEN di slide itu
+     (diverifikasi di browser pakai draft KB-3: maju ke Rangkuman gagal terus).
+     Dev Mode kebetulan lolos lewat gerbangnya di goTo(), jadi penyusun gak
+     pernah kena - cuma peserta yang kena. */
+  if(!HAS_ART) return null;
   const arts = SLIDE_ART[num];
   if(!arts) return null;
   for(const a of arts){
