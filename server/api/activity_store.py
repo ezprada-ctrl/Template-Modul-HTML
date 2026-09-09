@@ -230,7 +230,7 @@ def cocreation_tree(module_slug=None):
                 'ts': n.get('ts') or 0,
             })
 
-    judul_slug = _judul_per_slug()
+    judul_slug, _ = _judul_per_slug()
     # Kapan tiap modul PERTAMA dipakai - dipakai mengurut modul mengikuti
     # jalannya pelatihan, karena antar-modul gak ada urutan bawaan apa pun
     # (slug itu acak, judul belum tentu bernomor).
@@ -282,36 +282,57 @@ def cocreation_tree(module_slug=None):
 
 
 def _judul_per_slug():
-    """Peta module_slug -> daftar judul modul (module_title) yang pernah muncul.
+    """Dua peta: module_slug -> daftar judul modul yang pernah muncul, dan
+    session_id -> judul modul sesi itu.
 
     Kenapa penting: `slug` itu identitas PROJECT di builder, bukan identitas
     modul. Kalau satu project didaur ulang (diedit jadi modul beda lalu
     di-export lagi), dua file modul yang beda hidup di LMS dengan slug SAMA →
     datanya nyampur di bawah satu slug. Satu slug dengan >1 judul modul =
     tanda bentrok itu. Diambil dari payload session_start (1 baris per sesi,
-    jauh lebih sedikit dari total event) biar gak berat.
+    jauh lebih sedikit dari total event) biar gak berat. Peta per-sesi dipakai
+    list_modules buat MEMECAH slug yang bentrok jadi satu entri per judul.
     """
     rows = _tanpa_preflight(
-        fetch_rows(columns='module_slug,payload', event_type='session_start'))
+        fetch_rows(columns='module_slug,session_id,payload', event_type='session_start'))
     judul = {}
+    per_sesi = {}
     for r in rows:
         p = r.get('payload') or {}
         t = (p.get('module_title') or '').strip()
         if t:
             judul.setdefault(r['module_slug'], set()).add(t)
-    return {slug: sorted(s) for slug, s in judul.items()}
+            per_sesi[r['session_id']] = t
+    return {slug: sorted(s) for slug, s in judul.items()}, per_sesi
 
 
 def list_modules():
-    """Ringkasan per modul buat layar utama Command Center."""
+    """Ringkasan per modul buat layar utama Command Center.
+
+    Kuncinya (slug, judul_modul), BUKAN slug saja. Satu slug yang kepakai
+    beberapa judul modul (project didaur ulang / JSON-nya diimpor di dua
+    tempat) dipecah jadi satu entri per judul, karena itu memang dua modul
+    berbeda yang masing-masing perlu diakses & diselesaikan sendiri. Slug
+    normal tetap keluar sebagai satu entri, persis seperti sebelumnya.
+
+    Sesi yang module_title-nya gak pernah terekam (modul di-export sebelum
+    judulnya ikut dikirim) dikumpulkan di entri judul=None - dihitung, bukan
+    dibuang: kalau disembunyiin, jumlah peserta di layar jadi lebih kecil dari
+    yang sebenarnya tanpa ada yang sadar.
+    """
     rows = _tanpa_preflight(
         fetch_rows(columns='module_slug,session_id,learner_id,created_at,event_type'))
-    judul_map = _judul_per_slug()
-    by_slug = {}
+    judul_map, judul_sesi = _judul_per_slug()
+    by_key = {}
     for r in rows:
         slug = r['module_slug']
-        m = by_slug.setdefault(slug, {
-            'module_slug': slug, 'rows': 0,
+        bentrok = len(judul_map.get(slug, [])) > 1
+        # Cuma slug bentrok yang dipecah. Buat slug normal, judul di kunci
+        # dibiarkan None supaya satu slug = satu entri walau judulnya sempat
+        # ganti ejaan/spasi - pemecahan cuma berguna kalau memang ada dua modul.
+        judul = judul_sesi.get(r['session_id']) if bentrok else None
+        m = by_key.setdefault((slug, judul), {
+            'module_slug': slug, 'module_title': judul, 'rows': 0,
             '_sessions': set(), '_learners': set(),
             'first_seen': r['created_at'], 'last_seen': r['created_at'],
         })
@@ -325,10 +346,14 @@ def list_modules():
             m['last_seen'] = r['created_at']
 
     out = []
-    for m in by_slug.values():
+    for m in by_key.values():
         judul = judul_map.get(m['module_slug'], [])
         out.append({
             'module_slug': m['module_slug'],
+            # Judul modul entri INI kalau slug-nya dipecah; None kalau slug
+            # normal (atau kalau sesinya gak pernah merekam judul). Dipakai
+            # frontend buat menyaring sesi milik entri ini saja.
+            'module_title': m['module_title'],
             'rows': m['rows'],
             'sessions': len(m['_sessions']),
             'learners': len(m['_learners']),
@@ -336,8 +361,9 @@ def list_modules():
             'last_seen': m['last_seen'],
             'judul_modul': judul,
             # >1 judul di bawah satu slug = project didaur ulang, datanya
-            # nyampur. Ditandai keras biar penganalisis tau harus misahin per
-            # judul (tiap sesi bawa module_title-nya, lihat summarize_sessions).
+            # nyampur. Tetap ditandai walau entrinya sudah dipecah: yang
+            # dipecah cuma tabel sesi, sedangkan data mentah & catatan
+            # Co-creation masih nempel per slug.
             'kemungkinan_bentrok': len(judul) > 1,
         })
     out.sort(key=lambda m: m['last_seen'], reverse=True)

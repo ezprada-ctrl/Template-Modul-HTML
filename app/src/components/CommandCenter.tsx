@@ -41,6 +41,11 @@ function RingkasanBar({ butir }: { butir: { label: string; nilai: string; catata
 // meninggalkan layar lama, gagal kuis, atau membuka video lalu praktis tidak
 // menontonnya. Ambangnya sengaja sama persis dengan ambang ⚠ yang sudah dipakai
 // di tabel - biar angka ringkasan dan tanda di baris gak pernah bercerita beda.
+// Judul modul -> potongan nama berkas yang aman di Windows & macOS.
+function slugAman(t: string): string {
+  return t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+}
+
 function perluTindakLanjut(x: {
   peringatan_diabaikan?: number; durasi_ditinggal_menit: number | null;
   kuis_gagal: number; video_dimulai: number; video_rata_persen: number | null;
@@ -266,6 +271,10 @@ export default function CommandCenter() {
   // tampilan per-modul yang cakupannya beda.
   const [cocreationAll, setCocreationAll] = useState<CocreationModule[]>([]);
   const [activeSlug, setActiveSlug] = useState('');
+  // Entri modul itu dikunci (slug + judul), bukan slug saja: satu slug yang
+  // kepakai dua modul dipecah jadi dua entri, dan yang dibuka salah satunya.
+  // null = slug ini gak dipecah (kasus normal), jadi semua sesinya dipakai.
+  const [activeTitle, setActiveTitle] = useState<string | null>(null);
   // Pencarian & urutan daftar modul. Tanpa ini daftarnya cuma tembok tombol
   // acak: slug-nya mirip-mirip semua dan yang dicari orang biasanya "modul
   // yang barusan dipakai", bukan yang kebetulan paling awal di array.
@@ -329,17 +338,30 @@ export default function CommandCenter() {
     setActiveSlug('');
   }
 
-  async function openModule(slug: string) {
+  async function openModule(m: ActivityModule) {
+    const slug = m.module_slug;
     setActiveSlug(slug);
+    setActiveTitle(m.module_title);
     setPickerOpen(false);
     setModulTab('sesi');
     setCocreation([]);
-    if (demoMode) { setSessions(DEMO_SESSIONS); setTerpotong(false); return; }
+    // Sumbernya (backend / data contoh) kirim SEMUA sesi milik slug ini. Kalau
+    // slug-nya bentrok, yang ditampilkan cuma sesi milik judul yang dipilih -
+    // tiap sesi bawa module_title-nya sendiri, jadi pemisahannya pasti, bukan
+    // tebakan. Penyaringannya cuma buat slug bentrok: di slug normal, sesi lama
+    // yang module_title-nya kosong gak boleh ikut kebuang.
+    // Satu fungsi dipakai dua-duanya biar Mode Contoh gak diam-diam menempuh
+    // jalur lain dari data asli - kalau beda, yang dilatih orang bukan tampilan
+    // yang bakal dia hadapi.
+    const milikEntri = (items: ActivitySession[]) => m.kemungkinan_bentrok
+      ? items.filter(x => (x.module_title || null) === m.module_title)
+      : items;
+    if (demoMode) { setSessions(milikEntri(DEMO_SESSIONS)); setTerpotong(false); return; }
     setBusy(true);
     setError('');
     try {
       const r = await ccListSessions(password, slug);
-      setSessions(r.items);
+      setSessions(milikEntri(r.items));
       setTerpotong(r.terpotong);
     } catch (e: any) {
       setError(e.message);
@@ -427,7 +449,10 @@ export default function CommandCenter() {
 
   async function unduhRingkasan() {
     if (!sessions.length) return;
-    download(`aktivitas-${activeSlug}-ringkasan.csv`, toCsv(sessions as unknown as Record<string, unknown>[]));
+    // Judul ikut di nama berkas: dua modul yang berbagi satu slug diunduh
+    // terpisah, dan tanpa ini unduhan kedua nimpa yang pertama diam-diam.
+    download(`aktivitas-${activeSlug}${activeTitle ? '-' + slugAman(activeTitle) : ''}-ringkasan.csv`,
+             toCsv(sessions as unknown as Record<string, unknown>[]));
   }
 
   // Kolom modul diratakan jadi satu kolom teks + satu kolom menit per modul,
@@ -496,7 +521,7 @@ export default function CommandCenter() {
 
   function kunciLagi() {
     setUnlocked(false); setDemoMode(false); setPassword('');
-    setSessions([]); setLearners([]); setModules([]); setActiveSlug('');
+    setSessions([]); setLearners([]); setModules([]); setActiveSlug(''); setActiveTitle(null);
   }
 
   if (!unlocked) {
@@ -602,12 +627,15 @@ export default function CommandCenter() {
         // tanpa cari, tanpa nama yang dikenal manusia. Sekarang jadi daftar
         // yang bisa dicari, diurutkan, dan dikelompokkan per pemilik slug.
         const q = cariModul.trim().toLowerCase();
+        const namaEntriUrut = (m: ActivityModule) =>
+          m.module_title || (m.judul_modul.length ? m.judul_modul.join(' / ') : m.module_slug);
         const cocok = modules.filter(m =>
           !q || m.module_slug.toLowerCase().includes(q) ||
+          (m.module_title || '').toLowerCase().includes(q) ||
           m.judul_modul.some(j => j.toLowerCase().includes(q)));
         const urut = [...cocok].sort((a, b) =>
           urutModul === 'ramai' ? b.sessions - a.sessions
-          : urutModul === 'nama' ? judulModul(a.module_slug).localeCompare(judulModul(b.module_slug))
+          : urutModul === 'nama' ? namaEntriUrut(a).localeCompare(namaEntriUrut(b))
           : new Date(b.last_seen).getTime() - new Date(a.last_seen).getTime());
 
         // Kelompok pemilik cuma dibentuk kalau prefiksnya kepakai >1 modul —
@@ -626,16 +654,24 @@ export default function CommandCenter() {
         }
 
         const aktifSekarang = modules.filter(m => Date.now() - new Date(m.last_seen).getTime() < 7 * 86400000).length;
-        const terpilih = modules.find(m => m.module_slug === activeSlug);
+        const kunci = (m: ActivityModule) => `${m.module_slug}\u0000${m.module_title || ''}`;
+        // Nama yang dibaca orang buat SATU entri. Buat slug bentrok itu judul
+        // entrinya sendiri (bukan gabungan semua judul di slug itu - itu yang
+        // dulu bikin dua modul kelihatan seperti satu benda).
+        const namaEntri = (m: ActivityModule) =>
+          m.module_title || (m.kemungkinan_bentrok ? '(judulnya gak terekam)'
+            : (m.judul_modul.length ? m.judul_modul.join(' / ') : m.module_slug));
+        const terpilih = modules.find(m => m.module_slug === activeSlug && m.module_title === activeTitle);
 
         const barisModul = (m: ActivityModule) => {
-          const aktif = activeSlug === m.module_slug;
+          const aktif = activeSlug === m.module_slug && activeTitle === m.module_title;
           return (
             <button
-              key={m.module_slug}
-              onClick={() => openModule(m.module_slug)}
+              key={kunci(m)}
+              onClick={() => openModule(m)}
               title={m.kemungkinan_bentrok
-                ? `⚠ ${m.judul_modul.length} modul berbeda berbagi slug ini: ${m.judul_modul.join(' / ')}`
+                ? `⚠ Slug ini kepakai ${m.judul_modul.length} modul berbeda (${m.judul_modul.join(' / ')}). `
+                  + `Baris ini cuma bagian "${m.module_title || 'tanpa judul terekam'}"-nya.`
                 : `${m.rows} baris · ${m.sessions} sesi · ${m.learners} peserta`}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
@@ -647,11 +683,12 @@ export default function CommandCenter() {
             >
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontWeight: aktif ? 700 : 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {m.judul_modul.length ? m.judul_modul.join(' / ') : m.module_slug}
+                  {namaEntri(m)}
                   {m.kemungkinan_bentrok && <span style={{ marginLeft: 6, color: 'var(--danger)' }}>⚠</span>}
                 </span>
                 <span style={{ display: 'block', fontSize: 10.5, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {m.module_slug}
+                  {m.kemungkinan_bentrok && ' · berbagi slug'}
                 </span>
               </span>
               {/* Angka dipepetkan di kolom kanan dengan lebar tetap supaya bisa
@@ -673,11 +710,15 @@ export default function CommandCenter() {
         <>
         {modules.length > 0 && (
           <RingkasanBar butir={[
-            { label: 'Modul terekam', nilai: String(modules.length) },
+            { label: 'Modul terekam', nilai: String(modules.length),
+              catatan: modules.some(m => m.kemungkinan_bentrok) ? 'slug bentrok sudah dipecah' : undefined },
             { label: 'Aktif 7 hari terakhir', nilai: String(aktifSekarang), catatan: 'ada sesi baru' },
             { label: 'Total sesi', nilai: String(modules.reduce((a, m) => a + m.sessions, 0)) },
-            { label: 'Slug bentrok', nilai: String(modules.filter(m => m.kemungkinan_bentrok).length),
-              catatan: 'data nyampur', awas: modules.some(m => m.kemungkinan_bentrok) },
+            // Yang dihitung SLUG-nya, bukan barisnya: satu slug bentrok sudah
+            // dipecah jadi beberapa baris di daftar, dan menghitung barisnya
+            // bikin angka ini kelihatan berkali lipat dari masalah yang ada.
+            { label: 'Slug bentrok', nilai: String(new Set(modules.filter(m => m.kemungkinan_bentrok).map(m => m.module_slug)).size),
+              catatan: 'satu slug, beberapa modul', awas: modules.some(m => m.kemungkinan_bentrok) },
           ]} />
         )}
 
@@ -692,7 +733,8 @@ export default function CommandCenter() {
           }}>
             <span style={{ minWidth: 0 }}>
               <span style={{ display: 'block', fontWeight: 700, fontSize: 13.5 }}>
-                {terpilih.judul_modul.length ? terpilih.judul_modul.join(' / ') : terpilih.module_slug}
+                {namaEntri(terpilih)}
+                {terpilih.kemungkinan_bentrok && <span style={{ marginLeft: 6, color: 'var(--danger)' }}>⚠</span>}
               </span>
               <span style={{ display: 'block', fontSize: 10.5, color: 'var(--text-faint)' }}>
                 {terpilih.module_slug} · {terpilih.sessions} sesi · {terpilih.learners} peserta · terakhir {jarakWaktu(terpilih.last_seen)}
@@ -765,8 +807,10 @@ export default function CommandCenter() {
             lewat kolom "Modul" di tabel per sesi (tiap sesi bawa judulnya). */}
         {modules.some(m => m.kemungkinan_bentrok) && (
           <p className="hint" style={{ marginTop: -8, marginBottom: 16, color: 'var(--danger)' }}>
-            ⚠ Ada slug yang dipakai beberapa modul berbeda (project didaur ulang). Datanya nyampur di bawah satu slug —
-            pisahkan lewat kolom “Modul” di tabel sesi. Ke depan: bikin tiap modul lewat “+ Mulai Project Baru”.
+            ⚠ Ada slug yang dipakai beberapa modul berbeda (project didaur ulang). Modul-modulnya <b>sudah dipisah</b>{' '}
+            jadi baris sendiri di daftar ini, jadi tiap modul bisa dibaca &amp; diselesaikan terpisah — yang masih
+            bercampur cuma <b>CSV mentah</b> dan <b>catatan Co-creation</b>, karena keduanya nempel per slug.
+            Ke depan: gandakan project lewat tombol ⧉ di Preview &amp; Export (salinannya otomatis dapat slug sendiri).
           </p>
         )}
         </>
@@ -1016,7 +1060,13 @@ export default function CommandCenter() {
         </>
       )}
 
-      {view === 'modul' && activeSlug && (
+      {view === 'modul' && activeSlug && (() => {
+        // Entri ini hasil pecahan slug yang kepakai beberapa modul? Kalau iya,
+        // tabel sesinya sudah bersih per modul, TAPI data mentah & catatan
+        // Co-creation masih tersimpan per slug - dua-duanya wajib ngaku.
+        const slugDipecah = !!modules.find(
+          m => m.module_slug === activeSlug && m.module_title === activeTitle)?.kemungkinan_bentrok;
+        return (
         <>
           <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
             <button className={modulTab === 'sesi' ? 'btn-primary btn-sm' : 'btn-sm'}
@@ -1054,8 +1104,12 @@ export default function CommandCenter() {
               ⬇ CSV ringkasan per sesi
             </button>
             <button className="btn-sm" onClick={unduhMentah} disabled={busy || demoMode}
-                    title={demoMode ? 'Gak tersedia di Mode Contoh - data mentah cuma ada di Supabase asli' : undefined}>
-              ⬇ CSV mentah (semua event)
+                    title={demoMode
+                      ? 'Gak tersedia di Mode Contoh - data mentah cuma ada di Supabase asli'
+                      : slugDipecah
+                        ? 'Data mentah tersimpan per slug, jadi isinya SEMUA modul yang berbagi slug ini - bukan cuma yang lagi dibuka. Pisahkan lewat kolom module_title di CSV-nya.'
+                        : undefined}>
+              ⬇ CSV mentah (semua event){slugDipecah && ' ⚠'}
             </button>
           </div>
 
@@ -1067,7 +1121,12 @@ export default function CommandCenter() {
             // Kolom "Modul" cuma muncul kalau slug ini kecampuran beberapa
             // judul modul (project didaur ulang) - buat kasus normal, kolom
             // ini cuma nambah kebisingan.
-            const bentrok = !!modules.find(m => m.module_slug === activeSlug)?.kemungkinan_bentrok;
+            // Dihitung dari sesi yang BENAR-BENAR ditampilkan, bukan dari
+            // flag bentrok slug-nya: sesi sudah disaring per judul waktu entri
+            // dibuka, jadi di slug bentrok pun kolom "Modul" biasanya berisi
+            // nilai yang sama persis di tiap baris - nol informasi, makan
+            // tempat permanen. Pola yang sama dipakai kolom "Sumber" di bawah.
+            const bentrok = new Set(sessions.map(x => x.module_title || '—')).size > 1;
             const kolom = bentrok
               ? ['Peserta', 'Modul', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan']
               : ['Peserta', 'Mulai', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan'];
@@ -1259,6 +1318,18 @@ export default function CommandCenter() {
 
           {modulTab === 'cocreation' && (
             <>
+              {/* Catatan Co-creation tersimpan per SLUG, dan yang dipecah per
+                  judul cuma tabel sesi. Jadi di slug bentrok, catatan di bawah
+                  ini isinya gabungan semua modul yang berbagi slug itu -
+                  dibilang terus terang, bukan dibiarkan kelihatan seperti
+                  catatan modul yang lagi dibuka saja. */}
+              {slugDipecah && (
+                <p className="hint" style={{ color: 'var(--danger)', marginTop: 0 }}>
+                  ⚠ Catatan di bawah ini gabungan <b>semua modul yang berbagi slug “{activeSlug}”</b>,
+                  bukan cuma “{activeTitle || 'modul ini'}” — catatan Co-creation tersimpan per slug dan
+                  gak bawa judul modulnya, jadi gak bisa dipisah seperti tabel sesi.
+                </p>
+              )}
               {busy && <p className="hint">Memuat…</p>}
               {!busy && cocreation.length === 0 && (
                 <p className="hint">
@@ -1284,7 +1355,8 @@ export default function CommandCenter() {
             </>
           )}
         </>
-      )}
+        );
+      })()}
 
       {view === 'cocreation' && (
         <>

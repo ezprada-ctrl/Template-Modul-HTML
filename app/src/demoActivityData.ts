@@ -26,6 +26,7 @@ const TOTAL_ARTICULATE = 1;
 export const DEMO_MODULES: ActivityModule[] = [
   {
     module_slug: SLUG,
+    module_title: null,
     rows: 260,
     sessions: 8,
     learners: 6,

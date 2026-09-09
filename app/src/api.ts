@@ -161,6 +161,12 @@ export async function copyDraft(name: string, newName: string): Promise<void> {
 
 export interface ActivityModule {
   module_slug: string;
+  // Judul modul entri INI, kalau slug-nya kepakai beberapa modul dan karena
+  // itu dipecah jadi beberapa entri (lihat list_modules di activity_store.py).
+  // null = slug normal (satu modul saja), atau kumpulan sesi lama yang gak
+  // pernah merekam judul. Jadi kunci entri itu (module_slug, module_title),
+  // bukan slug saja.
+  module_title: string | null;
   rows: number;
   sessions: number;
   learners: number;
