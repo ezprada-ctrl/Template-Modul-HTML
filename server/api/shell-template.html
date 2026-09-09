@@ -2728,8 +2728,30 @@ function actNewSessionId(){
   return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
 }
 
+/* Sesi yang kesentuh Dev Mode SAMA SEKALI gak direkam. Yang layak dianalisis
+   cuma sesi belajar peserta di LMS, dan peserta gak mungkin masuk Dev Mode:
+   pintunya dikunci password (submitDevModePassword). Sebelum ini devMode cuma
+   ngelonggarin gerbang navigasi - perekamannya jalan terus, jadi tiap kali
+   penyusun nyoba modulnya sendiri dia nongol di Command Center berdampingan
+   sama peserta sungguhan, persis kayak baris "contoh"/"salma" di data KB-3.
+
+   Baris yang terlanjur kekirim SEBELUM Dev Mode dinyalakan gak bisa ditarik
+   balik dari sini - makanya satu baris penanda 'dev_mode' dikirim dulu, biar
+   server bisa mbuang SELURUH sesi itu lewat session_id-nya (lihat _sesi_dev()
+   di activity_store.py). Urutannya penting: penanda dikirim DULU, baru
+   perekaman dimatikan. */
+let devTrackStop = false;
+function devHentikanRekam(){
+  if(devTrackStop) return;
+  if(TRACK_READY && actSessionId){
+    actEvent('dev_mode', {});
+    actFlush();
+  }
+  devTrackStop = true;
+}
+
 function actEvent(type, payload){
-  if(!TRACK_READY || !actSessionId) return;
+  if(!TRACK_READY || !actSessionId || devTrackStop) return;
   const id = state.identity || {};
   actBuffer.push({
     module_slug: MODULE_SLUG,
@@ -2867,7 +2889,11 @@ function actFlush(useKeepalive){
 
 /* ---------- siklus sesi ---------- */
 function actStart(){
-  if(!TRACK_READY || actSessionId) return;
+  /* devTrackStop dicek di sini juga, bukan cuma di actEvent: kalau Dev Mode
+     udah nyala sebelum sesi sempat mulai (Live Preview di aplikasi penyusun
+     mulihin Dev Mode tiap iframe-nya dimuat ulang), sesinya gak usah lahir
+     sama sekali - lebih bersih daripada lahir lalu semua eventnya dibuang. */
+  if(!TRACK_READY || actSessionId || devTrackStop) return;
   actSessionId = actNewSessionId();
   actSessionT0 = Date.now();
   const id = state.identity || {};
@@ -3250,6 +3276,7 @@ function closeDevModeModal(){
    membanjiri backend dengan permintaan yang jawabannya sudah diketahui. */
 function enableDevMode(cekRekam){
   devMode = true;
+  devHentikanRekam();
   renderSidebar();
   document.getElementById('devmode-btn').classList.add('active');
   document.getElementById('devmode-btn').textContent = '● Dev Mode aktif';

@@ -112,9 +112,33 @@ def fetch_rows(module_slug=None, columns='*', event_type=None, learner_id=None):
 # Kalau ikut keitung, tiap modul dapat "sesi" palsu berdurasi nol.
 PREFLIGHT_EVENT = 'preflight'
 
+# Penanda "sesi ini kesentuh Dev Mode" yang dikirim modul (lihat
+# devHentikanRekam() di shell-template.html). Modul berhenti merekam begitu Dev
+# Mode nyala, TAPI baris yang terlanjur kekirim sebelum itu tetap ada di tabel -
+# baris penanda inilah yang bikin sesinya bisa dibuang utuh di sini.
+DEV_EVENT = 'dev_mode'
 
-def _tanpa_preflight(rows):
-    return [r for r in rows if r.get('event_type') != PREFLIGHT_EVENT]
+
+def _sesi_dev():
+    """session_id yang pernah kesentuh Dev Mode.
+
+    Ditanya terpisah ke server (bukan disaring dari baris yang udah ditarik)
+    karena sebagian pemanggil cuma narik SATU jenis event - mis. yang cuma
+    minta 'session_start' gak akan pernah lihat baris penanda 'dev_mode' punya
+    sesi itu, dan sesinya bakal lolos. Kuerinya kecil: satu kolom, dan cuma
+    sebanyak sesi yang beneran dipakai nyoba.
+    """
+    return {r['session_id']
+            for r in fetch_rows(columns='session_id', event_type=DEV_EVENT)
+            if r.get('session_id')}
+
+
+def _tanpa_uji(rows):
+    """Buang yang bukan aktivitas peserta: baris preflight Dev Mode, dan SEMUA
+    baris dari sesi yang kesentuh Dev Mode."""
+    dev = _sesi_dev()
+    return [r for r in rows
+            if r.get('event_type') != PREFLIGHT_EVENT and r.get('session_id') not in dev]
 
 
 # Catatan Co-creation. Tiap perubahan (tulis/sunting/hapus) dikirim sebagai
@@ -187,7 +211,7 @@ def cocreation_tree(module_slug=None):
     section lalu urutan slide (renumberModule di types.ts), jadi ini selalu
     cocok dengan alur modul, apa pun skema id section-nya.
     """
-    rows = _tanpa_preflight(fetch_rows(
+    rows = _tanpa_uji(fetch_rows(
         module_slug=module_slug,
         columns='module_slug,learner_id,learner_name,event_type,payload',
         event_type=COCREATION_EVENT))
@@ -235,7 +259,7 @@ def cocreation_tree(module_slug=None):
     # jalannya pelatihan, karena antar-modul gak ada urutan bawaan apa pun
     # (slug itu acak, judul belum tentu bernomor).
     pertama = {}
-    for r in _tanpa_preflight(fetch_rows(columns='module_slug,created_at', event_type='session_start')):
+    for r in _tanpa_uji(fetch_rows(columns='module_slug,created_at', event_type='session_start')):
         s = r['module_slug']
         if s not in pertama or r['created_at'] < pertama[s]:
             pertama[s] = r['created_at']
@@ -293,7 +317,7 @@ def _judul_per_slug():
     jauh lebih sedikit dari total event) biar gak berat. Peta per-sesi dipakai
     list_modules buat MEMECAH slug yang bentrok jadi satu entri per judul.
     """
-    rows = _tanpa_preflight(
+    rows = _tanpa_uji(
         fetch_rows(columns='module_slug,session_id,payload', event_type='session_start'))
     judul = {}
     per_sesi = {}
@@ -320,7 +344,7 @@ def list_modules():
     dibuang: kalau disembunyiin, jumlah peserta di layar jadi lebih kecil dari
     yang sebenarnya tanpa ada yang sadar.
     """
-    rows = _tanpa_preflight(
+    rows = _tanpa_uji(
         fetch_rows(columns='module_slug,session_id,learner_id,created_at,event_type'))
     judul_map, judul_sesi = _judul_per_slug()
     by_key = {}
@@ -373,7 +397,7 @@ def list_modules():
 def summarize_sessions(module_slug):
     """Satu baris per sesi belajar — bentuk yang paling langsung kepakai buat
     analisis habit (siapa, berapa lama, sejauh mana, skor berapa)."""
-    rows = _tanpa_preflight(fetch_rows(module_slug=module_slug))
+    rows = _tanpa_uji(fetch_rows(module_slug=module_slug))
     sessions = {}
     for r in rows:
         s = sessions.setdefault(r['session_id'], {
@@ -590,7 +614,7 @@ def summarize_learners():
     beda-beda jauh, itu keliatan (bisa jadi tanda NIP-nya salah ketik / dipakai
     berdua), bukan disembunyiin.
     """
-    rows = _tanpa_preflight(fetch_rows())
+    rows = _tanpa_uji(fetch_rows())
     by_session = {}
     for r in rows:
         by_session.setdefault(r['session_id'], []).append(r)
@@ -972,7 +996,7 @@ def recap_for_learner(module_slug, learner_id, live_session_id=None, live_total_
     persis pada saat peserta lagi ngeliat rekapnya. Modul yang tau angka itu
     sekarang, jadi dia yang nyetorin.
     """
-    rows = _tanpa_preflight(fetch_rows(module_slug=module_slug, learner_id=learner_id))
+    rows = _tanpa_uji(fetch_rows(module_slug=module_slug, learner_id=learner_id))
 
     nama = None
     total_slide = None
@@ -1162,7 +1186,7 @@ def _rata_kelas_tatap_menit(module_slug, exclude_learner_id=None):
     peserta modul, jadi paling gampang membengkak kalau gak disaring ketat
     dari awal. Tiap peserta yang buka rekapnya manggil ulang query ini.
     """
-    rows = _tanpa_preflight(fetch_rows(
+    rows = _tanpa_uji(fetch_rows(
         module_slug=module_slug, columns='learner_id,payload', event_type='slide_view'))
     per_learner = {}
     for r in rows:
