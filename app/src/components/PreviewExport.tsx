@@ -122,6 +122,43 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
     }
   }
 
+  // Project DIDAUR ULANG = judul modulnya berganti padahal slug-nya tetap.
+  // Akibatnya cuma kelihatan jauh di belakang: modul lama dan modul baru
+  // sama-sama mengirim module_slug yang sama, jadi sesi peserta dari dua
+  // pelatihan berbeda numpuk jadi satu di Command Center dan gak bisa
+  // dibongkar lagi dari data (itu yang bikin tanda "⚠ slug bentrok").
+  // Dicegat di titik EXPORT, bukan waktu judulnya diketik: mengganti judul
+  // sambil menyusun itu wajar dan sering, yang bikin bentrok cuma modul kedua
+  // yang benar-benar keluar ke LMS.
+  // Cuma berlaku kalau perekaman aktif - tanpa itu gak ada data yang bisa
+  // nyampur, dan peringatannya cuma jadi gangguan.
+  function lanjutWalauDaurUlang(): boolean {
+    const judul = (module.title || '').trim();
+    const dulu = (module.lastExportTitle || '').trim();
+    if (!module.trackActivity || !dulu || dulu === judul) return true;
+    return window.confirm(
+      `Judul modul berubah sejak export terakhir, tapi slug-nya masih sama.\n\n` +
+      `  Dulu  : "${dulu}"\n` +
+      `  Sekarang: "${judul}"\n` +
+      `  Slug  : "${module.slug}"\n\n` +
+      `Kalau ini MODUL BARU (project lama dipakai ulang), rekaman pesertanya bakal\n` +
+      `numpuk jadi satu sama modul sebelumnya di Command Center.\n\n` +
+      `Batal = urungkan, lalu gandakan project lewat tombol ⧉ di daftar draft\n` +
+      `        di bawah — salinannya dapat slug sendiri.\n` +
+      `OK    = tetap export pakai slug ini (kalau ini memang modul yang itu juga,\n` +
+      `        cuma ganti judul).`,
+    );
+  }
+
+  // Dipanggil setelah export BERHASIL. Juga dipanggil waktu pengguna memilih
+  // "tetap export" di atas, supaya dia gak ditanyai hal yang sama tiap kali -
+  // dia sudah menjawabnya sekali.
+  function catatJudulExport() {
+    if (!module.trackActivity) return;
+    if ((module.lastExportTitle || '') === (module.title || '')) return;
+    setModule({ ...module, lastExportTitle: module.title });
+  }
+
   async function doPreview() {
     setError('');
     try {
@@ -135,6 +172,7 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
   async function doExport() {
     setError('');
     setStatus('');
+    if (!lanjutWalauDaurUlang()) return;
     try {
       const mentah = await generateHtml(module);
       // Gambar disematkan jadi data URI dulu. Tanpa ini file HTML-nya cuma
@@ -162,6 +200,7 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
       a.download = `${module.slug || 'modul'}.html`;
       a.click();
       URL.revokeObjectURL(url);
+      catatJudulExport();
     } catch (e: any) {
       setError(e.message);
     }
@@ -232,6 +271,7 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
   // gak dibatasi limit fungsi serverless.
   async function doExportScorm() {
     setError('');
+    if (!lanjutWalauDaurUlang()) return;
     setZip({ fase: 'html', pesan: 'Menyiapkan…', persen: null });
     try {
       await exportScormZip(module, setZip);
@@ -242,6 +282,7 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
       setZip(null);
       return;
     }
+    catatJudulExport();
     setTimeout(() => setZip(null), 4000);
   }
 

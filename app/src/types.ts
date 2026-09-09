@@ -312,6 +312,15 @@ export interface ModuleData {
   // asks the learner for Nama + NIP up front. Opt-in per module so ordinary
   // modules don't send anything at all.
   trackActivity?: boolean;
+  // Judul modul waktu TERAKHIR di-export sebagai modul yang merekam aktivitas.
+  // Bukan buat ditampilkan - satu-satunya gunanya mendeteksi project yang
+  // DIDAUR ULANG: judulnya berganti tapi slug-nya tetap, jadi rekaman peserta
+  // modul lama & modul baru numpuk di bawah satu slug di Command Center dan
+  // gak bisa dipisah lagi. undefined = belum pernah di-export dengan perekaman
+  // aktif (termasuk semua draft yang dibuat sebelum field ini ada), dan itu
+  // BUKAN alasan buat memperingatkan - modul lama gak boleh tiba-tiba dituduh
+  // daur ulang cuma karena catatannya belum ada.
+  lastExportTitle?: string;
   // When true, the learner sees their OWN activity recap as an infographic
   // popup at the end of the module (screen time, videos watched, rushed
   // slides, knowledge-check first-attempt score, weakest quiz section,
