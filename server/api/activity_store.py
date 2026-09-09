@@ -20,7 +20,17 @@ SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '')
 
 READY = bool(SUPABASE_URL and SERVICE_KEY)
 
-PAGE_SIZE = 1000
+# Sebelumnya 1000. Rekap "Per Peserta" menarik SELURUH tabel, jadi ukuran
+# halaman langsung jadi jumlah bolak-balik HTTPS: 300 ribu baris = 300
+# permintaan berurutan, dan pada ~100ms per permintaan itu 30 detik - jauh di
+# atas batas waktu fungsi serverless, jauh sebelum batas MAX_ROWS kesentuh.
+# Waktu yang menabrak duluan, bukan memori.
+#
+# Aman dinaikin: loop di fetch_rows() maju sebanyak baris yang BENERAN
+# diterima, bukan sebanyak yang diminta - jadi kalau setelan db-max-rows
+# Supabase memangkas balasannya jadi lebih kecil, hasilnya tetap lengkap,
+# cuma balik ke banyak bolak-balik seperti dulu.
+PAGE_SIZE = 10000
 # Katup pengaman biar satu permintaan gak narik jutaan baris ke memori
 # fungsi serverless (yang jatah memorinya terbatas). Dinaikin dari 200rb:
 # 500rb baris ~150MB di memori (masih di bawah jatah fungsi Vercel), dan
@@ -53,6 +63,13 @@ def _headers():
 
 
 def fetch_rows(module_slug=None, columns='*', event_type=None, learner_id=None):
+    """Versi daftar dari iter_rows(). Dipakai pemanggil yang butuh menahan
+    semua barisnya sekaligus."""
+    return list(iter_rows(module_slug=module_slug, columns=columns,
+                          event_type=event_type, learner_id=learner_id))
+
+
+def iter_rows(module_slug=None, columns='*', event_type=None, learner_id=None):
     """Ambil semua baris, dipaginasi.
 
     Loop-nya sengaja maju sebanyak baris yang BENERAN diterima dan berhenti
@@ -71,7 +88,7 @@ def fetch_rows(module_slug=None, columns='*', event_type=None, learner_id=None):
             'SUPABASE_SERVICE_ROLE_KEY belum diset di project backend Vercel. '
             'Command Center butuh itu buat baca data (anon key sengaja gak punya izin baca).'
         )
-    out = []
+    jumlah = 0
     offset = 0
     while True:
         params = {
@@ -97,13 +114,14 @@ def fetch_rows(module_slug=None, columns='*', event_type=None, learner_id=None):
         rows = res.json()
         if not rows:
             break
-        out.extend(rows)
+        for r in rows:
+            yield r
+        jumlah += len(rows)
         offset += len(rows)
-        if len(out) >= MAX_ROWS:
+        if jumlah >= MAX_ROWS:
             global _TRUNCATED
             _TRUNCATED = True
             break
-    return out
 
 
 # Baris uji dari tombol "Cek Rekam Aktivitas" di Dev Mode modul. Berguna buat
@@ -152,10 +170,17 @@ def _sesi_disaring():
 def _tanpa_uji(rows):
     """Buang yang bukan aktivitas peserta: baris preflight Dev Mode, dan SEMUA
     baris dari sesi yang kesentuh Dev Mode atau ditandai manual."""
+    return list(_tanpa_uji_iter(rows))
+
+
+def _tanpa_uji_iter(rows):
+    """Versi mengalir. Dipakai pemanggil yang menarik SELURUH tabel: dengan
+    versi daftar, satu permintaan menahan dua salinan penuh sekaligus (hasil
+    tarikan + hasil saringan) sebelum yang pertama bisa dibuang."""
     disaring = _sesi_disaring()
-    return [r for r in rows
-            if r.get('event_type') != PREFLIGHT_EVENT
-            and r.get('session_id') not in disaring]
+    for r in rows:
+        if r.get('event_type') != PREFLIGHT_EVENT and r.get('session_id') not in disaring:
+            yield r
 
 
 def sesi_ditandai():
@@ -437,8 +462,8 @@ def list_modules():
     dibuang: kalau disembunyiin, jumlah peserta di layar jadi lebih kecil dari
     yang sebenarnya tanpa ada yang sadar.
     """
-    rows = _tanpa_uji(
-        fetch_rows(columns='module_slug,session_id,learner_id,created_at,event_type'))
+    rows = _tanpa_uji_iter(
+        iter_rows(columns='module_slug,session_id,learner_id,created_at,event_type'))
     judul_map, judul_sesi = _judul_per_slug()
     by_key = {}
     for r in rows:
@@ -707,9 +732,12 @@ def summarize_learners():
     beda-beda jauh, itu keliatan (bisa jadi tanda NIP-nya salah ketik / dipakai
     berdua), bukan disembunyiin.
     """
-    rows = _tanpa_uji(fetch_rows())
+    # Kolom 'id' dan 'client_ts' gak pernah dibaca fungsi ini - sebelumnya
+    # ikut ketarik karena select='*'. Di tarikan seluruh tabel, kolom yang gak
+    # kepakai itu bayarannya nyata: byte di jaringan dan objek di memori.
     by_session = {}
-    for r in rows:
+    for r in _tanpa_uji_iter(iter_rows(
+            columns='module_slug,session_id,learner_id,learner_name,event_type,payload,created_at')):
         by_session.setdefault(r['session_id'], []).append(r)
 
     learners = {}
