@@ -63,6 +63,39 @@ function perluTindakLanjut(x: {
 // nama pesertanya keluar layar dan dia gak tau lagi itu baris siapa.
 // Latarnya WAJIB dipasang eksplisit - sel sticky melayang di atas sel lain,
 // kalau tembus pandang teksnya bakal saling tumpuk waktu digeser.
+// Tabelnya 13-14 kolom DAN puluhan baris - dua-duanya perlu digulir. Wadahnya
+// dibikin menggulir sendiri (bukan halamannya) dan dibatasi tingginya, karena
+// itu satu-satunya cara `position: sticky` di header punya arti: sticky nempel
+// ke leluhur yang menggulir, jadi kalau yang menggulir halamannya, header
+// tabel gak punya apa pun buat dinempeli dan tetap kabur ke atas.
+// Tingginya relatif viewport (bukan px tetap) supaya di layar pendek tabelnya
+// gak menghabiskan halaman, dan di layar tinggi barisnya yang kelihatan makin
+// banyak.
+const WADAH_TABEL: CSSProperties = {
+  overflow: 'auto',
+  maxHeight: 'calc(100vh - 230px)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+};
+
+// Header baris atas. Latarnya WAJIB pekat: sel sticky melayang di atas baris
+// yang lewat di bawahnya, kalau tembus pandang angkanya saling tumpuk.
+const TH_ATAS: CSSProperties = {
+  textAlign: 'left',
+  padding: '9px 11px',
+  fontSize: 11,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  color: 'var(--text-faint)',
+  position: 'sticky',
+  top: 0,
+  zIndex: 3,
+  background: 'var(--surface-2)',
+  // <thead> gak ikut kebawa waktu <th>-nya sticky, jadi garis bawah header
+  // dipasang sebagai bayangan - `border` di sel sticky gak ikut melayang.
+  boxShadow: 'inset 0 -1px 0 var(--border)',
+};
+
 const SEL_NAMA: CSSProperties = {
   padding: '8px 11px',
   position: 'sticky',
@@ -71,10 +104,14 @@ const SEL_NAMA: CSSProperties = {
   background: 'var(--surface)',
   borderRight: '1px solid var(--border)',
 };
+// Pojok kiri-atas: beku DUA arah sekaligus (ikut TH_ATAS buat atas, ini buat
+// kiri). z-index-nya paling tinggi - dia satu-satunya sel yang harus menang
+// lawan header baris atas DAN kolom nama yang sama-sama melayang.
 const TH_NAMA: CSSProperties = {
   position: 'sticky',
   left: 0,
-  zIndex: 2,
+  top: 0,
+  zIndex: 5,
   background: 'var(--surface-2)',
   borderRight: '1px solid var(--border)',
 };
@@ -843,17 +880,18 @@ export default function CommandCenter() {
 
           {learners.length > 0 && (
             <>
-              <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+              <div style={WADAH_TABEL}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                   <thead>
                     <tr style={{ background: 'var(--surface-2)' }}>
                       {['Peserta', 'Modul', 'Nilai per Modul', 'Sesi', 'Tatap Layar', 'Ditinggal', 'Slide', 'Interaksi', 'Kuis', 'Knowledge Check', 'Video', 'Articulate', 'Catatan', 'Peringatan'].map((h, i) => (
-                        <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)', ...(i === 0 ? TH_NAMA : {}) }}>{h}</th>
+                        <th key={h} style={{ ...TH_ATAS, ...(i === 0 ? TH_NAMA : {}) }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {learners.map(l => {
+                      const mKey = `modul-peserta-${l.learner_id}`;
                       const pKey = `peringatan-peserta-${l.learner_id}`; const pOpen = expandedRows.has(pKey);
                       const vKey = `video-peserta-${l.learner_id}`; const vOpen = expandedRows.has(vKey);
                       return (
@@ -878,10 +916,41 @@ export default function CommandCenter() {
                             JUDUL modul; slug cuma jadi cadangan kalau judulnya
                             belum pernah terekam. */}
                         <td style={{ padding: '8px 11px' }}>
+                          {/* Dulu SEMUA judul modul dicetak sekaligus di sel ini.
+                              Peserta yang buka 8 modul bikin selnya jadi paragraf
+                              setinggi ~300px, dan satu baris seperti itu mendorong
+                              semua angka peserta lain keluar layar - kolom yang
+                              paling gak penting jadi yang paling makan tempat.
+                              Sekarang dua judul dulu, sisanya dibuka kalau diminta. */}
                           <span style={{ fontVariantNumeric: 'tabular-nums' }}>{l.jumlah_modul}</span>
-                          <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 1, whiteSpace: 'normal', maxWidth: 190 }}>
-                            {l.modul_slugs.map(slug => judulModul(slug)).join(', ')}
-                          </div>
+                          {(() => {
+                            const judul = l.modul_slugs.map(slug => judulModul(slug));
+                            const buka = expandedRows.has(mKey);
+                            const tampil = buka ? judul : judul.slice(0, 2);
+                            return (
+                              <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 1, whiteSpace: 'normal', maxWidth: 190 }}>
+                                {/* Waktu terlipat, tingginya dikunci dua baris lewat
+                                    line-clamp - bukan cuma dibatasi jumlah judulnya.
+                                    Dua judul panjang tetap bisa jadi empat baris, dan
+                                    yang bikin baris tabel menjulur itu TINGGINYA,
+                                    bukan banyaknya judul. */}
+                                <span style={buka ? undefined : {
+                                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                }}>{tampil.join(', ')}</span>
+                                {judul.length > 2 && (
+                                  <>
+                                    {!buka && '…'}{' '}
+                                    <button className="btn-ghost btn-sm" onClick={() => toggleRow(mKey)}
+                                            title={buka ? undefined : judul.join(String.fromCharCode(10))}
+                                            style={{ padding: '0 3px', fontSize: 10.5, verticalAlign: 'baseline' }}>
+                                      {buka ? 'tutup' : `+${judul.length - 2} lagi`}
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
                         {/* Nilai akhir per modul - satu baris per modul, bukan satu
                             angka gabungan: kelulusan ditetapkan PER modul oleh wali
@@ -1140,12 +1209,12 @@ export default function CommandCenter() {
             const sumberBervariasi = new Set(sessions.map(x => x.identity_source || '—')).size > 1;
             if (sumberBervariasi) kolom.splice(bentrok ? 2 : 1, 0, 'Sumber');
             return (
-            <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+            <div style={WADAH_TABEL}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
                 <thead>
                   <tr style={{ background: 'var(--surface-2)' }}>
                     {kolom.map((h, i) => (
-                      <th key={h} style={{ textAlign: 'left', padding: '9px 11px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-faint)', ...(i === 0 ? TH_NAMA : {}) }}>{h}</th>
+                      <th key={h} style={{ ...TH_ATAS, ...(i === 0 ? TH_NAMA : {}) }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
