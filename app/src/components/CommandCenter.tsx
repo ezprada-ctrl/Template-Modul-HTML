@@ -478,8 +478,23 @@ export default function CommandCenter() {
       const s = v === null || v === undefined ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
       return '"' + s.replace(/"/g, '""') + '"';
     };
+    /* NIP itu penanda orang, bukan bilangan. Dibungkus kutip CSV pun Excel
+       tetap memaksanya jadi angka: 18 digit berubah jadi notasi ilmiah
+       (1,98501E+17) dan nol di depan hilang - NIP yang isinya nol semua
+       bahkan tampil jadi "0". Formula teks ="..." bikin Excel membacanya apa
+       adanya. HARUS dikirim tanpa kutip pembungkus (kalau dibungkus, Excel
+       menampilkan formulanya sebagai teks mentah), jadi cuma dipakai kalau
+       nilainya angka semua - dijamin gak ada koma yang menggeser kolom.
+       Kolom lain sengaja dibiarkan polos supaya tetap enak diolah pemroses
+       selain Excel. */
+    const KOLOM_IDENTITAS = new Set(['nip', 'learner_id']);
+    const selCsv = (col: string, v: unknown) => {
+      const s = v === null || v === undefined ? '' : String(v);
+      if (KOLOM_IDENTITAS.has(col) && /^[0-9]+$/.test(s)) return '="' + s + '"';
+      return esc(v);
+    };
     const lines = [cols.map(esc).join(',')];
-    for (const r of rows) lines.push(cols.map(c => esc(r[c])).join(','));
+    for (const r of rows) lines.push(cols.map(c => selCsv(c, r[c])).join(','));
     // BOM: tanpa ini Excel salah baca huruf beraksen/emoji jadi karakter aneh.
     return '﻿' + lines.join('\r\n');
   }

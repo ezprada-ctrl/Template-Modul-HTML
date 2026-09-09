@@ -2470,6 +2470,27 @@ function scormNameToNatural(raw){
    PENTING buat analisis: student_id dari LMS BELUM TENTU NIP (bisa ID
    internal LMS). Makanya tiap sesi nyimpen `identity_source` — biar pas
    ngolah data ketahuan mana NIP asli (manual) dan mana ID dari LMS. */
+/* Nolak id yang secara jelas BUKAN penanda orang. Kunci penggabung peserta
+   di Command Center itu learner_id; kalau nilai sampah keterima, semua sesi
+   yang kena nilai yang sama KEGABUNG jadi satu "peserta" palsu.
+
+   BUG yang ditutup ini (dilaporkan 2026-09-09): ada baris peserta dengan
+   learner_id "0" di Command Center & CSV. `identityFromScorm()` dulu cuma
+   nge-trim `student_id` lalu nerima apa pun yang gak kosong - LMS yang
+   ngasih "0" buat akun preview/tamu langsung jadi identitas sah.
+
+   SENGAJA gak nuntut id-nya berupa angka: student_id dari LMS emang BELUM
+   TENTU NIP (bisa id internal alfanumerik) - itu keputusan yang udah diambil
+   di atas, dan `identity_source` yang mbedain keduanya waktu dianalisis.
+   Yang ditolak cuma yang degenerate: kependekan buat jadi penanda siapa pun,
+   atau nol semua. */
+function identityIdUsable(id){
+  id = (id || '').trim();
+  if(id.length < 3) return false;
+  if(/^0+$/.test(id)) return false;
+  return true;
+}
+
 function identityFromScorm(){
   if(!scorm.inited) return null;
   let name = '', id = '';
@@ -2484,6 +2505,10 @@ function identityFromScorm(){
   }catch(e){ return null; }
   name = scormNameToNatural(name);
   id = (id || '').trim();
+  /* Id sampah dibuang di sini, BUKAN di resolveIdentity: dengan dikosongkan,
+     jalurnya otomatis jatuh ke cabang "SCORM cuma kasih NAMA" di sana -
+     namanya tetap kepake buat ngisi form, peserta tinggal ngetik NIP. */
+  if(!identityIdUsable(id)) id = '';
   if(!name && !id) return null;
   return { nama: name, nip: id, source: 'scorm' };
 }
@@ -2532,7 +2557,7 @@ function resolveIdentity(){
   // Cache lintas-modul: peserta udah ngetik NIP di modul sebelumnya di
   // komputer yang sama. Dipakai sebelum jatuh ke form karena NIP-nya udah pasti.
   const shared = loadSharedIdentity();
-  if(shared && shared.nip){
+  if(shared && identityIdUsable(shared.nip)){
     state.identity = shared;
     saveState();
     return shared;
@@ -2603,6 +2628,10 @@ function submitIdentity(){
   const nip = nipDigits(document.getElementById('idn-nip').value);
   if(nama.length < 3){ showIdentityError('Nama belum diisi lengkap.'); return; }
   if(nip.length < 8){ showIdentityError('NIP harus angka (NIP PNS 18 digit).'); return; }
+  /* "000000000000000000" / "11111111" lolos cek panjang di atas tapi jelas
+     bukan NIP siapa pun - dan kalau keterima, semua yang ngetik itu kegabung
+     jadi satu baris peserta di Command Center. */
+  if(/^(\d)\1*$/.test(nip)){ showIdentityError('NIP kok angkanya sama semua? Cek lagi ya.'); return; }
   pendingIdentity = { nama: nama, nip: nip, source: 'manual' };
 
   document.getElementById('idn-confirm-nama').textContent = nama;
