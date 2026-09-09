@@ -1915,18 +1915,43 @@ const MULTI_GROUPS = __MULTI_GROUPS_JS__;
    Dipakai supaya progres tersimpan di LMS (server-side), bukan cuma localStorage browser,
    jadi peserta lanjut dari posisi terakhir walau ganti device/browser/logout LMS. */
 let scorm = {api:null, version:null, inited:false};
+
+/* Kenapa gagalnya perlu DICATAT, bukan cuma dianggap "gak ada LMS":
+   sebelum ini satu-satunya jejak yang ketinggalan adalah `scorm_version:
+   null` di session_start - dan itu gak bisa mbedain "modulnya emang dibuka
+   di luar LMS" dari "dibuka di dalam LMS tapi API-nya gak ketemu". Waktu
+   satu pelatihan (127 sesi, KB-3, Sep 2026) semuanya null padahal paketnya
+   jelas diunggah sebagai SCORM ke KLC, gak ada satu pun data buat nunjuk
+   langkah mana yang putus. Bidang ini yang ngejawab itu di pelatihan
+   berikutnya - kecil (beberapa puluh byte), aman buat CHECK pg_column_size
+   payload < 8192 di Supabase. */
+let scormDiag = {hop:0, putus:null, ketemu:null, init_balik:null, init_error:null};
+
 function scormFindAPI(win){
   let attempts = 0;
   while(win && attempts < 500){
-    /* !__modulShim: mulai dari ART_PACKAGED, modul ini MEMASANG API/
-       API_1484_11 palsu di window-nya sendiri buat ditemukan konten
-       Articulate di dalam iframe (lihat ARTICULATE di bawah). Tanpa
-       pengecualian ini, pencarian di bawah bakal nemu shim buatan sendiri
-       duluan dan modul ini gak akan pernah nyambung ke LMS beneran. */
-    if(win.API && !win.API.__modulShim) return {api:win.API, version:'1.2'};
-    if(win.API_1484_11 && !win.API_1484_11.__modulShim) return {api:win.API_1484_11, version:'2004'};
-    if(win.parent && win.parent !== win) win = win.parent; else break;
+    /* Tiap lompatan dibungkus sendiri-sendiri. Sebelumnya seluruh pencarian
+       cuma dibungkus SATU try/catch di scormInit(), jadi satu leluhur yang
+       beda origin (aksesnya nglempar SecurityError) mbatalin pencarian secara
+       total DAN diam-diam - modul balik ke mode "gak ada LMS" tanpa jejak.
+       Sekarang lompatan yang nglempar cuma ngehentiin pendakian di titik itu,
+       dan alasannya dicatat. */
+    try{
+      /* !__modulShim: mulai dari ART_PACKAGED, modul ini MEMASANG API/
+         API_1484_11 palsu di window-nya sendiri buat ditemukan konten
+         Articulate di dalam iframe (lihat ARTICULATE di bawah). Tanpa
+         pengecualian ini, pencarian di bawah bakal nemu shim buatan sendiri
+         duluan dan modul ini gak akan pernah nyambung ke LMS beneran. */
+      if(win.API && !win.API.__modulShim) return {api:win.API, version:'1.2'};
+      if(win.API_1484_11 && !win.API_1484_11.__modulShim) return {api:win.API_1484_11, version:'2004'};
+    }catch(e){ scormDiag.putus = 'lintas-origin'; return null; }
+    let naik = null;
+    try{ naik = (win.parent && win.parent !== win) ? win.parent : null; }
+    catch(e){ scormDiag.putus = 'lintas-origin'; return null; }
+    if(!naik){ scormDiag.putus = scormDiag.putus || 'ujung'; break; }
+    win = naik;
     attempts++;
+    scormDiag.hop = Math.max(scormDiag.hop, attempts);
   }
   return null;
 }
@@ -1940,10 +1965,25 @@ function scormInit(){
     const found = scormGetAPI();
     if(!found) return false;
     scorm.api = found.api; scorm.version = found.version;
+    scormDiag.ketemu = found.version;
     const ok = scorm.version==='1.2' ? scorm.api.LMSInitialize('') : scorm.api.Initialize('');
+    scormDiag.init_balik = String(ok);
     scorm.inited = (ok==='true' || ok===true);
+    /* LMSInitialize balikin "false" BUKAN cuma waktu gagal: kalau sesi SCORM
+       udah pernah di-Initialize (pemutar LMS yang ngelakuin duluan, atau
+       modulnya dimuat ulang di dalam sesi yang sama), SCORM 1.2 balikin
+       "false" dengan error 101/103 = "already initialized". Diperlakukan
+       sebagai gagal total, API yang sebenarnya SIAP PAKAI itu dibuang -
+       identitas & progres peserta gak pernah ketarik. Kode errornya yang
+       mbedain, jadi itu yang dicek. */
+    if(!scorm.inited){
+      let kode = '';
+      try{ kode = String(scorm.version==='1.2' ? scorm.api.LMSGetLastError() : scorm.api.GetLastError()); }catch(e){}
+      scormDiag.init_error = kode;
+      if(kode === '101' || kode === '103') scorm.inited = true;
+    }
     return scorm.inited;
-  }catch(e){ return false; }
+  }catch(e){ scormDiag.putus = scormDiag.putus || 'error-init'; return false; }
 }
 function scormGetValue(name){
   try{
@@ -2848,6 +2888,13 @@ function actStart(){
        yang emang udah ada di modul ini. */
     section_titles: SECTION_TITLES,
     scorm_version: scorm.inited ? scorm.version : null,
+    /* Cuma dikirim kalau SCORM GAGAL nyambung - kalau berhasil, scorm_version
+       di atas udah cukup dan gak perlu nambah berat payload tiap sesi. */
+    scorm_diag: scorm.inited ? null : {
+      ...scormDiag,
+      di_iframe: window.parent !== window,
+      punya_opener: !!window.opener
+    },
     screen: window.innerWidth + 'x' + window.innerHeight,
     touch: ('ontouchstart' in window),
     tz_offset_min: new Date().getTimezoneOffset(),
