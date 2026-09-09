@@ -2900,10 +2900,11 @@ function updateSlideRushed(m, ms){
   saveState();
 }
 
-function actCloseSlide(){
-  if(!actSlideMark) return;
-  const m = actSlideMark;
-  actSlideMark = null;
+/* Waktu tatap slide yang udah kekumpul buat mark ini SAMPAI DETIK INI, tanpa
+   nutup marknya. Dipisah dari actCloseSlide() karena dua pemanggil butuh
+   angka yang sama tapi cuma satu yang boleh mengakhiri marknya - lihat
+   actSyncRushedNow(). */
+function actElapsedMs(m){
   let ms = m.activeMs;
   if(!actIdlePaused){
     /* Segmen aktif masih jalan. Tambahin sampai sekarang, TAPI trailing idle
@@ -2915,6 +2916,31 @@ function actCloseSlide(){
     const segEnd = Math.min(now, actLastActivity + threshold);
     ms += Math.max(0, segEnd - m.t0);
   }
+  return ms;
+}
+
+/* Nilai slideRushed slide yang LAGI DIBUKA, pakai waktu yang udah jalan
+   sejauh ini - tanpa nutup mark (jadi gak ada slide_view kedobel dan timernya
+   gak kereset).
+
+   BUG yang ditutup ini (ditemukan 2026-09-09): slideRushed cuma dihitung di
+   actCloseSlide(), yang jalannya lewat render()->actMarkSlide() SESUDAH semua
+   gerbang di goTo() lewat. Gerbang peringatan baca-cepat sendiri ada DI DALAM
+   goTo() dan bikin return duluan, jadi slide yang barusan ditinggal - yaitu
+   slide TERAKHIR sebelum kuis, justru yang paling mungkin diklik-lewat pas
+   orang buru-buru loncat ke kuis - belum pernah dinilai waktu daftar rushed
+   dibaca. Akibat terparah: section yang materinya cuma SATU slide gak akan
+   pernah bisa memunculkan peringatan sama sekali. */
+function actSyncRushedNow(){
+  if(!TRACK_READY || !actSlideMark) return;
+  updateSlideRushed(actSlideMark, actElapsedMs(actSlideMark));
+}
+
+function actCloseSlide(){
+  if(!actSlideMark) return;
+  const m = actSlideMark;
+  actSlideMark = null;
+  const ms = actElapsedMs(m);
   // Ditandai SEBELUM filter render-kilat di bawah - justru klik cepat
   // berulang buat ngelewatin slide (skenario paling penting buat ditangkap)
   // seringnya di bawah 400ms, jadi kalau ditandai SESUDAH filter, kasus
@@ -4452,6 +4478,9 @@ function goTo(idx){
        kalau tracking mati, jadi gak perlu cek TRACK_READY eksplisit di
        sini). devMode dilewatin, sama kayak gerbang lain di atas. */
     if(target.kind==='quiz' && !devMode){
+      /* Slide yang lagi ditinggal ini dinilai DULU - kalau nggak, dia baru
+         kehitung di actCloseSlide() yang jalannya sesudah gerbang ini. */
+      actSyncRushedNow();
       const rushed = rushedSlidesInSection(target.section);
       if(rushed.length && !state.quizWarnShown[target.section]){
         openReadingWarning(target.section, rushed);
