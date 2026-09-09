@@ -4973,7 +4973,13 @@ function resetProgress(){
      datanya dari server dan gak bisa disentuh dari sisi peserta.) */
   const quizBest = state.quizBest;
   const quizAttempts = state.quizAttempts;
-  state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, quizBest:quizBest||{}, quizAttempts:quizAttempts||{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}};
+  /* artDone IKUT dikosongkan (bukan dipertahankan seperti quizBest): "paket
+     Articulate sudah selesai" itu progres belajar, satu golongan sama visited,
+     bukan riwayat penilaian. TAPI kuncinya WAJIB ada - sebelum ini artDone
+     hilang sama sekali dari state, dan pelaporan Articulate berikutnya
+     langsung nabrak TypeError waktu baca state.artDone[blockId]. loadState()
+     nambalnya cuma waktu halaman dimuat, jadi crash-nya kena sampai reload. */
+  state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, quizBest:quizBest||{}, quizAttempts:quizAttempts||{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}, artDone:{}};
   if(identity) state.identity = identity;
   saveState();
   currentIdx = 0;
