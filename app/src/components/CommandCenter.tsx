@@ -210,6 +210,28 @@ function VideoRincian({ detail }: { detail: VideoDetail[] }) {
   );
 }
 
+// Slug modul itu identitas project, dan di praktiknya orangnya nempel di
+// depan ("ikram-...", "wendi_tp-..."). Dipakai buat mengelompokkan daftar
+// modul biar 45 baris jadi beberapa kelompok yang bisa dilipat - satu orang
+// hampir selalu cuma peduli kelompoknya sendiri.
+function pemilikSlug(slug: string): string {
+  const m = slug.match(/^([A-Za-z0-9]+)[-_]/);
+  return m ? m[1].toLowerCase() : slug.toLowerCase();
+}
+
+// "3 hari lalu" jauh lebih cepat dibaca daripada tanggal ISO waktu yang
+// dicari itu "mana yang masih dipakai pelatihan sekarang".
+function jarakWaktu(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (!isFinite(t)) return '—';
+  const hari = Math.floor((Date.now() - t) / 86400000);
+  if (hari <= 0) return 'hari ini';
+  if (hari === 1) return 'kemarin';
+  if (hari < 30) return `${hari} hari lalu`;
+  if (hari < 365) return `${Math.floor(hari / 30)} bulan lalu`;
+  return `${Math.floor(hari / 365)} tahun lalu`;
+}
+
 /**
  * Command Center — baca & unduh rekaman aktivitas peserta.
  *
@@ -244,6 +266,16 @@ export default function CommandCenter() {
   // tampilan per-modul yang cakupannya beda.
   const [cocreationAll, setCocreationAll] = useState<CocreationModule[]>([]);
   const [activeSlug, setActiveSlug] = useState('');
+  // Pencarian & urutan daftar modul. Tanpa ini daftarnya cuma tembok tombol
+  // acak: slug-nya mirip-mirip semua dan yang dicari orang biasanya "modul
+  // yang barusan dipakai", bukan yang kebetulan paling awal di array.
+  const [cariModul, setCariModul] = useState('');
+  const [urutModul, setUrutModul] = useState<'terbaru' | 'ramai' | 'nama'>('terbaru');
+  // Daftar modul dilipat begitu satu modul dipilih - yang dibaca setelah itu
+  // tabelnya, bukan daftarnya, dan daftar sepanjang itu mendorong tabel jauh
+  // ke bawah layar.
+  const [pickerOpen, setPickerOpen] = useState(true);
+  const [grupTertutup, setGrupTertutup] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   // true kalau backend motong hasil di MAX_ROWS — rekap cuma sebagian.
@@ -299,6 +331,7 @@ export default function CommandCenter() {
 
   async function openModule(slug: string) {
     setActiveSlug(slug);
+    setPickerOpen(false);
     setModulTab('sesi');
     setCocreation([]);
     if (demoMode) { setSessions(DEMO_SESSIONS); setTerpotong(false); return; }
@@ -564,34 +597,181 @@ export default function CommandCenter() {
         </button>
       </div>
 
-      {view === 'modul' && (
-      <>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18 }}>
-        {modules.map(m => (
-          <button
-            key={m.module_slug}
-            className={activeSlug === m.module_slug ? 'btn-primary btn-sm' : 'btn-sm'}
-            onClick={() => openModule(m.module_slug)}
-            title={m.kemungkinan_bentrok
-              ? `⚠ ${m.judul_modul.length} modul berbeda berbagi slug ini: ${m.judul_modul.join(' / ')}`
-              : `${m.rows} baris · ${m.sessions} sesi · ${m.learners} peserta`}
-          >
-            {m.module_slug} <span style={{ opacity: 0.7 }}>({m.sessions})</span>
-            {m.kemungkinan_bentrok && <span style={{ marginLeft: 5, color: 'var(--danger)' }}>⚠</span>}
-          </button>
-        ))}
-      </div>
-      {/* Peringatan bentrok slug: satu slug isinya beberapa judul modul =
-          project didaur ulang, data dua modul nyampur. Masih bisa dipisah
-          lewat kolom "Modul" di tabel per sesi (tiap sesi bawa judulnya). */}
-      {modules.some(m => m.kemungkinan_bentrok) && (
-        <p className="hint" style={{ marginTop: -8, marginBottom: 16, color: 'var(--danger)' }}>
-          ⚠ Ada slug yang dipakai beberapa modul berbeda (project didaur ulang). Datanya nyampur di bawah satu slug —
-          pisahkan lewat kolom “Modul” di tabel sesi. Ke depan: bikin tiap modul lewat “+ Mulai Project Baru”.
-        </p>
-      )}
-      </>
-      )}
+      {view === 'modul' && (() => {
+        // Daftar modul: dulu tembok tombol berisi slug mentah, tanpa urutan,
+        // tanpa cari, tanpa nama yang dikenal manusia. Sekarang jadi daftar
+        // yang bisa dicari, diurutkan, dan dikelompokkan per pemilik slug.
+        const q = cariModul.trim().toLowerCase();
+        const cocok = modules.filter(m =>
+          !q || m.module_slug.toLowerCase().includes(q) ||
+          m.judul_modul.some(j => j.toLowerCase().includes(q)));
+        const urut = [...cocok].sort((a, b) =>
+          urutModul === 'ramai' ? b.sessions - a.sessions
+          : urutModul === 'nama' ? judulModul(a.module_slug).localeCompare(judulModul(b.module_slug))
+          : new Date(b.last_seen).getTime() - new Date(a.last_seen).getTime());
+
+        // Kelompok pemilik cuma dibentuk kalau prefiksnya kepakai >1 modul —
+        // kalau tidak, kelompoknya beranggota satu dan cuma nambah baris judul.
+        const hitungPemilik = new Map<string, number>();
+        for (const m of modules) {
+          const k = pemilikSlug(m.module_slug);
+          hitungPemilik.set(k, (hitungPemilik.get(k) || 0) + 1);
+        }
+        const grup = new Map<string, ActivityModule[]>();
+        for (const m of urut) {
+          const k = pemilikSlug(m.module_slug);
+          const nama = (hitungPemilik.get(k) || 0) > 1 ? k : 'lainnya';
+          if (!grup.has(nama)) grup.set(nama, []);
+          grup.get(nama)!.push(m);
+        }
+
+        const aktifSekarang = modules.filter(m => Date.now() - new Date(m.last_seen).getTime() < 7 * 86400000).length;
+        const terpilih = modules.find(m => m.module_slug === activeSlug);
+
+        const barisModul = (m: ActivityModule) => {
+          const aktif = activeSlug === m.module_slug;
+          return (
+            <button
+              key={m.module_slug}
+              onClick={() => openModule(m.module_slug)}
+              title={m.kemungkinan_bentrok
+                ? `⚠ ${m.judul_modul.length} modul berbeda berbagi slug ini: ${m.judul_modul.join(' / ')}`
+                : `${m.rows} baris · ${m.sessions} sesi · ${m.learners} peserta`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
+                padding: '8px 11px', border: 0, borderTop: '1px solid var(--border)', borderRadius: 0,
+                background: aktif ? 'var(--surface-2)' : 'transparent',
+                boxShadow: aktif ? 'inset 3px 0 0 var(--text)' : 'none',
+                cursor: 'pointer', font: 'inherit', fontSize: 12.5,
+              }}
+            >
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontWeight: aktif ? 700 : 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {m.judul_modul.length ? m.judul_modul.join(' / ') : m.module_slug}
+                  {m.kemungkinan_bentrok && <span style={{ marginLeft: 6, color: 'var(--danger)' }}>⚠</span>}
+                </span>
+                <span style={{ display: 'block', fontSize: 10.5, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {m.module_slug}
+                </span>
+              </span>
+              {/* Angka dipepetkan di kolom kanan dengan lebar tetap supaya bisa
+                  dibandingkan sekilas antar baris, bukan dicari-cari. */}
+              <span style={{ fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', textAlign: 'right', width: 62, flex: 'none' }}>
+                {m.sessions} sesi
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', textAlign: 'right', width: 72, flex: 'none' }}>
+                {m.learners} peserta
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--text-faint)', textAlign: 'right', width: 84, flex: 'none' }}>
+                {jarakWaktu(m.last_seen)}
+              </span>
+            </button>
+          );
+        };
+
+        return (
+        <>
+        {modules.length > 0 && (
+          <RingkasanBar butir={[
+            { label: 'Modul terekam', nilai: String(modules.length) },
+            { label: 'Aktif 7 hari terakhir', nilai: String(aktifSekarang), catatan: 'ada sesi baru' },
+            { label: 'Total sesi', nilai: String(modules.reduce((a, m) => a + m.sessions, 0)) },
+            { label: 'Slug bentrok', nilai: String(modules.filter(m => m.kemungkinan_bentrok).length),
+              catatan: 'data nyampur', awas: modules.some(m => m.kemungkinan_bentrok) },
+          ]} />
+        )}
+
+        {/* Modul terpilih ditaruh di baris sendiri: setelah memilih, yang
+            dibaca tabelnya - daftar 45 baris di atasnya cuma mendorong tabel
+            keluar layar. Bisa dibuka lagi lewat "Ganti modul". */}
+        {terpilih && !pickerOpen && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14,
+            padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-sm)',
+            background: 'var(--surface-2)',
+          }}>
+            <span style={{ minWidth: 0 }}>
+              <span style={{ display: 'block', fontWeight: 700, fontSize: 13.5 }}>
+                {terpilih.judul_modul.length ? terpilih.judul_modul.join(' / ') : terpilih.module_slug}
+              </span>
+              <span style={{ display: 'block', fontSize: 10.5, color: 'var(--text-faint)' }}>
+                {terpilih.module_slug} · {terpilih.sessions} sesi · {terpilih.learners} peserta · terakhir {jarakWaktu(terpilih.last_seen)}
+              </span>
+            </span>
+            <button className="btn-ghost btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setPickerOpen(true)}>
+              Ganti modul
+            </button>
+          </div>
+        )}
+
+        {pickerOpen && modules.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+              <input
+                value={cariModul}
+                onChange={e => setCariModul(e.target.value)}
+                placeholder="Cari modul (judul atau slug)…"
+                style={{ flex: '1 1 240px', minWidth: 0 }}
+              />
+              <select value={urutModul} onChange={e => setUrutModul(e.target.value as any)} style={{ flex: 'none' }}>
+                <option value="terbaru">Terbaru dipakai</option>
+                <option value="ramai">Paling banyak sesi</option>
+                <option value="nama">Judul A–Z</option>
+              </select>
+              {activeSlug && (
+                <button className="btn-ghost btn-sm" onClick={() => setPickerOpen(false)}>Tutup daftar</button>
+              )}
+            </div>
+
+            {urut.length === 0 ? (
+              <p className="hint" style={{ margin: 0 }}>Gak ada modul yang cocok dengan “{cariModul}”.</p>
+            ) : (
+              <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', maxHeight: 340, overflowY: 'auto' }}>
+                {[...grup.entries()].map(([nama, isi]) => {
+                  const tutup = grupTertutup.has(nama);
+                  // Satu kelompok = judul kelompoknya gak memisahkan apa pun,
+                  // cuma baris tambahan. Baru berguna kalau ada >1 kelompok.
+                  if (grup.size === 1) return <div key={nama}>{isi.map(barisModul)}</div>;
+                  return (
+                    <div key={nama}>
+                      <button
+                        onClick={() => setGrupTertutup(prev => {
+                          const next = new Set(prev);
+                          if (next.has(nama)) next.delete(nama); else next.add(nama);
+                          return next;
+                        })}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 6, width: '100%', textAlign: 'left',
+                          padding: '6px 11px', border: 0, borderRadius: 0, background: 'var(--surface-2)',
+                          cursor: 'pointer', font: 'inherit', fontSize: 10.5, fontWeight: 700,
+                          letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-faint)',
+                          position: 'sticky', top: 0, zIndex: 1,
+                        }}
+                      >
+                        <span style={{ display: 'inline-block', width: 9 }}>{tutup ? '▸' : '▾'}</span>
+                        {nama} <span style={{ opacity: 0.7 }}>({isi.length})</span>
+                      </button>
+                      {!tutup && isi.map(barisModul)}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Peringatan bentrok slug: satu slug isinya beberapa judul modul =
+            project didaur ulang, data dua modul nyampur. Masih bisa dipisah
+            lewat kolom "Modul" di tabel per sesi (tiap sesi bawa judulnya). */}
+        {modules.some(m => m.kemungkinan_bentrok) && (
+          <p className="hint" style={{ marginTop: -8, marginBottom: 16, color: 'var(--danger)' }}>
+            ⚠ Ada slug yang dipakai beberapa modul berbeda (project didaur ulang). Datanya nyampur di bawah satu slug —
+            pisahkan lewat kolom “Modul” di tabel sesi. Ke depan: bikin tiap modul lewat “+ Mulai Project Baru”.
+          </p>
+        )}
+        </>
+        );
+      })()}
 
       {view === 'peserta' && (
         <>
