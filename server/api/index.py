@@ -311,6 +311,61 @@ def api_activity_learners():
         return jsonify({'error': str(e)}), 503
 
 
+@app.post('/api/activity/tandai-uji')
+def api_activity_tandai_uji():
+    """Tandai sesi sebagai bukan-aktivitas-peserta (data uji penyusun).
+
+    MENANDAI, bukan menghapus: baris aktivitasnya tetap utuh di tabel dan tetap
+    ikut di ekspor CSV mentah (yang memang dijanjikan lossless). Yang berubah
+    cuma semua rekap - sesi bertanda dibuang di _tanpa_uji(). Penandaan yang
+    salah bisa dibatalkan tanpa kehilangan apa pun.
+    """
+    data = request.get_json(silent=True) or {}
+    denied = _check_cc_password(data)
+    if denied:
+        return denied
+    sesi = data.get('sesi') or []
+    if not isinstance(sesi, list) or not sesi:
+        return jsonify({'error': 'Tidak ada sesi yang dipilih.'}), 400
+    if len(sesi) > 500:
+        return jsonify({'error': 'Terlalu banyak sesi sekaligus (maksimal 500).'}), 400
+    try:
+        n = activity_store.tandai_sesi(sesi, data.get('alasan') or '')
+        return jsonify({'ditandai': n})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
+@app.post('/api/activity/batalkan-tanda')
+def api_activity_batalkan_tanda():
+    """Batalkan penandaan. Yang dihapus CUMA baris penandanya."""
+    data = request.get_json(silent=True) or {}
+    denied = _check_cc_password(data)
+    if denied:
+        return denied
+    ids = data.get('session_ids') or []
+    if not isinstance(ids, list) or not ids:
+        return jsonify({'error': 'Tidak ada sesi yang dipilih.'}), 400
+    try:
+        n = activity_store.batalkan_tanda(ids)
+        return jsonify({'dibatalkan': n})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
+@app.post('/api/activity/ditandai')
+def api_activity_ditandai():
+    """Daftar sesi yang ditandai manual - buat ditinjau ulang & dibatalkan."""
+    data = request.get_json(silent=True) or {}
+    denied = _check_cc_password(data)
+    if denied:
+        return denied
+    try:
+        return jsonify({'ditandai': activity_store.sesi_ditandai()})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
 @app.post('/api/activity/rows')
 def api_activity_rows():
     """Semua event mentah satu modul — buat ekspor CSV yang lossless."""

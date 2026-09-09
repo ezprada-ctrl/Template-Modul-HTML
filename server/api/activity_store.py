@@ -119,26 +119,119 @@ PREFLIGHT_EVENT = 'preflight'
 DEV_EVENT = 'dev_mode'
 
 
-def _sesi_dev():
-    """session_id yang pernah kesentuh Dev Mode.
+# Penanda MANUAL dari Command Center: "sesi ini bukan peserta, jangan dihitung".
+# Dipakai buat merapikan baris uji yang terlanjur masuk sebelum penyaringan Dev
+# Mode ada - mis. "contoh", "salma", NIP penyusun, NIP nol semua.
+#
+# SENGAJA menandai, BUKAN menghapus. Tabelnya append-only dan itu properti yang
+# mahal buat dibuang: penandaan salah bisa dibatalkan (baris penandanya yang
+# dihapus, bukan datanya), ekspor CSV mentah tetap lossless seperti maksud
+# awalnya, dan gak ada jalan buat menghilangkan data peserta sungguhan secara
+# permanen lewat satu klik yang salah.
+TANDA_UJI_EVENT = 'tandai_uji'
+
+
+def _sesi_disaring():
+    """session_id yang tidak boleh dihitung sebagai aktivitas peserta:
+    kesentuh Dev Mode, atau ditandai manual dari Command Center.
 
     Ditanya terpisah ke server (bukan disaring dari baris yang udah ditarik)
     karena sebagian pemanggil cuma narik SATU jenis event - mis. yang cuma
-    minta 'session_start' gak akan pernah lihat baris penanda 'dev_mode' punya
-    sesi itu, dan sesinya bakal lolos. Kuerinya kecil: satu kolom, dan cuma
-    sebanyak sesi yang beneran dipakai nyoba.
+    minta 'session_start' gak akan pernah lihat baris penanda punya sesi itu,
+    dan sesinya bakal lolos. Kuerinya kecil: satu kolom, dan cuma sebanyak
+    sesi yang beneran ditandai.
     """
-    return {r['session_id']
-            for r in fetch_rows(columns='session_id', event_type=DEV_EVENT)
-            if r.get('session_id')}
+    out = set()
+    for et in (DEV_EVENT, TANDA_UJI_EVENT):
+        for r in fetch_rows(columns='session_id', event_type=et):
+            if r.get('session_id'):
+                out.add(r['session_id'])
+    return out
 
 
 def _tanpa_uji(rows):
     """Buang yang bukan aktivitas peserta: baris preflight Dev Mode, dan SEMUA
-    baris dari sesi yang kesentuh Dev Mode."""
-    dev = _sesi_dev()
+    baris dari sesi yang kesentuh Dev Mode atau ditandai manual."""
+    disaring = _sesi_disaring()
     return [r for r in rows
-            if r.get('event_type') != PREFLIGHT_EVENT and r.get('session_id') not in dev]
+            if r.get('event_type') != PREFLIGHT_EVENT
+            and r.get('session_id') not in disaring]
+
+
+def sesi_ditandai():
+    """Rincian sesi yang ditandai manual - buat panel "data uji" di Command
+    Center, supaya penandaan bisa ditinjau ulang dan dibatalkan. Sesi yang
+    kesentuh Dev Mode TIDAK ikut: itu otomatis dan gak perlu ditinjau."""
+    out = []
+    for r in fetch_rows(event_type=TANDA_UJI_EVENT):
+        p = r.get('payload') or {}
+        out.append({
+            'session_id': r.get('session_id'),
+            'module_slug': r.get('module_slug'),
+            'learner_id': p.get('learner_id'),
+            'learner_name': p.get('learner_name'),
+            'alasan': p.get('alasan') or '',
+            'ditandai_pada': r.get('created_at'),
+        })
+    out.sort(key=lambda x: x['ditandai_pada'] or '', reverse=True)
+    return out
+
+
+def tandai_sesi(sesi, alasan=''):
+    """Tandai sesi sebagai bukan-peserta. `sesi` = daftar dict berisi
+    session_id (wajib) + module_slug/learner_id/learner_name (buat ditampilkan
+    balik waktu ditinjau). Sesi yang sudah ditandai dilewati, jadi menekan
+    tombolnya dua kali gak bikin penanda kembar."""
+    if not READY:
+        raise RuntimeError('SUPABASE_SERVICE_ROLE_KEY belum diset di project backend Vercel.')
+    sudah = {r['session_id'] for r in fetch_rows(columns='session_id', event_type=TANDA_UJI_EVENT)
+             if r.get('session_id')}
+    baris = []
+    for s in sesi:
+        sid = (s or {}).get('session_id')
+        if not sid or sid in sudah:
+            continue
+        sudah.add(sid)
+        baris.append({
+            'module_slug': s.get('module_slug') or '(tidak diketahui)',
+            'session_id': sid,
+            'learner_id': None,
+            'learner_name': None,
+            'event_type': TANDA_UJI_EVENT,
+            'payload': {
+                'learner_id': s.get('learner_id'),
+                'learner_name': s.get('learner_name'),
+                'alasan': (alasan or '')[:300],
+            },
+        })
+    if not baris:
+        return 0
+    res = requests.post(
+        f'{SUPABASE_URL}/rest/v1/modul_activity',
+        params={}, headers={**_headers(), 'Prefer': 'return=minimal'},
+        json=baris, timeout=30,
+    )
+    res.raise_for_status()
+    return len(baris)
+
+
+def batalkan_tanda(session_ids):
+    """Batalkan penandaan: yang dihapus CUMA baris penandanya, data aktivitas
+    pesertanya tidak pernah disentuh."""
+    if not READY:
+        raise RuntimeError('SUPABASE_SERVICE_ROLE_KEY belum diset di project backend Vercel.')
+    n = 0
+    for sid in session_ids or []:
+        if not sid:
+            continue
+        res = requests.delete(
+            f'{SUPABASE_URL}/rest/v1/modul_activity',
+            params={'session_id': f'eq.{sid}', 'event_type': f'eq.{TANDA_UJI_EVENT}'},
+            headers={**_headers(), 'Prefer': 'return=minimal'}, timeout=30,
+        )
+        res.raise_for_status()
+        n += 1
+    return n
 
 
 # Catatan Co-creation. Tiap perubahan (tulis/sunting/hapus) dikirim sebagai

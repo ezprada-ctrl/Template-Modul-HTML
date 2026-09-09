@@ -391,6 +391,41 @@ export async function ccRawRows(password: string, moduleSlug: string): Promise<a
   return (await ccPost('rows', { password, module_slug: moduleSlug })).rows;
 }
 
+// Sesi yang ditandai "bukan peserta" (data uji penyusun).
+export interface SesiDitandai {
+  session_id: string;
+  module_slug: string | null;
+  learner_id: string | null;
+  learner_name: string | null;
+  alasan: string;
+  ditandai_pada: string;
+}
+
+// Satu sesi yang mau ditandai. module_slug/learner_* ikut dikirim supaya
+// panel peninjauan bisa menampilkannya tanpa menarik ulang seluruh rekap.
+export interface SesiUntukDitandai {
+  session_id: string;
+  module_slug?: string | null;
+  learner_id?: string | null;
+  learner_name?: string | null;
+}
+
+// MENANDAI, bukan menghapus: baris aktivitasnya tetap utuh dan tetap ikut di
+// ekspor CSV mentah. Yang berubah cuma rekapnya. Bisa dibatalkan.
+export async function ccTandaiUji(
+  password: string, sesi: SesiUntukDitandai[], alasan: string,
+): Promise<number> {
+  return (await ccPost('tandai-uji', { password, sesi, alasan })).ditandai;
+}
+
+export async function ccBatalkanTanda(password: string, sessionIds: string[]): Promise<number> {
+  return (await ccPost('batalkan-tanda', { password, session_ids: sessionIds })).dibatalkan;
+}
+
+export async function ccDitandai(password: string): Promise<SesiDitandai[]> {
+  return (await ccPost('ditandai', { password })).ditandai;
+}
+
 // Satu catatan Co-creation milik satu peserta, sebagaimana dilihat pemateri.
 export interface CocreationNote {
   learner_id: string;

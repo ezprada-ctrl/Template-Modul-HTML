@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { Fragment, useState } from 'react';
-import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule, PeringatanDetail, VideoDetail } from '../api';
-import { ccCocreation, ccListModules, ccListSessions, ccListLearners, ccRawRows } from '../api';
+import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule, PeringatanDetail, VideoDetail, SesiDitandai } from '../api';
+import { ccCocreation, ccListModules, ccListSessions, ccListLearners, ccRawRows, ccTandaiUji, ccBatalkanTanda, ccDitandai } from '../api';
 import { DEMO_MODULES, DEMO_SESSIONS, DEMO_LEARNERS, DEMO_COCREATION } from '../demoActivityData';
 
 // Ringkasan di atas tabel. Alasannya: tabelnya 13 kolom dengan bobot visual
@@ -295,6 +295,11 @@ export default function CommandCenter() {
   const [demoMode, setDemoMode] = useState(false);
   const [modules, setModules] = useState<ActivityModule[]>([]);
   const [sessions, setSessions] = useState<ActivitySession[]>([]);
+  /* Sesi yang ditandai "bukan peserta". Ditandai, BUKAN dihapus: baris
+     aktivitasnya tetap utuh di tabel dan tetap ikut di ekspor CSV mentah -
+     jadi penandaan yang salah gak pernah menghilangkan data siapa pun. */
+  const [ditandai, setDitandai] = useState<SesiDitandai[]>([]);
+  const [panelUji, setPanelUji] = useState(false);
   const [learners, setLearners] = useState<ActivityLearner[]>([]);
   const [view, setView] = useState<'modul' | 'peserta' | 'cocreation'>('modul');
   // Sub-tampilan di dalam satu modul. Catatan Co-creation dipisah dari tabel
@@ -405,6 +410,48 @@ export default function CommandCenter() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function muatDitandai() {
+    if (demoMode) return;
+    try { setDitandai(await ccDitandai(password)); } catch { /* panel opsional, jangan bikin halaman gagal */ }
+  }
+
+  /* Menandai satu sesi sebagai data uji. Rekapnya langsung ditarik ulang -
+     kalau enggak, tabel di layar masih menampilkan sesi yang barusan dibuang
+     dan orang gak yakin tombolnya berhasil atau tidak. */
+  async function tandaiSesiUji(s: ActivitySession) {
+    if (demoMode) { setError('Mode Contoh: penandaan tidak dikirim ke server.'); return; }
+    const nama = s.learner_name || s.learner_id || 'sesi ini';
+    if (!window.confirm(
+      `Tandai sesi ${nama} sebagai DATA UJI?
+
+` +
+      'Sesi ini akan hilang dari semua rekap dan hitungan peserta. ' +
+      'Baris aktivitasnya TIDAK dihapus - tetap ada di CSV mentah, dan ' +
+      'penandaan ini bisa dibatalkan lagi lewat panel "Data uji".')) return;
+    const alasan = window.prompt('Alasan (opsional, buat catatan sendiri nanti):', '') || '';
+    setBusy(true); setError('');
+    try {
+      await ccTandaiUji(password, [{
+        session_id: s.session_id, module_slug: s.module_slug,
+        learner_id: s.learner_id, learner_name: s.learner_name,
+      }], alasan);
+      const m = modules.find(x => x.module_slug === activeSlug && x.module_title === activeTitle)
+               || modules.find(x => x.module_slug === activeSlug);
+      await Promise.all([m ? openModule(m) : Promise.resolve(), muatDitandai()]);
+    } catch (e: any) { setError(e.message); } finally { setBusy(false); }
+  }
+
+  async function batalkanTandaUji(sessionId: string) {
+    if (demoMode) return;
+    setBusy(true); setError('');
+    try {
+      await ccBatalkanTanda(password, [sessionId]);
+      const m = modules.find(x => x.module_slug === activeSlug && x.module_title === activeTitle)
+               || modules.find(x => x.module_slug === activeSlug);
+      await Promise.all([m ? openModule(m) : Promise.resolve(), muatDitandai()]);
+    } catch (e: any) { setError(e.message); } finally { setBusy(false); }
   }
 
   async function bukaCocreation() {
@@ -1197,6 +1244,49 @@ export default function CommandCenter() {
             </button>
           </div>
 
+          {!demoMode && (
+            <div style={{ margin: '10px 0 4px' }}>
+              <button className="btn-sm"
+                      onClick={() => { const b = !panelUji; setPanelUji(b); if (b) muatDitandai(); }}>
+                {panelUji ? '▾' : '▸'} Data uji{ditandai.length ? ` (${ditandai.length})` : ''}
+              </button>
+              {panelUji && (
+                <div style={{ marginTop: 8, padding: '10px 12px', border: '1px solid var(--border)',
+                              borderRadius: 8, background: 'var(--surface-2)' }}>
+                  <p className="hint" style={{ marginTop: 0 }}>
+                    Sesi di sini dibuang dari <b>semua rekap dan hitungan peserta</b>. Baris
+                    aktivitasnya tidak dihapus — tetap ada di CSV mentah — jadi penandaan yang
+                    salah bisa dibatalkan tanpa kehilangan apa pun. Sesi yang tersentuh Dev Mode
+                    disaring otomatis dan tidak muncul di daftar ini.
+                  </p>
+                  {ditandai.length === 0 ? (
+                    <p className="hint" style={{ marginBottom: 0 }}>Belum ada sesi yang ditandai.</p>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+                      <tbody>
+                        {ditandai.map(d => (
+                          <tr key={d.session_id} style={{ borderTop: '1px solid var(--border)' }}>
+                            <td style={{ padding: '6px 8px' }}>
+                              <NamaPeserta nama={d.learner_name} nip={d.learner_id} />
+                            </td>
+                            <td style={{ padding: '6px 8px', color: 'var(--text-dim)' }}>{d.module_slug}</td>
+                            <td style={{ padding: '6px 8px', color: 'var(--text-faint)' }}>{d.alasan || '—'}</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right' }}>
+                              <button className="btn-sm" disabled={busy}
+                                      onClick={() => batalkanTandaUji(d.session_id)}>
+                                batalkan
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {busy && <p className="hint">Memuat…</p>}
 
           {!busy && sessions.length === 0 && <p className="hint">Belum ada sesi terekam di modul ini.</p>}
@@ -1223,6 +1313,9 @@ export default function CommandCenter() {
             // Pola yang sama dipakai kolom "Modul" di atas.
             const sumberBervariasi = new Set(sessions.map(x => x.identity_source || '—')).size > 1;
             if (sumberBervariasi) kolom.splice(bentrok ? 2 : 1, 0, 'Sumber');
+            /* Ditaruh paling kanan: ini aksi kerapian data, bukan angka
+               belajar - jangan sampai mendorong kolom yang beneran dibaca. */
+            if (!demoMode) kolom.push('');
             return (
             <div style={WADAH_TABEL}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, whiteSpace: 'nowrap' }}>
@@ -1260,6 +1353,17 @@ export default function CommandCenter() {
                           day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
                         })}
                       </td>
+                      {/* Kolomnya sengaja tanpa judul & tombolnya samar: yang
+                          dilihat mata di tabel ini peserta, bukan tombol. */}
+                      {!demoMode && (
+                        <td style={{ padding: '8px 11px', textAlign: 'right' }}>
+                          <button className="btn-sm" disabled={busy}
+                                  onClick={() => tandaiSesiUji(s)}
+                                  title="Tandai sesi ini sebagai data uji penyusun. Hilang dari semua rekap, tapi barisnya TIDAK dihapus dan bisa dibatalkan.">
+                            tandai uji
+                          </button>
+                        </td>
+                      )}
                       {/* Tatap layar (durasi_tatap_layar_menit) dipakai sebagai
                           durasi utama, BUKAN durasi_menit total: peserta yang
                           tab-nya dibiarkan kebuka sambil ditinggal lama akan
