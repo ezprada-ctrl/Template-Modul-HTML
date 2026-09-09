@@ -2491,6 +2491,24 @@ function identityIdUsable(id){
   return true;
 }
 
+/* NIP yang diketik manual dinormalkan ke angka saja oleh nipDigits(), tapi
+   student_id dari LMS dulu cuma di-trim. Kalau LMS ngembaliin NIP berformat
+   ("19850101 201001 1 001"), orang yang SAMA kepecah jadi dua baris peserta
+   di Command Center - satu dari sesi lewat LMS, satu dari sesi yang ngisi
+   form. Disamakan di sini.
+
+   TAPI cuma kalau id-nya jelas NIP berformat: tanpa huruf sama sekali, dan
+   angkanya minimal 8 digit. Id internal LMS yang alfanumerik ("LMS-9931")
+   DIBIARKAN apa adanya - kalau ikut dipreteli jadi "9931", dua id LMS yang
+   beda bisa nabrak jadi satu orang, dan itu jauh lebih parah daripada
+   sekadar kepecah. */
+function normalizeLearnerId(id){
+  id = (id || '').trim();
+  if(/[A-Za-z]/.test(id)) return id;
+  const d = nipDigits(id);
+  return d.length >= 8 ? d : id;
+}
+
 function identityFromScorm(){
   if(!scorm.inited) return null;
   let name = '', id = '';
@@ -2504,7 +2522,7 @@ function identityFromScorm(){
     }
   }catch(e){ return null; }
   name = scormNameToNatural(name);
-  id = (id || '').trim();
+  id = normalizeLearnerId(id);
   /* Id sampah dibuang di sini, BUKAN di resolveIdentity: dengan dikosongkan,
      jalurnya otomatis jatuh ke cabang "SCORM cuma kasih NAMA" di sana -
      namanya tetap kepake buat ngisi form, peserta tinggal ngetik NIP. */
