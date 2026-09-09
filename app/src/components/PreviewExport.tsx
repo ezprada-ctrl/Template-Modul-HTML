@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import type { ModuleData } from '../types';
-import { normalizeModule, moduleFromJson, slugify } from '../types';
+import { normalizeModule, moduleFromJson, slugify, reslug } from '../types';
 import { generateHtml, listDrafts, loadDraft, saveDraft, renameDraft, copyDraft, deleteDraft } from '../api';
 import { articulateBlocks, exportScormZip, type ZipProgress } from '../scormZip';
 import { sematkanGambarDataUri } from '../assetEmbed';
@@ -206,7 +206,10 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
       `Impor "${data.title}" (${data.sections.length} section, ${data.slides.length} slide) sebagai draft.\n` +
       `Project yang terbuka sekarang ("${module.slug}") tetap tersimpan.\n\n` +
       `Nama draft untuk modul yang diimpor:`,
-      data.slug,
+      // Slug-nya masih kepakai draft lain = ini penggandaan, bukan pemulihan.
+      // Usulkan slug baru supaya rekaman Command Center-nya kepisah; nama
+      // lamanya masih bisa diketik ulang kalau memang mau menimpa.
+      drafts.includes(data.slug) ? reslug(data.slug) : data.slug,
     );
     if (jawab === null) return; // batal
     const slug = slugify(jawab) || data.slug;
@@ -262,7 +265,16 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
   // whatever's currently open in the editor - just adds a new independent
   // copy to the list, ready to load later.
   async function doCopy(name: string) {
-    const newName = window.prompt(`Nama draft salinan dari "${name}":`, `${name}-copy`);
+    // Nama usulannya slug BARU berprefiks sama, bukan "<nama>-copy": salinan
+    // itu modul kedua yang nantinya diakses & diselesaikan sendiri, jadi dia
+    // butuh tarikan Command Center-nya sendiri. copyDraft sudah menulis slug
+    // ini ke dalam JSON-nya juga, bukan cuma jadi nama draft.
+    const newName = window.prompt(
+      `Nama draft salinan dari "${name}":\n\n` +
+      `Salinan dapat slug sendiri, jadi rekaman aktivitasnya di Command Center\n` +
+      `terpisah dari modul asalnya.`,
+      reslug(name),
+    );
     if (!newName || !newName.trim() || newName.trim() === name) return;
     setError('');
     try {

@@ -372,6 +372,30 @@ export function buildProjectSlugPrefix(nama: string, namaProject: string): strin
   return projPart ? `${namaPart}_${projPart}` : namaPart;
 }
 
+// Slug BARU dengan prefiks manusia yang sama (buang cuma ekor acak dari
+// `uid`, mis. "ikram_pajak-mt2q7x-3" -> "ikram_pajak-mt9k1a-7").
+//
+// Dipakai setiap kali satu project DIGANDAKAN. Command Center menarik rekaman
+// aktivitas PER module_slug, dan slug itu ikut tertanam di HTML/SCORM yang
+// diekspor - jadi dua modul yang berbagi satu slug bikin sesi peserta dari
+// dua pelatihan berbeda numpuk jadi satu baris yang gak bisa dipisah lagi
+// (itu yang bikin tanda "⚠ slug bentrok" muncul). Salinan wajib punya slug
+// sendiri supaya keduanya bisa diakses & diselesaikan terpisah.
+//
+// Ekor `uid` dibuang supaya slug gak tumbuh memanjang tiap digandakan ulang,
+// TAPI cuma kalau ekornya memang ekor `uid`: pola `-<waktu base36>-<nomor>`
+// yang bagian waktunya jatuh di rentang tahun 2020-2100. Tanpa uji rentang
+// itu, pola `-\w+-\d+$` polos ikut memakan kata yang bermakna - nama asli
+// macam "ikram-pajakprovinsi-4" bakal terpangkas jadi "ikram", persis
+// menghapus keterangan yang bikin slug-nya bisa dikenali orang.
+export function reslug(slug: string): string {
+  const prefix = slug.replace(/-([0-9a-z]{7,9})-\d{1,5}$/, (cocok, waktu: string) => {
+    const ms = parseInt(waktu, 36);
+    return ms > 15778e8 && ms < 41028e8 ? '' : cocok;
+  }) || 'modul-html';
+  return uid(prefix);
+}
+
 export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
   // Unique per call (not a fixed "modul-baru") so two people opening the
   // app for the first time land on separate drafts instead of silently

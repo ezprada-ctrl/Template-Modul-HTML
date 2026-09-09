@@ -125,6 +125,20 @@ export async function deleteDraft(name: string): Promise<void> {
   if (!res.ok) throw new Error(data.error || 'Gagal hapus draft');
 }
 
+// Apakah slug ini sudah kepakai draft lain di server? Dipakai jalur import
+// JSON buat membedakan dua hal yang bentuk filenya identik: MEMULIHKAN project
+// sendiri (slug-nya belum ada di server) vs MENGGANDAKAN project yang masih
+// hidup (slug-nya udah ada). Yang kedua wajib dapat slug baru - lihat reslug().
+export async function draftExists(name: string): Promise<boolean> {
+  try {
+    return (await fetch(`${BASE}/api/drafts/${encodeURIComponent(name)}`)).ok;
+  } catch {
+    // Jaringan mati: jangan mengarang "sudah ada" - itu bakal memaksa slug
+    // baru buat project yang sebenarnya cuma mau dipulihkan.
+    return false;
+  }
+}
+
 // Duplicates a draft under a new name - no dedicated backend endpoint,
 // just load the source + save under the new slug, both existing routes.
 // The existence check comes first so a typo'd/colliding name fails loudly

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { ModuleData, DraftSlide } from './types';
-import { emptyModule, normalizeModule, buildProjectSlugPrefix, moduleFromJson } from './types';
-import { listDrafts, loadDraft, saveDraft } from './api';
+import { emptyModule, normalizeModule, buildProjectSlugPrefix, moduleFromJson, reslug } from './types';
+import { listDrafts, loadDraft, saveDraft, draftExists } from './api';
 import SlideBank from './components/SlideBank';
 import Canvas from './components/Canvas';
 import CoverForm from './components/CoverForm';
@@ -184,9 +184,33 @@ function App() {
   // like any open project — autosave will persist it server-side under its own
   // slug on the next edit, so LAST_SLUG_KEY is set now so that autosave (and
   // the next auto-restore) target the right draft.
-  function handleImportJson(data: ModuleData) {
-    resetHistory(data);
-    localStorage.setItem(LAST_SLUG_KEY, data.slug);
+  //
+  // Satu file JSON bisa berarti DUA hal yang beda akibatnya, dan bentuk
+  // filenya persis sama:
+  //   - MEMULIHKAN project sendiri (slug-nya belum ada di server) → pertahankan
+  //     slug-nya, biar nyambung ke draft & rekaman aktivitas yang sudah ada.
+  //   - MENGGANDAKAN project yang masih hidup (slug-nya sudah ada) → salinannya
+  //     WAJIB dapat slug baru. Slug itu ikut tertanam di SCORM yang diekspor
+  //     dan jadi kunci tarikan Command Center; kalau dua modul berbagi satu
+  //     slug, sesi peserta dari dua pelatihan numpuk jadi satu dan gak bisa
+  //     dipisah lagi — plus autosave salinannya bakal menimpa project sumber.
+  // Bedanya gak bisa ditebak dari datanya, jadi yang nentuin penggunanya.
+  async function handleImportJson(data: ModuleData) {
+    let dipakai = data;
+    if (await draftExists(data.slug)) {
+      const slugBaru = reslug(data.slug);
+      const jadikanBaru = window.confirm(
+        `Draft "${data.slug}" sudah ada di server.\n\n` +
+        `OK  = jadikan MODUL BARU dengan slug "${slugBaru}".\n` +
+        `        Rekaman Command Center-nya terpisah dari modul asalnya, dan\n` +
+        `        project asalnya gak tersentuh.\n\n` +
+        `Batal = lanjutkan project yang sama ("${data.slug}").\n` +
+        `        Pilih ini cuma kalau ini memang project yang itu-itu juga.`,
+      );
+      if (jadikanBaru) dipakai = { ...data, slug: slugBaru };
+    }
+    resetHistory(dipakai);
+    localStorage.setItem(LAST_SLUG_KEY, dipakai.slug);
     setProjectReady(true);
     setShowNewProjectModal(false);
   }
@@ -472,7 +496,7 @@ function NewProjectModal({ onCreate, onSkip, onOpenExisting, onImportJson }: {
   onCreate: (nama: string, namaProject: string) => void;
   onSkip: () => void;
   onOpenExisting: (slug: string, data: ModuleData) => void;
-  onImportJson: (data: ModuleData) => void;
+  onImportJson: (data: ModuleData) => void | Promise<void>;
 }) {
   const [nama, setNama] = useState('');
   const [namaProject, setNamaProject] = useState('');
@@ -485,7 +509,7 @@ function NewProjectModal({ onCreate, onSkip, onOpenExisting, onImportJson }: {
     if (!file) return;
     setImportError('');
     try {
-      onImportJson(moduleFromJson(await file.text()));
+      await onImportJson(moduleFromJson(await file.text()));
     } catch (err: any) {
       setImportError(err?.message || 'Gagal membaca file.');
     }
