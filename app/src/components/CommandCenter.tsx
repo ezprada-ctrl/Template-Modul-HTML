@@ -1181,21 +1181,28 @@ export default function CommandCenter() {
                             Nilainya diambil dari percobaan TERTINGGI tiap kuis
                             section, sesuai kebijakan kantor. */}
                         <td style={{ padding: '8px 11px', whiteSpace: 'normal', minWidth: 190 }}>
-                          {l.modul_slugs.filter(slug => l.modul[slug]?.nilai != null).length === 0 ? (
+                          {l.modul_slugs.filter(slug => (l.modul[slug]?.kuis || []).length).length === 0 ? (
                             <span style={{ color: 'var(--text-faint)' }} title="Peserta ini belum pernah menyerahkan kuis di modul mana pun">—</span>
                           ) : l.modul_slugs.map(slug => {
                             const m = l.modul[slug];
-                            if (!m || m.nilai == null) return null;
+                            if (!m || !(m.kuis || []).length) return null;
+                            /* Modul yang SEMUA kuisnya gerbang tidak punya nilai
+                               untuk ditampilkan - yang lolos pasti 100, jadi
+                               angka itu akan terbaca sebagai nilai ujian padahal
+                               cuma tanda "sudah lewat". Ditandai, bukan
+                               dikosongkan: kosong bikin pembacanya mengira
+                               pesertanya belum mengerjakan apa-apa. */
+                            const semuaGerbang = (m.kuis || []).every(k => k.mode === 'gerbang');
                             const rincian = (m.kuis || [])
-                              .map(k => `${k.section.toUpperCase()}: ${k.skor}/${k.total} (${k.persen}%, min ${k.min_lulus}%, ${k.percobaan}${k.maks_percobaan ? ` dari ${k.maks_percobaan}` : ''}×)`)
+                              .map(k => `${k.section.toUpperCase()}${k.mode === 'gerbang' ? ' [gerbang]' : ''}: ${k.skor}/${k.total} (${k.persen}%, min ${k.min_lulus}%, ${k.percobaan}${k.maks_percobaan ? ` dari ${k.maks_percobaan}` : ''}×)`)
                               .join(String.fromCharCode(10));
                             return (
                               <div key={slug} style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }} title={rincian}>
                                 <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: m.lulus ? 'var(--success)' : 'var(--danger)' }}>
-                                  {m.nilai}
+                                  {semuaGerbang ? '✓' : m.nilai}
                                 </span>
                                 <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', color: m.lulus ? 'var(--success)' : 'var(--danger)' }}>
-                                  {m.lulus ? 'LULUS' : 'BELUM'}
+                                  {semuaGerbang ? (m.lulus ? 'LEWAT' : 'BELUM') : (m.lulus ? 'LULUS' : 'BELUM')}
                                 </span>
                                 <span style={{ fontSize: 10.5, color: 'var(--text-faint)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                   {judulModul(slug)}

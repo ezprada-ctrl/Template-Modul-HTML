@@ -840,6 +840,9 @@ def summarize_learners():
                     'persen': p.get('persen'),
                     'min_lulus': p.get('min_lulus_persen', 100),
                     'maks_percobaan': p.get('maks_percobaan', 0),
+                    # Rekaman lama tanpa field ini dibaca sebagai 'gerbang' -
+                    # itu memang perilaku modul sebelum mode kuis ada.
+                    'mode': p.get('mode') or 'gerbang',
                 })
             elif t == 'reading_warning':
                 peringatan_baca_cepat += 1
@@ -948,6 +951,7 @@ def summarize_learners():
                 'percobaan': 0,
                 'min_lulus': sub['min_lulus'],
                 'maks_percobaan': sub['maks_percobaan'],
+                'mode': sub['mode'],
             })
             k['percobaan'] += 1
             # Cuma naik - kebijakan kantor mengambil nilai TERTINGGI, dan
@@ -959,6 +963,7 @@ def summarize_learners():
             # standar baru itu - bukan standar yang kebetulan tercatat duluan.
             k['min_lulus'] = sub['min_lulus']
             k['maks_percobaan'] = sub['maks_percobaan']
+            k['mode'] = sub['mode']
             k['total'] = sub['total']
         for num in slide_unik_sesi:
             L['_slide_unik'].add((slug, num))
@@ -1019,6 +1024,7 @@ def summarize_learners():
                     'percobaan': k['percobaan'],
                     'maks_percobaan': k['maks_percobaan'],
                     'min_lulus': k['min_lulus'],
+                    'mode': k.get('mode') or 'gerbang',
                     'lulus': persen >= k['min_lulus'],
                 })
             m['kuis'] = rincian
@@ -1026,7 +1032,17 @@ def summarize_learners():
             # (total benar / total soal): section dengan 20 soal bakal
             # menenggelamkan section dengan 5 soal, padahal dua-duanya satu
             # gerbang kelulusan yang setara.
-            m['nilai'] = round(sum(r['persen'] for r in rincian) / len(rincian))
+            # Section mode GERBANG tidak ikut menghitung nilai modul. Yang
+            # lolos gerbang pasti 100, jadi memasukkannya bikin nilai terlihat
+            # tinggi padahal cuma tanda "sudah lewat" - dan satu section
+            # bernilai yang jelek jadi tertutupi rata-rata gerbang di
+            # sekitarnya. Definisinya sengaja sama persis dengan modulNilai()
+            # di shell-template.html, supaya angka di rapor LMS dan angka di
+            # rekap penyusun gak pernah beda.
+            bernilai = [r for r in rincian if r['mode'] != 'gerbang']
+            # None = modul ini semua kuisnya gerbang, jadi memang tidak punya
+            # nilai untuk ditampilkan. Bukan 0 - itu bakal terbaca sebagai gagal.
+            m['nilai'] = round(sum(r['persen'] for r in bernilai) / len(bernilai)) if bernilai else None
             m['lulus'] = all(r['lulus'] for r in rincian)
             m['percobaan_maks_terpakai'] = max(r['percobaan'] for r in rincian)
         L['jumlah_modul'] = len(L['modul'])

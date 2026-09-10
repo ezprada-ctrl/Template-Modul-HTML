@@ -215,6 +215,22 @@ export interface Section {
   short: string;
   icon: string;
   color: string;
+  /* Mode kuis section ini. PER SECTION, bukan per modul: pola yang lumrah
+     adalah section 1-3 sekadar gerbang checkpoint sementara section terakhir
+     ujian bernilai sungguhan.
+
+     - 'gerbang': kuis cuma palang untuk lanjut. Wajib benar semua, jatah
+       mengerjakan TIDAK TERBATAS, dan nilainya tidak dilaporkan ke rapor LMS
+       (semua yang lolos pasti 100 - angka itu terlihat seperti prestasi
+       padahal cuma tanda "sudah lewat").
+     - 'nilai': kuis dinilai sungguhan. Nilai minimal & jatah mengerjakan
+       mengikuti quizPolicy (bawaan modul, boleh ditimpa di section ini).
+
+     Kosong = disimpulkan dari angkanya (lihat modeKuisSection di quizMode.ts).
+     Modul lama tidak punya field ini, dan bawaannya 100% + tanpa batas -
+     yang memang persis arti 'gerbang', jadi label barunya cocok sendiri
+     tanpa perlu migrasi data. */
+  quizMode?: QuizMode;
   // Kebijakan kuis khusus section ini - menimpa `quizPolicy` milik modul.
   // Dua-duanya opsional SENDIRI-SENDIRI: wali program biasanya cuma mau
   // memperketat salah satunya (mis. section terakhir minimal 80 tapi jatah
@@ -241,7 +257,16 @@ export interface QuizPolicy {
   maxAttempts: number;
 }
 
+export type QuizMode = 'gerbang' | 'nilai';
+
 export const DEFAULT_QUIZ_POLICY: QuizPolicy = { passPercent: 100, maxAttempts: 0 };
+
+/* Aturan yang BERLAKU di mode gerbang, apa pun yang tertulis di quizPolicy.
+   Jatah dipaksa tak terbatas bukan cuma demi kerapian: gerbang + jatah
+   terbatas berarti peserta yang kehabisan jatah TERKUNCI PERMANEN dan tidak
+   bisa menyelesaikan modul sama sekali - kombinasi yang sebelumnya masih
+   mungkin dipilih tanpa sadar. */
+export const KEBIJAKAN_GERBANG: QuizPolicy = { passPercent: 100, maxAttempts: 0 };
 
 export interface Slide {
   id: string;

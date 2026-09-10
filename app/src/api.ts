@@ -296,12 +296,17 @@ export interface ActivityLearner {
     // Nilai kuis modul ini. Absen kalau modulnya memang gak punya kuis, atau
     // peserta belum pernah menyerahkan satu pun - dua-duanya BUKAN nol, jadi
     // sengaja undefined supaya tampilan bisa membedakannya dari nilai 0.
-    nilai?: number;
+    // null (bukan absen) kalau modulnya PUNYA kuis tapi SEMUANYA mode gerbang:
+    // gerbang tidak punya nilai untuk ditampilkan, dan 0 akan terbaca gagal.
+    nilai?: number | null;
     lulus?: boolean;
     percobaan_maks_terpakai?: number;
     kuis?: {
       section: string; skor: number; total: number; persen: number;
       percobaan: number; maks_percobaan: number; min_lulus: number; lulus: boolean;
+      // 'gerbang' = kuis cuma palang untuk lanjut, angkanya bukan nilai ujian.
+      // Rekaman lama tanpa field ini dibaca backend sebagai 'gerbang'.
+      mode: 'gerbang' | 'nilai';
     }[];
   }>;
   modul_slugs: string[];

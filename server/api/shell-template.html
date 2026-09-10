@@ -2032,6 +2032,18 @@ function quizMaksPercobaan(sectionId){
   const p = QUIZ_POLICY[sectionId];
   return p && typeof p.maksPercobaan === 'number' ? p.maksPercobaan : 0;
 }
+/* 'gerbang' = kuisnya cuma palang untuk lanjut (wajib benar semua, ulang tak
+   terbatas, nilainya TIDAK dilaporkan ke rapor LMS). 'nilai' = dinilai
+   sungguhan. Sudah diratakan generator, termasuk menyimpulkannya buat modul
+   lama yang belum punya field ini - di sini tinggal dibaca.
+
+   Jatuh ke 'gerbang' kalau tidak ada: modul yang di-export sebelum mode ini
+   ada memakai 100% + tanpa batas, yang memang persis arti gerbang. */
+function quizMode(sectionId){
+  const p = QUIZ_POLICY[sectionId];
+  return p && p.mode === 'nilai' ? 'nilai' : 'gerbang';
+}
+function quizGerbang(sectionId){ return quizMode(sectionId) === 'gerbang'; }
 /* Berapa soal MINIMAL yang harus benar. Dibulatkan ke ATAS: "lulus 70%" dari
    10 soal artinya 7 soal, dan dari 3 soal artinya 3 - membulatkan ke bawah
    bakal diam-diam menurunkan standar yang sudah ditetapkan wali program. */
@@ -2214,8 +2226,14 @@ function modulGagal(){
    menenggelamkan section dengan 5 soal, padahal dua-duanya satu gerbang
    kelulusan yang setara. */
 function modulNilai(){
+  /* Section mode GERBANG tidak ikut dihitung. Yang lolos gerbang pasti 100,
+     jadi memasukkannya bikin rapor LMS penuh angka 100 yang terlihat seperti
+     prestasi padahal cuma tanda "sudah lewat" - dan lebih parah, satu section
+     bernilai yang jelek jadi tertutupi rata-rata section gerbang di sekitarnya.
+     Modul yang SEMUA kuisnya gerbang balik null: tidak ada nilai untuk
+     dilaporkan, cukup status selesai (lihat scormLaporNilai). */
   const persen = SECTIONS
-    .filter(sec => (QUIZZES[sec.id]||[]).length)
+    .filter(sec => (QUIZZES[sec.id]||[]).length && !quizGerbang(sec.id))
     .map(sec => Math.round(quizSkorTerbaik(sec.id) / QUIZZES[sec.id].length * 100));
   if(!persen.length) return null;
   return Math.round(persen.reduce((a,b)=>a+b,0) / persen.length);
@@ -3700,7 +3718,9 @@ function renderQuiz(section){
     <div class="cp-icon">🧠</div>
     <div class="kicker" style="justify-content:center;"><span class="num">?</span>KUIS CHECKPOINT</div>
     <h1 class="slide-title">Uji Pemahamanmu: ${secTitle}</h1>
-    <p class="slide-sub" style="margin:0 auto;">Jawab ${questions.length} pertanyaan berikut sebelum lanjut ke bagian selanjutnya.</p>
+    <p class="slide-sub" style="margin:0 auto;">${quizGerbang(section)
+      ? `Jawab ${questions.length} pertanyaan berikut dengan benar untuk lanjut ke bagian berikutnya.`
+      : `Jawab ${questions.length} pertanyaan berikut sebelum lanjut ke bagian selanjutnya.`}</p>
   </div>`;
 
   questions.forEach((q,qi)=>{
@@ -3732,6 +3752,10 @@ function renderQuiz(section){
 
   const correctCount = questions.filter((q,qi)=>answers[qi]===q.correct).length;
   const ambang = quizAmbangSoal(section);
+  /* Mode gerbang tidak pernah menyebut angka: yang lolos pasti benar semua,
+     jadi "3/3" cuma mengulang hal yang sudah pasti, dan menampilkan skor pada
+     yang belum lolos bikin palang terasa seperti ujian yang dia gagalkan. */
+  const gerbang = quizGerbang(section);
   const terbaik = quizSkorTerbaik(section);
   // Lulus di layar ini dinilai dari skor TERBAIK, bukan dari percobaan yang
   // barusan: peserta yang sudah lulus lalu mengulang buat mengejar nilai dan
@@ -3749,14 +3773,21 @@ function renderQuiz(section){
   let jejak = '';
   if(maks) jejak += `Percobaan ${dipakai} dari ${maks}.`;
   else if(dipakai > 1) jejak += `Percobaan ke-${dipakai}.`;
-  if(dipakai > 1) jejak += ` Nilai tertinggimu: ${terbaik}/${questions.length}.`;
+  /* Nilai tertinggi TIDAK disebut di mode gerbang. Di situ "lulus" berarti
+     benar semua, jadi angkanya cuma mengulang hal yang sudah pasti - dan
+     menyebut nilai di palang bikin dia terasa seperti ujian yang dinilai. */
+  if(dipakai > 1 && !gerbang) jejak += ` Nilai tertinggimu: ${terbaik}/${questions.length}.`;
   const jejakHtml = jejak ? `<div class="cp-attempts">${jejak}</div>` : '';
 
   /* Tombol ulang tetap ditawarkan ke yang SUDAH lulus - kebijakan kantor
      membolehkan mengejar nilai lebih tinggi, dan karena yang dipakai selalu
      nilai tertinggi, mencoba lagi gak pernah merugikan. Kalimatnya dibedakan
      supaya gak kebaca sebagai "kamu harus mengulang". */
-  const tombolUlang = bolehUlang
+  /* Di gerbang yang sudah lolos, tombol ulang tidak ditawarkan: lolos berarti
+     benar semua, jadi tidak ada nilai lebih tinggi untuk dikejar - dan
+     kalimatnya ("kejar nilai lebih tinggi") justru menyeret kembali gagasan
+     nilai yang sengaja dijauhkan dari mode ini. */
+  const tombolUlang = (bolehUlang && !(gerbang && passed))
     ? `<button class="nav-btn${passed?'':' primary'}" onclick="retryQuiz('${section}')">↺ ${passed ? 'Coba lagi (kejar nilai lebih tinggi)' : 'Ulangi Kuis'}</button>`
     : '';
 
@@ -3769,13 +3800,22 @@ function renderQuiz(section){
     </div>
     ${jejakHtml}
     ${tombolUlang}
+  ` : gerbang ? `
+    <div class="cp-score">✓</div>
+    <div class="cp-score-lbl">Semua jawabanmu benar. Bagian ${secTitle} sudah kamu lewati.</div>
+    ${jejakHtml}
+    <button class="nav-btn primary" onclick="goNext()">Lanjut →</button>
+    ${tombolUlang}
   ` : `
     <div class="cp-score">${terbaik}/${questions.length}</div>
     <div class="cp-score-lbl">Kamu lulus bagian ${secTitle} — nilai minimalnya ${ambang}/${questions.length}.</div>
     ${jejakHtml}
     <button class="nav-btn primary" onclick="goNext()">Lanjut →</button>
     ${tombolUlang}
-  `) : bolehUlang ? `
+  `) : gerbang ? `
+    <div class="cp-score-lbl">Masih ada yang salah, silakan coba lagi.</div>
+    ${tombolUlang}
+  ` : bolehUlang ? `
     <div class="cp-score" style="color:var(--rose-ink);">${correctCount}/${questions.length}</div>
     <div class="cp-score-lbl">Belum mencapai nilai minimal (${ambang}/${questions.length}). Pelajari kembali materi atau langsung coba kuis ini lagi.</div>
     ${jejakHtml}
@@ -4935,7 +4975,12 @@ function submitQuiz(section){
     persen_terbaik: total ? Math.round(quizSkorTerbaik(section) / total * 100) : 0,
     lulus_terbaik: isQuizPassed(section),
     min_lulus_persen: quizLulusPersen(section),
-    maks_percobaan: quizMaksPercobaan(section)
+    maks_percobaan: quizMaksPercobaan(section),
+    /* Ikut dikirim supaya Command Center tidak perlu menebak: section gerbang
+       nilainya selalu 100 kalau lolos, jadi angkanya keliru kalau dibaca
+       sebagai nilai ujian. Rekaman lama tanpa field ini dibaca sebagai
+       'gerbang' - itu memang perilaku modul sebelum mode ini ada. */
+    mode: quizMode(section)
   });
   if(isQuizPassed(section)) playQuizPassSound(); else playQuizFailSound();
   render({preserveScroll:true});

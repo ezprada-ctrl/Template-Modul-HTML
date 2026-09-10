@@ -1454,12 +1454,35 @@ def generate_html(module):
     dasar = module.get('quizPolicy') or {}
     lulus_dasar = dasar.get('passPercent', 100)
     jatah_dasar = dasar.get('maxAttempts', 0)
+    #
+    # Mode kuis ikut diratakan di sini. 'gerbang' = kuisnya cuma palang untuk
+    # lanjut: wajib benar semua, jatah DIPAKSA tak terbatas, dan nilainya tidak
+    # dilaporkan ke rapor LMS. 'nilai' = kuis dinilai sungguhan, angkanya
+    # dipakai apa adanya.
+    #
+    # Jatah dipaksa tak terbatas bukan demi kerapian: gerbang + jatah terbatas
+    # berarti peserta yang kehabisan jatah TERKUNCI PERMANEN dan tidak bisa
+    # menyelesaikan modul sama sekali.
+    #
+    # Kalau section belum pernah memilih mode, modenya DISIMPULKAN dari
+    # angkanya - sama persis dengan modeKuisSection() di app/src/quizMode.ts.
+    # Sebelum mode ini ada, "100% + tanpa batas" memang sudah berarti gerbang
+    # dan itu juga bawaan tiap modul, jadi modul lama langsung berlabel benar
+    # tanpa satu pun data perlu diubah.
     quiz_policy = {}
     for sec in sections:
         timpa = sec.get('quizPolicy') or {}
+        lulus = timpa.get('passPercent', lulus_dasar)
+        jatah = timpa.get('maxAttempts', jatah_dasar)
+        mode = sec.get('quizMode')
+        if mode not in ('gerbang', 'nilai'):
+            mode = 'gerbang' if (lulus == 100 and jatah == 0) else 'nilai'
+        if mode == 'gerbang':
+            lulus, jatah = 100, 0
         quiz_policy[sec['id']] = {
-            'lulusPersen': timpa.get('passPercent', lulus_dasar),
-            'maksPercobaan': timpa.get('maxAttempts', jatah_dasar),
+            'lulusPersen': lulus,
+            'maksPercobaan': jatah,
+            'mode': mode,
         }
     out = out.replace('__QUIZ_POLICY_JS__', js_str(quiz_policy))
 

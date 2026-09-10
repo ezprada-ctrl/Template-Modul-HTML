@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ModuleData, QuizQuestion, QuizPolicy } from '../types';
 import { DEFAULT_QUIZ_POLICY } from '../types';
+import { modeKuisSection } from '../quizMode';
 
 interface Props {
   module: ModuleData;
@@ -76,6 +77,24 @@ export default function QuizBuilder({ module, setModule }: Props) {
       }),
     });
   }
+  /* Mode yang berlaku di section yang lagi dibuka. Belum pernah dipilih =
+     DISIMPULKAN dari angkanya, bukan dipatok - lihat modeKuisSection(). */
+  const mode = sec ? modeKuisSection(module, sec) : 'gerbang';
+
+  /* Mode disimpan EKSPLISIT begitu penyusun memilihnya, walau pilihannya sama
+     dengan yang tadi disimpulkan: tanpa itu, mengubah nilai minimal modul
+     nanti bisa diam-diam menggeser section ini dari gerbang jadi bernilai.
+     Timpaan angka ikut dibersihkan waktu pindah ke gerbang - di mode itu
+     angkanya tidak berlaku, dan meninggalkannya bikin nilai lama muncul lagi
+     kalau modenya dikembalikan. */
+  function setMode(m: 'gerbang' | 'nilai') {
+    setModule({
+      ...module,
+      sections: module.sections.map(x => x.id !== activeSection ? x
+        : { ...x, quizMode: m, quizPolicy: m === 'gerbang' ? undefined : x.quizPolicy }),
+    });
+  }
+
   // '' di kotak angka = "ikut bawaan modul", bukan nol.
   const angka = (v: string) => (v.trim() === '' ? undefined : Math.max(0, Math.round(Number(v) || 0)));
 
@@ -138,27 +157,60 @@ export default function QuizBuilder({ module, setModule }: Props) {
 
         <div style={{ borderTop: '1px solid var(--border)', margin: '12px 0 10px' }} />
         <div style={{ fontSize: 12.5, color: 'var(--text-dim)', marginBottom: 8 }}>
-          Khusus <b style={{ color: 'var(--text)' }}>{sec?.short || activeSection}</b> — kosongkan kalau ikut aturan modul di atas.
+          Khusus <b style={{ color: 'var(--text)' }}>{sec?.short || activeSection}</b> — mode kuisnya:
         </div>
-        <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <label style={{ fontSize: 12.5, color: 'var(--text-dim)' }}>
-            Nilai minimal (%)<br />
-            <input type="number" min={0} max={100} placeholder={String(dasar.passPercent)} style={{ width: 110, marginTop: 4 }}
-              value={timpa.passPercent ?? ''}
-              onChange={e => setTimpa({ passPercent: angka(e.target.value) })} />
-          </label>
-          <label style={{ fontSize: 12.5, color: 'var(--text-dim)' }}>
-            Jatah mengerjakan<br />
-            <input type="number" min={0} placeholder={String(dasar.maxAttempts)} style={{ width: 110, marginTop: 4 }}
-              value={timpa.maxAttempts ?? ''}
-              onChange={e => setTimpa({ maxAttempts: angka(e.target.value) })} />
-          </label>
-          <p className="hint" style={{ margin: 0, flex: '1 1 240px', minWidth: 200 }}>
-            Berlaku di section ini: lulus mulai <b>{berlaku.passPercent}%</b>
-            {questions.length > 0 && ` (${Math.ceil(questions.length * berlaku.passPercent / 100)} dari ${questions.length} soal)`}
-            , {berlaku.maxAttempts === 0 ? 'boleh diulang tanpa batas' : `jatah ${berlaku.maxAttempts}× mengerjakan`}.
+        {/* Mode dipilih PER SECTION: pola yang lumrah adalah section awal
+            sekadar gerbang checkpoint sementara section terakhir ujian
+            bernilai sungguhan. */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+          <button className={mode === 'gerbang' ? 'btn-primary btn-sm' : 'btn-sm'}
+                  onClick={() => setMode('gerbang')}
+                  title="Kuis cuma palang untuk lanjut: wajib benar semua, boleh diulang tanpa batas, nilainya tidak dikirim ke rapor LMS">
+            Gerbang
+          </button>
+          <button className={mode === 'nilai' ? 'btn-primary btn-sm' : 'btn-sm'}
+                  onClick={() => setMode('nilai')}
+                  title="Kuis dinilai sungguhan: nilai minimal & jatah mengerjakan berlaku, dan nilainya masuk rapor LMS">
+            Kuis bernilai
+          </button>
+        </div>
+        {mode === 'gerbang' ? (
+          <p className="hint" style={{ margin: 0 }}>
+            Peserta <b>wajib menjawab benar semua</b> untuk lanjut, dan <b>boleh mengulang tanpa batas</b>.
+            Nilainya <b>tidak dikirim ke rapor LMS</b> — semua yang lolos pasti 100, jadi angka itu
+            akan terbaca seperti prestasi padahal cuma tanda “sudah lewat”.
+            {questions.length > 0 && <> Section ini: <b>{questions.length} dari {questions.length} soal</b> harus benar.</>}
+            <br />
+            Jatah sengaja tidak bisa dibatasi di mode ini: peserta yang kehabisan jatah akan
+            terkunci permanen dan tidak bisa menyelesaikan modul sama sekali.
           </p>
-        </div>
+        ) : (
+          <>
+            <div style={{ fontSize: 12.5, color: 'var(--text-dim)', marginBottom: 8 }}>
+              Kosongkan kalau ikut aturan modul di atas.
+            </div>
+            <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <label style={{ fontSize: 12.5, color: 'var(--text-dim)' }}>
+                Nilai minimal (%)<br />
+                <input type="number" min={0} max={100} placeholder={String(dasar.passPercent)} style={{ width: 110, marginTop: 4 }}
+                  value={timpa.passPercent ?? ''}
+                  onChange={e => setTimpa({ passPercent: angka(e.target.value) })} />
+              </label>
+              <label style={{ fontSize: 12.5, color: 'var(--text-dim)' }}>
+                Jatah mengerjakan<br />
+                <input type="number" min={0} placeholder={String(dasar.maxAttempts)} style={{ width: 110, marginTop: 4 }}
+                  value={timpa.maxAttempts ?? ''}
+                  onChange={e => setTimpa({ maxAttempts: angka(e.target.value) })} />
+              </label>
+              <p className="hint" style={{ margin: 0, flex: '1 1 240px', minWidth: 200 }}>
+                Berlaku di section ini: lulus mulai <b>{berlaku.passPercent}%</b>
+                {questions.length > 0 && ` (${Math.ceil(questions.length * berlaku.passPercent / 100)} dari ${questions.length} soal)`}
+                , {berlaku.maxAttempts === 0 ? 'boleh diulang tanpa batas' : `jatah ${berlaku.maxAttempts}× mengerjakan`}.
+                Nilainya <b>masuk rapor LMS</b>.
+              </p>
+            </div>
+          </>
+        )}
       </div>
       <button className="btn-sm" onClick={autoDistribute}>Sebar jawaban benar merata A/B/C/D</button>
       <p className="hint" style={{ margin: '6px 0 16px' }}>
