@@ -5310,9 +5310,35 @@ function openSidebar(){ document.getElementById('sidebar').classList.add('open')
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
 
 /* ---------------- Keyboard nav ---------------- */
+/* Selain panah kiri/kanan, kita juga dengar tombol yang dikirim clicker /
+   remote presenter waktu modul ditayangkan klasikal di kelas. Tiga konvensi
+   yang dipakai perangkat-perangkat itu:
+     - Page Down / Page Up  -> default Logitech (R400/R500/Spotlight) dkk
+     - Space / Backspace    -> default PowerPoint (Space = maju, Backspace = mundur)
+     - Panah kiri / kanan   -> sebagian clicker mode "arrow key"
+   Panah atas/bawah sengaja TIDAK dipakai supaya peserta yang belajar mandiri
+   masih bisa scroll isi slide pakai keyboard.
+   Gating slide tetap berlaku: goNext/goPrev lewat goTo(), jadi remote nggak
+   bisa loncat ke bagian yang belum kebuka. */
+function kbNavTargetIsEditable(t){
+  if(!t) return false;
+  if(t.isContentEditable) return true;
+  const tag = t.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+}
 document.addEventListener('keydown', e=>{
-  if(e.key==='ArrowRight') goNext();
-  if(e.key==='ArrowLeft') goPrev();
+  if(e.ctrlKey || e.altKey || e.metaKey) return;
+  if(kbNavTargetIsEditable(e.target)) return;
+  let dir = 0;
+  switch(e.key){
+    case 'ArrowRight': case 'PageDown': dir = 1; break;
+    case 'ArrowLeft':  case 'PageUp':   dir = -1; break;
+    case ' ': case 'Spacebar': dir = e.shiftKey ? -1 : 1; break;
+    case 'Backspace': dir = -1; break;
+    default: return;
+  }
+  e.preventDefault();
+  if(dir > 0) goNext(); else goPrev();
 });
 
 /* ============================= INIT ============================= */
