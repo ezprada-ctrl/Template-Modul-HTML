@@ -1000,6 +1000,7 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 #topbar-progress{display:none;font-size:12px;font-weight:700;color:var(--accent-ink);
   background:var(--surface-2);border:1px solid var(--border);padding:5px 11px;border-radius:20px;flex-shrink:0;}
 body.sidebar-collapsed #topbar-progress.ada{display:inline-flex;align-items:center;gap:6px;}
+#topbar-progress .tp-lbl{color:var(--text-dim);font-weight:600;}
 
 /* mobile */
 @media(max-width:900px){
@@ -1706,7 +1707,7 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
     <div id="topbar">
       <button id="menu-toggle" onclick="toggleSidebar()" title="Buka/tutup daftar isi" aria-label="Buka/tutup daftar isi">☰</button>
       <div class="crumb" id="crumb"></div>
-      <span id="topbar-progress" aria-hidden="true"></span>
+      <span id="topbar-progress"></span>
       <button id="theme-toggle" onclick="toggleTheme()" title="Ganti tema terang/gelap" aria-label="Ganti tema terang/gelap">🌙</button>
     </div>
 
@@ -5217,7 +5218,15 @@ function updateTopbarProgress(){
   const pctEl = document.getElementById('progress-pct');
   const disembunyikan = HIDE_PROGRESS || devHideProgressPreview;
   if(!pctEl || disembunyikan || sidebarMobile()){ el.classList.remove('ada'); el.textContent=''; return; }
-  el.textContent = '📘 ' + pctEl.textContent;
+  /* Dulu emoji 📘. Di sebagian perangkat & webview LMS glif itu gak ada dan
+     yang muncul kotak kosong - penanda yang gak menjelaskan apa-apa. Teks
+     biasa selalu punya glif. */
+  el.innerHTML = '';
+  const lbl = document.createElement('span');
+  lbl.className = 'tp-lbl';
+  lbl.textContent = 'Progres';
+  el.appendChild(lbl);
+  el.appendChild(document.createTextNode(' ' + pctEl.textContent));
   el.classList.add('ada');
 }
 
