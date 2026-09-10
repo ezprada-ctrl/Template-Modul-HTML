@@ -133,7 +133,7 @@ a{color:inherit;}
 
 /* ---------- Sidebar ---------- */
 #sidebar{
-  width:314px;flex-shrink:0;
+  width:314px;flex-shrink:0;transition:width .22s ease,padding .22s ease;
   background:linear-gradient(180deg,var(--bg-soft),var(--bg));
   border-right:1px solid var(--border);
   padding:26px 20px 20px;
@@ -881,6 +881,63 @@ ul.tick li b, ol.tick li b{color:var(--text);}
 .nav-section.locked .nsh-title{opacity:.65;}
 .nav-section.locked .nsh-lock{font-size:12px;color:var(--text-faint);}
 
+/* ---------- Sidebar bisa dilipat (DESKTOP saja) ----------
+   Di bawah 901px sidebar-nya sudah off-canvas + overlay dan itu tetap dipakai
+   apa adanya - aturan di sini SENGAJA dikurung @media(min-width:901px) supaya
+   dua mekanisme itu gak pernah tabrakan di layar sempit.
+
+   Yang disembunyikan cuma tampilannya, DOM-nya utuh: renderSidebar() gak perlu
+   tahu-menahu soal mode terlipat, dan tanda "sedang dibuka"/"sudah dibaca" di
+   ikon section tetap ikut ter-update sendiri seperti biasa. */
+@media(min-width:901px){
+  #menu-toggle{
+    display:flex;align-items:center;justify-content:center;width:34px;height:34px;
+    border-radius:10px;background:var(--surface);border:1px solid var(--border);
+    color:var(--text-dim);cursor:pointer;font-size:15px;line-height:1;transition:.15s;flex-shrink:0;
+  }
+  #menu-toggle:hover{color:var(--text);border-color:var(--border-strong);}
+
+  /* Rail ikon. 62px = ikon section 30px + napas kiri-kanan, cukup buat
+     disentuh nyaman tanpa memakan ruang yang justru mau dibebaskan. */
+  body.sidebar-collapsed #sidebar{width:62px;padding-left:10px;padding-right:10px;overflow:hidden;}
+  body.sidebar-collapsed #sidebar .brand-text,
+  body.sidebar-collapsed #sidebar .progress-block,
+  body.sidebar-collapsed #sidebar .nsh-title,
+  body.sidebar-collapsed #sidebar .nsh-count,
+  body.sidebar-collapsed #sidebar .nsh-lock,
+  body.sidebar-collapsed #sidebar .nav-section-body,
+  body.sidebar-collapsed #sidebar .nav-cover-btn > span:not(.nav-cover-icon),
+  body.sidebar-collapsed #sidebar #reset-btn,
+  body.sidebar-collapsed #sidebar #hideprogress-btn,
+  body.sidebar-collapsed #sidebar #trackcheck-btn,
+  body.sidebar-collapsed #sidebar #trackcheck-status,
+  body.sidebar-collapsed #sidebar #devmode-btn{display:none;}
+  body.sidebar-collapsed #sidebar .brand{justify-content:center;padding:2px 0 18px;gap:0;}
+  body.sidebar-collapsed #sidebar .nav-section-head,
+  body.sidebar-collapsed #sidebar .nav-cover-btn{justify-content:center;padding-left:0;padding-right:0;gap:0;}
+  body.sidebar-collapsed #sidebar .nav-section{margin-bottom:6px;}
+
+  /* Isi slide melebar - INI yang bikin menutup sidebar terasa ada gunanya.
+     Tanpa ini, .slide-frame tetap mentok 940px dan yang bertambah cuma ruang
+     kosong kiri-kanan. */
+  body.sidebar-collapsed .slide-frame{max-width:1180px;}
+
+  /* Tapi PARAGRAF gak ikut melar. Batasnya dipasang ke elemen teksnya
+     (78ch = sekitar 78 huruf per baris, rentang yang nyaman dibaca), BUKAN ke
+     daftar kelas blok "lebar". Bedanya penting: dengan cara ini tabel data,
+     gambar, grid, diagram alur, dan video otomatis memakai ruang penuh tanpa
+     perlu didaftarkan satu-satu - termasuk jenis blok yang ditambahkan nanti,
+     yang kalau pakai daftar putih pasti kelupaan. */
+  body.sidebar-collapsed .slide-frame p,
+  body.sidebar-collapsed .slide-frame li{max-width:78ch;}
+}
+
+/* Progres di topbar - cuma muncul selagi sidebar terlipat, karena di situlah
+   angka 82%-nya kesembunyian. */
+#topbar-progress{display:none;font-size:12px;font-weight:700;color:var(--accent-2);
+  background:var(--surface-2);border:1px solid var(--border);padding:5px 11px;border-radius:20px;flex-shrink:0;}
+body.sidebar-collapsed #topbar-progress.ada{display:inline-flex;align-items:center;gap:6px;}
+
 /* mobile */
 @media(max-width:900px){
   #sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);width:86vw;max-width:320px;box-shadow:var(--shadow-lg);}
@@ -1578,8 +1635,9 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
 
   <main id="main">
     <div id="topbar">
-      <button id="menu-toggle" onclick="openSidebar()">☰</button>
+      <button id="menu-toggle" onclick="toggleSidebar()" title="Buka/tutup daftar isi" aria-label="Buka/tutup daftar isi">☰</button>
       <div class="crumb" id="crumb"></div>
+      <span id="topbar-progress" aria-hidden="true"></span>
       <button id="theme-toggle" onclick="toggleTheme()" title="Ganti tema terang/gelap" aria-label="Ganti tema terang/gelap">🌙</button>
     </div>
 
@@ -2392,6 +2450,10 @@ let devHideProgressPreview = false;
 function applyProgressVisibility(){
   const el = document.querySelector('.progress-block');
   if(el) el.style.display = (HIDE_PROGRESS || devHideProgressPreview) ? 'none' : '';
+  /* Kalau enggak ikut disegarkan, angka progres tetap nangkring di topbar
+     padahal blok aslinya barusan disembunyikan - persis kebocoran yang mau
+     dicegah HIDE_PROGRESS. */
+  updateTopbarProgress();
 }
 function toggleHideProgressPreview(){
   devHideProgressPreview = !devHideProgressPreview;
@@ -3492,6 +3554,7 @@ function updateProgress(){
   fillEl.classList.remove('tier-yellow','tier-orange','tier-green');
   fillEl.classList.add(tier);
   document.getElementById('progress-sub').textContent = `${doneSlides} dari ${totalSlides} slide · ${doneQuiz} dari ${totalQuiz} kuis`;
+  updateTopbarProgress();
 }
 
 /* ============================= RENDER MAIN ============================= */
@@ -4996,6 +5059,80 @@ function resetProgress(){
 }
 
 /* ---------------- Sidebar mobile ---------------- */
+/* Lebar batas yang sama dengan @media(max-width:900px) di CSS. Ditulis sekali
+   di sini supaya dua perilaku tombol ☰ gak pernah beda pendapat sama CSS-nya. */
+const SIDEBAR_MOBILE_MAX = 900;
+const SIDEBAR_KEY = 'modul_ikram_sidebar_v1';
+
+function sidebarMobile(){ return window.innerWidth <= SIDEBAR_MOBILE_MAX; }
+
+/* Pilihan lipat itu preferensi tampilan milik PERANGKAT, bukan progres
+   belajar - jadi disimpan di localStorage sendiri seperti tema, BUKAN nebeng
+   `state`. `state` ikut dikirim ke cmi.suspend_data SCORM yang dibatasi ~4096
+   karakter; menaruh preferensi tampilan di situ artinya ikut memakan jatah
+   yang dibutuhkan progres belajar. */
+function applySidebarCollapsed(collapsed){
+  document.body.classList.toggle('sidebar-collapsed', !!collapsed);
+  updateTopbarProgress();
+}
+function toggleSidebar(){
+  if(sidebarMobile()){ openSidebar(); return; }
+  const kini = document.body.classList.contains('sidebar-collapsed');
+  applySidebarCollapsed(!kini);
+  try{ localStorage.setItem(SIDEBAR_KEY, kini ? '' : '1'); }catch(e){}
+}
+(function(){
+  try{ if(localStorage.getItem(SIDEBAR_KEY)) document.body.classList.add('sidebar-collapsed'); }catch(e){}
+})();
+
+/* Lebar jendela bisa melewati batas 900px sambil modulnya kebuka (jendela
+   di-resize, HP diputar, atau panel LMS dilebarkan). Mode lipat cuma punya arti
+   di desktop, jadi angka progres di topbar disegarkan ulang tiap batas itu
+   dilewati - bukan tiap piksel, biar gak jadi beban. */
+(function(){
+  let mobilTerakhir = sidebarMobile();
+  window.addEventListener('resize', function(){
+    const kini = sidebarMobile();
+    if(kini !== mobilTerakhir){ mobilTerakhir = kini; updateTopbarProgress(); }
+  });
+})();
+
+
+/* Rail dalam keadaan terlipat: sekali klik di ikon section membuka sidebar-nya
+   DULU, baru sectionnya dibuka. Tanpa ini, klik cuma memicu toggleSection()
+   yang membuka/menutup daftar slide yang sedang disembunyikan CSS - jadi dari
+   sisi peserta tombolnya terasa mati.
+
+   Dipasang di fase CAPTURE supaya sampai duluan sebelum onclick asli tombolnya,
+   dan menutup-paksa section yang sudah terbuka gak pernah kejadian. */
+document.addEventListener('click', function(e){
+  if(sidebarMobile()) return;
+  if(!document.body.classList.contains('sidebar-collapsed')) return;
+  const bar = e.target.closest && e.target.closest('#sidebar');
+  if(!bar) return;
+  const head = e.target.closest('.nav-section-head');
+  applySidebarCollapsed(false);
+  try{ localStorage.setItem(SIDEBAR_KEY, ''); }catch(e2){}
+  if(head){
+    e.preventDefault();
+    e.stopPropagation();
+    const sec = head.parentElement;
+    if(sec && !sec.classList.contains('open') && !sec.classList.contains('locked')) toggleSection(head);
+  }
+}, true);
+
+/* Angka progres pindah ke topbar selagi sidebar terlipat. Sumber angkanya
+   SATU - elemen di sidebar - jadi dua tempat itu gak mungkin beda. */
+function updateTopbarProgress(){
+  const el = document.getElementById('topbar-progress');
+  if(!el) return;
+  const pctEl = document.getElementById('progress-pct');
+  const disembunyikan = HIDE_PROGRESS || devHideProgressPreview;
+  if(!pctEl || disembunyikan || sidebarMobile()){ el.classList.remove('ada'); el.textContent=''; return; }
+  el.textContent = '📘 ' + pctEl.textContent;
+  el.classList.add('ada');
+}
+
 function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
 
