@@ -56,7 +56,11 @@ def render_card(b):
     icon_html = ''
     if b.get('icon'):
         bg = b.get('iconBg', 'var(--accent-soft)')
-        color = b.get('iconColor', 'var(--accent-2)')
+        # --accent-ink, bukan --accent-2: ikon kartu itu TEKS di atas
+        # --accent-soft, dan --accent-2 apa adanya cuma 1,8-2,6 kontrasnya di
+        # mode gelap untuk lima dari enam tema bawaan. Warna pilihan penyusun
+        # (iconColor) tetap dihormati apa adanya.
+        color = b.get('iconColor', 'var(--accent-ink)')
         icon_html = f'<span class="ic" style="background:{bg};color:{color};">{b["icon"]}</span>'
     heading = f'<h3>{icon_html}{esc(b.get("heading",""))}</h3>' if b.get('heading') else ''
     return f'<div class="card">{heading}{nl2br(b.get("bodyHtml",""))}</div>'
