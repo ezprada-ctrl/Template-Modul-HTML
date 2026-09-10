@@ -134,6 +134,133 @@ function NamaPeserta({ nama, nip, peringatan }: { nama: string | null; nip: stri
   );
 }
 
+// Sudut pandang KEDUA atas data yang sama persis: Peserta -> Slide -> catatan.
+//
+// Disusun ulang di sini, BUKAN lewat endpoint baru. Backend sudah mengirim
+// seluruh catatan beserta slide & section-nya dalam satu balasan, jadi
+// menyusunnya di sisi tampilan berarti dua susunan itu mustahil berbeda isi -
+// dan tidak menambah satu pun kueri ke database.
+interface CatatanSlidePeserta {
+  slide: number | null;
+  judul: string;
+  judul_section: string;
+  catatan: CocreationNote[];
+}
+interface PesertaCatatan {
+  learner_id: string;
+  nama: string;
+  jumlah_catatan: number;
+  slides: CatatanSlidePeserta[];
+}
+
+function perPeserta(m: CocreationModule): PesertaCatatan[] {
+  const peta = new Map<string, PesertaCatatan>();
+  // Ditelusuri mengikuti urutan section & slide dari backend (yang memang urut
+  // alur materi), jadi daftar slide tiap peserta ikut urut materi tanpa perlu
+  // diurutkan ulang di sini.
+  for (const sec of m.sections) {
+    for (const sl of sec.slides) {
+      for (const c of sl.catatan) {
+        let p = peta.get(c.learner_id);
+        if (!p) { p = { learner_id: c.learner_id, nama: c.nama, jumlah_catatan: 0, slides: [] }; peta.set(c.learner_id, p); }
+        // Nama bisa kosong di sebagian baris (mis. sesi lama); pakai yang
+        // pertama kali terisi, jangan biarkan tertimpa kosong.
+        if (!p.nama && c.nama) p.nama = c.nama;
+        let sl2 = p.slides.find(x => x.slide === sl.slide && x.judul === sl.judul);
+        if (!sl2) { sl2 = { slide: sl.slide, judul: sl.judul, judul_section: sec.judul_section, catatan: [] }; p.slides.push(sl2); }
+        sl2.catatan.push(c);
+        p.jumlah_catatan++;
+      }
+    }
+  }
+  return [...peta.values()].sort((a, b) =>
+    b.jumlah_catatan - a.jumlah_catatan || (a.nama || '').localeCompare(b.nama || ''));
+}
+
+// Satu baris per catatan - bentuk paling enak disaring & dikelompokkan di Excel.
+function barisCatatan(items: CocreationModule[]): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  for (const m of items) {
+    for (const sec of m.sections) {
+      for (const sl of sec.slides) {
+        for (const c of sl.catatan) {
+          out.push({
+            nip: c.learner_id,
+            nama: c.nama || '',
+            modul_slug: m.module_slug,
+            judul_modul: m.judul_modul,
+            section: sec.judul_section || sec.section || '',
+            slide: sl.slide ?? '',
+            judul_slide: sl.judul,
+            catatan: c.text,
+            /* Catatan asli memakai Date.now(), tapi baris lama/rusak bisa
+               membawa ts kecil - tanpa penjaga ini nilainya berubah jadi
+               "1970-01-01" yang kelihatan seperti tanggal sungguhan di
+               laporan. Ambangnya 2001 (10^12 ms). */
+            waktu: c.ts > 1e12 ? new Date(c.ts).toISOString() : '',
+          });
+        }
+      }
+    }
+  }
+  out.sort((a, b) => String(a.nama).localeCompare(String(b.nama))
+    || String(a.modul_slug).localeCompare(String(b.modul_slug))
+    || Number(a.slide || 0) - Number(b.slide || 0));
+  return out;
+}
+
+function CocreationPesertaView({ m, tampilkanJudulModul }: { m: CocreationModule; tampilkanJudulModul: boolean }) {
+  const daftar = perPeserta(m);
+  return (
+    <div style={{ marginBottom: tampilkanJudulModul ? 26 : 0 }}>
+      {tampilkanJudulModul && (
+        <div style={{ marginBottom: 10, paddingBottom: 8, borderBottom: '2px solid var(--border-strong)' }}>
+          <b style={{ fontSize: 15 }}>{m.judul_modul}</b>{' '}
+          <span style={{ fontSize: 11.5, color: 'var(--text-dim)' }}>
+            {m.jumlah_catatan} catatan · {m.jumlah_peserta} peserta
+          </span>
+        </div>
+      )}
+      {daftar.map(p => (
+        <div key={p.learner_id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+                                         overflow: 'hidden', marginBottom: 10 }}>
+          <div style={{ background: 'var(--surface-2)', padding: '8px 11px', display: 'flex',
+                        alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+            <b style={{ fontSize: 13 }}>{p.nama || '(tanpa nama)'}</b>
+            <span style={{ fontSize: 10.5, color: 'var(--text-faint)', fontVariantNumeric: 'tabular-nums' }}>
+              {p.learner_id}
+            </span>
+            <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-dim)' }}>
+              {p.jumlah_catatan} catatan di {p.slides.length} slide
+            </span>
+          </div>
+          {p.slides.map(sl => (
+            <div key={String(sl.slide) + sl.judul} style={{ padding: '9px 11px', borderTop: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-dim)', marginBottom: 5 }}>
+                {sl.slide != null && (
+                  <span style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-faint)' }}>
+                    Slide {sl.slide} ·{' '}
+                  </span>
+                )}
+                <b style={{ color: 'var(--text)' }}>{sl.judul}</b>
+                {sl.judul_section && (
+                  <span style={{ color: 'var(--text-faint)' }}> · {sl.judul_section}</span>
+                )}
+              </div>
+              {sl.catatan.map((c, i) => (
+                <p key={i} style={{ fontSize: 12.5, lineHeight: 1.55, whiteSpace: 'pre-wrap',
+                                    margin: i ? '7px 0 0' : 0 }}>
+                  {c.text}
+                </p>
+              ))}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Catatan Co-creation satu modul: Section -> Slide -> catatan.
 // Dipakai DUA tempat dengan data yang sama bentuknya - tampilan lintas modul
 // dan sub-tab di dalam satu modul - jadi susunannya gak pernah beda antara
@@ -308,6 +435,11 @@ export default function CommandCenter() {
   // diskusi kelas, bukan buat menilai peserta.
   const [modulTab, setModulTab] = useState<'sesi' | 'cocreation'>('sesi');
   const [cocreation, setCocreation] = useState<CocreationModule[]>([]);
+  /* Dua sudut pandang atas data yang SAMA. Per peserta menjawab "si A nulis
+     apa saja"; per slide menjawab "bagian mana yang bikin banyak orang
+     bertanya" - yang kedua itu bahan memperbaiki materi. Default per peserta
+     karena itu pertanyaan yang paling sering diajukan wali program. */
+  const [cocSusun, setCocSusun] = useState<'peserta' | 'slide'>('peserta');
   // Terpisah dari `cocreation` (yang isinya satu modul saja): tampilan lintas
   // modul dimuat sekali dan dipakai ulang, jangan saling menimpa dengan
   // tampilan per-modul yang cakupannya beda.
@@ -410,6 +542,34 @@ export default function CommandCenter() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function unduhCatatan(items: CocreationModule[], namaFile: string) {
+    const rows = barisCatatan(items);
+    if (!rows.length) return;
+    download(namaFile, toCsv(rows));
+  }
+
+  function CocSakelar({ items, namaFile }: { items: CocreationModule[]; namaFile: string }) {
+    return (
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
+        <button className={cocSusun === 'peserta' ? 'btn-primary btn-sm' : 'btn-sm'}
+                onClick={() => setCocSusun('peserta')}
+                title="Tiap peserta beserta slide mana saja yang dia catati">
+          Per Peserta
+        </button>
+        <button className={cocSusun === 'slide' ? 'btn-primary btn-sm' : 'btn-sm'}
+                onClick={() => setCocSusun('slide')}
+                title="Tiap slide beserta catatan dari semua peserta, urut alur materi">
+          Per Slide
+        </button>
+        <button className="btn-sm" style={{ marginLeft: 'auto' }}
+                onClick={() => unduhCatatan(items, namaFile)}
+                title="Satu baris per catatan: NIP, nama, modul, section, slide, isi, waktu">
+          ⬇ CSV catatan
+        </button>
+      </div>
+    );
   }
 
   async function muatDitandai() {
@@ -1528,16 +1688,19 @@ export default function CommandCenter() {
               )}
               {cocreation.length > 0 && (
                 <>
+                  <CocSakelar items={cocreation} namaFile={`catatan-cocreation-${activeSlug}.csv`} />
                   <p className="hint" style={{ marginBottom: 12 }}>
-                    Disusun mengikuti alur materi.
+                    {cocSusun === 'peserta'
+                      ? 'Urut dari yang paling banyak menulis. Slide di dalam tiap peserta urut alur materi.'
+                      : 'Disusun mengikuti alur materi.'}
                     {cocreation[0].slide_terramai && cocreation[0].slide_terramai!.jumlah_catatan > 1 && (
                       <> Paling banyak dicatat: <b>{cocreation[0].slide_terramai!.judul}</b>{' '}
                       ({cocreation[0].slide_terramai!.jumlah_catatan} catatan).</>
                     )}
                   </p>
-                  {cocreation.map(m => (
-                    <CocreationModulView key={m.module_slug} m={m} tampilkanJudulModul={false} />
-                  ))}
+                  {cocreation.map(m => cocSusun === 'peserta'
+                    ? <CocreationPesertaView key={m.module_slug} m={m} tampilkanJudulModul={false} />
+                    : <CocreationModulView key={m.module_slug} m={m} tampilkanJudulModul={false} />)}
                 </>
               )}
             </>
@@ -1558,12 +1721,14 @@ export default function CommandCenter() {
           )}
           {cocreationAll.length > 0 && (
             <>
+              <CocSakelar items={cocreationAll} namaFile="catatan-cocreation-semua-modul.csv" />
               <p className="hint" style={{ marginBottom: 16 }}>
                 Seluruh modul dalam satu layar, urut alur pelatihan.
+                {cocSusun === 'peserta' && ' Di tiap modul, peserta urut dari yang paling banyak menulis.'}
               </p>
-              {cocreationAll.map(m => (
-                <CocreationModulView key={m.module_slug} m={m} tampilkanJudulModul={true} />
-              ))}
+              {cocreationAll.map(m => cocSusun === 'peserta'
+                ? <CocreationPesertaView key={m.module_slug} m={m} tampilkanJudulModul={true} />
+                : <CocreationModulView key={m.module_slug} m={m} tampilkanJudulModul={true} />)}
             </>
           )}
         </>
