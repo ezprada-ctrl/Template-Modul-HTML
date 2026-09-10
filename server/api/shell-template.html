@@ -354,6 +354,16 @@ a{color:inherit;}
 #devmode-btn.active{color:var(--accent-ink);opacity:1;font-weight:700;}
 
 #sidebar-close{display:none;}
+/* Bahasanya sengaja disamakan dengan #theme-toggle di topbar: kotak membulat,
+   latar permukaan, garis tepi tipis. Terbaca sebagai tombol tanpa harus
+   bersaing dengan warna aksen yang sudah dipakai menandai section aktif. */
+#sidebar-toggle{
+  margin-left:auto;flex-shrink:0;width:34px;height:34px;border-radius:10px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text-dim);
+  cursor:pointer;font-size:19px;line-height:1;display:flex;align-items:center;justify-content:center;
+  transition:.15s;font-family:inherit;padding:0;
+}
+#sidebar-toggle:hover{color:var(--text);border-color:var(--border-strong);background:var(--surface-hover);}
 
 /* ---------- Main ---------- */
 #main{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
@@ -943,12 +953,10 @@ ul.tick li b, ol.tick li b{color:var(--text);}
    tahu-menahu soal mode terlipat, dan tanda "sedang dibuka"/"sudah dibaca" di
    ikon section tetap ikut ter-update sendiri seperti biasa. */
 @media(min-width:901px){
-  #menu-toggle{
-    display:flex;align-items:center;justify-content:center;width:34px;height:34px;
-    border-radius:10px;background:var(--surface);border:1px solid var(--border);
-    color:var(--text-dim);cursor:pointer;font-size:15px;line-height:1;transition:.15s;flex-shrink:0;
-  }
-  #menu-toggle:hover{color:var(--text);border-color:var(--border-strong);}
+  /* ☰ SENGAJA tetap tersembunyi di desktop. Ikon itu berarti "buka menu" dan
+     tidak menjelaskan arah geseran; tugasnya diambil alih panah ‹/› di dalam
+     sidebar. Di bawah 901px ☰ tetap hidup - di situ sidebar-nya melayang dan
+     memang butuh pemanggil dari luar. */
 
   /* Rail ikon. 62px = ikon section 30px + napas kiri-kanan, cukup buat
      disentuh nyaman tanpa memakan ruang yang justru mau dibebaskan. */
@@ -965,7 +973,9 @@ ul.tick li b, ol.tick li b{color:var(--text);}
   body.sidebar-collapsed #sidebar #trackcheck-btn,
   body.sidebar-collapsed #sidebar #trackcheck-status,
   body.sidebar-collapsed #sidebar #devmode-btn{display:none;}
+  body.sidebar-collapsed #sidebar .brand-mark{display:none;}
   body.sidebar-collapsed #sidebar .brand{justify-content:center;padding:2px 0 18px;gap:0;}
+  body.sidebar-collapsed #sidebar #sidebar-toggle{margin-left:0;}
   body.sidebar-collapsed #sidebar .nav-section-head,
   body.sidebar-collapsed #sidebar .nav-cover-btn{justify-content:center;padding-left:0;padding-right:0;gap:0;}
   body.sidebar-collapsed #sidebar .nav-section{margin-bottom:6px;}
@@ -995,6 +1005,7 @@ body.sidebar-collapsed #topbar-progress.ada{display:inline-flex;align-items:cent
 @media(max-width:900px){
   #sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);width:86vw;max-width:320px;box-shadow:var(--shadow-lg);}
   #sidebar.open{transform:translateX(0);}
+  #sidebar-toggle{display:none;}
   #sidebar-close{display:block;margin-left:auto;background:none;border:none;color:var(--text-faint);font-size:18px;cursor:pointer;}
   #menu-toggle{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:15px;}
   #overlay{display:none;position:fixed;inset:0;background:rgba(22,33,62,.35);z-index:35;}
@@ -1663,6 +1674,11 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
         <div class="t2">__SIDEBAR_TITLE__</div>
       </div>
       <button id="sidebar-close" onclick="closeSidebar()">✕</button>
+      <!-- Pasangan tutup-buka jadi SATU benda yang tidak berpindah tempat:
+           panahnya yang berbalik arah, bukan tombolnya yang pindah. -->
+      <button id="sidebar-toggle" onclick="toggleSidebar()"
+              title="Tutup daftar isi" aria-label="Tutup daftar isi"
+              aria-expanded="true" aria-controls="sidebar">‹</button>
     </div>
 
     <div class="progress-block">
@@ -5126,6 +5142,17 @@ function sidebarMobile(){ return window.innerWidth <= SIDEBAR_MOBILE_MAX; }
    yang dibutuhkan progres belajar. */
 function applySidebarCollapsed(collapsed){
   document.body.classList.toggle('sidebar-collapsed', !!collapsed);
+  /* Panahnya yang berbalik, tombolnya tidak pindah tempat - itu yang bikin
+     tutup & buka kebaca sebagai satu benda yang sama. Label & aria ikut
+     berubah supaya pembaca layar dapat keterangan yang benar juga. */
+  const t = document.getElementById('sidebar-toggle');
+  if(t){
+    t.textContent = collapsed ? '›' : '‹';
+    const label = collapsed ? 'Buka daftar isi' : 'Tutup daftar isi';
+    t.title = label;
+    t.setAttribute('aria-label', label);
+    t.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  }
   updateTopbarProgress();
 }
 function toggleSidebar(){
@@ -5135,7 +5162,11 @@ function toggleSidebar(){
   try{ localStorage.setItem(SIDEBAR_KEY, kini ? '' : '1'); }catch(e){}
 }
 (function(){
-  try{ if(localStorage.getItem(SIDEBAR_KEY)) document.body.classList.add('sidebar-collapsed'); }catch(e){}
+  let simpan = '';
+  try{ simpan = localStorage.getItem(SIDEBAR_KEY) || ''; }catch(e){}
+  /* Lewat applySidebarCollapsed(), bukan classList.add() langsung: arah panah
+     dan label tombolnya harus ikut benar sejak muatan pertama. */
+  applySidebarCollapsed(!!simpan);
 })();
 
 /* Lebar jendela bisa melewati batas 900px sambil modulnya kebuka (jendela
@@ -5163,6 +5194,10 @@ document.addEventListener('click', function(e){
   if(!document.body.classList.contains('sidebar-collapsed')) return;
   const bar = e.target.closest && e.target.closest('#sidebar');
   if(!bar) return;
+  /* Tombol panahnya diurus onclick-nya sendiri. Tanpa pengecualian ini,
+     penangkap di bawah membuka sidebar lalu toggleSidebar() menutupnya lagi -
+     dari sisi peserta tombolnya terlihat tidak berfungsi. */
+  if(e.target.closest('#sidebar-toggle')) return;
   const head = e.target.closest('.nav-section-head');
   applySidebarCollapsed(false);
   try{ localStorage.setItem(SIDEBAR_KEY, ''); }catch(e2){}
