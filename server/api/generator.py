@@ -50,6 +50,92 @@ def nl2br(text):
     return (text or '').replace('\r\n', '\n').replace('\r', '\n').replace('\n', '<br>')
 
 
+# Penanda daftar di isi Kartu. '-' dan '*' kebiasaan markdown; '•' kebawa
+# sendiri kalau penyusun menyalin dari Word/PowerPoint. Spasi sesudah penanda
+# WAJIB - tanpa itu, "*penting*" (miring) dan "-5 derajat" ikut kebaca sebagai
+# item daftar.
+_ITEM_BULLET = re.compile(r'^[ \t]*[-*\u2022][ \t]+(.*)$')
+_ITEM_NOMOR = re.compile(r'^[ \t]*\d+[.)][ \t]+(.*)$')
+
+
+def daftar_dari_penanda(text):
+    """Ubah baris berpenanda jadi <ul>/<ol>, sisanya tetap lewat nl2br.
+
+    Kenapa ada: isi Kartu itu HTML mentah, jadi bikin daftar berarti mengetik
+    <ul><li>...</li></ul> sendiri di dalam textarea - kode yang harus dibaca
+    ulang penyusun tiap kali dia menyunting kalimatnya.
+
+    Gayanya MENUMPANG class .tick yang sudah dipakai blok Daftar Bercentang,
+    bukan bikin CSS baru: ul.tick sudah titik bulat berwarna tema dan ol.tick
+    sudah badge bernomor, dua-duanya sudah seukuran teks isi Kartu. Menambah
+    aturan CSS sendiri cuma bikin dua daftar yang kelihatannya sama pelan-pelan
+    beda sendiri.
+
+    Isi HTML lama TIDAK tersentuh: yang diubah cuma baris yang karakter
+    pertamanya penanda + spasi, jadi <ul><li> yang terlanjur diketik tetap
+    lewat apa adanya.
+    """
+    raw = (text or '').replace('\r\n', '\n').replace('\r', '\n')
+    if not raw:
+        return ''
+
+    keluar = []
+    item = []
+    tag = None
+    teks = []
+
+    def tutup_daftar():
+        nonlocal item, tag
+        if item:
+            isi = ''.join('<li>%s</li>' % x for x in item)
+            keluar.append('<%s class="tick tick-isi">%s</%s>' % (tag, isi, tag))
+        item, tag = [], None
+
+    def buang_teks():
+        nonlocal teks
+        if teks:
+            keluar.append('<br>'.join(teks))
+        teks = []
+
+    baris = raw.split('\n')
+    i = 0
+    while i < len(baris):
+        b = baris[i]
+        mb = _ITEM_BULLET.match(b)
+        mn = None if mb else _ITEM_NOMOR.match(b)
+        if mb or mn:
+            jenis = 'ul' if mb else 'ol'
+            if tag and tag != jenis:
+                tutup_daftar()
+            if not tag:
+                buang_teks()
+                tag = jenis
+            item.append((mb or mn).group(1).strip())
+        elif not b.strip() and tag:
+            # Baris kosong DI ANTARA dua item dianggap jarak tulis biasa, bukan
+            # akhir daftar - penyusun sering merenggangkan item biar enak
+            # dibaca di textarea. Kalau sesudahnya bukan item lagi, daftarnya
+            # ditutup dan barisan kosongnya dibuang: <ul> sudah punya jarak
+            # bawah sendiri, menambah <br> di situ bikin celah dobel.
+            j = i + 1
+            while j < len(baris) and not baris[j].strip():
+                j += 1
+            lanjut = j < len(baris) and (
+                _ITEM_BULLET.match(baris[j]) or _ITEM_NOMOR.match(baris[j]))
+            if not lanjut:
+                tutup_daftar()
+            i = j
+            continue
+        else:
+            tutup_daftar()
+            teks.append(b)
+        i += 1
+
+    tutup_daftar()
+    buang_teks()
+    return ''.join(keluar)
+
+
 # ---------------------------------------------------------------- block renderers
 
 def render_card(b):
@@ -63,7 +149,7 @@ def render_card(b):
         color = b.get('iconColor', 'var(--accent-ink)')
         icon_html = f'<span class="ic" style="background:{bg};color:{color};">{b["icon"]}</span>'
     heading = f'<h3>{icon_html}{esc(b.get("heading",""))}</h3>' if b.get('heading') else ''
-    return f'<div class="card">{heading}{nl2br(b.get("bodyHtml",""))}</div>'
+    return f'<div class="card">{heading}{daftar_dari_penanda(b.get("bodyHtml",""))}</div>'
 
 
 def render_callout(b):

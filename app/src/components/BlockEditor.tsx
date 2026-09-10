@@ -291,22 +291,77 @@ function pembungkusTag(value: string, onChange: (v: string) => void) {
   };
 }
 
+// Enter di baris berpenanda melanjutkan daftarnya; Enter lagi di item yang
+// masih kosong membuang penandanya (itu cara keluar dari daftar). Perilaku yang
+// sama seperti Notion/Word.
+//
+// Nol elemen UI baru - dan itu memang inti permintaannya: bikin bullet TANPA
+// harus melihat kode. Tombol yang menyisipkan <ul><li> ke textarea tidak
+// menyelesaikan itu, karena kodenya tetap terpampang di kotak edit.
+//
+// Penanda & pemisahnya ditangkap terpisah supaya baris baru mewarisi indent,
+// jenis penanda, dan lebar spasi yang persis sama - daftar bernomor lanjut ke
+// angka berikutnya.
+const PENANDA_DAFTAR = /^([ \t]*)([-*\u2022]|(\d+)([.)]))([ \t]+)(.*)$/;
+
+function lanjutkanDaftar(value: string, onChange: (v: string) => void) {
+  return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+    const el = e.currentTarget;
+    const s = el.selectionStart ?? 0;
+    const t = el.selectionEnd ?? 0;
+    // Ada teks terpilih = penyusun sedang mengganti sesuatu, bukan menambah
+    // item. Biarkan Enter berperilaku biasa.
+    if (s !== t) return;
+    const awal = value.lastIndexOf('\n', s - 1) + 1;
+    const m = PENANDA_DAFTAR.exec(value.slice(awal, s));
+    if (!m) return;
+    const [, indent, penanda, angka, titik, spasi, isi] = m;
+    e.preventDefault();
+    let next: string;
+    let pos: number;
+    if (!isi.trim()) {
+      // Item kosong: buang seluruh penandanya, jangan tambah baris baru.
+      next = value.slice(0, awal) + value.slice(s);
+      pos = awal;
+    } else {
+      const berikut = angka ? `${Number(angka) + 1}${titik}` : penanda;
+      const sisip = `\n${indent}${berikut}${spasi}`;
+      next = value.slice(0, s) + sisip + value.slice(t);
+      pos = s + sisip.length;
+    }
+    onChange(next);
+    // Setelah React re-render, caret harus kembali ke tempat yang benar -
+    // kalau tidak, dia melompat ke ujung teks tiap kali Enter ditekan.
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(pos, pos); });
+  };
+}
+
 const JUDUL_SHORTCUT = 'Ctrl+B: tebal (<strong>) · Ctrl+I: miring (<em>)';
 
-function RichTextarea({ value, onChange, style, placeholder }: {
+function RichTextarea({ value, onChange, style, placeholder, daftar }: {
   value: string;
   onChange: (v: string) => void;
   style?: CSSProperties;
   placeholder?: string;
+  // Nyalakan Enter-lanjut-daftar. Opt-in, bukan bawaan: field yang isinya
+  // BUKAN alinea bebas (mis. satu item Accordion) gak boleh tiba-tiba
+  // menambah penanda sendiri waktu penyusun menekan Enter.
+  daftar?: boolean;
 }) {
+  const bungkus = pembungkusTag(value, onChange);
+  const lanjut = lanjutkanDaftar(value, onChange);
   return (
     <textarea
       style={style}
       placeholder={placeholder}
       value={value}
       onChange={e => onChange(e.target.value)}
-      onKeyDown={pembungkusTag(value, onChange)}
-      title={JUDUL_SHORTCUT}
+      onKeyDown={e => {
+        if (daftar) { lanjut(e); if (e.defaultPrevented) return; }
+        bungkus(e);
+      }}
+      title={daftar ? JUDUL_SHORTCUT + ' · awali baris dengan "- " untuk bullet, "1. " untuk bernomor' : JUDUL_SHORTCUT}
     />
   );
 }
@@ -396,7 +451,9 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
           Icon cuma muncul kalau Judul kartu diisi.
         </p>
         <input style={inp} placeholder="Judul kartu" value={block.heading || ''} onChange={e => onChange({ heading: e.target.value })} />
-        <RichTextarea style={ta} placeholder="Isi (HTML/teks)" value={block.bodyHtml || ''} onChange={v => onChange({ bodyHtml: v })} />
+        <RichTextarea style={ta} daftar
+                      placeholder={'Isi kartu\n\nAwali baris dengan "- " untuk bullet, "1. " untuk bernomor'}
+                      value={block.bodyHtml || ''} onChange={v => onChange({ bodyHtml: v })} />
       </>;
     case 'callout':
       return <>

@@ -489,6 +489,12 @@ ol.tick li{counter-increment:tk;padding-left:30px;}
 ol.tick li::before{content:counter(tk);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:7px;background:var(--accent-soft);color:var(--accent-ink);font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;}
 ul.tick li b, ol.tick li b{color:var(--text);}
 .card>ul.tick, .card>ol.tick{margin-left:37px;}
+/* Daftar yang lahir dari penanda "-" / "1." di ISI Kartu itu bagian dari
+   alineanya sendiri, jadi rata kiri dengan teks di atasnya. Indent 37px di
+   atas sengaja cuma buat blok Daftar Bercentang yang ditaruh di dalam Kartu -
+   angkanya menyamai ikon judul (28px) + jaraknya (9px) supaya item-itemnya
+   sejajar dengan TEKS JUDUL, dan alasan itu tidak berlaku di sini. */
+.card>ul.tick-isi, .card>ol.tick-isi{margin-left:0;}
 .tick-stacked li>div{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .tick-stacked li b{font-size:14px;}
 .tick-stacked li span{color:var(--text-dim);font-size:13.5px;line-height:1.55;}
