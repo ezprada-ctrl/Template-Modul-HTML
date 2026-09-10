@@ -45,9 +45,21 @@ MAX_ROWS = 500000
 _TRUNCATED = False
 
 
+# Hasil _sesi_disaring() untuk permintaan yang sedang berjalan. SENGAJA cuma
+# sepanjang satu permintaan, bukan cache berumur: kalau dibiarkan hidup di
+# kontainer serverless yang masih hangat, sesi yang BARU ditandai dari Command
+# Center gak akan tersaring sampai kontainernya mati - persis jenis "kadang
+# jalan kadang enggak" yang paling susah dilacak nanti.
+_SESI_DISARING = None
+
+
 def reset_truncation():
-    global _TRUNCATED
+    """Dipanggil di awal TIAP permintaan baca. Namanya soal truncation, tapi
+    tugasnya sekarang menandai batas permintaan - jadi cache di bawah ikut
+    dibuang di sini."""
+    global _TRUNCATED, _SESI_DISARING
     _TRUNCATED = False
+    _SESI_DISARING = None
 
 
 def was_truncated():
@@ -159,11 +171,15 @@ def _sesi_disaring():
     dan sesinya bakal lolos. Kuerinya kecil: satu kolom, dan cuma sebanyak
     sesi yang beneran ditandai.
     """
+    global _SESI_DISARING
+    if _SESI_DISARING is not None:
+        return _SESI_DISARING
     out = set()
     for et in (DEV_EVENT, TANDA_UJI_EVENT):
         for r in fetch_rows(columns='session_id', event_type=et):
             if r.get('session_id'):
                 out.add(r['session_id'])
+    _SESI_DISARING = out
     return out
 
 

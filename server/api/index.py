@@ -324,6 +324,7 @@ def api_activity_tandai_uji():
     denied = _check_cc_password(data)
     if denied:
         return denied
+    activity_store.reset_truncation()
     sesi = data.get('sesi') or []
     if not isinstance(sesi, list) or not sesi:
         return jsonify({'error': 'Tidak ada sesi yang dipilih.'}), 400
@@ -343,6 +344,7 @@ def api_activity_batalkan_tanda():
     denied = _check_cc_password(data)
     if denied:
         return denied
+    activity_store.reset_truncation()
     ids = data.get('session_ids') or []
     if not isinstance(ids, list) or not ids:
         return jsonify({'error': 'Tidak ada sesi yang dipilih.'}), 400
@@ -361,6 +363,7 @@ def api_activity_ditandai():
     if denied:
         return denied
     try:
+        activity_store.reset_truncation()
         return jsonify({'ditandai': activity_store.sesi_ditandai()})
     except Exception as e:
         return jsonify({'error': str(e)}), 503
@@ -377,6 +380,7 @@ def api_activity_rows():
     if not slug:
         return jsonify({'error': 'module_slug wajib diisi'}), 400
     try:
+        activity_store.reset_truncation()
         return jsonify({'rows': activity_store.fetch_rows(module_slug=slug)})
     except Exception as e:
         return jsonify({'error': str(e)}), 503
