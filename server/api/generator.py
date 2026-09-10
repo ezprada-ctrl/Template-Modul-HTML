@@ -1318,8 +1318,18 @@ def generate_html(module):
     # Tags every activity row so the Command Center can tell modules apart.
     out = out.replace('__MODULE_SLUG_JS__', js_str(slug))
 
-    module_title_js = esc(module.get('sidebarTitle') or module.get('title', '')).replace("'", "\\'")
-    out = out.replace('__MODULE_TITLE__', module_title_js)
+    # APA ADANYA, bukan esc(). MODULE_TITLE dipakai dua peran: disisipkan ke
+    # HTML (di situ escape memang perlu) DAN dikirim sebagai DATA di payload
+    # session_start. Waktu di-escape di sini, bentuk ter-escape itu ikut
+    # tersimpan ke database, lalu Command Center menampilkannya sebagai teks
+    # biasa - judul "Keren & Fancy" muncul jadi "Keren &amp; Fancy" di layar.
+    # Yang menyisipkannya ke HTML sekarang meng-escape sendiri di titik
+    # penyisipan (escHtml di shell-template.html).
+    #
+    # js_str(), bukan rangkai kutip manual: dia yang mengurus kutip, baris
+    # baru, dan "</script" sekaligus - persis seperti nilai lain di sekitarnya.
+    out = out.replace('__MODULE_TITLE_JS__',
+                      js_str(module.get('sidebarTitle') or module.get('title', '')))
 
     sections = module.get('sections', [])
     out = out.replace('__SECTIONS_JS__', js_str(sections))

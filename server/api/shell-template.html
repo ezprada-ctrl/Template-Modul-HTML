@@ -2446,7 +2446,16 @@ function artPendingOnSlide(num){
 
 /* ============================= STATE ============================= */
 const STORAGE_KEY = '__STORAGE_KEY__';
-const MODULE_TITLE = '__MODULE_TITLE__';
+/* Judul modul disimpan APA ADANYA - dia ikut dikirim sebagai data di payload
+   session_start, dan bentuk ter-escape yang tersimpan ke database bakal tampil
+   mentah ("Keren &amp; Fancy") di Command Center. Konsekuensinya: yang
+   menyisipkannya ke HTML wajib meng-escape sendiri di titik penyisipan. */
+function escHtml(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+const MODULE_TITLE = __MODULE_TITLE_JS__;
 
 /* ---------- Tema terang/gelap ----------
    Pilihan disimpan di localStorage TERPISAH (bukan cmi.suspend_data - ini
@@ -3739,7 +3748,7 @@ function renderQuiz(section){
     <div class="cp-final">
       <div class="cp-final-glow"></div>
       <div class="cp-final-badge">🏆</div>
-      <div class="cp-final-title">Selamat!<br>Kamu telah menyelesaikan materi<br><b>${MODULE_TITLE}</b></div>
+      <div class="cp-final-title">Selamat!<br>Kamu telah menyelesaikan materi<br><b>${escHtml(MODULE_TITLE)}</b></div>
       <div class="cp-final-sub">Seluruh section dan kuis checkpoint sudah kamu lewati dengan baik.</div>
     </div>
     ${jejakHtml}
