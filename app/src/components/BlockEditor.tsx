@@ -1391,7 +1391,7 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
           <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '6px 0 3px' }}>Model feedback</label>
           <select style={inp} value={mode} onChange={e => patchItem(qi, { feedbackMode: e.target.value as 'single' | 'perOption' })}>
             <option value="single">Feedback benar/salah (1x kesempatan, langsung lanjut)</option>
-            <option value="perOption">Feedback per pilihan jawaban (opsional per pilihan)</option>
+            <option value="perOption">Feedback di setiap opsi (peserta terus menjawab sampai benar)</option>
           </select>
           {mode === 'single' ? (
             <>
