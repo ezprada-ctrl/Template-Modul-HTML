@@ -1717,6 +1717,11 @@ body.pres-hud-off #pres-hud{display:none;}
 #demo-badge .hint{font-weight:500;opacity:.6;letter-spacing:0;}
 @keyframes demoPulse{50%{opacity:.25;}}
 body.demo-paused #demo-badge .dot{background:#fbbf24;animation:none;}
+#demo-badge .demo-jeda{display:none;}
+body.demo-paused #demo-badge .demo-jalan{display:none;}
+body.demo-paused #demo-badge .demo-jeda{display:inline;}
+body.demo-paused #demo-badge{cursor:pointer;border-color:rgba(255,255,255,.3);}
+body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
 
 /* --- Panel umpan aktivitas ---
    Memperlihatkan data LAHIR saat itu juga. Sengaja gak mengirim apa pun ke
@@ -6008,7 +6013,14 @@ let demoIdleTimer = null;
    meninggalkan modul di slide mana. Balik ke 0 cuma di ujung putaran penuh. */
 let demoStepIdx = 0;
 
-const DEMO_IDLE_RESUME_MS = 45000;  // diam segini lama -> demo jalan lagi
+/* Ambang "sudah selesai mencoba" -> demo jalan lagi sendiri.
+   Diturunkan dari 45 detik: di booth sungguhan, jeda sepanjang itu sesudah
+   pengunjung berhenti mengklik terbaca sebagai demonya MATI, bukan sedang
+   menunggu. Yang tidak boleh hilang dengan memendekkannya - direbut kursornya
+   di tengah mencoba - dijaga oleh demoArmIdle() yang menyetel ulang hitungan
+   di TIAP sentuhan, plus lencana yang bisa diklik buat melanjutkan seketika
+   (lihat demoBuildChrome) bagi yang tidak mau menunggu sama sekali. */
+const DEMO_IDLE_RESUME_MS = 20000;
 const DEMO_HOLD  = 3200;            // caption dibaca sekitar segini
 const DEMO_MOVE  = 600;             // sejalan dengan transition #demo-cursor
 const DEMO_AFTER = 900;             // jeda sesudah satu klik
@@ -6531,10 +6543,15 @@ function demoBuildChrome(){
   cap.id = 'demo-caption';
   document.body.appendChild(cap);
 
+  /* Lencana punya dua wajah: waktu demo jalan dia cuma keterangan, waktu
+     dijeda dia jadi TOMBOL - satu-satunya jalan melanjutkan seketika tanpa
+     menunggu hitungan idle habis. */
   const badge = document.createElement('div');
   badge.id = 'demo-badge';
-  badge.innerHTML = '<span class="dot"></span>DEMO OTOMATIS' +
-                    '<span class="hint">· sentuh layar untuk mencoba sendiri</span>';
+  badge.innerHTML = '<span class="dot"></span>' +
+                    '<span class="demo-jalan">DEMO OTOMATIS<span class="hint">· sentuh layar untuk mencoba sendiri</span></span>' +
+                    '<span class="demo-jeda">DEMO DIJEDA<span class="hint">· klik di sini untuk melanjutkan</span></span>';
+  badge.onclick = function(){ if(!demoRunning) presDemoStart(); };
   document.body.appendChild(badge);
 }
 

@@ -14,7 +14,15 @@
 
 export const DEMO_ABORT = { abort: true };
 
-export const DEMO_IDLE_RESUME_MS = 45000; // diam segini lama -> demo jalan lagi
+/* Ambang "sudah selesai mencoba" -> demo jalan lagi sendiri. Diturunkan dari
+   45 detik: jeda sepanjang itu sesudah orang berhenti mengklik terbaca
+   sebagai demonya MATI, bukan sedang menunggu. Yang dijaga dengan
+   memendekkannya - direbut kursornya di tengah mencoba - tetap aman karena
+   hitungannya disetel ulang di TIAP sentuhan (lihat pasangIdle), dan yang
+   tidak mau menunggu sama sekali tinggal mengklik lencananya. Sama dengan
+   kembarannya di shell-template.html; kalau yang satu diubah, ubah dua-duanya
+   - dua booth berdampingan yang menunggu beda lama terbaca sebagai rusak. */
+export const DEMO_IDLE_RESUME_MS = 20000;
 const HOLD = 3400;  // caption dibaca sekitar segini
 const MOVE = 600;   // sejalan dengan transition .bdemo-cursor
 const AFTER = 900;  // jeda sesudah satu klik
@@ -80,7 +88,11 @@ const CHROME_CSS = `
 .bdemo-caption.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .bdemo-badge{position:fixed;right:18px;top:14px;z-index:9999;display:flex;align-items:center;gap:8px;
   padding:7px 14px;border-radius:999px;background:rgba(20,20,20,.92);color:#fff;
-  font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;pointer-events:none;}
+  font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+.bdemo-badge .jeda{display:none;}
+body.bdemo-paused .bdemo-badge .jalan{display:none;}
+body.bdemo-paused .bdemo-badge .jeda{display:inline;}
+body.bdemo-paused .bdemo-badge{cursor:pointer;}
 .bdemo-badge .dot{width:8px;height:8px;border-radius:50%;background:#37d67a;animation:bdemoBlink 1.6s infinite;}
 .bdemo-badge .hint{font-weight:600;letter-spacing:0;text-transform:none;opacity:.75;}
 @keyframes bdemoBlink{50%{opacity:.25;}}
@@ -104,14 +116,21 @@ function pasangChrome() {
   cap.id = 'bdemo-caption';
   document.body.appendChild(cap);
 
+  /* Dua wajah: keterangan waktu demo jalan, TOMBOL waktu dijeda - jalan
+     satu-satunya buat melanjutkan seketika tanpa menunggu hitungan idle.
+     Pemanggilnya dipasang di mulai(), karena yang bisa melanjutkan cuma
+     instance yang lagi hidup. */
   const badge = document.createElement('div');
   badge.className = 'bdemo-badge';
-  badge.innerHTML = '<span class="dot"></span>DEMO OTOMATIS<span class="hint">· sentuh layar untuk mencoba sendiri</span>';
+  badge.id = 'bdemo-badge';
+  badge.innerHTML = '<span class="dot"></span>' +
+    '<span class="jalan">DEMO OTOMATIS<span class="hint">· sentuh layar untuk mencoba sendiri</span></span>' +
+    '<span class="jeda">DEMO DIJEDA<span class="hint">· klik di sini untuk melanjutkan</span></span>';
   document.body.appendChild(badge);
 }
 
 function bersihkanChrome() {
-  ['bdemo-style', 'bdemo-cursor', 'bdemo-caption'].forEach(id => document.getElementById(id)?.remove());
+  ['bdemo-style', 'bdemo-cursor', 'bdemo-caption', 'bdemo-badge'].forEach(id => document.getElementById(id)?.remove());
   document.querySelector('.bdemo-badge')?.remove();
 }
 
@@ -141,6 +160,8 @@ export class BuilderDemo {
 
   mulai() {
     pasangChrome();
+    const badge = document.getElementById('bdemo-badge');
+    if (badge) badge.onclick = () => { if (!this.jalan) this.jalankan(); };
     const jeda = (e: Event) => {
       // Klik yang dikirim mesin demo sendiri juga sampai ke sini; yang
       // membedakan cuma isTrusted. Tanpa penjaga ini demo menjeda dirinya
