@@ -2830,7 +2830,10 @@ const TRACK_READY = !!(TRACK_ACTIVITY && SUPA_URL && SUPA_KEY);
    bukan Supabase langsung. */
 const SHOW_RECAP = __SHOW_RECAP_JS__;
 const RECAP_API = __RECAP_API_JS__;
-const RECAP_READY = !!(TRACK_READY && SHOW_RECAP && RECAP_API);
+/* Di Mode Demo tidak ada TRACK_READY maupun RECAP_API - booth tidak punya
+   peserta ber-NIP dan tidak menyentuh server sama sekali. Rekapnya tetap
+   dibuka, dengan angka contoh yang dipasang langkah demo 'recap'. */
+const RECAP_READY = !!(TRACK_READY && SHOW_RECAP && RECAP_API) || !!(DEMO && SHOW_RECAP);
 
 /* Co-creation — catatan bebas peserta per slide materi.
    DUA MODE, dan bedanya nyata buat peserta:
@@ -6310,21 +6313,36 @@ const DEMO_ACTIONS = {
     if(lanjut) await D.click(lanjut);
   },
 
+  /* Dua bagian, karena captionnya menjanjikan dua hal: MENCATAT di slide,
+     lalu MENINJAU semuanya dari satu tempat. Sampai sebelum ini langkahnya
+     tidak pernah jalan sama sekali - #coc-fab tidak ada di berkas demo (lihat
+     show_cocreation di generator.py), dan selektor tombol simpannya pun salah
+     (#coc-panel tidak pernah ada; yang betul #coc-input & #coc-submit). */
   'cocreation': async (D, cap) => {
+    const fab = document.getElementById('coc-fab');
+    if(!fab) return false;
     const idx = demoFirstIdx('slide');
     if(idx < 0) return false;
     await D.goTo(idx); presRevealAll();
     await D.say(cap, 0);
-    const fab = document.getElementById('coc-fab');
-    if(!fab) return false;
     await D.click(fab);
-    const ta = document.querySelector('#coc-panel textarea, #coc-editor textarea, .coc-panel textarea');
-    if(ta){
-      await D.type(ta, 'Bagian ini perlu contoh kasus dari kantor sendiri.');
-      const simpan = document.querySelector('#coc-panel button.primary, #coc-panel .nav-btn.primary, .coc-save');
-      if(simpan) await D.click(simpan);
+    const ta = document.getElementById('coc-input');
+    if(!ta) return false;
+    await D.type(ta, 'Bagian ini perlu contoh kasus dari kantor sendiri.');
+    const simpan = document.getElementById('coc-submit');
+    if(simpan) await D.click(simpan);
+    await D.sleep(1100);
+    if(typeof cocClose === 'function') cocClose();
+    /* Separuh kedua: tinjauan terkumpul. Dibuka lewat fungsinya langsung -
+       pintu masuknya ada di sidebar, dan membuka sidebar cuma buat satu klik
+       bikin langkah ini kepanjangan buat ditonton sambil lewat di booth. */
+    await D.sleep(500);
+    if(typeof cocMenuOpen === 'function'){
+      cocMenuOpen();
+      await D.sleep(2800);
+      if(typeof cocMenuClose === 'function') cocMenuClose();
     }
-    await D.sleep(900);
+    await D.sleep(400);
     demoLogEvent('coc_note', '1 catatan peserta tersimpan');
   },
 
@@ -6373,14 +6391,68 @@ const DEMO_ACTIONS = {
     await D.sleep(500);
   },
 
+  /* Rekapnya diisi ANGKA CONTOH, bukan hasil sesi. Di booth tidak ada peserta
+     ber-NIP dan perekaman aktivitas memang mati (lihat `track` di
+     generator.py), jadi recapFetch() cuma akan menabrak jaringan dan berakhir
+     di pesan "koneksinya lagi gak nyambung" - kalimat terakhir yang pantas
+     dilihat pengunjung pameran. recapData dipasang lebih dulu supaya
+     recapOpen() merendernya langsung tanpa menyentuh server.
+
+     Angkanya sengaja SAMA dengan yang mengalir di panel umpan langkah
+     'activity' (14 menit, 9 slide unik): dua panel yang bicara soal sesi yang
+     sama tidak boleh menyebut angka yang berbeda di layar yang sama.
+
+     Cabang 'menengah' dipilih dengan sengaja: 'rajin' membuat fiturnya
+     tampak cuma bisa memuji, 'kurang' menutup demo dengan nada menghakimi.
+     Yang menengah memperlihatkan dua-duanya - apresiasi dulu, baru catatan
+     kecil - dan itulah yang paling mewakili cara fitur ini bicara. */
   'recap': async (D, cap) => {
     const idx = demoFirstIdx('summary');
     if(idx < 0) return false;
+    if(typeof recapOpen !== 'function') return false;
+    /* Dipasang SEBELUM pindah ke slide Ringkasan, bukan sesudah. Slide itu
+       membuka rekapnya sendiri 700ms setelah dibuka (lihat recapAutoShown),
+       dan kalau recapData masih kosong saat itu, yang jalan duluan adalah
+       recapFetch() - menembak server yang tidak dituju demo, lalu .catch()-nya
+       menimpa angka contoh kita dengan "koneksinya lagi gak nyambung". */
+    recapData = {
+      ada_data: true,
+      nama: 'Peserta Contoh',
+      learner_id: '000000',
+      tatap_menit: 14,
+      ditinggal_menit: 2,
+      slide_unik: 9,
+      /* Harus LEBIH BESAR dari slide_unik: sinyal slide_cepat di bawah bilang
+         ada satu slide yang dilewati, dan kartu statistiknya membaca selisih
+         angka ini - kalau sama, kartunya menulis "semua slide pernah dibuka"
+         tepat di sebelah kalimat yang bilang sebaliknya. */
+      total_slide: Math.max(10, NAV.filter(it => it.kind === 'slide').length),
+      slide_rushed: [{ num: 4, judul: '' }],
+      peringatan_diabaikan: 0,
+      video_dimulai: 1,
+      total_video: 1,
+      video_rata_persen: 62,
+      video_detail: [],
+      kc_benar: 3,
+      kc_total: 4,
+      kuis_terparah: null,
+      interaktif_diklik: 5,
+      total_interaktif: 8,
+      /* Dua 'jelek' = cabang 'menengah'; harus konsisten dengan angka di atas
+         (5 dari 8 interaktif, 1 slide dilewati cepat). */
+      sinyal: { slide_cepat: 'jelek', ditinggal: 'bagus', video: 'bagus',
+                kc: 'bagus', kuis: 'bagus', interaktif: 'jelek' },
+      jumlah_jelek: 2,
+      cabang: 'menengah',
+      rata_kelas_tatap_menit: 17,
+    };
     await D.goTo(idx);
     await D.say(cap, 0);
-    if(typeof recapOpen === 'function'){ recapOpen(); await D.sleep(4000); }
-    const tutup = document.querySelector('#recap-overlay .recap-close, #recap-overlay button');
-    if(tutup) await D.click(tutup);
+    recapOpen();
+    await D.sleep(5200);
+    if(typeof recapClose === 'function') recapClose();
+    recapData = null;   // putaran berikutnya memasang ulang - jangan tinggalkan angka contoh buat pengunjung yang mengambil alih
+    await D.sleep(500);
   },
 
   'pres-reveal-grid': async (D, cap) => {
@@ -6474,6 +6546,15 @@ function demoCleanup(){
   const cap = document.getElementById('demo-caption');
   if(cap) cap.classList.remove('show');
   demoForceGates = false;
+  /* Popup yang mungkin lagi terbuka di tengah langkah. Rekap sekalian
+     dikosongkan: angkanya contoh, dan pengunjung yang mengambil alih tepat di
+     langkah itu tidak boleh mewarisi "sesi belajar" yang bukan miliknya. */
+  try{
+    if(typeof recapClose === 'function') recapClose();
+    recapData = null;
+    if(typeof cocClose === 'function') cocClose();
+    if(typeof cocMenuClose === 'function') cocMenuClose();
+  }catch(_){ }
   try{
     presGridClose(); presTimerClose();
     if(presBlank) presSetBlank(presBlank);

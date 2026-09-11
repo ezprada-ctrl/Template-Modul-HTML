@@ -1558,7 +1558,12 @@ def generate_html(module):
     # Popup "Ringkasan Belajarmu" buat peserta sendiri di slide Ringkasan.
     # Dipaksa mati kalau perekaman aktivitas mati: tanpa tracking gak ada satu
     # baris pun buat direkap, jadi popup-nya cuma bakal nampilin kosong.
-    show_recap = track and bool(module.get('showRecap', False))
+    # Kecuali di Mode Demo: booth tidak punya sesi peserta sungguhan buat
+    # direkap (track memang sengaja mati di sana), tapi justru rekap inilah
+    # salah satu yang paling perlu DIPERLIHATKAN ke pengunjung pameran.
+    # Angkanya diisi contoh oleh langkah demo 'recap' di shell - lihat catatan
+    # di sana. RECAP_API tetap kosong: demo tidak pernah menyentuh server.
+    show_recap = (track or demo) and bool(module.get('showRecap', False))
     out = out.replace('__SHOW_RECAP_JS__', js_str(show_recap))
     # Beda dari event aktivitas yang nembak Supabase LANGSUNG (anon
     # INSERT-only), rekap harus MEMBACA - dan anon sengaja nol izin SELECT.
@@ -1566,7 +1571,7 @@ def generate_html(module):
     # selama ini gak pernah tau URL backend, makanya wajib ditanam di sini.
     out = out.replace('__RECAP_API_JS__', js_str(
         os.environ.get('RECAP_API_BASE', 'https://template-modul-html-backend.vercel.app').rstrip('/')
-        if show_recap else ''))
+        if (show_recap and track) else ''))
 
     # Co-creation - catatan peserta per slide. SENGAJA TIDAK di-AND dengan
     # `track` (beda dari show_recap di atas): tanpa perekaman pun peserta tetap
@@ -1575,7 +1580,13 @@ def generate_html(module):
     # Ikut mati di mode presentasi - catatan pribadi per slide gak ada
     # tempatnya waktu modulnya lagi dipaparkan ke depan kelas, dan tombol
     # melayangnya cuma nutupi materi di layar proyektor.
-    show_cocreation = bool(module.get('showCocreation', False)) and not presentation
+    # Kecuali di Mode Demo: alasan mematikannya (tombol melayang menutupi
+    # materi di layar proyektor) berlaku buat kelas yang sedang dipaparkan,
+    # BUKAN buat booth pameran yang memang sedang memamerkan tombol itu.
+    # Tanpa pengecualian ini langkah demo 'cocreation' mati diam-diam:
+    # #coc-fab tidak pernah ada di berkasnya, aksinya return false, dan
+    # katalog tetap menawarkan langkah yang mustahil tampil.
+    show_cocreation = bool(module.get('showCocreation', False)) and (not presentation or demo)
     out = out.replace('__SHOW_COCREATION_JS__', js_str(show_cocreation))
     # Alamat backend buat MENARIK BALIK catatan dari server (anon key modul
     # cuma bisa INSERT, nol SELECT - sama alasannya kayak RECAP_API di atas).
