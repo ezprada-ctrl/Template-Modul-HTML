@@ -35,7 +35,7 @@ export default function CoverForm({ module, setModule }: Props) {
         <div style={{ flex: '1 1 50%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <label style={{ color: 'var(--text-dim)' }}>
             Nama Tab Browser <span className="hint" style={{ fontSize: 11 }}>(opsional, gak kepakai kalau modul dijalankan lewat Web Object Storyline)</span>
-            <input style={{ width: '100%', marginTop: 5 }} value={module.title} onChange={e => setModule({ ...module, title: e.target.value })} />
+            <input data-demo="cover-title" style={{ width: '100%', marginTop: 5 }} value={module.title} onChange={e => setModule({ ...module, title: e.target.value })} />
           </label>
           <label style={{ color: 'var(--text-dim)' }}>
             Tema Warna Modul <span className="hint" style={{ fontSize: 11 }}>(ganti warna aksen &amp; navy; warna status tetap)</span>

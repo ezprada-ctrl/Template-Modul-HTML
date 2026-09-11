@@ -9,6 +9,9 @@ import CoverForm from './components/CoverForm';
 import QuizBuilder from './components/QuizBuilder';
 import PreviewExport from './components/PreviewExport';
 import CommandCenter from './components/CommandCenter';
+import { BuilderDemo } from './builderDemo/engine';
+import { BUILDER_DEMO_STEPS } from './builderDemo/steps';
+import { sampleProject } from './builderDemo/sampleProject';
 
 type Tab = 'bank' | 'canvas' | 'cover' | 'quiz' | 'preview' | 'command';
 
@@ -95,7 +98,18 @@ function useModuleHistory(initial: ModuleData) {
   };
 }
 
+/* Demo Booth Penyusun dinyalakan lewat ?demo=1, BUKAN lewat tombol di UI.
+   Dua alasan: penunggu booth tinggal memasang URL-nya di pintasan layar
+   penuh tanpa mengklik apa pun tiap pagi, dan tidak ada satu pun penyusun
+   sungguhan yang bisa menyalakannya tanpa sengaja lalu menonton kursor hantu
+   mengetik di atas pekerjaannya. */
+function demoBoothAktif(): boolean {
+  try { return new URLSearchParams(window.location.search).get('demo') === '1'; }
+  catch { return false; }
+}
+
 function App() {
+  const [demoBooth] = useState(demoBoothAktif);
   const [tab, setTab] = useState<Tab>(() => {
     try {
       const tersimpan = localStorage.getItem(TAB_KEY);
@@ -141,6 +155,14 @@ function App() {
   // the freshly-generated slug stays identifiable even if localStorage
   // gets cleared later (see "Mulai Project Baru" below for the manual path).
   useEffect(() => {
+    /* Mode demo tidak pernah menyentuh draft siapa pun: tidak memuat draft
+       terakhir, tidak menanyakan project baru, dan (lihat autosave di bawah)
+       tidak menulis apa-apa ke server. Yang tampil proyek contoh. */
+    if (demoBooth) {
+      resetHistory(sampleProject());
+      setHydrated(true);
+      return;
+    }
     const lastSlug = localStorage.getItem(LAST_SLUG_KEY);
     if (!lastSlug) {
       // Deliberately does NOT set projectReady here — the placeholder
@@ -154,7 +176,7 @@ function App() {
       .then(data => resetHistory(normalizeModule(data)))
       .catch(() => { /* no matching draft on server, start fresh */ })
       .finally(() => { setHydrated(true); setProjectReady(true); });
-  }, [resetHistory]);
+  }, [resetHistory, demoBooth]);
 
   function handleCreateProject(nama: string, namaProject: string) {
     const prefix = buildProjectSlugPrefix(nama, namaProject);
@@ -279,11 +301,27 @@ function App() {
     return () => document.removeEventListener('keydown', onKey);
   }, [undo, redo]);
 
+  /* Mesin demo dinyalakan SEKALI, sesudah UI-nya ada di layar. Proyek contoh
+     dipasang ulang di awal tiap putaran penuh - putaran kedua harus tampil
+     sama dengan yang pertama, bukan menumpuk di atas ketikan putaran
+     sebelumnya. */
+  useEffect(() => {
+    if (!demoBooth || !hydrated) return;
+    const demo = new BuilderDemo(BUILDER_DEMO_STEPS, () => resetHistory(sampleProject()));
+    demo.mulai();
+    return () => demo.hentikan();
+  }, [demoBooth, hydrated, resetHistory]);
+
   // Debounced autosave: any change to the module gets saved to the server
   // draft (Supabase) ~1.2s after the user stops editing. Gated on
   // projectReady too (not just hydrated) — see its declaration above for why.
   useEffect(() => {
     if (!hydrated || !projectReady) return;
+    /* Pagar kedua di atas projectReady yang memang tidak pernah dinyalakan di
+       mode demo. Sengaja berlapis: kalau suatu hari ada jalan baru yang
+       menyalakan projectReady, booth tidak boleh ikut menulis proyek
+       contohnya ke daftar draft orang. */
+    if (demoBooth) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     setAutosaveStatus('saving');
     saveTimer.current = setTimeout(async () => {
@@ -296,7 +334,7 @@ function App() {
       }
     }, 1200);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [module, hydrated, projectReady]);
+  }, [module, hydrated, projectReady, demoBooth]);
 
   return (
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: '28px 28px 80px' }}>
@@ -359,6 +397,7 @@ function App() {
               key={t.id}
               onClick={() => handleTabClick(t.id)}
               title={t.hint}
+              data-demo={`tab-${t.id}`}
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '10px 14px',
