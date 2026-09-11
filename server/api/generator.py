@@ -1509,7 +1509,25 @@ def generate_html(module):
     # penyusun sengaja dibiarkan utuh di project-nya, jadi sekali mode
     # presentasi dimatikan lagi, pilihan lamanya balik sendiri tanpa perlu
     # dicentang ulang. Pola yang sama dipakai show_recap vs track.
-    presentation = bool(module.get('presentationMode', False))
+    # Mode Demo Otomatis - modul menjalankan dirinya sendiri buat ditayangkan
+    # di booth pameran. Langkahnya TIDAK disusun di sini: katalognya hidup di
+    # app/src/demoSteps.ts, dan aplikasi mengirim daftar yang sudah diresolusi
+    # (fitur mana yang ada di modul ini + caption mana yang sudah disunting)
+    # lewat field `demoSteps`. Kalau Python ikut menyalin katalog itu, dua
+    # salinannya pasti pelan-pelan menyimpang.
+    #
+    # Dipanggil lewat API tanpa aplikasi (mis. test_gen.py) berarti `demoSteps`
+    # kosong - demonya gak punya apa-apa buat ditayangkan, jadi mode-nya
+    # dimatikan sekalian daripada menghasilkan booth yang diam membisu.
+    demo_steps = module.get('demoSteps') or []
+    demo = bool(module.get('demoMode', False)) and bool(demo_steps)
+    out = out.replace('__DEMO_JS__', js_str(demo))
+    out = out.replace('__DEMO_STEPS_JS__', js_str(demo_steps if demo else []))
+
+    # Demo MENYIRATKAN mode presentasi: sebagian yang dipamerkannya (reveal
+    # bertahap, kisi slide, timer, layar hitam, skala) cuma hidup kalau
+    # PRESENTATION nyala.
+    presentation = bool(module.get('presentationMode', False)) or demo
     out = out.replace('__PRESENTATION_JS__', js_str(presentation))
 
     # Progress belajar mengukur "sudah sejauh mana KAMU", pertanyaan yang gak

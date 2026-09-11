@@ -373,6 +373,25 @@ export interface ModuleData {
   // Satu project jadi DUA build: ekspor sekali tanpa centang ini buat LMS
   // peserta, sekali lagi dengan centang ini buat bahan tayang kelas.
   presentationMode?: boolean;
+  // Mode Demo Otomatis: modul menjalankan dirinya sendiri - mengklik tiap
+  // fiturnya satu per satu dengan kursor palsu dan caption penjelas - buat
+  // ditayangkan di booth pameran teknologi pembelajaran.
+  //
+  // MENYIRATKAN mode presentasi (lihat generator): demo ikut memamerkan
+  // reveal bertahap, kisi slide, timer, dan layar hitam, dan semua itu cuma
+  // hidup kalau PRESENTATION nyala.
+  //
+  // Perekaman aktivitas tetap DIMATIKAN. Demo yang mengklik ratusan hal
+  // semalaman akan membanjiri Command Center dengan satu "peserta" fiktif.
+  // Kemampuan merekamnya tetap dipamerkan, tapi lewat panel umpan simulasi
+  // yang memperlihatkan event lahir tanpa mengirimkannya ke mana pun.
+  demoMode?: boolean;
+  // Caption demo yang DIUBAH penyusun, dipetakan per id langkah (lihat
+  // demoSteps.ts). Sengaja cuma menyimpan yang diubah, bukan menyalin semua
+  // caption bawaan ke sini: kalau kalimat bawaannya diperbaiki di rilis
+  // berikutnya, modul lama ikut kebagian perbaikannya selama penyusun gak
+  // sengaja menimpanya sendiri.
+  demoCaptions?: Record<string, string>;
   theme: { accent: string; accent2: string; onAccent: string; navy: string };
   // Gaya dekorasi grafis (blob/cincin/dll) - INDEPENDEN dari `theme` di atas
   // (theme cuma warna, ini cuma bentuk - lihat GRAPHIC_STYLES di
@@ -466,6 +485,8 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     showRecap: false,
     showCocreation: false,
     presentationMode: false,
+    demoMode: false,
+    demoCaptions: {},
     theme: { ...DEFAULT_THEME },
     graphicStyle: 'none',
     sections: [{ id: 'a', title: 'A. Bagian Satu', short: 'Bagian Satu', icon: 'A', color: '#c99a3d' }],

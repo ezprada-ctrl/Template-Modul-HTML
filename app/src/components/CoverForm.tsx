@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { ModuleData } from '../types';
 import { uploadImageToStorage, checkTrackingConfig } from '../api';
 import { THEME_PRESETS, findThemePresetId } from '../themes';
+import DemoCaptionEditor from './DemoCaptionEditor';
 import GraphicStyleSelect from './GraphicStyleSelect';
 import SlidePreview from './SlidePreview';
 
@@ -112,6 +113,22 @@ export default function CoverForm({ module, setModule }: Props) {
                 </span>
               </p>
             )}
+
+            {/* Mode Demo nempel di bawah Mode Presentasi, bukan sejajar:
+                dia MENYIRATKAN mode presentasi (demo ikut memamerkan reveal,
+                kisi, timer, layar hitam), jadi menyalakannya sendirian tanpa
+                konteks itu bakal bikin bingung. */}
+            <label className="opt opt-sub">
+              <input type="checkbox" checked={!!module.demoMode}
+                onChange={e => setModule({ ...module, demoMode: e.target.checked })} />
+              <span>
+                <span className="opt-title">Mode Demo Otomatis</span>
+                <span className="opt-desc">
+                  Modul berjalan sendiri mengklik tiap fiturnya — buat booth pameran.
+                </span>
+              </span>
+            </label>
+            {module.demoMode && <DemoCaptionEditor module={module} setModule={setModule} />}
 
             <label className="opt">
               <input type="checkbox" checked={!!module.hideProgress}

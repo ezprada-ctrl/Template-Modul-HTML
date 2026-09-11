@@ -1,4 +1,5 @@
 import type { ModuleData, DraftSlide } from './types';
+import { resolveDemoSteps } from './demoSteps';
 
 // In production (Vercel), the backend lives on a different host (Render),
 // so it's supplied via VITE_API_BASE at build time. In local dev, fall back
@@ -50,11 +51,27 @@ export async function checkTrackingConfig(): Promise<boolean> {
   return !!data.configured;
 }
 
+/* Muatan yang dikirim ke /api/generate = modul apa adanya, PLUS langkah demo
+   yang sudah diresolusi.
+
+   Kenapa diresolusi di sini dan bukan di generator: katalog langkah demo
+   (demoSteps.ts) hidup di TypeScript, dan dia yang tahu fitur mana yang ada
+   di modul ini serta caption mana yang sudah disunting penyusun. Kalau Python
+   ikut menyalin katalog itu, dua salinan itu pasti pelan-pelan menyimpang dan
+   booth bakal menayangkan langkah yang editornya gak pernah tunjukkan.
+
+   Sengaja TIDAK ikut disimpan ke draft: ini data turunan, dihitung ulang tiap
+   ekspor. Modul tanpa demoMode gak membawa field ini sama sekali. */
+function payloadFor(module: ModuleData): Record<string, unknown> {
+  if (!module.demoMode) return { ...module };
+  return { ...module, demoSteps: resolveDemoSteps(module).map(s => ({ id: s.id, caption: s.caption })) };
+}
+
 export async function generateHtml(module: ModuleData): Promise<string> {
   const res = await fetch(`${BASE}/api/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(module),
+    body: JSON.stringify(payloadFor(module)),
   });
   if (!res.ok) throw new Error('Gagal generate HTML');
   return res.text();
@@ -813,7 +830,7 @@ export async function generateHtmlForZip(module: ModuleData): Promise<string> {
   const res = await fetch(`${BASE}/api/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...module, artPackaged: true }),
+    body: JSON.stringify({ ...payloadFor(module), artPackaged: true }),
   });
   if (!res.ok) throw new Error('Gagal generate HTML');
   return res.text();
