@@ -264,7 +264,7 @@ export default function CoverForm({ module, setModule }: Props) {
             <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
               Sama seperti judul sampul; kosong = otomatis.
             </span>
-            <textarea style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.endingTitleHtml || ''}
+            <textarea data-demo="ending-title" style={{ width: '100%', minHeight: 60, marginTop: 5 }} value={module.endingTitleHtml || ''}
               onChange={e => setModule({ ...module, endingTitleHtml: e.target.value })} />
           </label>
           <label style={{ color: 'var(--text-dim)' }}>
@@ -272,7 +272,7 @@ export default function CoverForm({ module, setModule }: Props) {
             <span className="hint" style={{ display: 'block', fontSize: 11, marginTop: 2 }}>
               Opsional; kosong berarti penutup cuma menampilkan judul.
             </span>
-            <textarea style={{ width: '100%', minHeight: 50, marginTop: 5 }} value={module.endingDesc || ''}
+            <textarea data-demo="ending-desc" style={{ width: '100%', minHeight: 50, marginTop: 5 }} value={module.endingDesc || ''}
               onChange={e => setModule({ ...module, endingDesc: e.target.value })} />
           </label>
           <BackgroundImageField

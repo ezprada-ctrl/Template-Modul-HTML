@@ -365,10 +365,19 @@ function App() {
      sebelumnya. */
   useEffect(() => {
     if (!demoBooth || !hydrated) return;
-    const demo = new BuilderDemo(BUILDER_DEMO_STEPS, () => resetHistory(sampleProject()));
+    const demo = new BuilderDemo(
+      BUILDER_DEMO_STEPS,
+      () => resetHistory(sampleProject()),
+      /* Jalur data buat yang mustahil lewat UI di booth - memilih berkas
+         gambar. Lihat catatannya di DemoCtx.patch. setModule, bukan
+         resetHistory: langkah demo berikutnya masih boleh di-undo, dan
+         riwayat yang di-reset di tengah putaran bikin langkah 'undo'
+         kehilangan bahan. */
+      bagian => setModule(m => ({ ...m, ...bagian })),
+    );
     demo.mulai();
     return () => demo.hentikan();
-  }, [demoBooth, hydrated, resetHistory]);
+  }, [demoBooth, hydrated, resetHistory, setModule]);
 
   // Debounced autosave: any change to the module gets saved to the server
   // draft (Supabase) ~1.2s after the user stops editing. Gated on

@@ -37,6 +37,18 @@ export interface DemoCtx {
   type: (el: Element | null, teks: string) => Promise<void>;
   sapu: (els: Element[], jeda?: number) => Promise<void>;
   tunggu: (cari: () => Element | null, batas?: number) => Promise<Element | null>;
+  /* Menyuntik perubahan langsung ke state modul, buat yang MUSTAHIL dilakukan
+     lewat UI di booth: memilih berkas. Klik tombol unggah membuka dialog file
+     milik sistem operasi - dialog itu di luar halaman, tidak bisa ditutup
+     lagi oleh demo, dan booth-nya berhenti di situ sampai ada yang menekan
+     Escape. Jadi tombolnya tetap disorot dan captionnya tetap menjelaskan
+     "pilih gambar dari komputer", tapi gambarnya dipasang lewat sini. */
+  patch: (bagian: Record<string, unknown>) => void;
+  /* Kursor palsu cuma gambar - menggesernya ke atas sesuatu TIDAK memicu
+     :hover maupun onMouseEnter React. Yang pratinjaunya baru muncul saat
+     disorot (daftar tipe blok, daftar gaya grafis) butuh event ini dikirim
+     betulan, kalau tidak yang tampil di booth cuma daftar yang diam. */
+  hover: (el: Element | null) => Promise<void>;
 }
 
 /* ---------- pencari sasaran ----------
@@ -152,10 +164,16 @@ export class BuilderDemo {
 
   private steps: DemoStep[];
   private onSebelumPutaran?: () => void;
+  private onPatch?: (bagian: Record<string, unknown>) => void;
 
-  constructor(steps: DemoStep[], onSebelumPutaran?: () => void) {
+  constructor(
+    steps: DemoStep[],
+    onSebelumPutaran?: () => void,
+    onPatch?: (bagian: Record<string, unknown>) => void,
+  ) {
     this.steps = steps;
     this.onSebelumPutaran = onSebelumPutaran;
+    this.onPatch = onPatch;
   }
 
   mulai() {
@@ -226,7 +244,11 @@ export class BuilderDemo {
             await this.steps[i].run(D);
           } catch (err) {
             if (err === DEMO_ABORT) return;
-            // Satu langkah gagal tidak boleh menjatuhkan seluruh booth.
+            /* Satu langkah gagal tidak boleh menjatuhkan seluruh booth - tapi
+               juga tidak boleh hilang tanpa bekas. Dua kali langkah demo mati
+               diam-diam di proyek ini dan baru ketahuan berbulan kemudian;
+               satu baris di console jauh lebih murah daripada mengulang itu. */
+            console.warn('[demo booth] langkah "' + this.steps[i].id + '" gagal:', err);
           }
           D.hide();
           await D.sleep(800);
@@ -299,8 +321,27 @@ export class BuilderDemo {
         await sleep(500);
       },
 
+      patch: (bagian) => { chk(); this.onPatch?.(bagian); },
+
+      hover: async (el) => {
+        chk();
+        if (!el) return;
+        await cursorTo(el);
+        for (const nama of ['pointerover', 'mouseover', 'mouseenter']) {
+          el.dispatchEvent(new MouseEvent(nama, { bubbles: nama !== 'mouseenter', cancelable: true }));
+        }
+        await sleep(120);
+      },
+
       sapu: async (els, jeda) => {
-        for (const el of els) { chk(); await cursorTo(el); await sleep(jeda == null ? 260 : jeda); }
+        for (const el of els) {
+          chk();
+          await cursorTo(el);
+          for (const nama of ['pointerover', 'mouseover', 'mouseenter']) {
+            el.dispatchEvent(new MouseEvent(nama, { bubbles: nama !== 'mouseenter', cancelable: true }));
+          }
+          await sleep(jeda == null ? 260 : jeda);
+        }
       },
 
       /* Menunggu React selesai merender sesuatu yang baru muncul akibat klik

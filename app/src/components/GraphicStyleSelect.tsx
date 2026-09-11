@@ -138,6 +138,7 @@ export default function GraphicStyleSelect({ value, onChange, theme }: Props) {
     <div ref={rootRef} style={{ position: 'relative', width: '100%' }}>
       <button
         type="button"
+        data-demo="graphic-style"
         onClick={() => {
           if (justSelectedRef.current) return;
           setOpen(o => !o);
@@ -156,6 +157,7 @@ export default function GraphicStyleSelect({ value, onChange, theme }: Props) {
 
       {open && (
         <div
+          data-demo="graphic-style-list"
           style={{
             position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 50,
             display: 'flex', gap: 12, background: 'var(--surface)', border: '1px solid var(--border)',
@@ -166,6 +168,7 @@ export default function GraphicStyleSelect({ value, onChange, theme }: Props) {
             {GRAPHIC_STYLES.map(g => (
               <div
                 key={g.id}
+                data-demo="graphic-style-opt"
                 onMouseEnter={() => setHovered(g.id)}
                 onClick={() => {
                   justSelectedRef.current = true;
