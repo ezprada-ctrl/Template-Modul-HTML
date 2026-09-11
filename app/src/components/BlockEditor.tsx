@@ -175,6 +175,11 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
           <div
             key={b.id}
             className={`block-card${blokAktif === b.id ? ' is-active' : ''}`}
+            /* Kait Demo Booth: dia mengisi tiap tipe blok satu per satu, jadi
+               butuh cara menemukan KARTU blok yang barusan ditambahkan -
+               beserta field-fieldnya - tanpa bergantung pada teks apa pun. */
+            data-demo="blok-baris"
+            data-blok={b.type}
             // Capture, bukan bubble biasa: fokus di elemen sedalam apa pun di
             // dalam blok (termasuk sub-blok Grid) tetap terbaca sebagai
             // "blok ini yang lagi digarap". onMouseDown melengkapi buat area
@@ -236,7 +241,7 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
               <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                 <button className="btn-icon btn-sm" title="Naik" onClick={() => move(i, -1)}>↑</button>
                 <button className="btn-icon btn-sm" title="Turun" onClick={() => move(i, 1)}>↓</button>
-                <button className="btn-danger btn-sm" onClick={() => remove(i)}>Hapus</button>
+                <button className="btn-danger btn-sm" data-demo="hapus-blok" onClick={() => remove(i)}>Hapus</button>
               </div>
             </div>
             {!isCollapsed && <BlockFields block={b} onChange={patch => update(i, patch)} />}

@@ -446,7 +446,9 @@ export default function SlidePreview({ module, slideNumber, target = 'slide', la
   const fontPetunjuk = Math.min(11, Math.max(8.5, lebarPetunjuk / 26));
 
   return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', height: '100%', minHeight: 420, display: 'flex', flexDirection: 'column', background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
+    /* data-demo: Demo Booth mengelilingi panel ini dengan kursornya waktu
+       memperlihatkan "blok yang barusan dibuat jadinya seperti apa". */
+    <div data-demo="pratinjau-slide" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', height: '100%', minHeight: 420, display: 'flex', flexDirection: 'column', background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
       <div style={{ padding: '8px 12px', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--text-faint)', display: 'flex', justifyContent: 'space-between' }}>
         <span>{label || (
           target === 'hero' ? 'Preview langsung — sampul'

@@ -36,6 +36,7 @@ const F = {
   mesinBooth: resolve(AKAR, 'src/builderDemo/engine.ts'),
   blokLabel: resolve(AKAR, 'src/components/BlockAddMenu.tsx'),
   tema: resolve(AKAR, 'src/themes.ts'),
+  turBlok: resolve(AKAR, 'src/builderDemo/blokTur.ts'),
   app: resolve(AKAR, 'src/App.tsx'),
   shell: resolve(REPO, 'server/api/shell-template.html'),
 };
@@ -122,7 +123,12 @@ function kaitDataDemoTerpasang() {
        waktu satu kait menandai banyak elemen sekaligus. */
     ...[...langkah.matchAll(/\[data-demo="([a-z0-9-]+)"\]/g)].map(m => m[1]),
   ];
-  const terpasang = (n) => sumber.includes(`data-demo="${n}"`) || sumber.includes(`demoHook="${n}"`);
+  /* Tiga bentuk sah kait terpasang: atribut langsung, dioper sebagai prop
+     (demoHook), atau ditentukan di dalam ekspresi - mis. satu komponen yang
+     dipakai dua peran memilih namanya lewat ternary. */
+  const terpasang = (n) => sumber.includes(`data-demo="${n}"`)
+    || sumber.includes(`demoHook="${n}"`)
+    || new RegExp('data-demo=\\{[^}]*' + "'" + n + "'").test(sumber);
   const hilang = bernama.filter(n => !terpasang(n));
 
   /* Kait TAB dirakit di runtime - T('quiz') jadi [data-demo="tab-quiz"] - jadi
@@ -152,24 +158,21 @@ function kaitDataDemoTerpasang() {
   }
 }
 
-/* 5. Tiap tipe blok harus habis terbagi antara daftar "bintang" dan "ragam".
-      Tipe blok BARU yang ditambahkan ke aplikasi otomatis bikin pemeriksaan
-      ini gagal - itulah maksudnya: blok baru tidak boleh diam-diam absen dari
-      booth yang justru memamerkan keragaman blok. Dibandingkan lewat ID TIPE
-      (BlockType), bukan label, karena itu yang sekarang dipakai demo. */
+/* 5. Tiap tipe blok wajib punya entri di tur blok. Tipe blok BARU yang
+      ditambahkan ke aplikasi otomatis bikin pemeriksaan ini gagal - itulah
+      maksudnya: blok baru tidak boleh diam-diam absen dari booth yang justru
+      memamerkan keragaman blok. Entri boleh bertanda `lewati` (cuma
+      dijelaskan caption, tidak dirakit) - yang dilarang itu TIDAK ADA
+      entrinya sama sekali. Dibandingkan lewat ID TIPE, bukan label. */
 function semuaTipeBlokDipamerkan() {
   const tipe = [...baca(F.blokLabel).matchAll(/^\s{2}([a-z]+): '/gm)].map(m => m[1]);
-  const langkah = baca(F.langkahBooth);
-  const daftar = (nama) => [...(langkah.split('const ' + nama + ' = [')[1] || '').split(']')[0]
-    .matchAll(/'([a-z]+)'/g)].map(m => m[1]);
-  const disebut = [...daftar('BLOK_BINTANG'), ...daftar('BLOK_RAGAM')];
-  const DIKECUALIKAN = ['articulate'];   // minta paket ZIP; tanpa berkasnya cuma blok kosong
-  const absen = tipe.filter(t => !DIKECUALIKAN.includes(t) && !disebut.includes(t));
-  const asing = disebut.filter(t => !tipe.includes(t));
+  const tur = [...baca(F.turBlok).matchAll(/^\s{4}tipe: '([a-z]+)',$/gm)].map(m => m[1]);
+  const absen = tipe.filter(t => !tur.includes(t));
+  const asing = tur.filter(t => !tipe.includes(t));
   if (absen.length || asing.length) {
-    gagal('Daftar blok demo booth tidak cocok dengan BLOCK_LABELS', [
-      ...absen.map(t => `  '${t}' ada di aplikasi tapi tidak pernah dipamerkan - tambahkan ke BLOK_BINTANG/BLOK_RAGAM`),
-      ...asing.map(t => `  '${t}' dipamerkan demo tapi bukan tipe blok yang ada`),
+    gagal('Tur blok demo booth tidak cocok dengan daftar tipe blok aplikasi', [
+      ...absen.map(t => `  '${t}' ada di aplikasi tapi tidak pernah dipamerkan - tambahkan entri di builderDemo/blokTur.ts`),
+      ...asing.map(t => `  '${t}' ada di tur blok tapi bukan tipe blok yang ada`),
     ]);
   }
 }

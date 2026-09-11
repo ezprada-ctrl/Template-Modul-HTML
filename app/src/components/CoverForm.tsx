@@ -116,21 +116,22 @@ export default function CoverForm({ module, setModule }: Props) {
               </p>
             )}
 
-            {/* Mode Demo nempel di bawah Mode Presentasi, bukan sejajar:
-                dia MENYIRATKAN mode presentasi (demo ikut memamerkan reveal,
-                kisi, timer, layar hitam), jadi menyalakannya sendirian tanpa
-                konteks itu bakal bikin bingung. */}
-            <label className="opt opt-sub">
-              <input type="checkbox" checked={!!module.demoMode}
-                onChange={e => setModule({ ...module, demoMode: e.target.checked })} />
-              <span>
-                <span className="opt-title">Demo Otomatis</span>
+            {/* Saklar "Demo Otomatis" sendiri PINDAH ke menu Demo di baris
+                project, bersama demo ekosistem - dua-duanya soal demo, dan
+                penunggu booth mencarinya di satu tempat, bukan menyelam ke
+                tab ini. Yang TETAP di sini cuma penyuntingan captionnya:
+                itu pekerjaan menyusun isi, sekelompok dengan setelan modul
+                lain, dan cuma muncul kalau demonya memang dinyalakan. */}
+            {module.demoMode && (
+              <div className="opt opt-sub" style={{ display: 'block' }}>
+                <span className="opt-title">Demo Otomatis menyala</span>
                 <span className="opt-desc">
                   Modul berjalan sendiri mengklik tiap fiturnya — buat booth pameran.
+                  Saklarnya ada di menu <b>Demo</b> di baris project.
                 </span>
-              </span>
-            </label>
-            {module.demoMode && <DemoCaptionEditor module={module} setModule={setModule} />}
+                <DemoCaptionEditor module={module} setModule={setModule} />
+              </div>
+            )}
 
             <label className="opt">
               <input type="checkbox" checked={!!module.hideProgress}

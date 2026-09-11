@@ -137,7 +137,11 @@ export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow,
         onClick={() => setOpen(o => !o)}
         title={title}
         className={triggerClass}
-        data-demo="tambah-blok"
+        /* Komponen ini dipakai DUA peran: tombol "+ Tambah blok" dan pemicu
+           "ganti tipe" di kepala tiap blok (yang itu selalu mengoper `active`).
+           Kaitnya dibedakan supaya demo yang mencari tombol tambah tidak
+           kejeblos ke pemicu ganti-tipe milik blok yang kebetulan ada di atas. */
+        data-demo={active === undefined ? 'tambah-blok' : 'ganti-tipe'}
         style={{
           width: '100%', textAlign: 'left', padding: '9px 12px', fontWeight: 600, color: 'var(--text-dim)',
           ...triggerStyle,

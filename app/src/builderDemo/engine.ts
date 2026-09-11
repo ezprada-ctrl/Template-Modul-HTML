@@ -49,6 +49,10 @@ export interface DemoCtx {
      disorot (daftar tipe blok, daftar gaya grafis) butuh event ini dikirim
      betulan, kalau tidak yang tampil di booth cuma daftar yang diam. */
   hover: (el: Element | null) => Promise<void>;
+  /* Kursor mengelilingi tepi sebuah elemen. Dipakai buat "lihat, ini hasil
+     jadinya": menunjuk diam ke tengah panel tidak terbaca sebagai menunjuk
+     apa pun, sedangkan gerak melingkar menarik mata ke daerahnya. */
+  kelilingi: (el: Element | null, putaran?: number) => Promise<void>;
 }
 
 /* ---------- pencari sasaran ----------
@@ -322,16 +326,49 @@ export class BuilderDemo {
         f.focus();
         await cursorTo(el);
         setNilaiReact(f, '');
-        for (let i = 0; i < teks.length; i++) {
+        /* Diketik per POTONGAN, bukan per huruf. Tiap pembaruan nilai memicu
+           setModule -> render ulang kanvas DAN pratinjau slide; pada isian
+           seratus huruf, render-render itu menumpuk sampai satu blok butuh
+           ~100 detik (terukur), padahal yang sama tanpa pratinjau cuma ~20.
+           Panjang berapa pun sekarang selesai dalam <= LANGKAH_KETIK
+           pembaruan, dan dari kursi penonton tetap terbaca "sedang diketik".
+
+           Angkanya kecil (8) bukan karena ragu-ragu: DIUKUR di build produksi,
+           satu pembaruan nilai memakan ~1,8 detik karena kanvas dan pratinjau
+           slide ikut dirender ulang. Dengan 28 pembaruan, mengisi SATU kartu
+           butuh 53 detik dan satu putaran demo lewat 20 menit. Dengan 8,
+           ketikannya masih terbaca sebagai ketikan. */
+        const LANGKAH_KETIK = 8;
+        const lompat = Math.max(1, Math.ceil(teks.length / LANGKAH_KETIK));
+        for (let i = 0; i < teks.length; i += lompat) {
           chk();
-          setNilaiReact(f, teks.slice(0, i + 1));
-          await sleep(34);
+          setNilaiReact(f, teks.slice(0, Math.min(teks.length, i + lompat)));
+          await sleep(90);
         }
         f.dispatchEvent(new Event('change', { bubbles: true }));
         await sleep(500);
       },
 
       patch: (bagian) => { chk(); this.onPatch?.(bagian); },
+
+      kelilingi: async (el, putaran) => {
+        chk();
+        if (!el) return;
+        const cur = document.getElementById('bdemo-cursor');
+        const r = el.getBoundingClientRect();
+        if (!cur || (!r.width && !r.height)) return;
+        /* Elips di dalam tepinya, bukan persis di tepinya: kursor yang
+           menyusur garis batas terbaca seperti mau menyeret panelnya. */
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const rx = r.width * 0.36, ry = r.height * 0.36;
+        const titik = 12, n = (putaran == null ? 1 : putaran) * titik;
+        for (let i = 0; i <= n; i++) {
+          chk();
+          const t = (i / titik) * Math.PI * 2 - Math.PI / 2;
+          cur.style.transform = `translate(${Math.round(cx + rx * Math.cos(t))}px,${Math.round(cy + ry * Math.sin(t))}px)`;
+          await sleep(120);
+        }
+      },
 
       hover: async (el) => {
         chk();

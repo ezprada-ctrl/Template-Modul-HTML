@@ -46,6 +46,17 @@ export function sampleProject(): ModuleData {
             items: ['Perencanaan yang terukur', 'Pelaksanaan yang tertib', 'Pertanggungjawaban yang terbuka'] },
         ],
       },
+      /* Slide KOSONG, khusus panggung blok. Tur blok menambah satu blok,
+         mengisinya, memperlihatkan hasilnya, lalu menghapusnya - dan itu cuma
+         terbaca kalau blok yang sedang dibahas berdiri SENDIRIAN di slide.
+         Kalau turnya menumpang slide berisi, pratinjaunya sudah ramai duluan
+         dan penonton tidak tahu yang mana yang barusan dibuat. */
+      {
+        id: 'demo-s3', number: 4, sectionId: 'b',
+        title: 'Ruang Coba Blok',
+        kickerLabel: 'B.1 PRAKTIK',
+        blocks: [],
+      },
     ],
     quizzes: {},
   };

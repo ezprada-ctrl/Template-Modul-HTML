@@ -1,6 +1,7 @@
 import type { DemoCtx, DemoStep } from './engine';
 import { qDemo } from './engine';
 import { GAMBAR_SAMPUL_CONTOH, GAMBAR_PENUTUP_CONTOH } from './sampleAssets';
+import { TUR_BLOK } from './blokTur';
 
 /* Katalog langkah Demo Booth Penyusun - satu tempat, seperti demoSteps.ts
  * untuk sisi peserta.
@@ -22,25 +23,46 @@ import { GAMBAR_SAMPUL_CONTOH, GAMBAR_PENUTUP_CONTOH } from './sampleAssets';
  *     Pintunya ditunjukkan, isinya tidak dibuka.
  */
 
-/* Dua kecepatan, dua daftar.
-   BINTANG: yang paling menjawab "modulnya bisa apa" - dirakit pelan-pelan.
-   RAGAM: sisanya, disisipkan cepat berturut-turut.
-   Isinya ID TIPE BLOK (BlockType di types.ts), bukan label yang tampil.
-   'articulate' sengaja TIDAK ikut: dia minta paket ZIP, dan tanpa berkasnya
-   yang muncul cuma blok kosong. cek-demo.mjs menegakkan bahwa tipe blok baru
-   wajib masuk salah satu daftar ini. */
-const BLOK_BINTANG = ['card', 'accordion', 'tabs', 'dtable', 'knowledge', 'modal'];
-const BLOK_RAGAM = [
-  'callout', 'definition', 'pullquote', 'ticklist', 'timeline',
-  'flow', 'grid', 'image', 'badgeref', 'html', 'media',
-];
+/* Panggung tur blok: slide KOSONG terakhir di proyek contoh (lihat
+   sampleProject.ts). Dibuka sendiri oleh tiap entri tur - satu blok yang
+   gagal tidak boleh menyeret sisanya, dan tiap langkah di katalog ini memang
+   memposisikan dirinya sendiri. */
+async function bukaPanggungBlok(D: DemoCtx) {
+  /* Tab cuma diklik kalau memang belum di sana. Tur blok memanggil ini 15
+     kali; klik yang sudah tidak perlu tetap memakan animasi kursor + jeda
+     sesudah klik, dan lima belas kali dua detik itu setengah menit. */
+  if (!qDemo('edit-blok')) {
+    if (!await bukaTab(D, 'canvas')) return false;
+  }
+  const semua = await D.tunggu(() => {
+    const daftar = document.querySelectorAll<HTMLElement>('[data-demo="edit-blok"]');
+    return daftar.length ? daftar[daftar.length - 1] : null;
+  }, 4000);
+  if (!semua) return false;
+  if (semua.dataset.buka === '0') await D.click(semua);
+  /* Panggung dikosongkan DI AWAL tiap blok, bukan cuma dibereskan di akhir.
+     Penghapusan di ujung langkah tetap ada karena itu bagian yang ditonton -
+     tapi mengandalkannya saja ternyata tidak cukup: sekali satu penghapusan
+     meleset, blok itu tinggal di panggung, lalu langkah berikutnya bisa
+     menyunting sisa blok lama alih-alih yang baru dia buat. Sepuluh dari
+     lima belas blok pernah tertinggal seperti itu dalam satu putaran.
+     Dibereskan tanpa animasi: ini kerapian, bukan bagian pertunjukan. */
+  for (let i = 0; i < 30; i++) {
+    D.chk();
+    const sisa = document.querySelectorAll<HTMLElement>('[data-demo="blok-baris"] [data-demo="hapus-blok"]');
+    if (!sisa.length) break;
+    sisa[0].click();
+    await D.sleep(120);
+  }
+  return true;
+}
 
 /* Opsi di menu "+ Tambah blok" dicari lewat id TIPE-nya (data-blok), bukan
-   lewat teks labelnya. Labelnya teks yang dibaca orang dan boleh diganti
-   kapan saja; id tipenya bagian dari struktur data dan tidak berubah tanpa
-   migrasi. Dulu dicari lewat teks - satu label diganti, satu langkah demo
-   mati tanpa suara. */
+   lewat teks labelnya: label boleh diganti kapan saja, id tipe bagian dari
+   struktur data. */
 const blokOpsi = (tipe: string) => document.querySelector<HTMLElement>(`[data-demo="blok-opsi"][data-blok="${tipe}"]`);
+
+const barisBlok = (tipe: string) => document.querySelector<HTMLElement>(`[data-demo="blok-baris"][data-blok="${tipe}"]`);
 
 const T = (n: string) => qDemo('tab-' + n);
 const inp = (ph: string) => document.querySelector<HTMLElement>(`[placeholder="${ph}"]`);
@@ -118,61 +140,53 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
       await D.sleep(1100);
     },
   },
-  {
-    id: 'blok-bintang',
-    label: 'Blok andalan, dirakit',
-    caption: 'Isi slide dirakit dari blok siap pakai. Tidak ada satu pun HTML yang perlu diketik.',
-    run: async (D, cap) => {
-      /* Menu "+ Tambah blok" cuma ada kalau kertas kerja slide-nya terbuka.
-         Kalau langkah sebelumnya terlewat, langkah ini membukanya sendiri -
-         satu langkah yang gagal tidak boleh menyeret langkah berikutnya. */
-      const buka = qDemo('edit-blok');
-      if (buka?.dataset.buka === '0') await D.click(buka);
+  ...TUR_BLOK.map(entri => ({
+    id: 'blok-' + entri.tipe,
+    label: 'Blok: ' + entri.tipe,
+    caption: entri.caption,
+    run: async (D: DemoCtx, cap: string) => {
+      if (entri.lewati) {
+        /* Cuma dijelaskan. Tidak ada yang dirakit, tapi captionnya tetap
+           tampil selama yang lain - jadi dari kursi penonton dia terbaca
+           sebagai satu fitur lagi, bukan sebagai jeda kosong. */
+        await D.say(cap);
+        return;
+      }
+      if (!await bukaPanggungBlok(D)) return false;
+
+      /* 1. Tambah bloknya */
       const pemicu = await D.tunggu(() => qDemo('tambah-blok'), 4000);
       if (!pemicu) return false;
-      await D.say(cap, 0);
       await D.click(pemicu);
-      /* Daftarnya dirender sesudah klik; ditunggu, bukan ditebak jedanya,
-         karena mesin booth yang lambat bikin tebakan jeda meleset. */
-      const daftar = await D.tunggu(() => blokOpsi('accordion'));
-      if (!daftar) return false;
-      const pilihan = BLOK_BINTANG.map(blokOpsi).filter((el): el is HTMLElement => !!el);
-      await D.sapu(pilihan, 480);   // hover = tooltip penjelas tiap blok ikut muncul
-      const kartu = blokOpsi('card');
-      if (kartu) await D.click(kartu);
-      await D.sleep(1100);
-    },
-  },
-  {
-    id: 'blok-ragam',
-    label: 'Ke-18 tipe blok',
-    caption: 'Delapan belas tipe blok — dan tiap blok yang ditambahkan langsung terlihat hasilnya di pratinjau sebelah.',
-    run: async (D, cap) => {
-      /* KECEPATAN KEDUA. Blok bintang di langkah sebelumnya dirakit pelan
-         supaya cara kerjanya kelihatan; sisanya lewat cepat supaya RAGAMNYA
-         yang kelihatan. Kalau ke-18 tipe dirakit dengan kecepatan yang sama,
-         satu putaran jadi sepuluh menit dan pengunjung yang datang di tengah
-         cuma melihat blok ke-13 tanpa konteks. */
-      await D.say(cap, 0);
-      for (const tipe of BLOK_RAGAM) {
+      const opsi = await D.tunggu(() => blokOpsi(entri.tipe), 2000);
+      if (!opsi) return false;
+      await D.click(opsi);
+
+      /* 2. Isi field-nya, berurutan posisi. Lihat catatan di blokTur.ts soal
+            kenapa posisi dan bukan placeholder. */
+      const baris = await D.tunggu(() => barisBlok(entri.tipe), 2500);
+      if (!baris) return false;
+      const field = Array.from(baris.querySelectorAll<HTMLElement>('input[type="text"], input:not([type]), textarea'));
+      for (let i = 0; i < (entri.isi || []).length && i < field.length; i++) {
         D.chk();
-        const pemicu = qDemo('tambah-blok');
-        if (!pemicu) break;
-        pemicu.click();                       // tanpa animasi kursor: ini bagian cepatnya
-        const item = (await D.tunggu(() => blokOpsi(tipe), 1200)) as HTMLElement | null;
-        if (!item) { pemicu.click(); continue; }   // menu terlanjur tertutup - tutup lagi, lewati
-        await D.cursorTo(item);
-        item.click();
-        await D.sleep(620);
+        await D.type(field[i], entri.isi![i]);
       }
-      await D.sleep(1400);
-      /* Ditutup supaya putaran berikutnya mulai dari keadaan yang sama
-         persis - kertas kerja yang tertinggal terbuka bikin langkah
-         'judul-slide' di putaran depan menghadapi layar yang berbeda. */
-      const tutup = qDemo('edit-blok');
-      if (tutup?.dataset.buka === '1') await D.click(tutup);
+
+      /* 3. Hasil jadinya: kursor mengelilingi pratinjau sambil captionnya
+            menjelaskan. Ini bagian yang paling menjawab "jadinya kayak apa" -
+            mengisi field saja cuma memperlihatkan pekerjaannya, bukan
+            hasilnya. */
+      await D.sleep(700);   // pratinjau dirender ulang sesudah ketikan terakhir
+      await D.say(cap, 0);
+      await D.kelilingi(qDemo('pratinjau-slide'), 1);
+      await D.sleep(700);
+
+      /* 4. Dihapus: blok berikutnya harus dapat panggung yang bersih. */
+      const hapus = baris.querySelector<HTMLElement>('[data-demo="hapus-blok"]');
+      if (hapus) await D.click(hapus);
+      await D.sleep(400);
     },
-  },
+  })),
   {
     id: 'undo',
     label: 'Undo / autosave',

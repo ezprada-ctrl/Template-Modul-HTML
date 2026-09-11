@@ -457,9 +457,11 @@ function App() {
               ? <button className="btn-sm btn-primary" onClick={hentikanDemo} title="Kembali ke project kamu (Esc)">
                   ■ Hentikan demo
                 </button>
-              : <button className="btn-sm" onClick={mulaiDemo} title="Aplikasi mendemokan dirinya sendiri di atas project contoh">
-                  ▶ Demo
-                </button>
+              : <MenuDemo
+                  demoModul={!!module.demoMode}
+                  onToggleDemoModul={() => setModule(m => ({ ...m, demoMode: !m.demoMode }))}
+                  onDemoEkosistem={mulaiDemo}
+                />
           )}
         </>}
       />
@@ -592,6 +594,72 @@ function UndoRedo({ canUndo, canRedo, onUndo, onRedo }: {
         title={`Redo (${mod}+Shift+Z)`}
         style={{ fontSize: 15, opacity: canRedo ? 1 : 0.4 }}
       >↷</button>
+    </div>
+  );
+}
+
+/* Satu pintu buat dua demo yang selama ini berjauhan: yang mendemokan MODUL
+   (sisi peserta, ikut tertanam ke berkas hasil export) dan yang mendemokan
+   EKOSISTEM penyusunnya (aplikasi ini, jalan sekarang juga).
+   Keduanya dikumpulkan di sini karena yang mencarinya orang yang sama -
+   penunggu booth - dan dia tidak punya alasan menduga yang satu ada di tab
+   Tema sementara yang lain di baris project.
+   Bedanya tetap dijelaskan di tiap baris, karena akibatnya memang beda:
+   yang atas SETELAN yang ikut tersimpan, yang bawah jalan seketika. */
+function MenuDemo({ demoModul, onToggleDemoModul, onDemoEkosistem }: {
+  demoModul: boolean; onToggleDemoModul: () => void; onDemoEkosistem: () => void;
+}) {
+  const [buka, setBuka] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!buka) return;
+    function diLuar(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setBuka(false);
+    }
+    document.addEventListener('mousedown', diLuar);
+    return () => document.removeEventListener('mousedown', diLuar);
+  }, [buka]);
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative' }}>
+      <button className="btn-sm" data-demo="menu-demo" onClick={() => setBuka(b => !b)}
+        title="Demo modul (buat peserta) & demo ekosistem penyusunnya">
+        ▶ Demo {demoModul ? '•' : ''} ▾
+      </button>
+      {buka && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 60, width: 320,
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-lg)', padding: 6,
+        }}>
+          <button
+            onClick={() => { onToggleDemoModul(); setBuka(false); }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', border: 'none', background: 'transparent', padding: '9px 10px', borderRadius: 'var(--radius-sm)' }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>
+              <span style={{ width: 14, color: 'var(--accent)' }}>{demoModul ? '✓' : ''}</span>
+              Demo Operasi Modul
+            </span>
+            <span style={{ display: 'block', marginLeft: 22, fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.45 }}>
+              Modul hasil export berjalan sendiri mengklik tiap fiturnya.
+              Setelan project — berpengaruh saat di-export, captionnya disunting di tab Tema.
+            </span>
+          </button>
+          <button
+            onClick={() => { setBuka(false); onDemoEkosistem(); }}
+            style={{ display: 'block', width: '100%', textAlign: 'left', border: 'none', background: 'transparent', padding: '9px 10px', borderRadius: 'var(--radius-sm)' }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>
+              <span style={{ width: 14 }}>▶</span>
+              Demo Operasi Ekosistem
+            </span>
+            <span style={{ display: 'block', marginLeft: 22, fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.45 }}>
+              Aplikasi ini mendemokan dirinya sendiri di atas project contoh. Jalan sekarang juga;
+              pekerjaanmu dititipkan dan kembali utuh.
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
