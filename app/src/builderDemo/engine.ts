@@ -149,10 +149,15 @@ function bersihkanChrome() {
 /* ---------- satu putaran ---------- */
 export interface DemoStep {
   id: string;
+  /** nama langkah buat manusia yang menyunting katalog - tidak tampil ke penonton */
   label: string;
+  /** Kalimat yang tampil di layar. Ditulis SEKALI di sini dan dioper ke run()
+      sebagai `cap` - jangan tulis ulang literalnya di dalam run, karena dua
+      salinan satu kalimat pasti pelan-pelan menyimpang dan yang disunting
+      orang belum tentu yang tampil. */
   caption: string;
-  /** false = sasarannya tidak ketemu di layar; langkah dilewati diam-diam. */
-  run: (D: DemoCtx) => Promise<boolean | void>;
+  /** false = sasarannya tidak ketemu di layar; langkahnya dilewati. */
+  run: (D: DemoCtx, cap: string) => Promise<boolean | void>;
 }
 
 export class BuilderDemo {
@@ -241,7 +246,12 @@ export class BuilderDemo {
           if (id !== this.runId) return;
           this.stepIdx = i;
           try {
-            await this.steps[i].run(D);
+            const hasil = await this.steps[i].run(D, this.steps[i].caption);
+            /* Langkah yang melewati dirinya sendiri ikut dicatat. Ini yang
+               terjadi kalau label tombol di UI diganti tanpa katalog ini ikut
+               disesuaikan: langkahnya hilang dari booth tanpa satu pun tanda,
+               dan yang menggantinya tidak punya cara tahu. */
+            if (hasil === false) console.warn('[demo booth] langkah "' + this.steps[i].id + '" dilewati: sasarannya tidak ada di layar');
           } catch (err) {
             if (err === DEMO_ABORT) return;
             /* Satu langkah gagal tidak boleh menjatuhkan seluruh booth - tapi

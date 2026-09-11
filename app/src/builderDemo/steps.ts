@@ -57,8 +57,8 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'alur',
     label: 'Alur enam tab',
     caption: 'Menyusun modul jalannya berurut: ambil bahan, tata, percantik, uji, lalu ekspor.',
-    run: async (D) => {
-      await D.say('Menyusun modul jalannya berurut: ambil bahan, tata, percantik, uji, lalu ekspor.', 0);
+    run: async (D, cap) => {
+      await D.say(cap, 0);
       const tabs = Array.from(document.querySelectorAll<HTMLElement>('[data-demo^="tab-"]'));
       if (!tabs.length) return false;
       await D.sapu(tabs, 420);
@@ -69,9 +69,9 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'import',
     label: 'Import PPTX',
     caption: 'Bahan tidak diketik ulang: satu file PPTX diurai jadi slide siap tata, lengkap dengan gambarnya.',
-    run: async (D) => {
+    run: async (D, cap) => {
       if (!await bukaTab(D, 'bank')) return false;
-      await D.say('Bahan tidak diketik ulang: satu file PPTX diurai jadi slide siap tata, lengkap dengan gambarnya.');
+      await D.say(cap);
       await D.sleep(900);
     },
   },
@@ -79,9 +79,9 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'canvas',
     label: 'Susun modul',
     caption: 'Slide disusun per bagian. Yang di kiri urutan materinya, yang di kanan pratinjaunya — tanpa perlu ekspor dulu.',
-    run: async (D) => {
+    run: async (D, cap) => {
       if (!await bukaTab(D, 'canvas')) return false;
-      await D.say('Slide disusun per bagian. Yang di kiri urutan materinya, yang di kanan pratinjaunya — tanpa perlu ekspor dulu.');
+      await D.say(cap);
       await D.sleep(900);
     },
   },
@@ -89,14 +89,14 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'judul-slide',
     label: 'Mengetik judul slide',
     caption: 'Setiap suntingan langsung terlihat hasilnya. Tidak ada tombol "render" yang harus ditunggu.',
-    run: async (D) => {
+    run: async (D, cap) => {
       /* Kertas kerja slide baru muncul setelah "Edit blok" ditekan - daftar
          slide sendiri cuma urutan. Langkah ini yang MEMBUKANYA, dan langkah
          'blok' di bawah menumpang editor yang sama; keduanya ditutup di ujung
          'blok'. Dipisah begini karena captionnya memang dua hal berbeda. */
       const edit = qTeks('Edit blok');
       if (!edit) return false;
-      await D.say('Setiap suntingan langsung terlihat hasilnya. Tidak ada tombol "render" yang harus ditunggu.', 0);
+      await D.say(cap, 0);
       await D.click(edit);
       const judul = await D.tunggu(() => inp('Judul slide'));
       if (!judul) return false;
@@ -108,10 +108,10 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'blok-bintang',
     label: 'Blok andalan, dirakit',
     caption: 'Isi slide dirakit dari blok siap pakai. Tidak ada satu pun HTML yang perlu diketik.',
-    run: async (D) => {
+    run: async (D, cap) => {
       const pemicu = qTeks('Tambah blok');
       if (!pemicu) return false;
-      await D.say('Isi slide dirakit dari blok siap pakai. Tidak ada satu pun HTML yang perlu diketik.', 0);
+      await D.say(cap, 0);
       await D.click(pemicu);
       /* Daftarnya dirender sesudah klik; ditunggu, bukan ditebak jedanya,
          karena mesin booth yang lambat bikin tebakan jeda meleset. */
@@ -128,13 +128,13 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'blok-ragam',
     label: 'Ke-18 tipe blok',
     caption: 'Delapan belas tipe blok — dan tiap blok yang ditambahkan langsung terlihat hasilnya di pratinjau sebelah.',
-    run: async (D) => {
+    run: async (D, cap) => {
       /* KECEPATAN KEDUA. Blok bintang di langkah sebelumnya dirakit pelan
          supaya cara kerjanya kelihatan; sisanya lewat cepat supaya RAGAMNYA
          yang kelihatan. Kalau ke-18 tipe dirakit dengan kecepatan yang sama,
          satu putaran jadi sepuluh menit dan pengunjung yang datang di tengah
          cuma melihat blok ke-13 tanpa konteks. */
-      await D.say('Delapan belas tipe blok — dan tiap blok yang ditambahkan langsung terlihat hasilnya di pratinjau sebelah.', 0);
+      await D.say(cap, 0);
       for (const nama of BLOK_RAGAM) {
         D.chk();
         const pemicu = qTeks('Tambah blok');
@@ -153,11 +153,11 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'undo',
     label: 'Undo / autosave',
     caption: 'Salah tekan tidak pernah fatal: semua langkah bisa dibatalkan, dan pekerjaan tersimpan sendiri tanpa diminta.',
-    run: async (D) => {
+    run: async (D, cap) => {
       const undo = document.querySelector<HTMLElement>('[title^="Undo"]');
       const redo = document.querySelector<HTMLElement>('[title^="Redo"]');
       if (!undo) return false;
-      await D.say('Salah tekan tidak pernah fatal: semua langkah bisa dibatalkan, dan pekerjaan tersimpan sendiri tanpa diminta.', 0);
+      await D.say(cap, 0);
       await D.click(undo);
       await D.sleep(900);
       if (redo) await D.click(redo);
@@ -168,9 +168,9 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'tema-warna',
     label: 'Enam tema warna',
     caption: 'Satu klik mengganti warna seluruh modul — dan pratinjau di sebelah ikut berubah saat itu juga.',
-    run: async (D) => {
+    run: async (D, cap) => {
       if (!await bukaTab(D, 'cover')) return false;
-      await D.say('Satu klik mengganti warna seluruh modul — dan pratinjau di sebelah ikut berubah saat itu juga.', 0);
+      await D.say(cap, 0);
       /* Tombol presetnya tidak berteks tunggal (ada petak warna + label), jadi
          dicari lewat labelnya - sama persis dengan yang dibaca pengunjung. */
       for (const nama of TEMA_PRESET) {
@@ -193,10 +193,10 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'tema-grafis',
     label: 'Gaya grafis',
     caption: 'Di atas warna ada gaya grafis — dekorasi yang dipakai sampul dan tiap slide.',
-    run: async (D) => {
+    run: async (D, cap) => {
       const pemicu = qDemo('graphic-style');
       if (!pemicu) return false;
-      await D.say('Di atas warna ada gaya grafis — dekorasi yang dipakai sampul dan tiap slide.', 0);
+      await D.say(cap, 0);
       await D.click(pemicu);
       const daftar = await D.tunggu(() => document.querySelector('[data-demo="graphic-style-list"]'), 1500);
       if (daftar) {
@@ -211,10 +211,10 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'sampul',
     label: 'Gambar sampul',
     caption: 'Gambar sampul tinggal dipilih dari komputer — judulnya tetap terbaca karena gradasi gelapnya sudah bawaan.',
-    run: async (D) => {
+    run: async (D, cap) => {
       const unggah = qTeks('Gambar Sampul');
       if (!unggah) return false;
-      await D.say('Gambar sampul tinggal dipilih dari komputer — judulnya tetap terbaca karena gradasi gelapnya sudah bawaan.', 0);
+      await D.say(cap, 0);
       await D.cursorTo(unggah);
       await D.sleep(700);
       /* TIDAK diklik. Klik betulan membuka dialog berkas milik sistem operasi:
@@ -229,10 +229,10 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'penutup',
     label: 'Slide penutup',
     caption: 'Modul juga punya layar penutup sendiri — kalimat terakhir yang dibaca peserta, bukan sekadar slide habis.',
-    run: async (D) => {
+    run: async (D, cap) => {
       const judul = await D.tunggu(() => qDemo('ending-title'), 1500);
       if (!judul) return false;
-      await D.say('Modul juga punya layar penutup sendiri — kalimat terakhir yang dibaca peserta, bukan sekadar slide habis.', 0);
+      await D.say(cap, 0);
       await D.type(judul, 'Sampai Jumpa di<br><span>Modul Lanjutan</span>');
       const desc = qDemo('ending-desc');
       if (desc) await D.type(desc, 'Terima kasih sudah menuntaskan materi ini.');
@@ -244,9 +244,9 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'kuis',
     label: 'Kuis per bagian',
     caption: 'Kuis dibuat per bagian, kunci jawabannya ditandai di tempat — dan bisa dijadikan gerbang: belum benar, belum boleh lanjut.',
-    run: async (D) => {
+    run: async (D, cap) => {
       if (!await bukaTab(D, 'quiz')) return false;
-      await D.say('Kuis dibuat per bagian, kunci jawabannya ditandai di tempat — dan bisa dijadikan gerbang: belum benar, belum boleh lanjut.', 0);
+      await D.say(cap, 0);
       const tambah = qTeks('+ Soal');
       if (!tambah) return false;
       await D.click(tambah);
@@ -261,9 +261,9 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'preview',
     label: 'Pratinjau utuh',
     caption: 'Sebelum diserahkan, modulnya bisa dijalankan utuh persis seperti yang akan dibuka peserta.',
-    run: async (D) => {
+    run: async (D, cap) => {
       if (!await bukaTab(D, 'preview')) return false;
-      await D.say('Sebelum diserahkan, modulnya bisa dijalankan utuh persis seperti yang akan dibuka peserta.');
+      await D.say(cap);
       await D.sleep(600);
     },
   },
@@ -271,13 +271,13 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'export',
     label: 'Hasil akhir',
     caption: 'Hasilnya satu berkas HTML yang berdiri sendiri — atau paket SCORM siap unggah ke LMS. Tidak butuh server sendiri.',
-    run: async (D) => {
+    run: async (D, cap) => {
       /* Sengaja HANYA disorot, tidak diklik: satu klik = satu unduhan
          sungguhan di mesin booth, berulang tiap putaran sepanjang hari. */
       const tombol = ['Export HTML', 'Export SCORM', 'Export JSON']
         .map(t => qTeks(t)).filter((el): el is HTMLElement => !!el);
       if (!tombol.length) return false;
-      await D.say('Hasilnya satu berkas HTML yang berdiri sendiri — atau paket SCORM siap unggah ke LMS. Tidak butuh server sendiri.', 0);
+      await D.say(cap, 0);
       await D.sapu(tombol, 900);
       await D.sleep(900);
     },
@@ -286,10 +286,10 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'command',
     label: 'Command Center',
     caption: 'Sesudah modulnya dipakai, rekaman belajar peserta masuk ke sini — per orang, per slide. Terkunci password, isinya data sungguhan.',
-    run: async (D) => {
+    run: async (D, cap) => {
       const t = T('command');
       if (!t) return false;
-      await D.say('Sesudah modulnya dipakai, rekaman belajar peserta masuk ke sini — per orang, per slide. Terkunci password, isinya data sungguhan.', 0);
+      await D.say(cap, 0);
       await D.cursorTo(t);   // ditunjuk, tidak dibuka
       await D.sleep(2600);
     },
@@ -298,10 +298,10 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     id: 'tema-app',
     label: 'Tema aplikasi',
     caption: 'Aplikasinya sendiri punya mode gelap — menyusun modul sering berlangsung sampai malam.',
-    run: async (D) => {
+    run: async (D, cap) => {
       const tombol = document.querySelector<HTMLElement>('[title^="Ganti ke mode"]');
       if (!tombol) return false;
-      await D.say('Aplikasinya sendiri punya mode gelap — menyusun modul sering berlangsung sampai malam.', 0);
+      await D.say(cap, 0);
       await D.click(tombol);
       await D.sleep(2400);
       const balik = document.querySelector<HTMLElement>('[title^="Ganti ke mode"]');

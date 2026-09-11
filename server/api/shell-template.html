@@ -6597,12 +6597,20 @@ async function presDemoLoop(){
         const aksi = DEMO_ACTIONS[langkah.id];
         if(!aksi) continue;                  // id tanpa aksi: dilewati diam-diam
         try{
-          await aksi(D, langkah.caption);
+          const hasil = await aksi(D, langkah.caption);
+          /* Langkah yang melewati dirinya sendiri (sasarannya gak ada di
+             layar) ikut dicatat. Ini PERSIS yang menyembunyikan co-creation &
+             rekap berbulan-bulan: katalog menawarkan langkahnya, generator
+             mematikan fiturnya, aksinya return false, dan booth diam saja
+             seolah tidak ada apa-apa. Satu baris console bikin ketidakcocokan
+             semacam itu ketahuan di percobaan pertama, bukan di pameran. */
+          if(hasil === false) console.warn('[demo] langkah "' + langkah.id + '" dilewati: fiturnya gak ada di modul ini');
         }catch(err){
           if(err === DEMO_ABORT) return;
           /* Satu langkah gagal (mis. embed YouTube gak kebuka karena wifi
              venue) gak boleh menjatuhkan seluruh booth - lanjut ke fitur
              berikutnya. */
+          console.warn('[demo] langkah "' + langkah.id + '" gagal:', err);
         }
         D.hide();
         await D.sleep(700);
