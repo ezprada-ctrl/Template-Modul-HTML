@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { Fragment, useState } from 'react';
-import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule, PeringatanDetail, VideoDetail, SesiDitandai } from '../api';
+import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule, CocreationNote, PeringatanDetail, VideoDetail, SesiDitandai } from '../api';
 import { ccCocreation, ccListModules, ccListSessions, ccListLearners, ccRawRows, ccTandaiUji, ccBatalkanTanda, ccDitandai } from '../api';
 import { DEMO_MODULES, DEMO_SESSIONS, DEMO_LEARNERS, DEMO_COCREATION } from '../demoActivityData';
 
