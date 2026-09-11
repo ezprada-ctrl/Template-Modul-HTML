@@ -122,7 +122,7 @@ export default function CoverForm({ module, setModule }: Props) {
               <input type="checkbox" checked={!!module.demoMode}
                 onChange={e => setModule({ ...module, demoMode: e.target.checked })} />
               <span>
-                <span className="opt-title">Mode Demo Otomatis</span>
+                <span className="opt-title">Demo Otomatis</span>
                 <span className="opt-desc">
                   Modul berjalan sendiri mengklik tiap fiturnya — buat booth pameran.
                 </span>
