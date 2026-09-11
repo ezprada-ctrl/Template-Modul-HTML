@@ -98,18 +98,22 @@ function useModuleHistory(initial: ModuleData) {
   };
 }
 
-/* Demo Booth Penyusun dinyalakan lewat ?demo=1, BUKAN lewat tombol di UI.
-   Dua alasan: penunggu booth tinggal memasang URL-nya di pintasan layar
-   penuh tanpa mengklik apa pun tiap pagi, dan tidak ada satu pun penyusun
-   sungguhan yang bisa menyalakannya tanpa sengaja lalu menonton kursor hantu
-   mengetik di atas pekerjaannya. */
-function demoBoothAktif(): boolean {
+/* Demo Booth Penyusun bisa dinyalakan dua cara:
+     - tombol "▶ Demo" di baris project (dipakai orang yang mau melihat atau
+       menunjukkannya dari aplikasi yang sedang dibuka), dan
+     - ?demo=1, buat mesin booth pameran: penunggunya tinggal memasang URL-nya
+       di pintasan layar penuh, tanpa mengklik apa pun tiap pagi.
+   Bedanya cuma satu, dan itu disengaja: yang dari tombol menampilkan
+   "Hentikan demo", yang dari URL tidak - pengunjung pameran yang mengklik
+   tombol itu bakal meninggalkan booth mati sampai penunggunya sadar. */
+function demoDariUrl(): boolean {
   try { return new URLSearchParams(window.location.search).get('demo') === '1'; }
   catch { return false; }
 }
 
 function App() {
-  const [demoBooth] = useState(demoBoothAktif);
+  const [dariUrl] = useState(demoDariUrl);
+  const [demoBooth, setDemoBooth] = useState(dariUrl);
   const [tab, setTab] = useState<Tab>(() => {
     try {
       const tersimpan = localStorage.getItem(TAB_KEY);
@@ -154,7 +158,16 @@ function App() {
   // If there's no local record of a previous project, ask for a name so
   // the freshly-generated slug stays identifiable even if localStorage
   // gets cleared later (see "Mulai Project Baru" below for the manual path).
+  const sudahHidrasi = useRef(false);
   useEffect(() => {
+    /* SEKALI seumur hidup komponen. Dulu efek ini ikut berjalan lagi tiap
+       `demoBooth` berubah - tidak masalah waktu demo cuma bisa dinyalakan
+       lewat URL (nilainya tidak pernah berubah), tapi begitu ada tombol
+       menghentikan demo berarti memuat ulang draft terakhir dari server dan
+       menimpa pekerjaan yang baru saja dikembalikan. */
+    if (sudahHidrasi.current) return;
+    sudahHidrasi.current = true;
+
     /* Mode demo tidak pernah menyentuh draft siapa pun: tidak memuat draft
        terakhir, tidak menanyakan project baru, dan (lihat autosave di bawah)
        tidak menulis apa-apa ke server. Yang tampil proyek contoh. */
@@ -177,6 +190,51 @@ function App() {
       .catch(() => { /* no matching draft on server, start fresh */ })
       .finally(() => { setHydrated(true); setProjectReady(true); });
   }, [resetHistory, demoBooth]);
+
+  /* Pekerjaan yang sedang dibuka, dititipkan selama demo jalan.
+     Kenapa disimpan di sini dan bukan sekadar dimuat ulang dari server waktu
+     demo berhenti: draft di server ketinggalan sampai ~1,2 detik terakhir
+     (autosave didebounce), jadi memuat ulang berarti membuang suntingan
+     terakhir orangnya - persis suntingan yang baru saja dia ketik sebelum
+     menekan Demo. */
+  const titipan = useRef<{ module: ModuleData; projectReady: boolean } | null>(null);
+
+  function mulaiDemo() {
+    if (demoBooth) return;
+    const lanjut = window.confirm(
+      'Jalankan Demo Booth?\n\n' +
+      'Layar diambil alih: aplikasi mendemokan dirinya sendiri di atas sebuah\n' +
+      'PROJECT CONTOH — bukan project yang lagi kamu kerjakan.\n\n' +
+      'Pekerjaanmu dititipkan dan kembali utuh begitu demo dihentikan; selama\n' +
+      'demo jalan tidak ada satu pun yang tersimpan ke server.\n\n' +
+      'Menyentuh layar menjeda demo — jadi kamu bisa langsung mencobanya sendiri.',
+    );
+    if (!lanjut) return;
+    titipan.current = { module, projectReady };
+    setProjectReady(false);   // autosave mati selama demo
+    resetHistory(sampleProject());
+    setDemoBooth(true);
+  }
+
+  function hentikanDemo() {
+    if (!demoBooth) return;
+    setDemoBooth(false);
+    const simpanan = titipan.current;
+    titipan.current = null;
+    if (!simpanan) return;   // demo dari ?demo=1: tidak pernah ada yang dititipkan
+    resetHistory(simpanan.module);
+    setProjectReady(simpanan.projectReady);
+  }
+
+  /* Esc menghentikan demo juga. Tombolnya sendiri bisa ketutupan caption atau
+     kursor palsu di layar sempit, dan orang yang panik mencari jalan keluar
+     menekan Esc duluan, bukan mencari tombol. */
+  useEffect(() => {
+    if (!demoBooth || dariUrl) return;
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') hentikanDemo(); }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  });
 
   function handleCreateProject(nama: string, namaProject: string) {
     const prefix = buildProjectSlugPrefix(nama, namaProject);
@@ -383,6 +441,17 @@ function App() {
           <AutosaveIndicator status={autosaveStatus} />
           <UndoRedo canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
           <ThemeToggle theme={theme} onToggle={() => setTheme(t => (t === 'light' ? 'dark' : 'light'))} />
+          {/* Tidak ditawarkan di booth pameran (?demo=1): pengunjung yang
+              mengkliknya meninggalkan booth mati sampai penunggunya sadar. */}
+          {!dariUrl && (
+            demoBooth
+              ? <button className="btn-sm btn-primary" onClick={hentikanDemo} title="Kembali ke project kamu (Esc)">
+                  ■ Hentikan demo
+                </button>
+              : <button className="btn-sm" onClick={mulaiDemo} title="Aplikasi mendemokan dirinya sendiri di atas project contoh">
+                  ▶ Demo
+                </button>
+          )}
         </>}
       />
 
