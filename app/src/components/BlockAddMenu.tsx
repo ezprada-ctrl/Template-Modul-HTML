@@ -137,6 +137,7 @@ export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow,
         onClick={() => setOpen(o => !o)}
         title={title}
         className={triggerClass}
+        data-demo="tambah-blok"
         style={{
           width: '100%', textAlign: 'left', padding: '9px 12px', fontWeight: 600, color: 'var(--text-dim)',
           ...triggerStyle,
@@ -158,6 +159,12 @@ export default function BlockAddMenu({ onAdd, label = '+ Tambah blok…', allow,
               key={type}
               type="button"
               onClick={() => pick(type)}
+              /* Kait buat Demo Booth: dicari lewat data-blok, BUKAN lewat
+                 teks labelnya. Label boleh diganti kapan saja tanpa
+                 melumpuhkan demo, dan cek-demo.mjs menegakkan bahwa tiap
+                 label di sini memang ikut dipamerkan. */
+              data-demo="blok-opsi"
+              data-blok={type}
               onMouseEnter={e => scheduleHover(type, e.currentTarget)}
               onMouseLeave={cancelHover}
               style={{

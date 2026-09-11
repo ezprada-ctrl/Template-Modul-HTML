@@ -354,12 +354,12 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
     <div>
       <h2 style={{ margin: '0 0 14px' }}>Preview &amp; Export</h2>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-        <button className="btn-primary" onClick={doPreview}>Live Preview</button>
-        <button onClick={doExport}>Export HTML</button>
-        <button onClick={doExportScorm} disabled={!!zip}>
+        <button className="btn-primary" data-demo="live-preview" onClick={doPreview}>Live Preview</button>
+        <button data-demo="export-html" onClick={doExport}>Export HTML</button>
+        <button data-demo="export-scorm" onClick={doExportScorm} disabled={!!zip}>
           {zip ? 'Membungkus…' : 'Export SCORM (.zip)'}
         </button>
-        <button onClick={doExportJson}>Export JSON</button>
+        <button data-demo="export-json" onClick={doExportJson}>Export JSON</button>
         <button onClick={() => importRef.current?.click()}>Import JSON</button>
         <button onClick={doSave}>Simpan Draft</button>
         <button className="btn-ghost" onClick={refreshDrafts}>Muat daftar draft</button>

@@ -47,6 +47,8 @@ export default function CoverForm({ module, setModule }: Props) {
                 <button
                   key={preset.id}
                   type="button"
+                  data-demo="tema-preset"
+                  data-tema={preset.id}
                   onClick={() => setModule({ ...module, theme: { accent: preset.accent, accent2: preset.accent2, onAccent: preset.onAccent, navy: preset.navy } })}
                   style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
@@ -238,6 +240,7 @@ export default function CoverForm({ module, setModule }: Props) {
               onChange={e => setModule({ ...module, sidebarTitle: e.target.value })} />
           </label>
           <BackgroundImageField
+            demoHook="unggah-sampul"
             label="Gambar Sampul (opsional, disimpan di Supabase Storage, kualitas asli)"
             imageUri={module.coverImageDataUri}
             brightness={module.coverImageBrightness}
@@ -304,7 +307,10 @@ export default function CoverForm({ module, setModule }: Props) {
 // `defaultBrightness` beda-beda per pemanggil: Sampul default 100 (udah
 // punya gradasi gelap bawaan, slider ini cuma tambahan), slide penutup
 // default 50 (gak ada gradasi bawaan sama sekali).
-function BackgroundImageField({ label, imageUri, brightness, defaultBrightness, brightnessHint, onUpload, onBrightnessChange, onRemove }: {
+function BackgroundImageField({ demoHook, label, imageUri, brightness, defaultBrightness, brightnessHint, onUpload, onBrightnessChange, onRemove }: {
+  /* Nama kait buat Demo Booth, opsional. Yang dipasangi cuma field yang
+     memang disorot demo - lihat builderDemo/steps.ts. */
+  demoHook?: string;
   label: string;
   imageUri: string | undefined;
   brightness: number | undefined;
@@ -334,7 +340,7 @@ function BackgroundImageField({ label, imageUri, brightness, defaultBrightness, 
   }
 
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: 14 }} data-demo={demoHook}>
       <label style={{ color: 'var(--text-dim)' }}>{label}</label>
       {imageUri ? (
         <div style={{ marginTop: 6 }}>

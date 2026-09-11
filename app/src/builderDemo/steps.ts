@@ -1,10 +1,6 @@
 import type { DemoCtx, DemoStep } from './engine';
-import { qDemo, qTeks } from './engine';
+import { qDemo } from './engine';
 import { GAMBAR_SAMPUL_CONTOH, GAMBAR_PENUTUP_CONTOH } from './sampleAssets';
-
-/* Urut sama dengan THEME_PRESETS di themes.ts; yang pertama = tema bawaan,
-   dan langkah tema mengembalikannya ke situ sebelum selesai. */
-const TEMA_PRESET = ['Emas Klasik', 'Biru Kemenkeu', 'Hijau Zamrud', 'Merah Marun', 'Ungu Elegan', 'Teal Modern'];
 
 /* Katalog langkah Demo Booth Penyusun - satu tempat, seperti demoSteps.ts
  * untuk sisi peserta.
@@ -28,19 +24,23 @@ const TEMA_PRESET = ['Emas Klasik', 'Biru Kemenkeu', 'Hijau Zamrud', 'Merah Maru
 
 /* Dua kecepatan, dua daftar.
    BINTANG: yang paling menjawab "modulnya bisa apa" - dirakit pelan-pelan.
-   RAGAM: sisanya, disisipkan cepat berturut-turut. Namanya ditulis persis
-   seperti di menu "+ Tambah blok" (BLOCK_LABELS di BlockAddMenu.tsx), karena
-   itulah yang dicari qTeks. Articulate 360 sengaja TIDAK ikut: dia minta
-   paket ZIP, dan tanpa berkasnya yang muncul cuma blok kosong. */
-const BLOK_BINTANG = [
-  { menu: 'Kartu' }, { menu: 'Accordion' }, { menu: 'Tabs' },
-  { menu: 'Tabel Data' }, { menu: 'Knowledge Check' }, { menu: 'Modal Popup' },
-];
+   RAGAM: sisanya, disisipkan cepat berturut-turut.
+   Isinya ID TIPE BLOK (BlockType di types.ts), bukan label yang tampil.
+   'articulate' sengaja TIDAK ikut: dia minta paket ZIP, dan tanpa berkasnya
+   yang muncul cuma blok kosong. cek-demo.mjs menegakkan bahwa tipe blok baru
+   wajib masuk salah satu daftar ini. */
+const BLOK_BINTANG = ['card', 'accordion', 'tabs', 'dtable', 'knowledge', 'modal'];
 const BLOK_RAGAM = [
-  'Catatan (Callout)', 'Definisi', 'Kutipan Angka', 'Daftar Bercentang',
-  'Timeline', 'Diagram Alur', 'Grid (2/3 kolom)', 'Gambar',
-  'Badge Referensi', 'HTML Bebas', 'Media (Video',
+  'callout', 'definition', 'pullquote', 'ticklist', 'timeline',
+  'flow', 'grid', 'image', 'badgeref', 'html', 'media',
 ];
+
+/* Opsi di menu "+ Tambah blok" dicari lewat id TIPE-nya (data-blok), bukan
+   lewat teks labelnya. Labelnya teks yang dibaca orang dan boleh diganti
+   kapan saja; id tipenya bagian dari struktur data dan tidak berubah tanpa
+   migrasi. Dulu dicari lewat teks - satu label diganti, satu langkah demo
+   mati tanpa suara. */
+const blokOpsi = (tipe: string) => document.querySelector<HTMLElement>(`[data-demo="blok-opsi"][data-blok="${tipe}"]`);
 
 const T = (n: string) => qDemo('tab-' + n);
 const inp = (ph: string) => document.querySelector<HTMLElement>(`[placeholder="${ph}"]`);
@@ -94,10 +94,24 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
          slide sendiri cuma urutan. Langkah ini yang MEMBUKANYA, dan langkah
          'blok' di bawah menumpang editor yang sama; keduanya ditutup di ujung
          'blok'. Dipisah begini karena captionnya memang dua hal berbeda. */
-      const edit = qTeks('Edit blok');
+      /* MEMPOSISIKAN DIRI SENDIRI, sama seperti tiap langkah di sisi modul:
+         membuka tabnya sendiri, lalu MENUNGGU barisnya dirender - bukan
+         mengandalkan langkah sebelumnya sudah menaruh layar di tempat yang
+         benar. Sebelum ini langkah ini sesekali terlewat (peringatan console
+         menangkapnya, ~sekali tiap beberapa putaran, di build produksi juga):
+         proyek contoh dipasang ulang tiap awal putaran, dan barisnya baru ada
+         satu-dua render sesudahnya. Menunggu saja tidak cukup kalau layarnya
+         ternyata sedang di tab lain. */
+      if (!await bukaTab(D, 'canvas')) return false;
+      const edit = await D.tunggu(() => qDemo('edit-blok'), 4000);
       if (!edit) return false;
       await D.say(cap, 0);
-      await D.click(edit);
+      /* Tombolnya SAKLAR, bukan tombol buka. Kalau kertas kerjanya sudah
+         terbuka - dan dia memang tertinggal terbuka dari putaran sebelumnya -
+         mengkliknya justru MENUTUP, lalu langkah ini mencari kolom judul yang
+         barusan dia hilangkan sendiri. Inilah kenapa putaran pertama selalu
+         lolos dan putaran berikutnya tidak. */
+      if (edit.dataset.buka === '0') await D.click(edit);
       const judul = await D.tunggu(() => inp('Judul slide'));
       if (!judul) return false;
       await D.type(judul, 'Tiga Pilar yang Harus Dipegang Setiap Hari');
@@ -109,17 +123,22 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     label: 'Blok andalan, dirakit',
     caption: 'Isi slide dirakit dari blok siap pakai. Tidak ada satu pun HTML yang perlu diketik.',
     run: async (D, cap) => {
-      const pemicu = qTeks('Tambah blok');
+      /* Menu "+ Tambah blok" cuma ada kalau kertas kerja slide-nya terbuka.
+         Kalau langkah sebelumnya terlewat, langkah ini membukanya sendiri -
+         satu langkah yang gagal tidak boleh menyeret langkah berikutnya. */
+      const buka = qDemo('edit-blok');
+      if (buka?.dataset.buka === '0') await D.click(buka);
+      const pemicu = await D.tunggu(() => qDemo('tambah-blok'), 4000);
       if (!pemicu) return false;
       await D.say(cap, 0);
       await D.click(pemicu);
       /* Daftarnya dirender sesudah klik; ditunggu, bukan ditebak jedanya,
          karena mesin booth yang lambat bikin tebakan jeda meleset. */
-      const daftar = await D.tunggu(() => qTeks('Accordion'));
+      const daftar = await D.tunggu(() => blokOpsi('accordion'));
       if (!daftar) return false;
-      const pilihan = BLOK_BINTANG.map(b => qTeks(b.menu)).filter((el): el is HTMLElement => !!el);
+      const pilihan = BLOK_BINTANG.map(blokOpsi).filter((el): el is HTMLElement => !!el);
       await D.sapu(pilihan, 480);   // hover = tooltip penjelas tiap blok ikut muncul
-      const kartu = qTeks('Kartu');
+      const kartu = blokOpsi('card');
       if (kartu) await D.click(kartu);
       await D.sleep(1100);
     },
@@ -135,18 +154,23 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
          satu putaran jadi sepuluh menit dan pengunjung yang datang di tengah
          cuma melihat blok ke-13 tanpa konteks. */
       await D.say(cap, 0);
-      for (const nama of BLOK_RAGAM) {
+      for (const tipe of BLOK_RAGAM) {
         D.chk();
-        const pemicu = qTeks('Tambah blok');
+        const pemicu = qDemo('tambah-blok');
         if (!pemicu) break;
         pemicu.click();                       // tanpa animasi kursor: ini bagian cepatnya
-        const item = (await D.tunggu(() => qTeks(nama), 1200)) as HTMLElement | null;
+        const item = (await D.tunggu(() => blokOpsi(tipe), 1200)) as HTMLElement | null;
         if (!item) { pemicu.click(); continue; }   // menu terlanjur tertutup - tutup lagi, lewati
         await D.cursorTo(item);
         item.click();
         await D.sleep(620);
       }
       await D.sleep(1400);
+      /* Ditutup supaya putaran berikutnya mulai dari keadaan yang sama
+         persis - kertas kerja yang tertinggal terbuka bikin langkah
+         'judul-slide' di putaran depan menghadapi layar yang berbeda. */
+      const tutup = qDemo('edit-blok');
+      if (tutup?.dataset.buka === '1') await D.click(tutup);
     },
   },
   {
@@ -171,21 +195,21 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     run: async (D, cap) => {
       if (!await bukaTab(D, 'cover')) return false;
       await D.say(cap, 0);
-      /* Tombol presetnya tidak berteks tunggal (ada petak warna + label), jadi
-         dicari lewat labelnya - sama persis dengan yang dibaca pengunjung. */
-      for (const nama of TEMA_PRESET) {
+      /* Diambil dari LAYAR, bukan dari daftar tema yang disalin ke sini.
+         Tema baru yang ditambahkan ke themes.ts otomatis ikut dikelilingi,
+         dan tidak ada daftar kedua yang bisa ketinggalan. */
+      const preset = Array.from(document.querySelectorAll<HTMLElement>('[data-demo="tema-preset"]'));
+      if (!preset.length) return false;
+      for (const b of preset) {
         D.chk();
-        const b = qTeks(nama);
-        if (!b) continue;
         await D.cursorTo(b);
         b.click();
         await D.sleep(820);   // cukup buat mata menangkap preview-nya berganti
       }
-      /* Ditutup dengan kembali ke tema bawaan: putaran berikutnya harus mulai
-         dari tampilan yang sama, dan pengunjung yang mengambil alih tepat di
-         sini tidak mewarisi warna acak. */
-      const bawaan = qTeks(TEMA_PRESET[0]);
-      if (bawaan) await D.click(bawaan);
+      /* Ditutup dengan kembali ke tema bawaan (preset pertama): putaran
+         berikutnya harus mulai dari tampilan yang sama, dan pengunjung yang
+         mengambil alih tepat di sini tidak mewarisi warna acak. */
+      await D.click(preset[0]);
       await D.sleep(700);
     },
   },
@@ -212,7 +236,7 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     label: 'Gambar sampul',
     caption: 'Gambar sampul tinggal dipilih dari komputer — judulnya tetap terbaca karena gradasi gelapnya sudah bawaan.',
     run: async (D, cap) => {
-      const unggah = qTeks('Gambar Sampul');
+      const unggah = qDemo('unggah-sampul');
       if (!unggah) return false;
       await D.say(cap, 0);
       await D.cursorTo(unggah);
@@ -247,7 +271,7 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     run: async (D, cap) => {
       if (!await bukaTab(D, 'quiz')) return false;
       await D.say(cap, 0);
-      const tambah = qTeks('+ Soal');
+      const tambah = qDemo('tambah-soal');
       if (!tambah) return false;
       await D.click(tambah);
       const tanya = await D.tunggu(() => inp('Pertanyaan'));
@@ -274,8 +298,8 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     run: async (D, cap) => {
       /* Sengaja HANYA disorot, tidak diklik: satu klik = satu unduhan
          sungguhan di mesin booth, berulang tiap putaran sepanjang hari. */
-      const tombol = ['Export HTML', 'Export SCORM', 'Export JSON']
-        .map(t => qTeks(t)).filter((el): el is HTMLElement => !!el);
+      const tombol = ['export-html', 'export-scorm', 'export-json']
+        .map(qDemo).filter((el): el is HTMLElement => !!el);
       if (!tombol.length) return false;
       await D.say(cap, 0);
       await D.sapu(tombol, 900);

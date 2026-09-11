@@ -36,7 +36,7 @@ export interface DemoCtx {
   click: (el: Element | null) => Promise<boolean>;
   type: (el: Element | null, teks: string) => Promise<void>;
   sapu: (els: Element[], jeda?: number) => Promise<void>;
-  tunggu: (cari: () => Element | null, batas?: number) => Promise<Element | null>;
+  tunggu: (cari: () => HTMLElement | null, batas?: number) => Promise<HTMLElement | null>;
   /* Menyuntik perubahan langsung ke state modul, buat yang MUSTAHIL dilakukan
      lewat UI di booth: memilih berkas. Klik tombol unggah membuka dialog file
      milik sistem operasi - dialog itu di luar halaman, tidak bisa ditutup
@@ -52,23 +52,15 @@ export interface DemoCtx {
 }
 
 /* ---------- pencari sasaran ----------
- * Dicari lewat TEKS YANG TERBACA, bukan kelas CSS: aplikasi ini menata
- * gayanya dengan inline style, jadi tidak ada kelas stabil untuk dipegang -
- * dan teks tombol adalah hal yang sama persis dipakai pengunjung untuk
- * menemukannya. Yang tidak punya teks (tab, kanvas) dikasih data-demo.
+ * SEMUA sasaran dicari lewat kait data-demo yang sengaja ditanam di
+ * komponennya - tidak ada yang dicari lewat teks yang tampil. Teks tombol itu
+ * kalimat buat manusia: boleh diganti kapan saja, dan waktu diganti langkah
+ * demo yang mengandalkannya mati TANPA SUARA. Sudah pernah kejadian, dan
+ * pemeriksa app/scripts/cek-demo.mjs sekarang menolak build yang mencoba
+ * kembali ke pola itu.
  */
 export function qDemo(nama: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-demo="${nama}"]`);
-}
-
-export function qTeks(teks: string, dalam?: Element | null): HTMLElement | null {
-  const akar = dalam || document.body;
-  const kandidat = Array.from(akar.querySelectorAll<HTMLElement>('button, a, label, summary'));
-  const pas = kandidat.filter(el => (el.textContent || '').trim().toLowerCase().includes(teks.toLowerCase()));
-  // Yang paling dangkal isinya = yang paling mungkin tombolnya sendiri, bukan
-  // pembungkus yang kebetulan memuat teks itu di dalamnya.
-  pas.sort((a, b) => (a.textContent || '').length - (b.textContent || '').length);
-  return pas[0] || null;
 }
 
 /* React memasang setter-nya sendiri di properti `value`, jadi `el.value = x`
@@ -164,6 +156,7 @@ export class BuilderDemo {
   private runId = 0;
   private stepIdx = 0;
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
+  private mulaiTimer: ReturnType<typeof setTimeout> | null = null;
   private jalan = false;
   private lepasListener: (() => void) | null = null;
 
@@ -196,12 +189,19 @@ export class BuilderDemo {
     const nama = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
     nama.forEach(n => window.addEventListener(n, jeda, { passive: true, capture: true }));
     this.lepasListener = () => nama.forEach(n => window.removeEventListener(n, jeda, { capture: true } as EventListenerOptions));
-    setTimeout(() => this.jalankan(), 1400);
+    /* Timernya DIPEGANG, bukan ditembak lalu dilupakan. React StrictMode di
+       mode dev memasang lalu membongkar efek sekali sebelum yang sungguhan -
+       instance pertama sudah dihentikan tapi timer mulainya tetap menyala,
+       lalu menjalankan satu putaran hantu di atas chrome yang sudah dicabut:
+       langkah-langkahnya gagal satu per satu dan mengotori console dengan
+       peringatan yang tidak ada hubungannya dengan booth sungguhan. */
+    this.mulaiTimer = setTimeout(() => this.jalankan(), 1400);
   }
 
   hentikan() {
     this.runId++;
     this.jalan = false;
+    if (this.mulaiTimer) clearTimeout(this.mulaiTimer);
     if (this.idleTimer) clearTimeout(this.idleTimer);
     this.lepasListener?.();
     this.bersih();
@@ -357,7 +357,7 @@ export class BuilderDemo {
       /* Menunggu React selesai merender sesuatu yang baru muncul akibat klik
          barusan. Tanpa ini langkah berikutnya mencari elemen yang belum ada
          dan langkahnya gugur padahal fiturnya baik-baik saja. */
-      tunggu: async (cari, batas) => {
+      tunggu: async (cari, batas): Promise<HTMLElement | null> => {
         const habis = Date.now() + (batas == null ? 2500 : batas);
         for (;;) {
           chk();

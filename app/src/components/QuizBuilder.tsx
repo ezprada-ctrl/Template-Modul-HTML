@@ -245,7 +245,7 @@ export default function QuizBuilder({ module, setModule }: Props) {
           </div>
         ))}
       </div>
-      <button className="btn-primary" style={{ marginTop: 12 }} onClick={addQuestion}>+ Soal</button>
+      <button className="btn-primary" data-demo="tambah-soal" style={{ marginTop: 12 }} onClick={addQuestion}>+ Soal</button>
     </div>
   );
 }

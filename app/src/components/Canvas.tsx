@@ -589,6 +589,12 @@ function SlideRow({ slide, module, open, onToggle, onUpdate, onRemove, onPilihSl
             slidenya malah jadi berkedip semua. */}
         <button
           className={open ? 'btn-primary btn-sm btn-tutup-editor' : 'btn-sm'}
+          /* Kait Demo Booth. `data-buka` dibaca demo buat tahu kertas
+             kerjanya sedang terbuka atau tertutup - dulu dibedakan lewat
+             teks tombolnya ("Edit blok" vs "Tutup"), yang berarti mengganti
+             kata itu melumpuhkan dua langkah demo tanpa suara. */
+          data-demo="edit-blok"
+          data-buka={open ? '1' : '0'}
           onClick={alihkanEditor}
           title={open ? 'Tutup kertas kerja slide ini' : undefined}
         >{open ? 'Tutup' : 'Edit blok'}</button>
