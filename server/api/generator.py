@@ -1503,7 +1503,20 @@ def generate_html(module):
     nav = build_nav(module)
     out = out.replace('__NAV_JS__', js_str(nav))
 
-    out = out.replace('__HIDE_PROGRESS_JS__', js_str(bool(module.get('hideProgress', False))))
+    # Mode Presentasi Kelas - berkas hasilnya dipakai INSTRUKTUR buat memaparkan
+    # di depan kelas, bukan dikerjakan peserta sendiri. Semua pematian di bawah
+    # ini dilakukan DI SINI (saat export), bukan di aplikasi: nilai centang asli
+    # penyusun sengaja dibiarkan utuh di project-nya, jadi sekali mode
+    # presentasi dimatikan lagi, pilihan lamanya balik sendiri tanpa perlu
+    # dicentang ulang. Pola yang sama dipakai show_recap vs track.
+    presentation = bool(module.get('presentationMode', False))
+    out = out.replace('__PRESENTATION_JS__', js_str(presentation))
+
+    # Progress belajar mengukur "sudah sejauh mana KAMU", pertanyaan yang gak
+    # punya arti buat satu layar proyektor yang ditonton sekelas. Di mode
+    # presentasi diganti penunjuk posisi slide di HUD instruktur.
+    hide_progress = bool(module.get('hideProgress', False)) or presentation
+    out = out.replace('__HIDE_PROGRESS_JS__', js_str(hide_progress))
 
     # Activity recording (opt-in per module via the Sampul tab). The anon key
     # is deliberately baked into the exported HTML: the module is a static
@@ -1514,7 +1527,12 @@ def generate_html(module):
     # key: it would be readable by every learner who views source.
     # Kredensial cuma ditanam kalau modulnya memang merekam. Modul biasa
     # jangan sampai bawa-bawa key yang gak dia pakai.
-    track = bool(module.get('trackActivity', False))
+    # Dipaksa mati di mode presentasi. Satu sesi proyektor bukan "seorang
+    # peserta": kalau direkam, dia masuk Command Center sebagai satu orang yang
+    # mengklik 60 slide dalam 40 menit dan ikut menggeser rata-rata kelas.
+    # Sekalian bikin gerbang Nama & NIP gak muncul - instruktur bukan peserta
+    # terdaftar - karena gerbang itu nempel ke TRACK_ACTIVITY.
+    track = bool(module.get('trackActivity', False)) and not presentation
     out = out.replace('__TRACK_ACTIVITY_JS__', js_str(track))
     out = out.replace('__SUPABASE_URL_JS__', js_str(os.environ.get('SUPABASE_URL', '').rstrip('/') if track else ''))
     out = out.replace('__SUPABASE_ANON_KEY_JS__', js_str(os.environ.get('SUPABASE_ANON_KEY', '') if track else ''))
@@ -1536,7 +1554,10 @@ def generate_html(module):
     # `track` (beda dari show_recap di atas): tanpa perekaman pun peserta tetap
     # bisa mencatat & meninjau catatannya sendiri di perangkatnya. Yang hilang
     # cuma sinkronisasi lintas perangkat & tampilan di Command Center.
-    show_cocreation = bool(module.get('showCocreation', False))
+    # Ikut mati di mode presentasi - catatan pribadi per slide gak ada
+    # tempatnya waktu modulnya lagi dipaparkan ke depan kelas, dan tombol
+    # melayangnya cuma nutupi materi di layar proyektor.
+    show_cocreation = bool(module.get('showCocreation', False)) and not presentation
     out = out.replace('__SHOW_COCREATION_JS__', js_str(show_cocreation))
     # Alamat backend buat MENARIK BALIK catatan dari server (anon key modul
     # cuma bisa INSERT, nol SELECT - sama alasannya kayak RECAP_API di atas).

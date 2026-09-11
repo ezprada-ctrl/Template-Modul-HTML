@@ -81,6 +81,37 @@ export default function CoverForm({ module, setModule }: Props) {
               Sebelumnya tiap opsi berdiri sendiri dengan keterangan panjang,
               jadi susah dibedakan mana judul opsi mana penjelasan. */}
           <div className="optgroup">
+            {/* Mode Presentasi ditaruh PALING ATAS dan dipisah garis karena dia
+                bukan opsi sejajar: begitu nyala, dia mematikan paksa beberapa
+                centang di bawahnya waktu export. Kalau ditaruh di tengah,
+                penyusun bakal bingung kenapa "Rekam aktivitas" yang dia centang
+                gak ngefek di berkas hasilnya. */}
+            <label className="opt">
+              <input type="checkbox" checked={!!module.presentationMode}
+                onChange={e => setModule({ ...module, presentationMode: e.target.checked })} />
+              <span>
+                <span className="opt-title">Mode Presentasi Kelas</span>
+                <span className="opt-desc">
+                  Berkas hasil jadi bahan tayang buat instruktur, bukan modul e-learning peserta.
+                </span>
+              </span>
+            </label>
+            {module.presentationMode && (
+              <p className="opt-note is-warn">
+                ⚠ Ekspor ini <b>bukan buat peserta</b>. Perekaman aktivitas, rekap, co-creation,
+                progress belajar, dan penguncian antar-bagian <b>dimatikan</b> — instruktur bisa
+                loncat ke bagian mana saja saat tanya jawab. Buat versi peserta, hilangkan centang
+                ini lalu ekspor sekali lagi.
+                {/* Baris sendiri, bukan menyambung kalimat di atas: ini daftar
+                    tombol, jenis informasi yang beda dari peringatannya. */}
+                <span className="opt-note-aside" style={{ display: 'block', marginTop: 6 }}>
+                  Di kelas: <code>F</code> layar penuh, <code>B</code>/<code>W</code> layar hitam/putih,{' '}
+                  <code>+</code>/<code>−</code> besar-kecilkan teks, <code>?</code> daftar tombol.
+                  Isi slide muncul bertahap tiap klik remote.
+                </span>
+              </p>
+            )}
+
             <label className="opt">
               <input type="checkbox" checked={!!module.hideProgress}
                 onChange={e => setModule({ ...module, hideProgress: e.target.checked })} />

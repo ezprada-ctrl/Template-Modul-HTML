@@ -360,6 +360,19 @@ export interface ModuleData {
   // walau modulnya sengaja gak merekam apa-apa. Konsekuensinya ada DUA MODE -
   // lihat catatan di CoverForm.tsx dan COCREATION_API di generator.py.
   showCocreation?: boolean;
+  // Mode Presentasi Kelas: modul yang diekspor dipakai INSTRUKTUR buat
+  // memaparkan di depan kelas, bukan dikerjakan peserta e-learning sendiri.
+  // Ini bukan sekadar tambahan fitur - dia MEMATIKAN PAKSA di generator semua
+  // yang mengasumsikan pembaca perorangan (trackActivity, showRecap,
+  // showCocreation, progress belajar), karena satu sesi proyektor bukan
+  // "seorang peserta" dan datanya cuma bikin kotor statistik di Command
+  // Center. Nilai centang aslinya TIDAK ikut diubah di sini - sama alasannya
+  // dengan showRecap: pilihan penyusun tetap keinget kalau mode presentasi
+  // dimatikan lagi.
+  //
+  // Satu project jadi DUA build: ekspor sekali tanpa centang ini buat LMS
+  // peserta, sekali lagi dengan centang ini buat bahan tayang kelas.
+  presentationMode?: boolean;
   theme: { accent: string; accent2: string; onAccent: string; navy: string };
   // Gaya dekorasi grafis (blob/cincin/dll) - INDEPENDEN dari `theme` di atas
   // (theme cuma warna, ini cuma bentuk - lihat GRAPHIC_STYLES di
@@ -452,6 +465,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     trackActivity: false,
     showRecap: false,
     showCocreation: false,
+    presentationMode: false,
     theme: { ...DEFAULT_THEME },
     graphicStyle: 'none',
     sections: [{ id: 'a', title: 'A. Bagian Satu', short: 'Bagian Satu', icon: 'A', color: '#c99a3d' }],

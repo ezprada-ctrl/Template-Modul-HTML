@@ -1552,6 +1552,72 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
 .cp-final-title b{color:var(--accent-ink);}
 .cp-final-sub{position:relative;color:var(--text-dim);font-size:14px;line-height:1.6;max-width:420px;margin:0 auto;text-wrap:balance;}
 @keyframes badgePop{0%{transform:scale(.4);opacity:0;}100%{transform:scale(1);opacity:1;}}
+
+/* ================= MODE PRESENTASI KELAS =================
+   Semua aturan di bawah dikurung `body.pres-on`, yang cuma dipasang kalau
+   PRESENTATION nyala. Modul peserta biasa gak kesentuh satu baris pun. */
+
+/* --- Isi slide muncul bertahap ---
+   `display:none`, BUKAN `visibility:hidden`. Reveal-nya selalu urut dari atas
+   ke bawah, jadi blok yang sudah tampil gak pernah ikut bergeser waktu blok
+   berikutnya muncul - yang bergerak cuma ruang di bawahnya. visibility:hidden
+   malah nyisain lubang kosong menganga di layar proyektor. */
+body.pres-on .pres-hidden{display:none !important;}
+body.pres-on .pres-in{animation:presIn .22s ease-out both;}
+@keyframes presIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){
+  body.pres-on .pres-in{animation:none;}
+}
+
+/* --- Skala tampilan buat proyektor ---
+   CSS modul ini seluruhnya px (nol pemakaian rem), jadi menaikkan font-size
+   root gak ngefek apa-apa. `zoom` membesarkan SEMUANYA secara proporsional -
+   teks, gambar, padding, radius - yang justru yang dimau buat diproyeksikan:
+   teks yang enak dibaca di laptop jarak 40cm kekecilan dilihat dari bangku
+   belakang. Ditaruh di .slide-frame (bukan #viewport) supaya #viewport tetap
+   jadi kotak gulir berukuran asli. */
+body.pres-on #viewport .slide-frame{zoom:var(--pres-zoom,1);}
+
+/* --- Layar hitam / putih ---
+   Padanan tombol B / W di PowerPoint: perhatian balik ke instruktur waktu
+   diskusi, tanpa harus menutup atau memindahkan apa pun. z-index sengaja di
+   atas segalanya termasuk popup kuis & sidebar. */
+#pres-blank{position:fixed;inset:0;z-index:99999;background:#000;}
+#pres-blank.is-white{background:#fff;}
+
+/* --- HUD instruktur ---
+   Kecil, redup, pojok kanan bawah. Sengaja TIDAK ikut zoom (di luar
+   .slide-frame) supaya ukurannya tetap walau materinya dibesarkan. */
+/* bottom-nya MENGHINDARI #bottomnav (tinggi ~76px), bukan 14px dari dasar
+   layar: tombol "Selanjutnya →" duduk persis di pojok kanan bawah, dan HUD
+   yang cuma 14px dari dasar bakal menutupinya. */
+#pres-hud{position:fixed;right:14px;bottom:96px;z-index:9998;display:flex;align-items:center;gap:6px;
+  padding:6px 8px;border-radius:999px;background:rgba(17,17,20,.72);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 8px 24px -8px rgba(0,0,0,.5);
+  font-size:12px;color:#fff;opacity:.32;transition:opacity .18s;}
+#pres-hud:hover,#pres-hud.is-awake{opacity:1;}
+#pres-hud button{all:unset;cursor:pointer;padding:4px 7px;border-radius:999px;line-height:1;font-size:12px;color:#fff;}
+#pres-hud button:hover{background:rgba(255,255,255,.16);}
+#pres-pos{padding:0 6px;font-variant-numeric:tabular-nums;letter-spacing:.02em;opacity:.85;}
+body.pres-hud-off #pres-hud{display:none;}
+
+/* --- Daftar tombol (tekan ?) --- */
+#pres-help{position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(3px);}
+/* Pakai token tema yang MEMANG ada di :root template ini (--surface,
+   --surface-2, --border, --text*). Jangan mengarang nama baru: nama yang gak
+   terdaftar diam-diam jatuh ke nilai cadangan, dan kartu putih cadangan itu
+   nyaris gak kebaca waktu modulnya lagi mode gelap. */
+#pres-help-card{background:var(--surface);color:var(--text);border-radius:var(--radius-lg);padding:22px 26px;
+  max-width:460px;width:calc(100% - 40px);border:1px solid var(--border);box-shadow:var(--shadow-lg);}
+#pres-help-card h3{margin:0 0 14px;font-size:17px;font-weight:800;color:var(--text);}
+#pres-help-card dl{display:grid;grid-template-columns:auto 1fr;gap:9px 14px;margin:0;align-items:center;}
+#pres-help-card dt{text-align:right;white-space:nowrap;}
+#pres-help-card dd{margin:0;color:var(--text-dim);font-size:13px;line-height:1.45;}
+#pres-help-card kbd{display:inline-block;min-width:20px;text-align:center;padding:2px 6px;border-radius:6px;
+  font:600 11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text);
+  background:var(--surface-2);border:1px solid var(--border-strong);}
+#pres-help-hint{margin:16px 0 0;font-size:12px;color:var(--text-faint);text-align:center;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -2558,6 +2624,20 @@ function saveState(){
 
 /* Build linear navigation */
 const NAV = __NAV_JS__;
+
+/* ---------------- Mode Presentasi Kelas ----------------
+   Ditanam saat export dari centang "Mode Presentasi Kelas" (tab Sampul).
+   Berkas ini dipakai INSTRUKTUR buat memaparkan di depan kelas, bukan
+   dikerjakan peserta sendiri di LMS.
+
+   Yang sudah diurus generator (lihat generator.py), JANGAN diulang di sini:
+   TRACK_ACTIVITY, SHOW_RECAP, SHOW_COCREATION, dan HIDE_PROGRESS semuanya
+   sudah dipaksa ke nilai yang benar sebelum berkas ini jadi. Sisanya - yang
+   cuma ada sebagai perilaku runtime - diurus di file ini:
+     - gerbang navigasi         -> navGatesOff()
+     - isi slide muncul bertahap -> presReveal*()
+     - layar penuh, skala, layar hitam/putih, HUD -> pres*() */
+const PRESENTATION = __PRESENTATION_JS__;
 // Baked in at export time from the "Sembunyikan progress belajar" checkbox
 // (Sampul tab) - true for modules that are just one part of a larger
 // series, where showing "100%" on this module alone would be misleading.
@@ -3327,13 +3407,24 @@ function isQuizPassed(sectionId){
   return quizSkorTerbaik(sectionId) >= quizAmbangSoal(sectionId);
 }
 function isQuizAccessible(sectionId){
-  if(devMode) return true;
+  if(navGatesOff()) return true;
   const slidesInSec = NAV.filter(it=>(it.kind==='slide'||it.kind==='hero') && it.section===sectionId);
   return slidesInSec.every(it=>state.visited[itemKey(it)]);
 }
 let devMode = false;
+/* Semua gerbang urutan belajar - kunci antar-bagian, syarat kuis, gerbang
+   knowledge-check, konten Articulate terkunci, peringatan kecepatan baca -
+   mengandaikan SATU ORANG yang mengerjakan modul ini sendirian dan urut.
+   Dua keadaan membatalkan andaian itu, dan dua-duanya lewat sini:
+
+   - devMode   : penyusun lagi memeriksa modulnya sendiri.
+   - PRESENTATION : instruktur lagi memaparkan di kelas. Peserta bertanya soal
+     bagian C waktu layar masih di bagian A adalah hal normal di kelas; kalau
+     gerbangnya tetap hidup, instruktur mentok di "Selesaikan kuis dulu" di
+     depan 40 orang. */
+function navGatesOff(){ return devMode || PRESENTATION; }
 function isSectionUnlocked(sectionIdx){
-  if(devMode) return true;
+  if(navGatesOff()) return true;
   if(sectionIdx<=0) return true;
   return isQuizPassed(SECTIONS[sectionIdx-1].id);
 }
@@ -4521,6 +4612,12 @@ function render(opts){
      dan tombol melayangnya perlu tau slide sekarang jenisnya apa. */
   cocRefreshUi();
 
+  /* Wajib SESUDAH applySlideAudio() di atas: pemutar audio disuntik sebagai
+     anak pertama .slide-frame sesudah innerHTML, jadi kalau langkah cicilan
+     dikumpulkan sebelum itu, pemutarnya kehitung sebagai "blok materi" dan
+     ikut disembunyikan sampai diklik. */
+  presSyncAfterRender();
+
   /* Rekap muncul sendiri sekali begitu peserta sampai di Ringkasan — kalau
      cuma nunggu tombol diklik, yang paling perlu lihat justru yang paling
      mungkin ngelewatin. Sesudah itu tinggal tombol di slide Ringkasan.
@@ -4758,7 +4855,7 @@ function goTo(idx){
      kcContinue() yang manggil ulang goTo(idx) begitu semua udah dijawab.
      Sekali kejawab, kcAllAnsweredForSlide selalu true buat slide itu (nggak
      ngecek benar/salah), jadi popup ini betul-betul cuma sekali per slide. */
-  if(!devMode && cur && cur.kind==='slide' && idx!==currentIdx &&
+  if(!navGatesOff() && cur && cur.kind==='slide' && idx!==currentIdx &&
      SLIDE_KC[cur.num] && !kcAllAnsweredForSlide(cur.num)){
     kcOpenPopup(cur.num, idx);
     return;
@@ -4770,7 +4867,7 @@ function goTo(idx){
      bukan yang dituju, jadi peserta gak bisa kabur lewat menu samping. Balik
      ke slide sebelumnya tetap dibolehin: mundur baca ulang bukan pelanggaran,
      yang dijaga cuma jangan sampai maju melewatinya. */
-  if(!devMode && cur && cur.kind==='slide' && idx > currentIdx){
+  if(!navGatesOff() && cur && cur.kind==='slide' && idx > currentIdx){
     const pending = artPendingOnSlide(cur.num);
     if(pending){
       showLockNotice('Selesaikan dulu "'+pending.nama+'" di slide ini sebelum lanjut.');
@@ -4786,14 +4883,14 @@ function goTo(idx){
   /* Sampul dicek TERPISAH dari slide: section-nya null, jadi dia gak akan
      pernah cocok sama cur.section dan bakal jadi pintu kabur dari halaman
      kuis kalau cuma diandelin ke perbandingan section. */
-  if(!devMode && cur && cur.kind==='quiz' &&
+  if(!navGatesOff() && cur && cur.kind==='quiz' &&
      (target.kind==='hero' || (target.kind==='slide' && target.section===cur.section))){
     showLockNotice('Kamu sedang mengerjakan kuis. Selesaikan dulu sebelum balik ke materi.');
     return;
   }
   if(target.kind==='summary'){
     const lastSec = SECTIONS[SECTIONS.length-1];
-    if(!devMode && !isQuizPassed(lastSec.id)){
+    if(!navGatesOff() && !isQuizPassed(lastSec.id)){
       showLockNotice(`Selesaikan kuis "${lastSec.short}" dengan nilai sempurna dulu untuk melihat ringkasan akhir.`);
       return;
     }
@@ -4811,7 +4908,7 @@ function goTo(idx){
        nyala (slideRushed cuma keisi lewat actCloseSlide yang no-op total
        kalau tracking mati, jadi gak perlu cek TRACK_READY eksplisit di
        sini). devMode dilewatin, sama kayak gerbang lain di atas. */
-    if(target.kind==='quiz' && !devMode){
+    if(target.kind==='quiz' && !navGatesOff()){
       /* Slide yang lagi ditinggal ini dinilai DULU - kalau nggak, dia baru
          kehitung di actCloseSlide() yang jalannya sesudah gerbang ini. */
       actSyncRushedNow();
@@ -4826,12 +4923,27 @@ function goTo(idx){
   // langsung pindah slide) tetap kekirim progres terakhirnya di sini, bukan
   // hilang diam-diam pas viewport-nya diganti kontennya.
   videoFlushAll();
+  /* Satu aturan buat cicilan blok, berlaku juga buat lompatan dari menu
+     samping: MAJU = slide dibuka kosong lalu dibangun blok demi blok; MUNDUR =
+     slide dibuka utuh, karena balik ke belakang artinya mau merujuk isinya
+     (peserta nanya soal yang tadi), bukan mau memaparkannya ulang dari nol. */
+  presEnterAll = (idx < currentIdx);
   currentIdx = idx;
   render();
   if(window.innerWidth<=900) closeSidebar();
 }
-function goNext(){ if(currentIdx<NAV.length-1) goTo(currentIdx+1); }
-function goPrev(){ if(currentIdx>0) goTo(currentIdx-1); }
+/* Di mode presentasi, satu klik remote memunculkan blok berikutnya dulu;
+   slide baru pindah kalau blok di slide ini sudah habis. presNextStep/
+   presPrevStep selalu false kalau PRESENTATION mati, jadi modul peserta
+   biasa tetap satu-klik-satu-slide persis seperti sebelumnya. */
+function goNext(){
+  if(presNextStep()) return;
+  if(currentIdx<NAV.length-1) goTo(currentIdx+1);
+}
+function goPrev(){
+  if(presPrevStep()) return;
+  if(currentIdx>0) goTo(currentIdx-1);
+}
 
 /* ---------------- Peringatan kecepatan baca ----------------
    Muncul sekali (SEKALI TAMPIL, bukan sekali "peserta pilih Yakin") sebelum
@@ -5309,6 +5421,219 @@ function updateTopbarProgress(){
 function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('overlay').classList.add('show'); }
 function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); }
 
+/* ================= MODE PRESENTASI KELAS =================
+   Seluruh bagian ini no-op total kalau PRESENTATION mati - tiap fungsi pintu
+   masuknya nge-return duluan, dan HUD-nya gak pernah dibikin. Modul peserta
+   biasa jalan persis seperti sebelum fitur ini ada. */
+
+/* ---- 1. Isi slide muncul bertahap ----
+   Blok tingkat atas slide dimunculkan satu per satu tiap klik remote, bukan
+   sekaligus. Ini inti yang bikin paparan hidup: peserta gak membaca
+   mendahului penjelasan instruktur.
+
+   Langkahnya dikumpulkan RUNTIME dari DOM, bukan ditandai generator waktu
+   render. Sengaja: menyuntikkan atribut ke tag terluar tiap blok berarti
+   bedah-string ke HTML yang sudah jadi, dan itu gampang merusak blok yang
+   bentuknya gak seragam (float gambar, tabel, accordion). Membaca
+   frame.children sesudah slide-nya terpasang jauh lebih aman dan gak
+   menyentuh generator sama sekali. */
+
+/* Yang BUKAN "isi", jadi selalu kelihatan begitu slide dibuka: dekorasi
+   grafis, kicker nomor, judul, subjudul, pemutar audio yang disuntik
+   applySlideAudio() sesudah innerHTML, dan penutup float di ujung. */
+const PRES_ALWAYS = '.g-deco-behind,.kicker,.slide-title,.slide-sub,.slide-audio,.img-clear';
+
+let presSteps = [];        // elemen blok di slide sekarang
+let presShown = 0;         // berapa yang sudah dimunculkan
+let presLastKey = null;    // buat bedain pindah slide vs render ulang slide yang sama
+let presEnterAll = false;  // diisi goTo(): slide berikutnya dibuka utuh
+
+function presCollectSteps(){
+  presSteps = [];
+  presShown = 0;
+  const item = NAV[currentIdx];
+  // Sampul, kuis, dan ringkasan tampil utuh - gak ada "blok materi" buat
+  // dicicil, dan kuis yang muncul separo malah bikin bingung.
+  if(!item || item.kind !== 'slide') return;
+  const frame = document.querySelector('#viewport .slide-frame');
+  if(!frame) return;
+  presSteps = Array.prototype.filter.call(frame.children, el => !el.matches(PRES_ALWAYS));
+}
+
+function presApply(){
+  presSteps.forEach((el,i)=>{ el.classList.toggle('pres-hidden', i >= presShown); });
+  presUpdateHud();
+}
+
+/* Dipanggil di ujung render(). Menjaga dua hal sekaligus:
+   - render ulang slide yang SAMA (mis. accordion dibuka, jawaban kuis
+     dicatat - render({preserveScroll:true})) gak boleh mengatupkan balik blok
+     yang sudah instruktur munculkan;
+   - pindah slide MUNDUR membuka slide utuh, karena balik ke slide sebelumnya
+     artinya mau merujuk isinya, bukan mau membangunnya ulang dari nol. */
+function presSyncAfterRender(){
+  if(!PRESENTATION) return;
+  const item = NAV[currentIdx];
+  const key = item ? itemKey(item) : null;
+  const sameSlide = (key === presLastKey);
+  const prevShown = presShown;
+  presCollectSteps();
+  if(sameSlide)        presShown = Math.min(prevShown, presSteps.length);
+  else if(presEnterAll) presShown = presSteps.length;
+  presLastKey = key;
+  presEnterAll = false;
+  presApply();
+}
+
+/* true = klik ini dipakai buat memunculkan blok berikutnya, JANGAN pindah
+   slide. Dipakai goNext()/goPrev() sebagai gerbang. */
+function presNextStep(){
+  if(!PRESENTATION || presShown >= presSteps.length) return false;
+  const el = presSteps[presShown];
+  presShown++;
+  presApply();
+  /* Blok yang baru muncul dibawa ke layar. Di slide panjang dia bisa lahir di
+     bawah garis lipat, dan instruktur bakal ngira kliknya gak ngefek. */
+  if(el){
+    el.classList.add('pres-in');
+    setTimeout(()=>el.classList.remove('pres-in'), 400);
+    try{ el.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(_){ }
+  }
+  return true;
+}
+function presPrevStep(){
+  if(!PRESENTATION || presShown <= 0) return false;
+  presShown--;
+  presApply();
+  return true;
+}
+
+/* ---- 2. Layar hitam / putih (B / W) ---- */
+let presBlank = null;   // null | 'black' | 'white'
+function presSetBlank(mode){
+  if(!PRESENTATION) return;
+  presBlank = (presBlank === mode) ? null : mode;   // tekan tombol yang sama = balik
+  let el = document.getElementById('pres-blank');
+  if(!presBlank){ if(el) el.remove(); return; }
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'pres-blank';
+    /* Diklik = balik ke materi. Instruktur yang lupa tombolnya gak perlu
+       panik di depan kelas. */
+    el.onclick = ()=>presSetBlank(presBlank);
+    document.body.appendChild(el);
+  }
+  el.classList.toggle('is-white', presBlank === 'white');
+}
+
+/* ---- 3. Skala tampilan buat proyektor ----
+   Disimpan di localStorage: ukuran yang pas itu sifat RUANGAN (jarak bangku
+   ke layar), bukan sifat modul - sekali disetel di kelas itu, semua modul
+   berikutnya kebuka dengan ukuran yang sama. */
+const PRES_ZOOMS = [1, 1.15, 1.3, 1.5, 1.75];
+const PRES_ZOOM_LS = 'presZoom';
+let presZoomIdx = 0;
+function presApplyZoom(){
+  const vp = document.getElementById('viewport');
+  if(vp) vp.style.setProperty('--pres-zoom', PRES_ZOOMS[presZoomIdx]);
+  presUpdateHud();
+}
+function presZoom(delta){
+  if(!PRESENTATION) return;
+  presZoomIdx = Math.max(0, Math.min(PRES_ZOOMS.length-1, presZoomIdx + delta));
+  try{ localStorage.setItem(PRES_ZOOM_LS, String(presZoomIdx)); }catch(_){ }
+  presApplyZoom();
+}
+
+/* ---- 4. Layar penuh ---- */
+function presFullscreen(){
+  try{
+    if(document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  }catch(_){ }
+}
+
+/* ---- 5. HUD instruktur + daftar tombol ---- */
+function presUpdateHud(){
+  const pos = document.getElementById('pres-pos');
+  if(!pos) return;
+  const item = NAV[currentIdx];
+  let txt = (currentIdx+1) + '/' + NAV.length;
+  // Penanda cicilan cuma muncul kalau slide ini memang punya blok buat dicicil.
+  if(item && item.kind==='slide' && presSteps.length) txt += '  ·  ' + presShown + '/' + presSteps.length;
+  pos.textContent = txt;
+  const z = document.getElementById('pres-zoomlbl');
+  if(z) z.textContent = Math.round(PRES_ZOOMS[presZoomIdx]*100) + '%';
+}
+
+let presHudTimer = null;
+function presWakeHud(){
+  const hud = document.getElementById('pres-hud');
+  if(!hud) return;
+  hud.classList.add('is-awake');
+  clearTimeout(presHudTimer);
+  presHudTimer = setTimeout(()=>hud.classList.remove('is-awake'), 2200);
+}
+
+function presToggleHelp(){
+  const open = document.getElementById('pres-help');
+  if(open){ open.remove(); return; }
+  const row = (k,d)=>'<dt>'+k+'</dt><dd>'+d+'</dd>';
+  const el = document.createElement('div');
+  el.id = 'pres-help';
+  el.onclick = ()=>el.remove();
+  el.innerHTML =
+    '<div id="pres-help-card">' +
+      '<h3>Tombol saat memaparkan</h3>' +
+      '<dl>' +
+      row('<kbd>→</kbd> <kbd>PgDn</kbd> <kbd>Space</kbd>', 'Munculkan blok berikutnya, lalu pindah slide') +
+      row('<kbd>←</kbd> <kbd>PgUp</kbd> <kbd>⌫</kbd>', 'Mundur satu blok, lalu slide sebelumnya') +
+      row('<kbd>F</kbd>', 'Layar penuh') +
+      row('<kbd>B</kbd>', 'Layar hitam — perhatian balik ke kamu') +
+      row('<kbd>W</kbd>', 'Layar putih') +
+      row('<kbd>+</kbd> <kbd>−</kbd>', 'Besarkan / kecilkan tampilan') +
+      row('<kbd>0</kbd>', 'Balikkan ukuran ke 100%') +
+      row('<kbd>H</kbd>', 'Sembunyikan panel pojok') +
+      row('<kbd>?</kbd>', 'Buka/tutup daftar ini') +
+      '</dl>' +
+      '<p id="pres-help-hint">Klik di mana saja untuk menutup. Remote presenter yang mengirim Page Up/Down, Space, atau panah sudah otomatis jalan.</p>' +
+    '</div>';
+  document.body.appendChild(el);
+}
+
+function presBuildHud(){
+  const hud = document.createElement('div');
+  hud.id = 'pres-hud';
+  hud.innerHTML =
+    '<button type="button" title="Layar penuh (F)" aria-label="Layar penuh">⛶</button>' +
+    '<button type="button" title="Kecilkan (−)" aria-label="Kecilkan">A−</button>' +
+    '<span id="pres-zoomlbl" style="opacity:.7;min-width:34px;text-align:center"></span>' +
+    '<button type="button" title="Besarkan (+)" aria-label="Besarkan">A+</button>' +
+    '<button type="button" title="Layar hitam (B)" aria-label="Layar hitam">◐</button>' +
+    '<span id="pres-pos"></span>' +
+    '<button type="button" title="Daftar tombol (?)" aria-label="Daftar tombol">?</button>';
+  const b = hud.querySelectorAll('button');
+  b[0].onclick = presFullscreen;
+  b[1].onclick = ()=>presZoom(-1);
+  b[2].onclick = ()=>presZoom(1);
+  b[3].onclick = ()=>presSetBlank('black');
+  b[4].onclick = presToggleHelp;
+  document.body.appendChild(hud);
+}
+
+/* Dipanggil dari INIT. Satu-satunya pintu masuk mode presentasi. */
+function presInit(){
+  if(!PRESENTATION) return;
+  document.body.classList.add('pres-on');
+  try{
+    const saved = parseInt(localStorage.getItem(PRES_ZOOM_LS), 10);
+    if(!isNaN(saved)) presZoomIdx = Math.max(0, Math.min(PRES_ZOOMS.length-1, saved));
+  }catch(_){ }
+  presBuildHud();
+  presApplyZoom();
+  presWakeHud();
+}
+
 /* ---------------- Keyboard nav ---------------- */
 /* Selain panah kiri/kanan, kita juga dengar tombol yang dikirim clicker /
    remote presenter waktu modul ditayangkan klasikal di kelas. Tiga konvensi
@@ -5329,6 +5654,34 @@ function kbNavTargetIsEditable(t){
 document.addEventListener('keydown', e=>{
   if(e.ctrlKey || e.altKey || e.metaKey) return;
   if(kbNavTargetIsEditable(e.target)) return;
+
+  /* Tombol khusus instruktur. Dicek SEBELUM navigasi supaya huruf-huruf ini
+     gak bocor jadi apa-apa di modul peserta biasa (PRESENTATION mati =
+     seluruh blok ini dilewat dan B/W/F cuma huruf biasa). */
+  if(PRESENTATION){
+    switch(e.key){
+      case 'f': case 'F': e.preventDefault(); presFullscreen(); return;
+      case 'b': case 'B': e.preventDefault(); presSetBlank('black'); return;
+      case 'w': case 'W': e.preventDefault(); presSetBlank('white'); return;
+      case '?': e.preventDefault(); presToggleHelp(); return;
+      case 'h': case 'H':
+        e.preventDefault(); document.body.classList.toggle('pres-hud-off'); return;
+      case '+': case '=': e.preventDefault(); presZoom(1); presWakeHud(); return;
+      case '-': case '_': e.preventDefault(); presZoom(-1); presWakeHud(); return;
+      case '0':
+        e.preventDefault(); presZoomIdx = 0;
+        try{ localStorage.setItem(PRES_ZOOM_LS, '0'); }catch(_){ }
+        presApplyZoom(); presWakeHud(); return;
+      case 'Escape':
+        if(presBlank){ e.preventDefault(); presSetBlank(presBlank); return; }
+        break;
+    }
+    /* Layar lagi dihitamkan buat diskusi: telan SEMUA tombol navigasi. Kalau
+       nggak, satu pencetan remote yang gak sengaja bikin slide maju diam-diam
+       di balik layar hitam, dan materinya sudah ganti waktu layarnya dibuka. */
+    if(presBlank) return;
+  }
+
   let dir = 0;
   switch(e.key){
     case 'ArrowRight': case 'PageDown': dir = 1; break;
@@ -5339,6 +5692,7 @@ document.addEventListener('keydown', e=>{
   }
   e.preventDefault();
   if(dir > 0) goNext(); else goPrev();
+  if(PRESENTATION) presWakeHud();
 });
 
 /* ============================= INIT ============================= */
@@ -5357,6 +5711,10 @@ if(SHOW_COCREATION){
   }
 }
 applyProgressVisibility();
+/* WAJIB sebelum render() pertama di ujung INIT: presInit() yang memasang
+   body.pres-on, dan tanpa kelas itu aturan .pres-hidden gak berlaku - slide
+   pertama bakal terlanjur tampil utuh sebelum cicilannya sempat jalan. */
+presInit();
 /* Kalau ada blok embed Instagram, muat embed.js SEKALI dari sini (bukan dari
    dalam blok — <script> yang disuntik lewat innerHTML gak pernah jalan).
    render() lalu manggil window.instgrm.Embeds.process() tiap kali slide
