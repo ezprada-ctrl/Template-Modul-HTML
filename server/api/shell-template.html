@@ -5996,8 +5996,16 @@ const DEMO_ABORT = { abort: true };
 let demoRunId = 0;        // naik tiap mulai/berhenti; yang basi dibatalkan
 let demoRunning = false;
 let demoIdleTimer = null;
+/* Langkah yang bakal dijalankan berikutnya. Diingat waktu pengunjung
+   mengambil alih supaya demo MELANJUTKAN, bukan mengulang dari sampul -
+   kalau interupsinya terjadi di langkah ke-15, mengulang dari nol berarti
+   menit-menitan sebelum kembali ke titik yang tadi. Aman dilanjutkan dari
+   mana pun karena tiap entri DEMO_ACTIONS memposisikan dirinya sendiri
+   (goTo + presRevealAll di awal langkah), jadi tidak peduli pengunjung
+   meninggalkan modul di slide mana. Balik ke 0 cuma di ujung putaran penuh. */
+let demoStepIdx = 0;
 
-const DEMO_IDLE_RESUME_MS = 30000;  // diam segini lama -> demo jalan lagi
+const DEMO_IDLE_RESUME_MS = 45000;  // diam segini lama -> demo jalan lagi
 const DEMO_HOLD  = 3200;            // caption dibaca sekitar segini
 const DEMO_MOVE  = 600;             // sejalan dengan transition #demo-cursor
 const DEMO_AFTER = 900;             // jeda sesudah satu klik
@@ -6409,6 +6417,32 @@ const DEMO_ACTIONS = {
     presZoom(1); await D.sleep(2200);
     presZoom(-2); await D.sleep(900);
   },
+
+  /* Langkah penutup. Diklik BETULAN lewat tombol topbar-nya (bukan
+     applyTheme langsung) supaya yang dipamerkan persis jalur yang dipakai
+     pengunjung nanti - termasuk ikon tombolnya yang ikut berganti.
+     Selalu balik ke terang sebelum langkah ini selesai: putaran berikutnya
+     harus mulai dari tampilan yang sama, dan pengunjung yang mengambil alih
+     tepat sesudahnya tidak mewarisi tema yang bukan pilihannya. */
+  'theme': async (D, cap) => {
+    const btn = document.getElementById('theme-toggle');
+    if(!btn) return false;
+    /* Preferensi TERSIMPAN, bukan tema yang lagi tampil: kalau pengunjung
+       belum pernah memilih, nilainya kosong = ikut tema OS. Mengembalikan
+       lewat klik kedua saja akan meninggalkan pilihan eksplisit yang bukan
+       miliknya. */
+    let semula = null;
+    try{ semula = localStorage.getItem(THEME_KEY); }catch(_){ }
+    await D.say(cap, 0);
+    await D.click(btn);
+    await D.sleep(2600);
+    await D.click(btn);
+    try{
+      if(semula === null) localStorage.removeItem(THEME_KEY); else localStorage.setItem(THEME_KEY, semula);
+      applyTheme(semula || '');
+    }catch(_){ }
+    demoLogEvent('interaksi', 'Tema ditukar · gelap → terang');
+  },
 };
 
 /* ---- Perkakas layar demo ---- */
@@ -6452,10 +6486,16 @@ async function presDemoLoop(){
   const id = demoRunId;
   try{
     while(id === demoRunId){
-      demoEvents = [];
+      /* Cuma di awal putaran penuh. Melanjutkan dari tengah harus MEMBAWA
+         umpan aktivitas yang sudah terkumpul - panel 'activity' menayangkan
+         jejak putaran ini, dan mengosongkannya bikin panelnya tampil bolong
+         persis sesudah pengunjung menyentuh layar. */
+      if(demoStepIdx === 0) demoEvents = [];
       const D = demoCtx(id);
-      for(const langkah of DEMO_STEPS_DATA){
+      for(let i = demoStepIdx; i < DEMO_STEPS_DATA.length; i++){
         if(id !== demoRunId) return;
+        demoStepIdx = i;
+        const langkah = DEMO_STEPS_DATA[i];
         const aksi = DEMO_ACTIONS[langkah.id];
         if(!aksi) continue;                  // id tanpa aksi: dilewati diam-diam
         try{
@@ -6473,6 +6513,7 @@ async function presDemoLoop(){
          sampul. Tanpa reset, putaran kedua tampil beda dari yang pertama -
          kuis sudah terjawab, slide sudah "dikunjungi", gerbang sudah terbuka. */
       demoCleanup();
+      demoStepIdx = 0;
       try{ localStorage.removeItem(STORAGE_KEY); }catch(_){ }
       location.reload();
       return;
@@ -6498,6 +6539,15 @@ function presDemoPause(){
   demoRunning = false;
   document.body.classList.add('demo-paused');
   demoCleanup();
+  demoArmIdle();
+}
+
+/* Hitung mundur menuju "demo jalan lagi". Dipanggil ulang di TIAP sentuhan
+   manusia, bukan cuma di sentuhan pertama: kalau cuma sekali, ambangnya
+   berarti "45 detik sejak mulai mencoba", jadi pengunjung yang asyik
+   mengklik bakal direbut kursornya di tengah dia mencoba - persis kebalikan
+   dari yang diinginkan di booth. */
+function demoArmIdle(){
   clearTimeout(demoIdleTimer);
   demoIdleTimer = setTimeout(presDemoStart, DEMO_IDLE_RESUME_MS);
 }
@@ -6509,7 +6559,11 @@ function presDemoInit(){
   /* Klik/tombol dari MANUSIA menjeda demo - tapi klik yang dikirim mesin demo
      sendiri (el.click()) juga sampai ke sini. Yang membedakan: event buatan
      script punya isTrusted=false. */
-  const jeda = (e)=>{ if(e.isTrusted && demoRunning) presDemoPause(); };
+  const jeda = (e)=>{
+    if(!e.isTrusted) return;
+    if(demoRunning) presDemoPause();
+    else demoArmIdle();   // sudah dijeda: tiap sentuhan menunda demo lagi
+  };
   ['pointerdown','keydown','wheel','touchstart'].forEach(n=>{
     window.addEventListener(n, jeda, { passive: true, capture: true });
   });

@@ -200,6 +200,21 @@ export const DEMO_STEPS: DemoStep[] = [
     defaultCaption: 'Ukuran teks dinaikkan agar terbaca dari belakang ruang kelas.',
     applies: always,
   },
+  // Ditaruh PALING AKHIR dengan sengaja: menukar tema di tengah putaran bikin
+  // booth berkedip gelap-terang di sela fitur materi. Di ujung, dia terbaca
+  // sebagai penutup - dan aksinya mengembalikan tema ke terang sebelum
+  // putaran berikutnya, jadi tiap putaran mulai dari tampilan yang sama.
+  {
+    id: 'theme',
+    label: 'Tema terang / gelap',
+    // Tombolnya ada di topbar tiap modul, bukan fitur opsional - jadi tidak
+    // ada syarat isi yang perlu diperiksa.
+    // Arah tukarnya tergantung tema perangkat booth (tanpa pilihan eksplisit
+    // modul ikut OS), jadi captionnya sengaja tidak menyebut "ke gelap" -
+    // di layar yang sudah gelap kalimat itu berlawanan dengan yang terlihat.
+    defaultCaption: 'Satu klik menukar tema terang ↔ gelap — nyaman dibaca di ruang redup maupun ruang terang.',
+    applies: always,
+  },
 ];
 
 /** Langkah yang BERLAKU buat modul ini, urut, caption sudah final
