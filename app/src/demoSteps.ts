@@ -11,7 +11,7 @@ import type { Block, ModuleData } from './types';
                   yang berubah bikin suntingannya yatim (jatuh balik ke
                   caption bawaan tanpa peringatan).
      - caption  : kalimat bawaan yang tampil di layar. Penyusun boleh
-                  menimpanya lewat editor di tab Sampul; yang disimpan cuma
+                  menimpanya lewat editor di tab Tema; yang disimpan cuma
                   yang DIUBAH (lihat resolveDemoSteps).
      - applies  : fitur ini ada nggak di modulnya. Langkah yang gak berlaku
                   dibuang sebelum ditanam, jadi demo gak pernah menunjuk

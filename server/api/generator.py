@@ -1536,7 +1536,7 @@ def generate_html(module):
     hide_progress = bool(module.get('hideProgress', False)) or presentation
     out = out.replace('__HIDE_PROGRESS_JS__', js_str(hide_progress))
 
-    # Activity recording (opt-in per module via the Sampul tab). The anon key
+    # Activity recording (opt-in per module via the Tema tab). The anon key
     # is deliberately baked into the exported HTML: the module is a static
     # file running inside an LMS with no backend of its own, so it writes to
     # Supabase directly. That's safe *only* because RLS grants anon

@@ -111,7 +111,7 @@ export default function QuizBuilder({ module, setModule }: Props) {
         }}>
           <span style={{ fontSize: 14, lineHeight: 1.4 }}>⚠</span>
           <span style={{ fontSize: 12.5, lineHeight: 1.5, color: 'var(--text-dim)' }}>
-            Progress belajar aktif (gak dicentang "Sembunyikan progress belajar" di tab Sampul), tapi{' '}
+            Progress belajar aktif (gak dicentang "Sembunyikan progress belajar" di tab Tema), tapi{' '}
             <b style={{ color: 'var(--text)' }}>{sectionsWithoutQuiz.map(s => s.short).join(', ')}</b>{' '}
             belum ada kuisnya. Section tanpa kuis otomatis dianggap "lulus", jadi persentase progress bisa
             kelihatan lebih tinggi dari yang sebenarnya udah dipelajari peserta.

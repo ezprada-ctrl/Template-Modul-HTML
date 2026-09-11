@@ -2753,7 +2753,7 @@ function saveState(){
 const NAV = __NAV_JS__;
 
 /* ---------------- Mode Presentasi Kelas ----------------
-   Ditanam saat export dari centang "Mode Presentasi Kelas" (tab Sampul).
+   Ditanam saat export dari centang "Mode Presentasi Kelas" (tab Tema).
    Berkas ini dipakai INSTRUKTUR buat memaparkan di depan kelas, bukan
    dikerjakan peserta sendiri di LMS.
 
@@ -2780,7 +2780,7 @@ const PRESENTATION = __PRESENTATION_JS__;
 const DEMO = __DEMO_JS__;
 const DEMO_STEPS_DATA = __DEMO_STEPS_JS__;
 // Baked in at export time from the "Sembunyikan progress belajar" checkbox
-// (Sampul tab) - true for modules that are just one part of a larger
+// (Tema tab) - true for modules that are just one part of a larger
 // series, where showing "100%" on this module alone would be misleading.
 const HIDE_PROGRESS = __HIDE_PROGRESS_JS__;
 // Dev-mode-only local override so an author can preview what
@@ -2804,7 +2804,7 @@ function toggleHideProgressPreview(){
 }
 
 /* ==================== REKAM AKTIVITAS PESERTA (opsional) ====================
-   Aktif cuma kalau "Rekam aktivitas peserta" dicentang di tab Sampul waktu
+   Aktif cuma kalau "Rekam aktivitas peserta" dicentang di tab Tema waktu
    modul ini di-generate. Kalau mati, TIDAK ADA satu byte pun yang dikirim
    keluar — semua kode di bawah jadi no-op.
 
@@ -3605,7 +3605,7 @@ function runTrackCheck(){
 
   if(!TRACK_ACTIVITY){
     box.innerHTML = html + tcRow('Kesimpulan', 'TIDAK MEREKAM', 'tc-bad') +
-      '<div style="margin-top:6px;color:var(--rose-ink)">Centang “Rekam aktivitas peserta” di tab Sampul, lalu export ulang.</div>';
+      '<div style="margin-top:6px;color:var(--rose-ink)">Centang “Rekam aktivitas peserta” di tab Tema, lalu export ulang.</div>';
     return;
   }
   if(!punyaKredensial){
