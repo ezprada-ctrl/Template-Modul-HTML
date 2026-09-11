@@ -1618,6 +1618,60 @@ body.pres-hud-off #pres-hud{display:none;}
   font:600 11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text);
   background:var(--surface-2);border:1px solid var(--border-strong);}
 #pres-help-hint{margin:16px 0 0;font-size:12px;color:var(--text-faint);text-align:center;line-height:1.5;}
+
+/* --- Kisi semua slide (tekan O) ---
+   Buat menjawab "balik ke yang tadi dong" tanpa mengklik Selanjutnya 20 kali
+   di depan kelas. Menutup seluruh layar SENGAJA: ini alat pindah, bukan
+   panel sampingan - yang dicari instruktur adalah satu slide dari enam
+   puluh, dan itu butuh ruang. */
+#pres-grid{position:fixed;inset:0;z-index:99997;display:flex;flex-direction:column;
+  background:var(--bg);}
+#pres-grid-head{flex:0 0 auto;display:flex;align-items:baseline;gap:12px;
+  padding:16px 22px 12px;border-bottom:1px solid var(--border);}
+#pres-grid-head b{font-size:16px;font-weight:800;color:var(--text);}
+#pres-grid-head span{font-size:12px;color:var(--text-faint);}
+#pres-grid-wrap{flex:1 1 auto;overflow-y:auto;padding:16px 22px 26px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;align-content:start;}
+.pg-card{all:unset;cursor:pointer;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;
+  padding:10px 12px;min-height:76px;border-radius:var(--radius-md);
+  background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--border-strong);}
+.pg-card:hover{background:var(--surface-hover);}
+/* Pilihan papan-ketik dan posisi sekarang dibedakan: yang satu "kursor lagi
+   di sini", yang satu "layar lagi menampilkan ini". Sering beda tempat. */
+.pg-card.is-sel{outline:2px solid var(--accent);outline-offset:1px;}
+.pg-card.is-now{background:var(--accent-soft);}
+.pg-num{font:700 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-faint);
+  font-variant-numeric:tabular-nums;}
+.pg-title{font-size:13px;font-weight:600;line-height:1.35;color:var(--text);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.pg-sec{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint);margin-top:auto;}
+
+/* --- Timer diskusi (tekan T) ---
+   Ditaruh di BAWAH-tengah, bukan tengah layar: instruksi tugasnya ada di
+   badan slide, dan timer yang menutupinya bikin peserta kehilangan apa yang
+   harus didiskusikan. Angkanya tetap besar biar kebaca dari bangku belakang. */
+/* bottom-nya DI ATAS baris HUD (HUD: bottom 96px, tinggi ~34px), bukan
+   sejajar dengannya. Timer ini di tengah dan HUD di kanan, jadi di layar
+   lebar mereka kelihatan gak bakal ketemu - tapi begitu jendelanya menyempit
+   ke sekitar 900px, kotak timer melebar melewati pangkal HUD dan keduanya
+   saling menimpa. */
+#pres-timer{position:fixed;left:50%;transform:translateX(-50%);bottom:146px;z-index:9997;
+  display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 26px 10px;
+  border-radius:var(--radius-lg);background:rgba(17,17,20,.88);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 44px -14px rgba(0,0,0,.6);}
+#pres-timer-digits{font:800 clamp(40px,6.5vw,84px)/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#fff;font-variant-numeric:tabular-nums;letter-spacing:.02em;}
+#pres-timer.is-done #pres-timer-digits{color:#ff6b6b;animation:presTimerDone 1s steps(1) infinite;}
+@keyframes presTimerDone{50%{opacity:.25;}}
+#pres-timer-ctl{display:flex;align-items:center;gap:4px;}
+#pres-timer-ctl button{all:unset;cursor:pointer;padding:4px 9px;border-radius:999px;
+  font-size:12px;font-weight:600;color:#fff;opacity:.75;}
+#pres-timer-ctl button:hover{background:rgba(255,255,255,.16);opacity:1;}
+#pres-timer-ctl button.is-on{background:rgba(255,255,255,.2);opacity:1;}
+#pres-timer-ctl .sep{width:1px;height:16px;background:rgba(255,255,255,.2);margin:0 4px;}
+@media (prefers-reduced-motion:reduce){
+  #pres-timer.is-done #pres-timer-digits{animation:none;}
+}
 </style>
 </head>
 <body>
@@ -3768,22 +3822,29 @@ function updateProgress(){
 }
 
 /* ============================= RENDER MAIN ============================= */
+/* Nama satu item NAV, apa pun jenisnya. Dipakai bareng oleh crumb di topbar
+   dan kisi slide mode presentasi - kalau masing-masing bikin penamaan
+   sendiri, cepat atau lambat keduanya menyimpang dan satu slide punya dua
+   nama beda di dua tempat. */
+function navLabel(item){
+  if(!item) return '';
+  if(item.kind==='summary') return 'Ringkasan Akhir';
+  if(item.kind==='hero')    return 'Sampul';
+  if(item.kind==='quiz')    return 'Kuis Section';
+  return SLIDE_TITLES[item.num] || '';
+}
+
 function renderCrumb(item){
   const sec = SECTIONS.find(s=>s.id===item.section);
   const crumb = document.getElementById('crumb');
-  if(item.kind==='summary'){
-    crumb.innerHTML = `<b>Ringkasan Akhir</b>`;
+  if(item.kind==='summary' || item.kind==='hero'){
+    /* Sampul & Ringkasan gak berada di section mana pun, jadi gak ada induk
+       yang bisa ditulis di depannya - `<span></span> / <b>Sampul</b>` cuma
+       ninggalin garis miring menggantung. */
+    crumb.innerHTML = `<b>${navLabel(item)}</b>`;
     return;
   }
-  /* Sampul gak berada di section mana pun, jadi gak ada induk yang bisa
-     ditulis di depannya - `<span></span> / <b>Sampul</b>` cuma ninggalin
-     garis miring menggantung. */
-  if(item.kind==='hero'){
-    crumb.innerHTML = `<b>Sampul</b>`;
-    return;
-  }
-  const label = item.kind==='quiz' ? 'Kuis Section' : SLIDE_TITLES[item.num];
-  crumb.innerHTML = `<span>${sec?sec.title:''}</span><span class="sep">/</span><b>${label}</b>`;
+  crumb.innerHTML = `<span>${sec?sec.title:''}</span><span class="sep">/</span><b>${navLabel(item)}</b>`;
 }
 
 function renderHero(){
@@ -5588,6 +5649,8 @@ function presToggleHelp(){
       '<dl>' +
       row('<kbd>→</kbd> <kbd>PgDn</kbd> <kbd>Space</kbd>', 'Munculkan blok berikutnya, lalu pindah slide') +
       row('<kbd>←</kbd> <kbd>PgUp</kbd> <kbd>⌫</kbd>', 'Mundur satu blok, lalu slide sebelumnya') +
+      row('<kbd>O</kbd>', 'Kisi semua slide — lompat ke mana saja') +
+      row('<kbd>T</kbd>', 'Timer diskusi kelompok') +
       row('<kbd>F</kbd>', 'Layar penuh') +
       row('<kbd>B</kbd>', 'Layar hitam — perhatian balik ke kamu') +
       row('<kbd>W</kbd>', 'Layar putih') +
@@ -5601,6 +5664,188 @@ function presToggleHelp(){
   document.body.appendChild(el);
 }
 
+/* ---- 6. Kisi semua slide (O) ----
+   Menjawab "balik ke yang tadi dong" dalam satu lompatan, bukan 20 klik
+   Selanjutnya di depan kelas. */
+let presGridSel = 0;
+
+function presGridIsOpen(){ return !!document.getElementById('pres-grid'); }
+
+function presGridClose(){
+  const el = document.getElementById('pres-grid');
+  if(el) el.remove();
+}
+
+function presGridOpen(){
+  if(!PRESENTATION || presGridIsOpen()) return;
+  presGridSel = currentIdx;
+
+  const el = document.createElement('div');
+  el.id = 'pres-grid';
+  const head = document.createElement('div');
+  head.id = 'pres-grid-head';
+  head.innerHTML = '<b>Semua Slide</b><span>Panah buat pilih · Enter buat lompat · O atau Esc buat tutup</span>';
+  const wrap = document.createElement('div');
+  wrap.id = 'pres-grid-wrap';
+
+  NAV.forEach((item, i)=>{
+    const sec = SECTIONS.find(s=>s.id===item.section);
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'pg-card' + (i===currentIdx ? ' is-now' : '');
+    card.dataset.idx = i;
+    if(sec && sec.color) card.style.borderLeftColor = sec.color;
+
+    const num = document.createElement('div');
+    num.className = 'pg-num';
+    num.textContent = (i+1) + '/' + NAV.length;
+
+    /* textContent, BUKAN innerHTML: SLIDE_TITLES ditanam generator apa
+       adanya (js_str tanpa esc()), jadi judul yang mengandung < atau &
+       bakal kebaca sebagai markup kalau disuntik sebagai HTML. */
+    const title = document.createElement('div');
+    title.className = 'pg-title';
+    title.textContent = navLabel(item);
+
+    const secl = document.createElement('div');
+    secl.className = 'pg-sec';
+    secl.textContent = sec ? (sec.short || sec.title) : ' ';
+
+    card.appendChild(num); card.appendChild(title); card.appendChild(secl);
+    card.onclick = ()=>{ presGridClose(); goTo(i); };
+    wrap.appendChild(card);
+  });
+
+  el.appendChild(head); el.appendChild(wrap);
+  document.body.appendChild(el);
+  presGridPaint();
+}
+
+function presGridPaint(){
+  const wrap = document.getElementById('pres-grid-wrap');
+  if(!wrap) return;
+  const cards = wrap.children;
+  for(let i=0;i<cards.length;i++) cards[i].classList.toggle('is-sel', i===presGridSel);
+  const sel = cards[presGridSel];
+  if(sel) try{ sel.scrollIntoView({block:'nearest'}); }catch(_){ }
+}
+
+/* Jumlah kolom dibaca dari grid yang SUDAH dihitung browser, bukan ditebak:
+   kolomnya auto-fill dan berubah ikut lebar layar/proyektor, jadi angka
+   tetap apa pun bakal salah di sebagian resolusi. */
+function presGridCols(){
+  const wrap = document.getElementById('pres-grid-wrap');
+  if(!wrap) return 1;
+  const t = getComputedStyle(wrap).gridTemplateColumns;
+  return Math.max(1, t ? t.split(' ').filter(Boolean).length : 1);
+}
+
+function presGridMove(d){
+  const n = NAV.length;
+  presGridSel = Math.max(0, Math.min(n-1, presGridSel + d));
+  presGridPaint();
+}
+
+/* ---- 7. Timer diskusi (T) ----
+   Buat aktivitas kelompok: "diskusi 5 menit". Sengaja TIDAK menghentikan
+   apa pun - instruktur tetap bisa pindah slide selagi hitungan jalan,
+   karena instruksi tugasnya sering ada di slide berikutnya. */
+const PRES_TIMER_PRESETS = [1, 3, 5, 10];
+let presTimerLeft = 0;      // detik tersisa
+let presTimerTotal = 5*60;
+let presTimerHandle = null;
+let presTimerEndAt = 0;
+
+function presTimerIsOpen(){ return !!document.getElementById('pres-timer'); }
+
+function presTimerFormat(s){
+  s = Math.max(0, Math.ceil(s));
+  const m = Math.floor(s/60);
+  return String(m).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+}
+
+function presTimerPaint(){
+  const el = document.getElementById('pres-timer');
+  if(!el) return;
+  el.querySelector('#pres-timer-digits').textContent = presTimerFormat(presTimerLeft);
+  el.classList.toggle('is-done', presTimerLeft <= 0 && presTimerTotal > 0);
+  const play = el.querySelector('#pres-timer-play');
+  if(play) play.textContent = presTimerHandle ? '❚❚' : '▶';
+  el.querySelectorAll('[data-min]').forEach(b=>{
+    b.classList.toggle('is-on', Number(b.dataset.min)*60 === presTimerTotal);
+  });
+}
+
+function presTimerStop(){
+  if(presTimerHandle){ clearInterval(presTimerHandle); presTimerHandle = null; }
+}
+
+/* Sisa waktu dihitung dari SELISIH JAM (presTimerEndAt - now), bukan dari
+   mengurangi 1 tiap tick. setInterval di tab yang ketutup/kejepit bisa
+   melambat atau diredam browser, dan hitungan kurang-satu-per-tick bakal
+   ketinggalan diam-diam - di kelas itu berarti "5 menit" yang jadi 7 menit. */
+function presTimerStart(){
+  if(presTimerLeft <= 0) presTimerLeft = presTimerTotal;
+  if(presTimerLeft <= 0) return;
+  presTimerEndAt = Date.now() + presTimerLeft*1000;
+  presTimerStop();
+  presTimerHandle = setInterval(()=>{
+    presTimerLeft = (presTimerEndAt - Date.now())/1000;
+    if(presTimerLeft <= 0){ presTimerLeft = 0; presTimerStop(); }
+    presTimerPaint();
+  }, 250);
+  presTimerPaint();
+}
+
+function presTimerToggleRun(){
+  if(presTimerHandle){ presTimerStop(); presTimerPaint(); }
+  else presTimerStart();
+}
+
+function presTimerSet(min){
+  presTimerTotal = min*60;
+  presTimerLeft  = presTimerTotal;
+  presTimerStop();
+  presTimerPaint();
+}
+
+function presTimerClose(){
+  presTimerStop();
+  const el = document.getElementById('pres-timer');
+  if(el) el.remove();
+}
+
+function presTimerOpen(){
+  if(!PRESENTATION || presTimerIsOpen()) return;
+  if(presTimerLeft <= 0) presTimerLeft = presTimerTotal;
+
+  const el = document.createElement('div');
+  el.id = 'pres-timer';
+  const presets = PRES_TIMER_PRESETS
+    .map(m=>'<button type="button" data-min="'+m+'">'+m+'m</button>').join('');
+  el.innerHTML =
+    '<div id="pres-timer-digits"></div>' +
+    '<div id="pres-timer-ctl">' + presets +
+      '<span class="sep"></span>' +
+      '<button type="button" id="pres-timer-play" title="Mulai / jeda">▶</button>' +
+      '<button type="button" id="pres-timer-reset" title="Ulang">↺</button>' +
+      '<button type="button" id="pres-timer-close" title="Tutup (T)">✕</button>' +
+    '</div>';
+  document.body.appendChild(el);
+
+  el.querySelectorAll('[data-min]').forEach(b=>{
+    b.onclick = ()=>{ presTimerSet(Number(b.dataset.min)); b.blur(); };
+  });
+  el.querySelector('#pres-timer-play').onclick  = e=>{ presTimerToggleRun(); e.currentTarget.blur(); };
+  el.querySelector('#pres-timer-reset').onclick = e=>{ presTimerSet(presTimerTotal/60); e.currentTarget.blur(); };
+  el.querySelector('#pres-timer-close').onclick = presTimerClose;
+  presTimerPaint();
+}
+
+function presTimerToggle(){
+  if(presTimerIsOpen()) presTimerClose(); else presTimerOpen();
+}
+
 function presBuildHud(){
   const hud = document.createElement('div');
   hud.id = 'pres-hud';
@@ -5610,14 +5855,22 @@ function presBuildHud(){
     '<span id="pres-zoomlbl" style="opacity:.7;min-width:34px;text-align:center"></span>' +
     '<button type="button" title="Besarkan (+)" aria-label="Besarkan">A+</button>' +
     '<button type="button" title="Layar hitam (B)" aria-label="Layar hitam">◐</button>' +
+    '<button type="button" title="Semua slide (O)" aria-label="Semua slide">▦</button>' +
+    '<button type="button" title="Timer diskusi (T)" aria-label="Timer diskusi">⏱</button>' +
     '<span id="pres-pos"></span>' +
     '<button type="button" title="Daftar tombol (?)" aria-label="Daftar tombol">?</button>';
+  /* Tiap tombol di-blur sesudah diklik. Kalau fokusnya nyangkut, pencetan
+     Space berikutnya dari remote bakal MENGAKTIFKAN tombol itu lagi sekaligus
+     dibaca sebagai "maju" - satu klik, dua kejadian. */
   const b = hud.querySelectorAll('button');
-  b[0].onclick = presFullscreen;
-  b[1].onclick = ()=>presZoom(-1);
-  b[2].onclick = ()=>presZoom(1);
-  b[3].onclick = ()=>presSetBlank('black');
-  b[4].onclick = presToggleHelp;
+  const wire = (el, fn) => { el.onclick = e => { fn(); e.currentTarget.blur(); }; };
+  wire(b[0], presFullscreen);
+  wire(b[1], ()=>presZoom(-1));
+  wire(b[2], ()=>presZoom(1));
+  wire(b[3], ()=>presSetBlank('black'));
+  wire(b[4], presGridOpen);
+  wire(b[5], presTimerToggle);
+  wire(b[6], presToggleHelp);
   document.body.appendChild(hud);
 }
 
@@ -5655,11 +5908,42 @@ document.addEventListener('keydown', e=>{
   if(e.ctrlKey || e.altKey || e.metaKey) return;
   if(kbNavTargetIsEditable(e.target)) return;
 
+  /* Tombol yang lagi kepegang fokus (HUD, timer, "Selanjutnya →"): biarkan
+     browser yang mengurus Space/Enter-nya. Kalau dibajak jadi "maju", satu
+     pencetan mengaktifkan tombol itu DAN memindah slide sekaligus. */
+  const tag = e.target && e.target.tagName;
+  if((tag === 'BUTTON' || tag === 'A') &&
+     (e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter')) return;
+
   /* Tombol khusus instruktur. Dicek SEBELUM navigasi supaya huruf-huruf ini
      gak bocor jadi apa-apa di modul peserta biasa (PRESENTATION mati =
-     seluruh blok ini dilewat dan B/W/F cuma huruf biasa). */
+     seluruh blok ini dilewat dan B/W/F/O/T cuma huruf biasa). */
   if(PRESENTATION){
+    /* Kisi slide lagi kebuka: dia MENELAN navigasi. Panah dipakai buat
+       memilih kartu, bukan memindah slide di belakangnya - kalau nggak,
+       instruktur menutup kisi dan mendapati dirinya sudah 5 slide meleset. */
+    if(presGridIsOpen()){
+      switch(e.key){
+        case 'ArrowRight': e.preventDefault(); presGridMove(1); return;
+        case 'ArrowLeft':  e.preventDefault(); presGridMove(-1); return;
+        case 'ArrowDown':  e.preventDefault(); presGridMove(presGridCols()); return;
+        case 'ArrowUp':    e.preventDefault(); presGridMove(-presGridCols()); return;
+        case 'Home':       e.preventDefault(); presGridSel = 0; presGridPaint(); return;
+        case 'End':        e.preventDefault(); presGridSel = NAV.length-1; presGridPaint(); return;
+        case 'Enter': case ' ': case 'Spacebar': {
+          e.preventDefault();
+          const pick = presGridSel;
+          presGridClose(); goTo(pick); return;
+        }
+        case 'o': case 'O': case 'Escape':
+          e.preventDefault(); presGridClose(); return;
+        default: return;
+      }
+    }
+
     switch(e.key){
+      case 'o': case 'O': e.preventDefault(); presGridOpen(); return;
+      case 't': case 'T': e.preventDefault(); presTimerToggle(); return;
       case 'f': case 'F': e.preventDefault(); presFullscreen(); return;
       case 'b': case 'B': e.preventDefault(); presSetBlank('black'); return;
       case 'w': case 'W': e.preventDefault(); presSetBlank('white'); return;
@@ -5672,9 +5956,15 @@ document.addEventListener('keydown', e=>{
         e.preventDefault(); presZoomIdx = 0;
         try{ localStorage.setItem(PRES_ZOOM_LS, '0'); }catch(_){ }
         presApplyZoom(); presWakeHud(); return;
-      case 'Escape':
-        if(presBlank){ e.preventDefault(); presSetBlank(presBlank); return; }
+      case 'Escape': {
+        /* Satu Escape menutup SATU lapisan, yang paling mendesak duluan.
+           Layar hitam di urutan pertama: itu satu-satunya keadaan di mana
+           instruktur gak bisa lihat apa pun buat mengorientasikan diri. */
+        if(presBlank)                            { e.preventDefault(); presSetBlank(presBlank); return; }
+        if(document.getElementById('pres-help')) { e.preventDefault(); presToggleHelp();        return; }
+        if(presTimerIsOpen())                    { e.preventDefault(); presTimerClose();        return; }
         break;
+      }
     }
     /* Layar lagi dihitamkan buat diskusi: telan SEMUA tombol navigasi. Kalau
        nggak, satu pencetan remote yang gak sengaja bikin slide maju diam-diam

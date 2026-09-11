@@ -106,6 +106,7 @@ export default function CoverForm({ module, setModule }: Props) {
                     tombol, jenis informasi yang beda dari peringatannya. */}
                 <span className="opt-note-aside" style={{ display: 'block', marginTop: 6 }}>
                   Di kelas: <code>F</code> layar penuh, <code>B</code>/<code>W</code> layar hitam/putih,{' '}
+                  <code>O</code> kisi semua slide, <code>T</code> timer diskusi,{' '}
                   <code>+</code>/<code>−</code> besar-kecilkan teks, <code>?</code> daftar tombol.
                   Isi slide muncul bertahap tiap klik remote.
                 </span>
