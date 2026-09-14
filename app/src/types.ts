@@ -384,6 +384,13 @@ export interface ModuleData {
   // Satu project jadi DUA build: ekspor sekali tanpa centang ini buat LMS
   // peserta, sekali lagi dengan centang ini buat bahan tayang kelas.
   presentationMode?: boolean;
+  // Cicilan blok: slide dibuka KOSONG, isinya muncul sebongkah tiap klik
+  // remote. Teknik memaparkan yang sah (sama seperti animasi build di
+  // PowerPoint) TAPI sengaja default MATI: mendarat di slide kosong itu
+  // mengagetkan kalau tidak diminta, dan gejalanya menyamar jadi "modulnya
+  // lemot, isinya telat muncul" - bukan sesuatu yang penyusun modul bisa
+  // tebak sendiri penyebabnya. Cuma berlaku kalau presentationMode nyala.
+  presentationStepBlocks?: boolean;
   // Mode Demo Otomatis: modul menjalankan dirinya sendiri - mengklik tiap
   // fiturnya satu per satu dengan kursor palsu dan caption penjelas - buat
   // ditayangkan di booth pameran teknologi pembelajaran.
@@ -496,6 +503,7 @@ export function emptyModule(slugPrefix = 'modul-html'): ModuleData {
     showRecap: false,
     showCocreation: false,
     presentationMode: false,
+    presentationStepBlocks: false,
     demoMode: false,
     demoCaptions: {},
     theme: { ...DEFAULT_THEME },

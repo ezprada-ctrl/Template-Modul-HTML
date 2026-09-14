@@ -2818,6 +2818,11 @@ const NAV = __NAV_JS__;
      - isi slide muncul bertahap -> presReveal*()
      - layar penuh, skala, layar hitam/putih, HUD -> pres*() */
 const PRESENTATION = __PRESENTATION_JS__;
+/* Cicilan blok - saklar SENDIRI, default mati (lihat pres_step di
+   generator.py). Mati = tiap slide mendarat utuh; seluruh sisa Mode
+   Presentasi (layar penuh, layar hitam/putih, kisi slide, timer, skala
+   teks, HUD posisi) tetap jalan seperti biasa. */
+const PRES_STEP = __PRES_STEP_JS__;
 
 /* ---------------- Mode Demo Otomatis ----------------
    Modul menjalankan dirinya sendiri buat ditayangkan di booth pameran:
@@ -5742,6 +5747,12 @@ let presEnterAll = false;  // diisi goTo(): slide berikutnya dibuka utuh
 function presCollectSteps(){
   presSteps = [];
   presShown = 0;
+  /* Cicilan dimatikan = daftar langkahnya memang KOSONG, bukan "ada tapi
+     semuanya dibuka". Sekali digating di sini, semua yang lain ikut benar
+     tanpa cabang tambahan: presApply gak menyembunyikan apa pun,
+     presNextStep balik false (jadi Selanjutnya pindah slide seperti modul
+     biasa), dan penanda langkah di HUD gak muncul. */
+  if(!PRES_STEP) return;
   const item = NAV[currentIdx];
   // Sampul, kuis, dan ringkasan tampil utuh - gak ada "blok materi" buat
   // dicicil, dan kuis yang muncul separo malah bikin bingung.

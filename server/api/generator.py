@@ -1579,6 +1579,18 @@ def generate_html(module):
     presentation = bool(module.get('presentationMode', False)) or demo
     out = out.replace('__PRESENTATION_JS__', js_str(presentation))
 
+    # Cicilan blok (slide mendarat KOSONG, isinya muncul sebongkah tiap klik)
+    # sekarang saklar sendiri dan default MATI - dulu dia otomatis ikut nyala
+    # bareng Mode Presentasi, dan penyusun modul membacanya sebagai "modulnya
+    # lemot, isi slide telat muncul" karena satu-satunya keterangan soal ini
+    # cuma sekalimat di ujung daftar pintasan keyboard.
+    # `or demo` sama alasannya dengan PRESENTATION di atas: salah satu langkah
+    # demo memang MEMAMERKAN cicilan ini (presRevealNone lalu presNextStep
+    # berulang), jadi di modul demo dia wajib hidup walau penyusunnya gak
+    # mencentang apa-apa.
+    pres_step = bool(module.get('presentationStepBlocks', False)) or demo
+    out = out.replace('__PRES_STEP_JS__', js_str(presentation and pres_step))
+
     # Progress belajar mengukur "sudah sejauh mana KAMU", pertanyaan yang gak
     # punya arti buat satu layar proyektor yang ditonton sekelas. Di mode
     # presentasi diganti penunjuk posisi slide di HUD instruktur.

@@ -111,9 +111,26 @@ export default function CoverForm({ module, setModule }: Props) {
                   Di kelas: <code>F</code> layar penuh, <code>B</code>/<code>W</code> layar hitam/putih,{' '}
                   <code>O</code> kisi semua slide, <code>T</code> timer diskusi,{' '}
                   <code>+</code>/<code>−</code> besar-kecilkan teks, <code>?</code> daftar tombol.
-                  Isi slide muncul bertahap tiap klik remote.
                 </span>
               </p>
+            )}
+            {/* Saklar sendiri, bukan lagi satu kalimat yang nyempil di ujung
+                catatan tombol keyboard di atas: kalau nyala, tiap slide
+                MENDARAT KOSONG, dan itu perubahan perilaku paling kentara
+                dari seluruh Mode Presentasi - bukan detail kecil sekelas
+                daftar pintasan. */}
+            {module.presentationMode && (
+              <label className="opt" style={{ marginLeft: 22 }}>
+                <input type="checkbox" checked={!!module.presentationStepBlocks}
+                  onChange={e => setModule({ ...module, presentationStepBlocks: e.target.checked })} />
+                <span>
+                  <span className="opt-title">Isi slide muncul bertahap tiap klik</span>
+                  <span className="opt-desc">
+                    Slide dibuka kosong, isinya muncul sebongkah tiap klik remote — buat memaparkan
+                    poin satu per satu. Biarkan mati kalau kamu ingin tiap slide langsung tampil utuh.
+                  </span>
+                </span>
+              </label>
             )}
 
             {/* Saklar "Demo Otomatis" sendiri PINDAH ke menu Demo di baris
