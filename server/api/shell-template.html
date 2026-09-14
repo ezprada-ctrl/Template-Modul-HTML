@@ -5116,7 +5116,16 @@ function renderBottomNav(){
   }
 }
 
-function goTo(idx){
+/* `lanjutBertahap` cuma true dari tombol Selanjutnya/Sebelumnya & remote -
+   satu langkah BERURUTAN, yang memang inti mode presentasi. Lompatan yang
+   DISENGAJA (menu samping, hasil cari, kartu grid slide, catatan
+   co-creation) selalu membuka slide utuh: orang melompat ke slide tertentu
+   karena mau MERUJUK isinya - alasan yang sama persis kenapa lompat mundur
+   sudah dibuka utuh dari dulu. Sebelum ini, lompat MAJU dari menu samping
+   mendarat di slide kosong melompong, dan itu kebaca sebagai "modulnya lemot,
+   isinya baru muncul beberapa detik kemudian" - padahal yang terjadi
+   instrukturnya keburu mengklik Selanjutnya beberapa kali. */
+function goTo(idx, lanjutBertahap){
   idx = Math.max(0, Math.min(NAV.length-1, idx));
   const target = NAV[idx];
   const cur = NAV[currentIdx];
@@ -5129,7 +5138,7 @@ function goTo(idx){
      ngecek benar/salah), jadi popup ini betul-betul cuma sekali per slide. */
   if(!navGatesOff() && cur && cur.kind==='slide' && idx!==currentIdx &&
      SLIDE_KC[cur.num] && !kcAllAnsweredForSlide(cur.num)){
-    kcOpenPopup(cur.num, idx);
+    kcOpenPopup(cur.num, idx, lanjutBertahap);
     return;
   }
 
@@ -5195,11 +5204,13 @@ function goTo(idx){
   // langsung pindah slide) tetap kekirim progres terakhirnya di sini, bukan
   // hilang diam-diam pas viewport-nya diganti kontennya.
   videoFlushAll();
-  /* Satu aturan buat cicilan blok, berlaku juga buat lompatan dari menu
-     samping: MAJU = slide dibuka kosong lalu dibangun blok demi blok; MUNDUR =
-     slide dibuka utuh, karena balik ke belakang artinya mau merujuk isinya
-     (peserta nanya soal yang tadi), bukan mau memaparkannya ulang dari nol. */
-  presEnterAll = (idx < currentIdx);
+  /* Cicilan blok cuma buat LANGKAH BERURUTAN yang maju: slide dibuka kosong
+     lalu dibangun blok demi blok. Dua hal lain dibuka utuh - MUNDUR, karena
+     balik ke belakang artinya mau merujuk isinya (peserta nanya soal yang
+     tadi) bukan memaparkannya ulang dari nol; dan LOMPATAN dari menu
+     samping/hasil cari/grid slide, yang alasannya sama persis: itu tindakan
+     memilih satu slide buat dirujuk, bukan melangkah maju satu tahap. */
+  presEnterAll = (idx < currentIdx) || !lanjutBertahap;
   currentIdx = idx;
   render();
   if(window.innerWidth<=900) closeSidebar();
@@ -5210,11 +5221,11 @@ function goTo(idx){
    biasa tetap satu-klik-satu-slide persis seperti sebelumnya. */
 function goNext(){
   if(presNextStep()) return;
-  if(currentIdx<NAV.length-1) goTo(currentIdx+1);
+  if(currentIdx<NAV.length-1) goTo(currentIdx+1, true);
 }
 function goPrev(){
   if(presPrevStep()) return;
-  if(currentIdx>0) goTo(currentIdx-1);
+  if(currentIdx>0) goTo(currentIdx-1, true);
 }
 
 /* ---------------- Peringatan kecepatan baca ----------------
@@ -5395,6 +5406,11 @@ function retryQuiz(section){
 let kcCurrentGroups = null; // SLIDE_KC[slideNum] lagi ditampilkan di popup
 let kcPopupSlideNum = null;
 let kcPendingIdx = null; // NAV index tujuan, dieksekusi begitu popup ditutup
+/* Ikut disimpan bareng tujuannya: popup ini MENUNDA navigasi, bukan
+   menggantinya - kalau flag-nya gak dibawa, "Selanjutnya" yang kebetulan
+   tertahan popup bakal balik lagi sebagai LOMPATAN (slide utuh) dan
+   cicilan bloknya hilang cuma gara-gara slide itu punya knowledge-check. */
+let kcPendingBertahap = false;
 
 function kcAllAnsweredForSlide(num){
   const groups = SLIDE_KC[num];
@@ -5405,10 +5421,11 @@ function kcFindItem(blockId, qi){
   const g = (kcCurrentGroups||[]).find(x=>x.block===blockId);
   return g ? g.items[qi] : null;
 }
-function kcOpenPopup(num, pendingIdx){
+function kcOpenPopup(num, pendingIdx, pendingBertahap){
   kcPopupSlideNum = num;
   kcCurrentGroups = SLIDE_KC[num] || [];
   kcPendingIdx = pendingIdx;
+  kcPendingBertahap = !!pendingBertahap;
   let html = '';
   kcCurrentGroups.forEach(g=>{
     g.items.forEach((it,qi)=>{
@@ -5555,8 +5572,10 @@ function kcUpdateContinueBtn(){
 function kcContinue(){
   document.getElementById('kc-popup-overlay').classList.remove('show');
   const target = kcPendingIdx;
+  const bertahap = kcPendingBertahap;
   kcCurrentGroups = null; kcPopupSlideNum = null; kcPendingIdx = null;
-  if(target!=null) goTo(target);
+  kcPendingBertahap = false;
+  if(target!=null) goTo(target, bertahap);
 }
 
 /* ---------------- Reset ---------------- */
