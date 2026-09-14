@@ -456,6 +456,10 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
   switch (block.type) {
     case 'card':
       return <>
+        <select style={inp} value={block.color || ''} onChange={e => onChange({ color: (e.target.value || undefined) as any })}>
+          <option value="">Warna: Default (netral)</option>
+          {['amber', 'rose', 'blue', 'violet', 'teal'].map(v => <option key={v} value={v}>Warna: {v}</option>)}
+        </select>
         <EmojiPicker value={block.icon || ''} onChange={icon => onChange({ icon })} />
         <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
           Icon cuma muncul kalau Judul kartu diisi.

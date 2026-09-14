@@ -61,6 +61,13 @@ export interface KcQuestion {
 // render_dtable (generator.py), satu tempat.
 export type RataTeks = 'kiri' | 'tengah' | 'kanan' | 'rata';
 
+// Token warna blok - satu daftar dipakai bersama Kartu (color) & Catatan
+// (variant) supaya "amber" di satu blok = "amber" di blok lain, bukan dua
+// palet yang kebetulan mirip. Pemetaan nama -> warna CSS asli ada di
+// generator.py render_card/render_callout + .card.*/.callout.* di
+// shell-template.html, satu tempat.
+export type BlockColor = 'amber' | 'rose' | 'blue' | 'violet' | 'teal';
+
 export interface Block {
   id: string;
   type: BlockType;
@@ -70,8 +77,12 @@ export interface Block {
   iconColor?: string;
   heading?: string;
   bodyHtml?: string;
+  // Opsional (beda dari `variant` milik Catatan yang WAJIB terisi) - kosong
+  // = kartu netral, persis tampilan sebelum field ini ada, jadi draft lama
+  // gak berubah sedikit pun.
+  color?: BlockColor;
   // callout
-  variant?: 'amber' | 'rose' | 'blue' | 'violet' | 'teal';
+  variant?: BlockColor;
   badge?: string;
   pill?: string;
   // definition

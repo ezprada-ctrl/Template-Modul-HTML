@@ -159,10 +159,26 @@ def daftar_dari_penanda(text):
 
 # ---------------------------------------------------------------- block renderers
 
+# Token warna blok - SATU daftar dipakai render_card & render_callout
+# (lihat BlockColor di types.ts), jadi "amber" berarti warna yang sama di
+# kartu maupun catatan. iconBg 'teal' sengaja jatuh ke --accent-soft, bukan
+# --teal-soft (gak ada variabel begitu) - ikut kuirk lama .callout.teal di
+# shell-template.html yang sudah begitu dari awal, bukan yang baru diciptakan
+# di sini.
+CARD_COLOR_ICON_BG = {
+    'amber': 'var(--amber-soft)', 'rose': 'var(--rose-soft)',
+    'blue': 'var(--blue-soft)', 'violet': 'var(--violet-soft)',
+    'teal': 'var(--accent-soft)',
+}
+
+
 def render_card(b):
+    card_color = b.get('color')
+    card_cls = f'card {card_color}' if card_color in CARD_COLOR_ICON_BG else 'card'
     icon_html = ''
     if b.get('icon'):
-        bg = b.get('iconBg', 'var(--accent-soft)')
+        default_bg = CARD_COLOR_ICON_BG.get(card_color, 'var(--accent-soft)')
+        bg = b.get('iconBg', default_bg)
         # --accent-ink, bukan --accent-2: ikon kartu itu TEKS di atas
         # --accent-soft, dan --accent-2 apa adanya cuma 1,8-2,6 kontrasnya di
         # mode gelap untuk lima dari enam tema bawaan. Warna pilihan penyusun
@@ -170,7 +186,7 @@ def render_card(b):
         color = b.get('iconColor', 'var(--accent-ink)')
         icon_html = f'<span class="ic" style="background:{bg};color:{color};">{b["icon"]}</span>'
     heading = f'<h3>{icon_html}{esc(b.get("heading",""))}</h3>' if b.get('heading') else ''
-    return f'<div class="card">{heading}{daftar_dari_penanda(b.get("bodyHtml",""))}</div>'
+    return f'<div class="{card_cls}">{heading}{daftar_dari_penanda(b.get("bodyHtml",""))}</div>'
 
 
 def render_callout(b):
@@ -1359,11 +1375,22 @@ def generate_html(module):
     consts = []
     titles = {}
     min_ms_per_slide = {}
+    # Indeks buat kotak cari sidebar (lihat onSearchInput di
+    # shell-template.html) - teks polos per slide, DITURUNKAN dari HTML yang
+    # sudah dirender (bukan field terpisah yang harus diisi penyusun modul),
+    # jadi tiap blok baru otomatis ikut kecari tanpa penyusun sadar ada
+    # indeks ini sama sekali.
+    search_index = {}
     for s in slides:
         html_body = render_slide_html(s, graphic_style)
         consts.append(f'const SLIDE_{s["number"]} = {js_str(html_body)};')
         titles[str(s['number'])] = s.get('title', '')
         min_ms_per_slide[str(s['number'])] = slide_min_read_ms(count_words(html_body))
+        # html_body sendiri sudah memuat judul+subjudul (lihat
+        # render_slide_html) - gak perlu digabung ulang di sini, cukup satu
+        # sumber yang sama dipakai buat kata-per-menit DAN indeks cari.
+        plain = html_lib.unescape(re.sub(r'<[^>]+>', ' ', html_body))
+        search_index[str(s['number'])] = re.sub(r'\s+', ' ', plain).strip()
     slides_map = 'const SLIDES = {' + ','.join(f'{s["number"]}:SLIDE_{s["number"]}' for s in slides) + '};'
     flow_flush = ''.join(
         f"window._flowData['{cid}'] = {js_str(steps)};\n" for cid, steps in FLOW_DATA.items()
@@ -1426,6 +1453,7 @@ def generate_html(module):
     out = out.replace('__HAS_YOUTUBE_JS__', js_str(GEN_FLAGS['has_youtube']))
 
     out = out.replace('__SLIDE_TITLES_JS__', js_str(titles))
+    out = out.replace('__SLIDE_SEARCH_JS__', js_str(search_index))
     # Ditanam biar Command Center bisa nunjukin "52 kunjungan (50/50 slide)"
     # alih-alih angka telanjang - penyusun modul jarang inget persis modulnya
     # ada berapa slide, jadi tanpa pembanding ini gak ada yang tau kalau

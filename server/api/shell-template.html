@@ -249,6 +249,33 @@ a{color:inherit;}
 .progress-sub{margin-top:9px;font-size:11.5px;color:var(--text-faint);}
 .autosave-note{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:10.5px;color:var(--text-faint);line-height:1.4;}
 
+/* Kotak cari - indeksnya (SLIDE_SEARCH) diturunkan generator dari HTML
+   slide yang sudah dirender, bukan field yang diisi penyusun modul (lihat
+   onSearchInput di bawah). position:relative di wadahnya supaya daftar
+   hasil (position:absolute) menggantung tepat di bawah kotak, bukan
+   mendorong nav di bawahnya turun. */
+.search-box{position:relative;flex-shrink:0;margin-bottom:12px;}
+#search-input{
+  width:100%;padding:9px 12px;border-radius:var(--radius-md);
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font-size:12.5px;font-family:inherit;
+}
+#search-input::placeholder{color:var(--text-faint);}
+#search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.search-results{
+  position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:5;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  box-shadow:var(--shadow-md);max-height:320px;overflow-y:auto;padding:6px;
+}
+.search-result-item{
+  display:block;width:100%;text-align:left;padding:9px 10px;border-radius:8px;
+  background:transparent;border:none;cursor:pointer;color:var(--text-dim);
+  font-size:12.5px;font-family:inherit;line-height:1.4;
+}
+.search-result-item:hover{background:var(--surface-2);color:var(--text);}
+.search-result-item .srm{color:var(--text-faint);font-size:11px;display:block;margin-top:2px;}
+.search-empty{padding:9px 10px;font-size:12px;color:var(--text-faint);}
+
 #nav-sections{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px;}
 .nav-section{border-radius:var(--radius-md);overflow:hidden;flex-shrink:0;}
 .nav-section-head{
@@ -434,6 +461,16 @@ h1.slide-title{font-size:clamp(23px,3.2vw,32px);font-weight:800;line-height:1.2;
 }
 .card h3{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:9px;color:var(--navy-ink);}
 .card h3 .ic{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+/* Token warna blok - border-color SAMA PERSIS dengan .callout.* di bawah,
+   jadi "amber" berarti warna yang sama di kartu maupun catatan. Cuma
+   background+border yang ditimpa; radius/padding/shadow kartu tetap netral
+   (beda dari .callout yang seluruh chrome-nya ikut ganti) karena Kartu bisa
+   memuat teks panjang, bukan cuma satu-dua baris catatan singkat. */
+.card.amber{background:var(--amber-soft);border-color:var(--accent-glow);}
+.card.rose{background:var(--rose-soft);border-color:rgba(192,74,68,.25);}
+.card.blue{background:var(--blue-soft);border-color:rgba(47,102,144,.22);}
+.card.violet{background:var(--violet-soft);border-color:rgba(107,91,149,.22);}
+.card.teal{background:var(--accent-soft);border-color:rgba(201,154,61,.3);}
 
 /* ---- Blok Gambar: ukuran / posisi / mode karakter (bersih) ----
    --img-w di-set generator (lebar %). Default (align-center + width 100 +
@@ -1909,6 +1946,13 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
       <div class="autosave-note">💾 Progres tersimpan otomatis — boleh lanjut kapan saja</div>
     </div>
 
+    <div id="search-box" class="search-box">
+      <input type="search" id="search-input" placeholder="Cari di modul ini…"
+             oninput="onSearchInput(this.value)" onkeydown="onSearchKeydown(event)"
+             aria-label="Cari konten di modul ini">
+      <div id="search-results" class="search-results" hidden></div>
+    </div>
+
     <nav id="nav-sections"></nav>
 
     <button id="reset-btn" onclick="resetProgress()">↺ Reset Progres</button>
@@ -2166,6 +2210,10 @@ function restoreUI(s){
 __SLIDE_CONSTS_JS__
 
 const SLIDE_TITLES = __SLIDE_TITLES_JS__;
+// Teks polos per slide buat kotak cari sidebar (onSearchInput). Diturunkan
+// generator dari HTML yang sudah dirender - lihat search_index di
+// generate_html (generator.py) - bukan sesuatu yang diisi penyusun modul.
+const SLIDE_SEARCH = __SLIDE_SEARCH_JS__;
 // Dikirim di session_start biar Command Center bisa nunjukin kunjungan
 // dibanding TOTAL slide modul ini - tanpa ini gak ada yang tau kalau
 // kunjungan udah lebih dari totalnya (ada pengulangan) atau ada slide
@@ -3882,6 +3930,69 @@ function renderSidebar(){
     btn.innerHTML = '<span class="nav-coc-icon">✎</span><span>Co-creation</span>'
       + '<span class="nav-coc-count" id="coc-menu-count">' + (n ? n : '') + '</span>';
     wrap.appendChild(btn);
+  }
+}
+/* Cari lintas slide. Sengaja cuma nyasar it.kind==='slide' - Sampul gak
+   punya blok (jadi gak ada apa-apa buat dicari), Kuis/Ringkasan bukan
+   "konten" yang orang cari isinya. Hasil klik lewat goTo() BIASA, bukan
+   jalur pintas: itu artinya gerbang kunci section/kuis yang sudah ada
+   otomatis ikut berlaku ke hasil pencarian juga, tanpa kode baru sama
+   sekali - coba cari & klik slide di section terkunci, tetap kena
+   notifyLocked seperti klik dari menu biasa. */
+function onSearchInput(q){
+  const box = document.getElementById('search-results');
+  q = q.trim().toLowerCase();
+  if(!q){ box.hidden = true; box.innerHTML = ''; return; }
+  const hits = [];
+  NAV.forEach((it, idx)=>{
+    if(it.kind!=='slide') return;
+    const text = SLIDE_SEARCH[it.num] || '';
+    const title = SLIDE_TITLES[it.num] || '';
+    const pos = text.toLowerCase().indexOf(q);
+    if(pos===-1 && title.toLowerCase().indexOf(q)===-1) return;
+    // Potongan konteks di sekitar kata yang cocok, biar hasil kelihatan
+    // BUKAN cuma judul yang nyambung - kalau yang cocok cuma judulnya
+    // (pos===-1 di teks), gak ada potongan yang ditampilkan.
+    let snippet = '';
+    if(pos!==-1){
+      const start = Math.max(0, pos-40);
+      snippet = (start>0?'…':'') + text.slice(start, pos+q.length+40).trim() + '…';
+    }
+    hits.push({ idx, title: title || ('Slide '+it.num), snippet });
+  });
+  box.hidden = false;
+  if(!hits.length){
+    box.innerHTML = '<div class="search-empty">Tidak ditemukan di modul ini.</div>';
+    return;
+  }
+  // Dibatasi 20 - kotak hasil sudah scroll sendiri (max-height), tapi
+  // ratusan tombol DOM buat satu pencarian jelas percuma.
+  // escHtml WAJIB di sini (beda dari SLIDE_TITLES yang dipakai mentah di
+  // renderSidebar): title pendek dan terkurasi, tapi snippet dipotong dari
+  // ISI SLIDE apa adanya (SLIDE_SEARCH) - bisa memuat "<"/">" mentah dari
+  // teks penyusun modul, dan tanpa escape itu bisa menyisipkan tag liar ke
+  // dalam sidebar.
+  box.innerHTML = hits.slice(0, 20).map(h =>
+    `<button class="search-result-item" onclick="onSearchPick(${h.idx})">${escHtml(h.title)}`
+    + (h.snippet ? `<span class="srm">${escHtml(h.snippet)}</span>` : '')
+    + `</button>`
+  ).join('');
+}
+function onSearchPick(idx){
+  document.getElementById('search-results').hidden = true;
+  document.getElementById('search-input').value = '';
+  goTo(idx);
+}
+function onSearchKeydown(e){
+  if(e.key==='Escape'){
+    e.target.value = '';
+    onSearchInput('');
+    e.target.blur();
+  } else if(e.key==='Enter'){
+    // Enter langsung ke hasil PERTAMA - buat yang udah yakin sama kata
+    // kuncinya dan males mengklik, sama seperti "I'm Feeling Lucky".
+    const first = document.querySelector('#search-results .search-result-item');
+    if(first) first.click();
   }
 }
 function notifyLocked(sectionIdx){
