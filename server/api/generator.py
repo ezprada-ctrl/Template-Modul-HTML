@@ -17,6 +17,27 @@ SHELL_PATH = os.path.join(BASE_DIR, 'shell-template.html')
 with open(SHELL_PATH, encoding='utf-8') as f:
     SHELL = f.read()
 
+# Komentar developer di shell-template.html (Indonesia, penjelasan desain)
+# TETAP di file sumber - cuma dibuang dari HTML *keluaran* di akhir
+# generate_html(), supaya View Source peserta gak kebawa penjelasan internal.
+# Sengaja cuma menyasar komentar yang berdiri sendiri di barisnya sendiri
+# (gaya penulisan kita di shell-template.html selalu begitu): kalau ada
+# "//" atau "/*" nyempil di tengah baris kode/data (URL, base64, moduleData
+# JSON), baris itu gak match pola ^-anchor-nya jadi otomatis dilewati -
+# gagal aman, bukan gagal ngerusak.
+_RE_HTML_COMMENT = re.compile(r'<!--.*?-->', re.DOTALL)
+_RE_JS_BLOCK_COMMENT = re.compile(r'^[ \t]*/\*.*?\*/[ \t]*$\n?', re.MULTILINE | re.DOTALL)
+_RE_JS_LINE_COMMENT = re.compile(r'^[ \t]*//.*$\n?', re.MULTILINE)
+
+
+def strip_shell_comments(out):
+    out = _RE_HTML_COMMENT.sub('', out)
+    out = _RE_JS_BLOCK_COMMENT.sub('', out)
+    out = _RE_JS_LINE_COMMENT.sub('', out)
+    # rapikan baris kosong berturut-turut yang tertinggal bekas komentar
+    out = re.sub(r'\n{3,}', '\n\n', out)
+    return out
+
 
 def hex_to_rgba(hex_color, alpha):
     hex_color = hex_color.lstrip('#')
@@ -1639,5 +1660,11 @@ def generate_html(module):
 
     sidebar_title = esc(module.get('sidebarTitle') or module.get('title', ''))
     out = out.replace('__SIDEBAR_TITLE__', sidebar_title)
+
+    # Default aktif. Set STRIP_SHELL_COMMENTS=0 pas debug lokal kalau perlu
+    # lihat versi mentah persis shell-template.html (misal buat cocokkan
+    # nomor baris error di DevTools dengan sumbernya).
+    if os.environ.get('STRIP_SHELL_COMMENTS', '1') != '0':
+        out = strip_shell_comments(out)
 
     return out
