@@ -374,6 +374,20 @@ function App() {
          riwayat yang di-reset di tengah putaran bikin langkah 'undo'
          kehilangan bahan. */
       bagian => setModule(m => ({ ...m, ...bagian })),
+      /* Bentuk akhir blok yang barusan dirakit demo. Sasarannya blok TERAKHIR
+         di slide TERAKHIR - itu persis panggung tur blok (slide kosong di
+         ujung proyek contoh), dan menyebutnya begitu jauh lebih tahan banting
+         daripada mencari id blok yang baru dibuat komponennya sendiri. */
+      data => setModule(m => {
+        const slides = m.slides.slice();
+        const i = slides.length - 1;
+        const s = slides[i];
+        if (!s || !s.blocks.length) return m;
+        const blocks = s.blocks.slice();
+        blocks[blocks.length - 1] = { ...blocks[blocks.length - 1], ...data };
+        slides[i] = { ...s, blocks };
+        return { ...m, slides };
+      }),
     );
     demo.mulai();
     return () => demo.hentikan();

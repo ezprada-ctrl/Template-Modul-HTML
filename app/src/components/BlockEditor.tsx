@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { demoBoothJalan } from '../builderDemo/status';
 import type { CSSProperties } from 'react';
 import type { Block, BlockType, RataTeks } from '../types';
 import { newBlock, changeBlockType, isBlockEmpty, extractBlockText, POPUP_BLOCK_TYPES } from '../types';
@@ -146,7 +147,11 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
     onChange(next);
   }
   function remove(i: number) {
-    if (!isBlockEmpty(blocks[i]) && !confirm(`${nounCap} ini masih ada isinya, yakin mau dihapus?`)) return;
+    /* Pagar buat manusia yang salah klik. Demo Booth menghapus bloknya
+       SENGAJA, tiap blok, tiap putaran - dan confirm() di sana menahan
+       seluruh demo sampai ada orang menekan OK. Lihat builderDemo/status.ts. */
+    if (!demoBoothJalan() && !isBlockEmpty(blocks[i])
+        && !confirm(`${nounCap} ini masih ada isinya, yakin mau dihapus?`)) return;
     onChange(blocks.filter((_, idx) => idx !== i));
   }
   function changeType(i: number, newType: BlockType) {

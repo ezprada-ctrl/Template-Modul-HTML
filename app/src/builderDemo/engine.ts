@@ -12,6 +12,8 @@
  * LMS, jadi tidak bisa mengimpor apa pun dari sini.
  */
 
+import { setDemoBoothJalan } from './status';
+
 export const DEMO_ABORT = { abort: true };
 
 /* Ambang "sudah selesai mencoba" -> demo jalan lagi sendiri. Diturunkan dari
@@ -44,6 +46,12 @@ export interface DemoCtx {
      Escape. Jadi tombolnya tetap disorot dan captionnya tetap menjelaskan
      "pilih gambar dari komputer", tapi gambarnya dipasang lewat sini. */
   patch: (bagian: Record<string, unknown>) => void;
+  /* Memasang bentuk AKHIR blok yang barusan dibuat (blok terakhir di slide
+     terakhir - panggung tur blok). Yang diketik tetap diketik; ini mengisi
+     sisa strukturnya - panel accordion kedua-ketiga, baris tabel, anak grid -
+     yang kalau harus diketik satu per satu bikin satu blok makan semenit,
+     padahal yang mau ditunjukkan bentuk jadinya. */
+  patchBlok: (data: Record<string, unknown>) => void;
   /* Kursor palsu cuma gambar - menggesernya ke atas sesuatu TIDAK memicu
      :hover maupun onMouseEnter React. Yang pratinjaunya baru muncul saat
      disorot (daftar tipe blok, daftar gaya grafis) butuh event ini dikirim
@@ -167,18 +175,22 @@ export class BuilderDemo {
   private steps: DemoStep[];
   private onSebelumPutaran?: () => void;
   private onPatch?: (bagian: Record<string, unknown>) => void;
+  private onPatchBlok?: (data: Record<string, unknown>) => void;
 
   constructor(
     steps: DemoStep[],
     onSebelumPutaran?: () => void,
     onPatch?: (bagian: Record<string, unknown>) => void,
+    onPatchBlok?: (data: Record<string, unknown>) => void,
   ) {
     this.steps = steps;
     this.onSebelumPutaran = onSebelumPutaran;
     this.onPatch = onPatch;
+    this.onPatchBlok = onPatchBlok;
   }
 
   mulai() {
+    setDemoBoothJalan(true);
     pasangChrome();
     const badge = document.getElementById('bdemo-badge');
     if (badge) badge.onclick = () => { if (!this.jalan) this.jalankan(); };
@@ -203,6 +215,7 @@ export class BuilderDemo {
   }
 
   hentikan() {
+    setDemoBoothJalan(false);
     this.runId++;
     this.jalan = false;
     if (this.mulaiTimer) clearTimeout(this.mulaiTimer);
@@ -350,6 +363,7 @@ export class BuilderDemo {
       },
 
       patch: (bagian) => { chk(); this.onPatch?.(bagian); },
+      patchBlok: (data) => { chk(); this.onPatchBlok?.(data); },
 
       kelilingi: async (el, putaran) => {
         chk();

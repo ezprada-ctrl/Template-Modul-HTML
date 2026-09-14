@@ -172,13 +172,26 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
         await D.type(field[i], entri.isi![i]);
       }
 
+      /* 2b. Bentuk akhirnya dipasang sekaligus. Lihat catatan panjang di
+             blokTur.ts: mengetik dua field pertama saja meninggalkan blok
+             setengah jadi, dan pengunjung booth menilai PRODUKNYA dari
+             pratinjau itu - bukan menilai demonya. */
+      if (entri.lengkap) {
+        D.patchBlok(entri.lengkap);
+        await D.sleep(600);
+      }
+
       /* 3. Hasil jadinya: kursor mengelilingi pratinjau sambil captionnya
             menjelaskan. Ini bagian yang paling menjawab "jadinya kayak apa" -
             mengisi field saja cuma memperlihatkan pekerjaannya, bukan
             hasilnya. */
       await D.sleep(700);   // pratinjau dirender ulang sesudah ketikan terakhir
       await D.say(cap, 0);
-      await D.kelilingi(qDemo('pratinjau-slide'), 1);
+      /* Yang dikelilingi biasanya PRATINJAU - itu hasil jadinya. Kecuali buat
+         blok yang memang tidak tampil inline (lihat `sorot` di blokTur.ts);
+         di situ yang disorot kertas kerjanya, karena di sanalah isinya
+         terlihat. */
+      await D.kelilingi(entri.sorot === 'editor' ? baris : qDemo('pratinjau-slide'), 1);
       await D.sleep(700);
 
       /* 4. Dihapus: blok berikutnya harus dapat panggung yang bersih. */
