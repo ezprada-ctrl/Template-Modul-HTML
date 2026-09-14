@@ -634,28 +634,22 @@ function MenuDemo({ demoModul, onToggleDemoModul, onDemoEkosistem }: {
         }}>
           <button
             onClick={() => { onToggleDemoModul(); setBuka(false); }}
+            title="Modul hasil export berjalan sendiri mengklik tiap fiturnya. Setelan project — berpengaruh saat di-export, captionnya disunting di tab Tema."
             style={{ display: 'block', width: '100%', textAlign: 'left', border: 'none', background: 'transparent', padding: '9px 10px', borderRadius: 'var(--radius-sm)' }}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>
               <span style={{ width: 14, color: 'var(--accent)' }}>{demoModul ? '✓' : ''}</span>
               Demo Operasi Modul
             </span>
-            <span style={{ display: 'block', marginLeft: 22, fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.45 }}>
-              Modul hasil export berjalan sendiri mengklik tiap fiturnya.
-              Setelan project — berpengaruh saat di-export, captionnya disunting di tab Tema.
-            </span>
           </button>
           <button
             onClick={() => { setBuka(false); onDemoEkosistem(); }}
+            title="Aplikasi ini mendemokan dirinya sendiri di atas project contoh. Jalan sekarang juga; pekerjaanmu dititipkan dan kembali utuh."
             style={{ display: 'block', width: '100%', textAlign: 'left', border: 'none', background: 'transparent', padding: '9px 10px', borderRadius: 'var(--radius-sm)' }}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>
               <span style={{ width: 14 }}>▶</span>
               Demo Operasi Ekosistem
-            </span>
-            <span style={{ display: 'block', marginLeft: 22, fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.45 }}>
-              Aplikasi ini mendemokan dirinya sendiri di atas project contoh. Jalan sekarang juga;
-              pekerjaanmu dititipkan dan kembali utuh.
             </span>
           </button>
         </div>
