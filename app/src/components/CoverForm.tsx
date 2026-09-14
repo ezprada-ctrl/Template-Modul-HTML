@@ -178,9 +178,7 @@ export default function CoverForm({ module, setModule }: Props) {
                 Cuma relevan kalau tracking nyala. */}
             {module.trackActivity && (
               <p className="opt-note is-warn">
-                ⚠ Data direkam pakai slug <code>{module.slug}</code>. Buat <b>tiap modul baru</b>, mulai dari
-                tombol “+ Mulai Project Baru” di header — jangan daur ulang project ini jadi modul lain,
-                nanti datanya nyampur di Command Center.
+                ⚠ Rekaman terkunci ke slug <code>{module.slug}</code> — jangan daur ulang project ini jadi modul lain.
               </p>
             )}
             {/* Rekap buat peserta — sengaja nempel di bawah "Rekam aktivitas"
