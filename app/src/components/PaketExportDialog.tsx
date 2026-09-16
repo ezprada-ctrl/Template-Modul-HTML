@@ -1,10 +1,10 @@
 import type { CSSProperties } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { listDrafts, loadDraft, generateHtml } from '../api';
 import { normalizeModule } from '../types';
 import { sematkanGambarDataUri } from '../assetEmbed';
 import {
-  exportPaket, judulDariHtml, ringkasDeskripsi, ukuranBaca,
+  exportPaket, judulDariHtml, ringkasDeskripsi, ukuranBaca, bangunPratinjau,
   type Konsep, type ModulPaket,
 } from '../paket/paketExport';
 
@@ -51,6 +51,10 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [seret, setSeret] = useState(false);
+  /* Konsep yang sedang DISOROT kursor. Pratinjau menampilkan ini kalau ada,
+     kalau tidak ya yang sedang terpilih - jadi kotaknya tidak pernah kosong
+     dan tingginya tidak melompat waktu kursor masuk-keluar. */
+  const [sorot, setSorot] = useState<Konsep | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -164,6 +168,16 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
 
   const perkiraan = pilihan.reduce((a, p) => a + (p.byte || 0), 0);
 
+  /* Pratinjau memakai modul yang SUDAH dipilih kalau ada — jauh lebih berguna
+     daripada nama contoh, karena penyusun langsung lihat judulnya sendiri
+     dalam tata letak yang dipilih. Nama contoh cuma dipakai selagi belum ada
+     yang dicentang. */
+  const konsepTampil = sorot ?? konsep;
+  const pratinjau = useMemo(
+    () => bangunPratinjau(konsepTampil, judul, sambutan, pilihan.map((p) => ({ nama: p.nama, desc: p.desc }))),
+    [konsepTampil, judul, sambutan, pilihan],
+  );
+
   return (
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(10,10,12,0.55)', backdropFilter: 'blur(2px)',
@@ -266,13 +280,18 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
 
         {/* ---------- konsep ---------- */}
         <label style={{ display: 'block', fontWeight: 600, fontSize: 13, margin: '18px 0 7px' }}>Tampilan dashboard</label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 8 }}
+             onMouseLeave={() => setSorot(null)}>
           {KONSEP_INFO.map((k) => (
-            <label key={k.id} style={{
-              border: `1px solid ${konsep === k.id ? 'var(--accent)' : 'var(--border)'}`,
-              background: konsep === k.id ? 'var(--accent-soft)' : 'transparent',
-              borderRadius: 8, padding: 10, cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'flex-start',
-            }}>
+            <label key={k.id}
+                   onMouseEnter={() => setSorot(k.id)}
+                   onFocus={() => setSorot(k.id)}
+                   style={{
+                     border: `1px solid ${konsepTampil === k.id ? 'var(--accent)' : 'var(--border)'}`,
+                     background: konsep === k.id ? 'var(--accent-soft)' : 'transparent',
+                     borderRadius: 8, padding: 10, cursor: 'pointer', display: 'flex', gap: 8,
+                     alignItems: 'flex-start', transition: 'border-color .15s',
+                   }}>
               <input type="radio" name="konsep" checked={konsep === k.id} disabled={busy}
                      onChange={() => setKonsep(k.id)} />
               <span>
@@ -281,6 +300,42 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
               </span>
             </label>
           ))}
+        </div>
+
+        {/* Pratinjau hidup: cangkang dashboard yang SUNGGUHAN, dirender kecil.
+            Bukan gambar contoh — jadi begitu tata letaknya diubah nanti,
+            kotak ini ikut berubah sendiri dan tidak akan pernah berbohong. */}
+        <div style={{
+          marginTop: 10, border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden',
+          background: 'var(--surface-2)',
+        }}>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10,
+            padding: '7px 11px', borderBottom: '1px solid var(--border)', fontSize: 11.5,
+          }}>
+            <span style={{ fontWeight: 600 }}>
+              Pratinjau — {KONSEP_INFO.find((k) => k.id === konsepTampil)?.nama}
+              {sorot && sorot !== konsep && <span className="hint" style={{ fontWeight: 400 }}> (disorot)</span>}
+            </span>
+            <span className="hint">
+              {pilihan.length ? `${pilihan.length} modul pilihanmu` : 'nama contoh — centang modul untuk lihat punyamu'}
+            </span>
+          </div>
+          {/* Dirender di lebar desktop lalu diperkecil, supaya tata letak yang
+              tampil memang tata letak layar lebar (Indeks butuh ≥900px buat
+              memunculkan kolom pratinjaunya, Orbit ≥780px buat cincinnya). */}
+          <div style={{ height: 300, overflow: 'hidden', position: 'relative' }}>
+            <iframe
+              title="Pratinjau tampilan dashboard"
+              srcDoc={pratinjau}
+              tabIndex={-1}
+              style={{
+                width: 1160, height: 760, border: 0, pointerEvents: 'none',
+                transform: 'scale(0.58)', transformOrigin: 'top left',
+                position: 'absolute', top: 0, left: 0,
+              }}
+            />
+          </div>
         </div>
 
         {/* ---------- aksi ---------- */}

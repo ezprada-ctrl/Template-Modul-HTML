@@ -55,17 +55,62 @@ function jsString(nilai: unknown): string {
     .replace(/<!--/g, '<\\!--');
 }
 
-/** Pisahkan cangkang di penanda, supaya bagian berat bisa ditulis mengalir. */
-function belahCangkang(meta: PaketMeta, modul: ModulPaket[]) {
-  const isi = cangkang
+/** Cangkang dengan semua penanda terisi KECUALI isi modulnya. */
+function isiCangkang(
+  meta: Pick<PaketMeta, 'judul' | 'sambutan' | 'konsep'>,
+  modul: { nama: string; desc?: string }[],
+) {
+  return cangkang
     .replace(/__PAKET_JUDUL__/g, escHtml(meta.judul))
     .replace(/__PAKET_SAMBUTAN__/g, escHtml(meta.sambutan))
     .replace('__PAKET_KONSEP__', meta.konsep)
     .replace('__PAKET_MODUL__', jsString(modul.map((m) => ({ nama: m.nama, desc: m.desc || '' }))));
+}
 
+/** Pisahkan cangkang di penanda, supaya bagian berat bisa ditulis mengalir. */
+function belahCangkang(meta: PaketMeta, modul: ModulPaket[]) {
+  const isi = isiCangkang(meta, modul);
   const potong = isi.indexOf('__PAKET_ISI__');
   if (potong < 0) throw new Error('Cangkang paket rusak: penanda __PAKET_ISI__ tidak ditemukan.');
   return { awal: isi.slice(0, potong), akhir: isi.slice(potong + '__PAKET_ISI__'.length) };
+}
+
+/** Nama contoh, dipakai pratinjau kalau penyusun belum memilih modul apa pun. */
+export const MODUL_CONTOH: { nama: string; desc?: string }[] = [
+  { nama: 'Lorem Ipsum Dolor Sit', desc: 'Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.' },
+  { nama: 'Consectetur Adipiscing' },
+  { nama: 'Tempor Incididunt Labore', desc: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.' },
+  { nama: 'Magna Aliqua Ut Enim' },
+  { nama: 'Quis Nostrud Exercitation', desc: 'Duis aute irure dolor in reprehenderit in voluptate velit esse.' },
+  { nama: 'Ullamco Laboris Nisi Aliquip' },
+];
+
+/**
+ * HTML pratinjau: cangkang SUNGGUHAN dengan isi modul dikosongkan.
+ *
+ * Sengaja memakai cangkang yang sama persis dengan hasil export, bukan
+ * gambar atau tiruan mini - begitu tata letaknya diubah nanti, pratinjaunya
+ * ikut berubah sendiri dan tidak akan pernah berbohong.
+ */
+export function bangunPratinjau(
+  konsep: Konsep,
+  judul: string,
+  sambutan: string,
+  modul: { nama: string; desc?: string }[],
+): string {
+  const daftar = modul.length ? modul : MODUL_CONTOH;
+  const isi = isiCangkang(
+    {
+      konsep,
+      judul: judul.trim() || 'Nama Pelatihan',
+      sambutan: sambutan.trim() || 'Sambutan singkat untuk peserta muncul di sini.',
+    },
+    daftar,
+  );
+  // ISI diisi string kosong sebanyak modulnya supaya panjangnya tetap sepadan
+  // dengan MODUL; pratinjau tidak bisa diklik (pointer-events dimatikan di
+  // sisi dialog), jadi isinya memang tidak pernah dipakai.
+  return isi.replace('__PAKET_ISI__', daftar.map(() => '""').join(','));
 }
 
 async function bukaTujuan(namaFile: string) {
