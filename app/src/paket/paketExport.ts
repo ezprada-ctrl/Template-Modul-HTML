@@ -1,4 +1,4 @@
-// Perakit "Paket Pelatihan": satu berkas HTML berisi dashboard + SEMUA modul
+// Perakit "Paket Modul": satu berkas HTML berisi dashboard + SEMUA modul
 // yang dipilih, ditanam utuh di dalamnya.
 //
 // Dirakit SEPENUHNYA DI BROWSER, alasannya sama persis dengan scormZip.ts:
@@ -119,7 +119,7 @@ async function bukaTujuan(namaFile: string) {
     try {
       const handle = await anyWin.showSaveFilePicker({
         suggestedName: namaFile,
-        types: [{ description: 'Paket pelatihan (HTML)', accept: { 'text/html': ['.html'] } }],
+        types: [{ description: 'Paket modul (HTML)', accept: { 'text/html': ['.html'] } }],
       });
       const stream: WritableStream = await handle.createWritable();
       return { stream, unduhSendiri: false as const };

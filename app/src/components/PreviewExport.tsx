@@ -34,7 +34,7 @@ interface Props {
 
 export default function PreviewExport({ module, setModule, onImportJson }: Props) {
   const [html, setHtml] = useState('');
-  /* Paket pelatihan = beberapa modul jadi SATU berkas. Dialognya berdiri
+  /* Paket modul = beberapa modul jadi SATU berkas. Dialognya berdiri
      sendiri karena isinya bukan soal modul yang sedang dibuka: dia menarik
      draft lain dan bisa menerima berkas HTML dari luar aplikasi. */
   const [paketOpen, setPaketOpen] = useState(false);
@@ -366,7 +366,7 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
         </button>
         <button data-demo="export-paket" onClick={() => setPaketOpen(true)}
                 title="Gabungkan beberapa modul jadi satu berkas dashboard">
-          Export Paket Pelatihan
+          Export Paket Modul
         </button>
         <button data-demo="export-json" onClick={doExportJson}>Export JSON</button>
         <button onClick={() => importRef.current?.click()}>Import JSON</button>

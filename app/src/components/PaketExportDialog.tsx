@@ -187,7 +187,7 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
         width: 720, maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto',
         padding: 24, boxShadow: 'var(--shadow-lg)',
       }}>
-        <h3 style={{ marginTop: 0, marginBottom: 4 }}>Export Paket Pelatihan</h3>
+        <h3 style={{ marginTop: 0, marginBottom: 4 }}>Export Paket Modul</h3>
         <p className="hint" style={{ marginTop: 0 }}>
           Satu berkas HTML berisi dashboard + semua modul yang dipilih, ditanam di dalamnya.
           Peserta cukup membuka satu berkas; tiap modul terbuka di tab baru.
