@@ -4,6 +4,7 @@ import { normalizeModule, moduleFromJson, slugify, reslug } from '../types';
 import { generateHtml, listDrafts, loadDraft, saveDraft, renameDraft, copyDraft, deleteDraft } from '../api';
 import { articulateBlocks, exportScormZip, type ZipProgress } from '../scormZip';
 import { sematkanGambarDataUri } from '../assetEmbed';
+import PaketExportDialog from './PaketExportDialog';
 
 /** Menyorot bagian nama draft yang cocok dengan ketikan, supaya alasan sebuah
  *  baris ikut tampil kelihatan langsung — bukan cuma "percaya saja". */
@@ -33,6 +34,10 @@ interface Props {
 
 export default function PreviewExport({ module, setModule, onImportJson }: Props) {
   const [html, setHtml] = useState('');
+  /* Paket pelatihan = beberapa modul jadi SATU berkas. Dialognya berdiri
+     sendiri karena isinya bukan soal modul yang sedang dibuka: dia menarik
+     draft lain dan bisa menerima berkas HTML dari luar aplikasi. */
+  const [paketOpen, setPaketOpen] = useState(false);
   const [error, setError] = useState('');
   const [drafts, setDrafts] = useState<string[]>([]);
   const [status, setStatus] = useState('');
@@ -359,6 +364,10 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
         <button data-demo="export-scorm" onClick={doExportScorm} disabled={!!zip}>
           {zip ? 'Membungkus…' : 'Export SCORM (.zip)'}
         </button>
+        <button data-demo="export-paket" onClick={() => setPaketOpen(true)}
+                title="Gabungkan beberapa modul jadi satu berkas dashboard">
+          Export Paket Pelatihan
+        </button>
         <button data-demo="export-json" onClick={doExportJson}>Export JSON</button>
         <button onClick={() => importRef.current?.click()}>Import JSON</button>
         <button onClick={doSave}>Simpan Draft</button>
@@ -457,6 +466,7 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
       {html && (
         <iframe srcDoc={html} allow="autoplay; encrypted-media; picture-in-picture; clipboard-write" style={{ width: '100%', height: '80vh', border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: '#fff' }} />
       )}
+      {paketOpen && <PaketExportDialog onClose={() => setPaketOpen(false)} />}
     </div>
   );
 }

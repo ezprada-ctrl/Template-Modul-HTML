@@ -1,0 +1,605 @@
+<title>Konsol Modul</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap">
+
+<style>
+/* ===========================================================
+   TIGA KONSEP, bukan tiga warna. Tiap konsep punya dunia visual
+   sendiri (struktur, interaksi, palet) dan sengaja berkomitmen
+   ke satu suasana - jadi tokennya diganti utuh per konsep,
+   bukan digeser terang/gelap.
+   =========================================================== */
+:root{
+  /* Bawaan = Panel. Ditimpa penuh oleh dua konsep lain di bawah. */
+  --bg:#070c14; --panel:#0c1421; --surface:#0d1522; --surface-2:#111b2b;
+  --ink:#e7eef8; --ink-dim:#94a5be; --ink-faint:#5f6e88;
+  --line:rgba(150,190,225,.15); --line-strong:rgba(150,190,225,.32);
+  --accent:#37e0d4; --accent-ink:#5ff0e6; --accent-soft:rgba(55,224,212,.12);
+  --dot:rgba(150,190,225,.13);
+  --shadow:0 20px 44px -30px rgba(0,0,0,.9);
+  --shadow-lift:0 26px 54px -26px rgba(0,0,0,.95);
+  --r:3px;
+}
+:root[data-konsep="indeks"]{
+  --bg:#eff1f5; --panel:#ffffff; --surface:#ffffff; --surface-2:#f6f7fa;
+  --ink:#101828; --ink-dim:#4d5a72; --ink-faint:#8490a6;
+  --line:rgba(16,24,40,.14); --line-strong:rgba(16,24,40,.34);
+  --accent:#8a6a1f; --accent-ink:#6e5417; --accent-soft:rgba(138,106,31,.09);
+  --dot:rgba(16,24,40,.1);
+  --shadow:0 18px 40px -30px rgba(16,24,40,.45);
+  --shadow-lift:0 22px 46px -26px rgba(16,24,40,.4);
+  --r:2px;
+}
+:root[data-konsep="orbit"]{
+  --bg:#04060c; --panel:#080d17; --surface:#0a111d; --surface-2:#0d1522;
+  --ink:#f0ecdf; --ink-dim:#a49b85; --ink-faint:#6d6656;
+  --line:rgba(216,161,60,.2); --line-strong:rgba(216,161,60,.5);
+  --accent:#d8a13c; --accent-ink:#edbe63; --accent-soft:rgba(216,161,60,.12);
+  --dot:rgba(216,161,60,.16);
+  --shadow:0 22px 50px -32px rgba(0,0,0,.95);
+  --shadow-lift:0 28px 60px -28px rgba(0,0,0,1);
+  --r:999px;
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+  transition:background .5s ease,color .5s ease;
+}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:26px 120px;}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+
+/* ================= PEMILIH KONSEP (kromnya mockup) ================= */
+.switch{
+  position:fixed;left:50%;transform:translateX(-50%);z-index:80;
+  bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  display:flex;align-items:center;gap:4px;padding:5px;
+  background:rgba(8,12,20,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.16);border-radius:4px;
+  box-shadow:0 18px 40px -18px rgba(0,0,0,.8);
+  max-width:calc(100vw - 32px);
+}
+.switch b{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:rgba(255,255,255,.42);padding:0 8px 0 6px;font-weight:400;
+}
+.switch button{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;letter-spacing:.03em;
+  padding:8px 13px;border-radius:3px;cursor:pointer;
+  background:transparent;color:rgba(255,255,255,.62);border:1px solid transparent;
+  transition:color .2s,background .2s,border-color .2s;
+}
+.switch button:hover{color:#fff;background:rgba(255,255,255,.08);}
+.switch button[aria-pressed="true"]{color:#04060c;background:#f2f4f8;border-color:#f2f4f8;}
+.switch button:focus-visible{outline:2px solid #6ff0e6;outline-offset:2px;}
+@media (max-width:460px){ .switch b{display:none;} .switch button{padding:8px 10px;font-size:11.5px;} }
+
+/* label penjelas konsep yang sedang tampil */
+.konsep-note{
+  display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;
+  color:var(--ink-faint);margin-bottom:22px;
+}
+.konsep-note em{color:var(--accent-ink);font-style:normal;letter-spacing:.12em;text-transform:uppercase;}
+
+/* ====================================================================
+   KONSEP 1 — PANEL : grid padat, semua kelihatan sekaligus
+   ==================================================================== */
+.p-head{
+  position:relative;overflow:hidden;background:var(--panel);
+  border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - 30px) 0,100% 30px,100% 100%,0 100%);
+  padding:clamp(22px,3.6vw,38px);box-shadow:var(--shadow);
+}
+.p-head .mesh{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,var(--dot) 1px,transparent 1px);background-size:24px 24px;
+  mask-image:linear-gradient(to bottom right,#000,transparent 70%);
+  -webkit-mask-image:linear-gradient(to bottom right,#000,transparent 70%);
+}
+.p-head .beam{
+  position:absolute;width:min(44vw,420px);aspect-ratio:1;border-radius:50%;
+  background:var(--accent-soft);filter:blur(60px);top:-34%;right:-6%;
+  animation:drift 24s ease-in-out infinite alternate;pointer-events:none;
+}
+@keyframes drift{to{transform:translate3d(-8%,14%,0) scale(1.15);}}
+.p-head-in{position:relative;display:flex;flex-wrap:wrap;gap:20px 34px;align-items:flex-end;justify-content:space-between;}
+.p-title{max-width:620px;}
+.eyebrow{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--accent-ink);margin-bottom:12px;
+}
+.p-title h1{
+  font-family:'Chakra Petch','Segoe UI',system-ui,sans-serif;font-weight:700;
+  font-size:clamp(26px,4.2vw,42px);line-height:1.1;letter-spacing:-.015em;margin:0 0 12px;text-wrap:balance;
+}
+.p-title p{margin:0;color:var(--ink-dim);font-size:14.5px;max-width:58ch;}
+.p-stat{text-align:right;flex:none;}
+.p-stat .n{font-family:'Chakra Petch',system-ui,sans-serif;font-size:42px;font-weight:700;line-height:1;color:var(--accent-ink);font-variant-numeric:tabular-nums;}
+.p-stat .l{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-top:6px;}
+
+.p-bar{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+  display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+  margin:22px 0 18px;padding:11px 13px;
+  background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--line);border-radius:var(--r);
+}
+.search{position:relative;flex:1 1 240px;min-width:0;}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-faint);pointer-events:none;}
+.search input{
+  width:100%;padding:10px 14px 10px 35px;background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:var(--r);
+  font-family:inherit;font-size:14px;
+}
+.search input::placeholder{color:var(--ink-faint);}
+.search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+.count{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;color:var(--ink-faint);white-space:nowrap;font-variant-numeric:tabular-nums;}
+
+.p-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:12px;}
+.p-card{
+  position:relative;display:flex;flex-direction:column;gap:9px;text-align:left;width:100%;
+  padding:18px 18px 14px;background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:var(--r);
+  font-family:inherit;cursor:pointer;box-shadow:var(--shadow);
+  transition:transform .22s cubic-bezier(.2,.8,.3,1),border-color .22s,box-shadow .22s;
+  animation:rise .45s cubic-bezier(.2,.8,.3,1) both;
+}
+.p-card::before{
+  content:'';position:absolute;top:-1px;left:-1px;height:2px;width:0;
+  background:linear-gradient(to right,var(--accent),transparent);
+  transition:width .36s cubic-bezier(.2,.8,.3,1);
+}
+.p-card:hover,.p-card:focus-visible{transform:translateY(-3px);border-color:var(--line-strong);box-shadow:var(--shadow-lift);}
+.p-card:hover::before,.p-card:focus-visible::before{width:calc(100% + 2px);}
+.p-card:focus-visible{outline:none;box-shadow:var(--shadow-lift),inset 0 0 0 2px var(--accent);}
+.p-card .nm{font-family:'Chakra Petch',system-ui,sans-serif;font-weight:600;font-size:16.5px;line-height:1.28;}
+.p-card .ds{font-size:13px;color:var(--ink-dim);margin:0;}
+.p-card .go{
+  margin-top:auto;padding-top:11px;border-top:1px solid var(--line);
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--accent-ink);display:flex;align-items:center;gap:7px;
+}
+.p-card .go i{font-style:normal;transition:transform .22s cubic-bezier(.2,.8,.3,1);}
+.p-card:hover .go i{transform:translateX(5px);}
+@keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.p-card:nth-child(1){animation-delay:.02s}.p-card:nth-child(2){animation-delay:.05s}
+.p-card:nth-child(3){animation-delay:.08s}.p-card:nth-child(4){animation-delay:.11s}
+.p-card:nth-child(5){animation-delay:.14s}.p-card:nth-child(6){animation-delay:.17s}
+.p-card:nth-child(7){animation-delay:.2s}.p-card:nth-child(n+8){animation-delay:.23s}
+
+/* ====================================================================
+   KONSEP 2 — INDEKS : daftar tipografis + panel pratinjau
+   ==================================================================== */
+.i-head{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:6px;}
+.i-kicker{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--accent-ink);margin-bottom:14px;
+}
+.i-head h1{
+  font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:clamp(30px,5.6vw,58px);
+  line-height:1.03;letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance;max-width:16ch;
+}
+.i-head p{margin:0;color:var(--ink-dim);font-size:15.5px;max-width:60ch;}
+.i-cols{display:grid;grid-template-columns:1fr;gap:34px;margin-top:30px;}
+@media (min-width:900px){ .i-cols{grid-template-columns:1fr 330px;gap:44px;align-items:start;} }
+
+.i-list{display:flex;flex-direction:column;}
+.i-row{
+  display:grid;grid-template-columns:1fr auto;gap:8px 20px;align-items:baseline;
+  width:100%;text-align:left;background:none;border:0;cursor:pointer;
+  font-family:inherit;color:var(--ink);
+  padding:17px 4px 16px;border-bottom:1px solid var(--line);
+  transition:padding-left .25s cubic-bezier(.2,.8,.3,1),color .2s;
+}
+.i-row:first-child{border-top:1px solid var(--line);}
+.i-row .nm{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:clamp(18px,2.3vw,23px);line-height:1.22;letter-spacing:-.01em;}
+.i-row .ds{grid-column:1/-1;font-size:13.5px;color:var(--ink-dim);margin:0;max-width:64ch;}
+.i-row .go{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-faint);white-space:nowrap;
+  opacity:0;transform:translateX(-6px);transition:opacity .22s,transform .22s,color .22s;
+}
+.i-row:hover,.i-row:focus-visible{padding-left:16px;outline:none;}
+.i-row:hover .nm,.i-row:focus-visible .nm{color:var(--accent-ink);}
+.i-row:hover .go,.i-row:focus-visible .go{opacity:1;transform:none;color:var(--accent-ink);}
+.i-row.aktif{padding-left:16px;box-shadow:inset 3px 0 0 var(--accent);}
+.i-row:focus-visible{box-shadow:inset 3px 0 0 var(--accent),0 0 0 2px var(--accent-soft);}
+
+.i-prev{
+  position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:24px;box-shadow:var(--shadow);
+}
+.i-prev .lbl{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px;
+  padding-bottom:12px;border-bottom:1px solid var(--line);
+}
+.i-prev h3{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:22px;line-height:1.2;margin:0 0 10px;letter-spacing:-.01em;}
+.i-prev p{margin:0 0 20px;font-size:14px;color:var(--ink-dim);}
+.i-prev .kosong{color:var(--ink-faint);font-style:italic;}
+.i-btn{
+  display:inline-flex;align-items:center;gap:9px;width:100%;justify-content:center;
+  padding:12px 18px;background:var(--ink);color:var(--panel);
+  border:1px solid var(--ink);border-radius:var(--r);cursor:pointer;
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+  transition:background .2s,color .2s,border-color .2s;
+}
+.i-btn:hover{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff;}
+.i-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+@media (max-width:899px){ .i-prev{display:none;} .i-row .go{opacity:1;transform:none;} }
+
+/* ====================================================================
+   KONSEP 3 — ORBIT : peta spasial, pusat berubah saat ditunjuk
+   ==================================================================== */
+.o-wrap{position:relative;}
+.o-kicker{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--accent-ink);text-align:center;margin-bottom:10px;
+}
+.o-stage{
+  position:relative;width:100%;max-width:620px;margin:0 auto;aspect-ratio:1;
+  display:grid;place-items:center;
+}
+.o-rings{position:absolute;inset:0;pointer-events:none;}
+.o-rings circle{fill:none;stroke:var(--line);}
+.o-sweep{
+  position:absolute;inset:0;pointer-events:none;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0deg,transparent 320deg,var(--accent-soft) 355deg,transparent 360deg);
+  animation:sweep 9s linear infinite;
+  mask-image:radial-gradient(circle,transparent 26%,#000 27%,#000 50%,transparent 51%);
+  -webkit-mask-image:radial-gradient(circle,transparent 26%,#000 27%,#000 50%,transparent 51%);
+}
+@keyframes sweep{to{transform:rotate(360deg);}}
+.o-link{position:absolute;inset:0;pointer-events:none;}
+.o-link line{stroke:var(--accent);stroke-width:1;opacity:0;transition:opacity .25s;}
+.o-link line.on{opacity:.6;}
+
+.o-core{
+  position:relative;z-index:3;width:min(50%,268px);aspect-ratio:1;border-radius:50%;
+  display:grid;place-items:center;text-align:center;padding:22px;
+  background:radial-gradient(circle at 50% 42%,var(--surface-2),var(--panel));
+  border:1px solid var(--line-strong);box-shadow:var(--shadow-lift),0 0 0 8px var(--accent-soft);
+}
+.o-core .ttl{font-family:'Chakra Petch',system-ui,sans-serif;font-weight:600;font-size:clamp(14px,2.1vw,19px);line-height:1.22;letter-spacing:-.01em;}
+.o-core .sub{font-size:12px;color:var(--ink-dim);margin-top:9px;line-height:1.5;}
+.o-core .hint{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-top:12px;}
+
+.o-node{
+  position:absolute;z-index:2;transform:translate(-50%,-50%);
+  width:150px;padding:10px 13px;text-align:center;cursor:pointer;
+  background:var(--surface);color:var(--ink);
+  border:1px solid var(--line);border-radius:var(--r);
+  font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:11.5px;line-height:1.35;font-weight:500;
+  box-shadow:var(--shadow);
+  transition:border-color .22s,color .22s,box-shadow .22s,scale .22s;
+}
+.o-node:hover,.o-node:focus-visible,.o-node.aktif{
+  border-color:var(--accent);color:var(--accent-ink);scale:1.07;
+  box-shadow:var(--shadow-lift),0 0 0 4px var(--accent-soft);outline:none;
+}
+.o-note{
+  text-align:center;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;
+  color:var(--ink-faint);margin-top:22px;
+}
+/* Di layar sempit cincinnya dilipat jadi daftar - metaforanya gugur,
+   keterbacaan menang. */
+.o-stage.list{aspect-ratio:auto;display:flex;flex-direction:column;gap:9px;max-width:520px;}
+.o-stage.list .o-rings,.o-stage.list .o-sweep,.o-stage.list .o-link{display:none;}
+.o-stage.list .o-core{width:100%;aspect-ratio:auto;border-radius:var(--r);padding:20px;margin-bottom:6px;}
+.o-stage.list .o-node{position:static;transform:none;width:100%;text-align:left;font-size:13px;padding:13px 15px;}
+
+.stars{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;}
+
+/* ============================ UMUM ============================ */
+.empty{
+  border:1px dashed var(--line-strong);border-radius:var(--r);
+  padding:38px 24px;text-align:center;color:var(--ink-dim);font-size:14px;
+}
+.empty b{display:block;font-size:17px;color:var(--ink);margin-bottom:6px;}
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);z-index:90;
+  bottom:calc(74px + env(safe-area-inset-bottom,0px));max-width:min(92vw,440px);
+  background:var(--surface);color:var(--ink);border:1px solid var(--accent);
+  border-radius:var(--r);padding:12px 16px;font-size:13.5px;box-shadow:var(--shadow-lift);
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;}
+}
+</style>
+
+<canvas class="stars" id="stars" aria-hidden="true"></canvas>
+
+<div class="wrap">
+  <p class="konsep-note"><em id="noteName">Panel</em> <span id="noteDesc"></span></p>
+
+  <!-- ================= KONSEP 1 : PANEL ================= -->
+  <section id="k-panel">
+    <header class="p-head">
+      <div class="mesh"></div><div class="beam"></div>
+      <div class="p-head-in">
+        <div class="p-title">
+          <div class="eyebrow">Paket Modul Pelatihan</div>
+          <h1>Analisis Pengelolaan Keuangan Daerah</h1>
+          <p>Seluruh modul tersedia di halaman ini dan bisa dibuka dalam urutan mana pun. Progres baca tiap modul tersimpan otomatis.</p>
+        </div>
+        <div class="p-stat"><div class="n" id="pCount">8</div><div class="l">Modul</div></div>
+      </div>
+    </header>
+
+    <div class="p-bar">
+      <div class="search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path></svg>
+        <input id="qPanel" type="search" placeholder="Cari modul…  (tekan / untuk fokus)" autocomplete="off" aria-label="Cari modul">
+      </div>
+      <div class="count" id="cPanel">8 modul</div>
+    </div>
+
+    <h2 class="sr-only">Daftar modul</h2>
+    <div class="p-grid" id="gPanel"></div>
+    <div class="empty" id="ePanel" hidden><b>Tidak ada modul yang cocok</b>Coba kata kunci lain, atau kosongkan pencarian.</div>
+  </section>
+
+  <!-- ================= KONSEP 2 : INDEKS ================= -->
+  <section id="k-indeks" hidden>
+    <header class="i-head">
+      <div class="i-kicker">Paket Modul Pelatihan</div>
+      <h1>Analisis Pengelolaan Keuangan Daerah</h1>
+      <p>Seluruh modul tersedia di halaman ini dan bisa dibuka dalam urutan mana pun. Progres baca tiap modul tersimpan otomatis.</p>
+    </header>
+
+    <div class="i-cols">
+      <div>
+        <div class="p-bar" style="margin-top:0">
+          <div class="search">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path></svg>
+            <input id="qIndeks" type="search" placeholder="Cari modul…" autocomplete="off" aria-label="Cari modul">
+          </div>
+          <div class="count" id="cIndeks">8 modul</div>
+        </div>
+        <h2 class="sr-only">Daftar modul</h2>
+        <div class="i-list" id="gIndeks"></div>
+        <div class="empty" id="eIndeks" hidden><b>Tidak ada modul yang cocok</b>Coba kata kunci lain, atau kosongkan pencarian.</div>
+      </div>
+
+      <aside class="i-prev" aria-live="polite">
+        <div class="lbl">Pratinjau</div>
+        <h3 id="ipName">Arahkan ke salah satu modul</h3>
+        <p id="ipDesc" class="kosong">Keterangan modul muncul di sini begitu Anda menunjuk atau memilihnya dari daftar.</p>
+        <button class="i-btn" type="button" id="ipBtn" hidden>Buka modul →</button>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= KONSEP 3 : ORBIT ================= -->
+  <section id="k-orbit" hidden>
+    <div class="o-wrap">
+      <div class="o-kicker">Paket Modul Pelatihan</div>
+      <div class="o-stage" id="oStage">
+        <svg class="o-rings" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="38"></circle>
+          <circle cx="50" cy="50" r="27" stroke-dasharray="1 3"></circle>
+        </svg>
+        <div class="o-sweep" aria-hidden="true"></div>
+        <svg class="o-link" id="oLink" viewBox="0 0 100 100" aria-hidden="true"><line id="oLine" x1="50" y1="50" x2="50" y2="50"></line></svg>
+        <div class="o-core" id="oCore">
+          <div>
+            <div class="ttl" id="ocTitle">Analisis Pengelolaan Keuangan Daerah</div>
+            <div class="sub" id="ocSub">Delapan modul mengelilingi pusat ini. Semuanya bebas dibuka, tanpa urutan wajib.</div>
+            <div class="hint" id="ocHint">Arahkan ke salah satu titik</div>
+          </div>
+        </div>
+      </div>
+      <p class="o-note">Konsep ini paling pas untuk paket ≤ 12 modul. Di layar sempit, cincinnya melipat jadi daftar.</p>
+    </div>
+  </section>
+</div>
+
+<div class="switch" role="group" aria-label="Pilih konsep rancangan">
+  <b>Konsep</b>
+  <button type="button" data-k="panel" aria-pressed="true">Panel</button>
+  <button type="button" data-k="indeks" aria-pressed="false">Indeks</button>
+  <button type="button" data-k="orbit" aria-pressed="false">Orbit</button>
+</div>
+
+<script>
+/* Data contoh — sama persis di ketiga konsep, supaya yang dibandingkan
+   idenya, bukan isinya. Di paket asli daftar ini ditulis generator:
+   nama wajib, deskripsi opsional. */
+const MODUL = [
+  { nama:'Pajak Daerah Provinsi',
+    desc:'Tujuh jenis pajak yang dipungut pemerintah provinsi menurut UU HKPD, dari PKB sampai Opsen Pajak MBLB.' },
+  { nama:'Ketentuan Umum UU HKPD',
+    desc:'Istilah, dasar hukum, dan perubahan pokok yang dibawa Undang-Undang Nomor 1 Tahun 2022.' },
+  { nama:'Tata Kelola & Administrasi Pajak Daerah',
+    desc:'Perda sebagai payung pemungutan, evaluasi ranperda, sampai kerahasiaan data dan penyidikan.' },
+  { nama:'Pajak Kendaraan Bermotor' },
+  { nama:'Bea Balik Nama Kendaraan Bermotor' },
+  { nama:'Opsen Pajak Mineral Bukan Logam & Batuan',
+    desc:'Skema opsen MBLB dan pembagian kewenangannya antara provinsi dan kabupaten/kota.' },
+  { nama:'Penyusunan Sasaran Kinerja Pegawai',
+    desc:'Dari dialog kinerja sampai penetapan SKP, termasuk perilaku kerja dan ketentuan IKI.' },
+  { nama:'Studi Kasus APKD Intermediate' },
+];
+
+const KONSEP = {
+  panel:  { nama:'Panel',  desc:'Grid padat — semua modul terbaca sekaligus. Paling kuat kalau modulnya banyak (20, 30, 50).' },
+  indeks: { nama:'Indeks', desc:'Daftar tipografis + panel pratinjau. Tenang, cepat dipindai, latar terang.' },
+  orbit:  { nama:'Orbit',  desc:'Peta spasial — modul mengelilingi pusat yang isinya berubah saat ditunjuk.' },
+};
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cocok = (m,k) => !k || m.nama.toLowerCase().includes(k) || (m.desc||'').toLowerCase().includes(k);
+
+/* ---------- membuka modul (mockup: halaman penanda) ---------- */
+function buka(nama){
+  const w = window.open('', '_blank');
+  if(!w){ toast('Browser memblokir tab baru. Izinkan popup untuk halaman ini, lalu coba lagi.'); return; }
+  w.document.write(
+    '<!doctype html><meta charset="utf-8"><title>'+esc(nama)+'</title>'+
+    '<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#070c14;color:#e7eef8;'+
+    'font:400 15px/1.6 system-ui,sans-serif;padding:32px;text-align:center}div{max-width:44ch}'+
+    'h1{font-size:23px;margin:0 0 12px;letter-spacing:-.01em}p{color:#94a5be;margin:0}</style>'+
+    '<div><h1>'+esc(nama)+'</h1><p>Di paket sungguhan, tab ini berisi modulnya secara utuh.<br>Halaman ini hanya penanda untuk mockup.</p></div>');
+  w.document.close();
+}
+let tTimer;
+function toast(p){
+  document.getElementById('tBox')?.remove();
+  const t=document.createElement('div');t.className='toast';t.id='tBox';t.setAttribute('role','status');t.textContent=p;
+  document.body.appendChild(t);clearTimeout(tTimer);tTimer=setTimeout(()=>t.remove(),5200);
+}
+
+/* ---------- KONSEP 1 : PANEL ---------- */
+const gPanel=document.getElementById('gPanel'), ePanel=document.getElementById('ePanel'),
+      cPanel=document.getElementById('cPanel'), qPanel=document.getElementById('qPanel');
+function renderPanel(k){
+  k=(k||'').trim().toLowerCase();
+  const t=MODUL.filter(m=>cocok(m,k));
+  gPanel.innerHTML='';
+  t.forEach(m=>{
+    const b=document.createElement('button');b.type='button';b.className='p-card';
+    b.innerHTML='<span class="nm"></span>'+(m.desc?'<p class="ds"></p>':'')+'<div class="go">Buka modul <i>→</i></div>';
+    b.querySelector('.nm').textContent=m.nama;
+    if(m.desc) b.querySelector('.ds').textContent=m.desc;
+    b.addEventListener('click',()=>buka(m.nama));
+    gPanel.appendChild(b);
+  });
+  cPanel.textContent = k ? t.length+' dari '+MODUL.length+' modul' : t.length+' modul';
+  ePanel.hidden=t.length>0; gPanel.hidden=t.length===0;
+}
+qPanel.addEventListener('input',()=>renderPanel(qPanel.value));
+
+/* ---------- KONSEP 2 : INDEKS ---------- */
+const gIndeks=document.getElementById('gIndeks'), eIndeks=document.getElementById('eIndeks'),
+      cIndeks=document.getElementById('cIndeks'), qIndeks=document.getElementById('qIndeks'),
+      ipName=document.getElementById('ipName'), ipDesc=document.getElementById('ipDesc'), ipBtn=document.getElementById('ipBtn');
+let ipAktif=null;
+function previewIndeks(m,row){
+  ipAktif=m;
+  document.querySelectorAll('.i-row.aktif').forEach(r=>r.classList.remove('aktif'));
+  if(row) row.classList.add('aktif');
+  ipName.textContent=m.nama;
+  ipDesc.textContent = m.desc || 'Modul ini belum diberi keterangan.';
+  ipDesc.classList.toggle('kosong', !m.desc);
+  ipBtn.hidden=false;
+}
+ipBtn.addEventListener('click',()=>{ if(ipAktif) buka(ipAktif.nama); });
+function renderIndeks(k){
+  k=(k||'').trim().toLowerCase();
+  const t=MODUL.filter(m=>cocok(m,k));
+  gIndeks.innerHTML='';
+  t.forEach(m=>{
+    const b=document.createElement('button');b.type='button';b.className='i-row';
+    b.innerHTML='<span class="nm"></span><span class="go">Buka →</span>'+(m.desc?'<p class="ds"></p>':'');
+    b.querySelector('.nm').textContent=m.nama;
+    if(m.desc) b.querySelector('.ds').textContent=m.desc;
+    b.addEventListener('mouseenter',()=>previewIndeks(m,b));
+    b.addEventListener('focus',()=>previewIndeks(m,b));
+    b.addEventListener('click',()=>buka(m.nama));
+    gIndeks.appendChild(b);
+  });
+  cIndeks.textContent = k ? t.length+' dari '+MODUL.length+' modul' : t.length+' modul';
+  eIndeks.hidden=t.length>0; gIndeks.hidden=t.length===0;
+}
+qIndeks.addEventListener('input',()=>renderIndeks(qIndeks.value));
+
+/* ---------- KONSEP 3 : ORBIT ---------- */
+const oStage=document.getElementById('oStage'), oLine=document.getElementById('oLine'),
+      ocTitle=document.getElementById('ocTitle'), ocSub=document.getElementById('ocSub'), ocHint=document.getElementById('ocHint');
+const JUDUL_PUSAT='Analisis Pengelolaan Keuangan Daerah';
+const SUB_PUSAT='Delapan modul mengelilingi pusat ini. Semuanya bebas dibuka, tanpa urutan wajib.';
+let oNodes=[];
+function buildOrbit(){
+  oNodes.forEach(n=>n.remove()); oNodes=[];
+  MODUL.forEach((m,i)=>{
+    const b=document.createElement('button');b.type='button';b.className='o-node';
+    b.textContent=m.nama;
+    b.addEventListener('mouseenter',()=>fokusOrbit(m,b,i));
+    b.addEventListener('focus',()=>fokusOrbit(m,b,i));
+    b.addEventListener('mouseleave',resetOrbit);
+    b.addEventListener('blur',resetOrbit);
+    b.addEventListener('click',()=>buka(m.nama));
+    oStage.appendChild(b); oNodes.push(b);
+  });
+  layoutOrbit();
+}
+function layoutOrbit(){
+  const sempit = window.innerWidth < 780;
+  oStage.classList.toggle('list', sempit);
+  if(sempit){ oNodes.forEach(n=>{n.style.left='';n.style.top='';}); return; }
+  const n=oNodes.length, R=41; /* persen dari sisi panggung */
+  oNodes.forEach((el,i)=>{
+    const a = (i/n)*Math.PI*2 - Math.PI/2;
+    el.style.left = (50 + Math.cos(a)*R) + '%';
+    el.style.top  = (50 + Math.sin(a)*R) + '%';
+    el.dataset.x = (50 + Math.cos(a)*R); el.dataset.y = (50 + Math.sin(a)*R);
+  });
+}
+function fokusOrbit(m,el,i){
+  oNodes.forEach(n=>n.classList.remove('aktif')); el.classList.add('aktif');
+  ocTitle.textContent=m.nama;
+  ocSub.textContent = m.desc || 'Modul ini belum diberi keterangan.';
+  ocHint.textContent='Klik untuk membuka';
+  if(el.dataset.x){ oLine.setAttribute('x2',el.dataset.x); oLine.setAttribute('y2',el.dataset.y); oLine.classList.add('on'); }
+}
+function resetOrbit(){
+  if(document.activeElement && document.activeElement.classList.contains('o-node')) return;
+  oNodes.forEach(n=>n.classList.remove('aktif'));
+  ocTitle.textContent=JUDUL_PUSAT; ocSub.textContent=SUB_PUSAT;
+  ocHint.textContent='Arahkan ke salah satu titik'; oLine.classList.remove('on');
+}
+window.addEventListener('resize',layoutOrbit);
+
+/* ---------- pemilih konsep ---------- */
+const seksi={panel:document.getElementById('k-panel'),indeks:document.getElementById('k-indeks'),orbit:document.getElementById('k-orbit')};
+const tombol=[...document.querySelectorAll('.switch button')];
+const noteName=document.getElementById('noteName'), noteDesc=document.getElementById('noteDesc');
+function pilih(k,simpan){
+  document.documentElement.setAttribute('data-konsep',k);
+  Object.entries(seksi).forEach(([n,el])=>{el.hidden = n!==k;});
+  tombol.forEach(t=>t.setAttribute('aria-pressed',String(t.dataset.k===k)));
+  noteName.textContent=KONSEP[k].nama; noteDesc.textContent=KONSEP[k].desc;
+  document.getElementById('stars').style.opacity = k==='orbit' ? '.55' : '0';
+  if(k==='orbit') layoutOrbit();
+  if(simpan){ try{ localStorage.setItem('konsol_konsep',k); }catch(e){} }
+  window.scrollTo({top:0,behavior:'instant'});
+}
+tombol.forEach(t=>t.addEventListener('click',()=>pilih(t.dataset.k,true)));
+
+/* ---------- bintang (khusus Orbit) ---------- */
+const cv=document.getElementById('stars'), cx=cv.getContext('2d');
+function stars(){
+  const d=window.devicePixelRatio||1;
+  cv.width=innerWidth*d; cv.height=innerHeight*d; cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px';
+  cx.setTransform(d,0,0,d,0,0); cx.clearRect(0,0,innerWidth,innerHeight);
+  const n=Math.round(innerWidth*innerHeight/14000);
+  for(let i=0;i<n;i++){
+    const r=Math.random()*1.1+.2;
+    cx.globalAlpha=Math.random()*.55+.12;
+    cx.fillStyle = Math.random()>.82 ? '#d8a13c' : '#f0ecdf';
+    cx.beginPath(); cx.arc(Math.random()*innerWidth,Math.random()*innerHeight,r,0,7); cx.fill();
+  }
+}
+stars(); addEventListener('resize',()=>{stars();});
+
+/* ---------- pintasan papan ketik ---------- */
+document.addEventListener('keydown',e=>{
+  const aktif=document.documentElement.getAttribute('data-konsep');
+  const box = aktif==='panel' ? qPanel : aktif==='indeks' ? qIndeks : null;
+  if(e.key==='/' && box && document.activeElement!==box){ e.preventDefault(); box.focus(); }
+  if(e.key==='Escape' && box && document.activeElement===box){ box.value=''; aktif==='panel'?renderPanel(''):renderIndeks(''); box.blur(); }
+});
+
+/* ---------- mulai ---------- */
+document.getElementById('pCount').textContent=MODUL.length;
+renderPanel(''); renderIndeks(''); buildOrbit();
+let awal=null; try{ awal=localStorage.getItem('konsol_konsep'); }catch(e){}
+pilih(awal && KONSEP[awal] ? awal : 'panel', false);
+</script>
