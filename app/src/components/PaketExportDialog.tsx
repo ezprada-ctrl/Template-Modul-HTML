@@ -33,6 +33,13 @@ const KONSEP_INFO: { id: Konsep; nama: string; ket: string }[] = [
   { id: 'orbit', nama: 'Orbit', ket: 'Peta melingkar. Paling pas untuk ≤ 12 modul.' },
 ];
 
+/* Ukuran "layar lebar" tempat pratinjau dirender sebelum diperkecil.
+   Tingginya harus cukup buat konsep yang paling jangkung — Orbit: cincinnya
+   persegi selebar 620px, plus kicker dan catatan di bawahnya. Kalau kurang,
+   yang kepotong justru titik-titik modul paling bawah. */
+const PRA_W = 1160;
+const PRA_H = 812;
+
 const inp: CSSProperties = {
   width: '100%', padding: '8px 10px', borderRadius: 8,
   border: '1px solid var(--border)', background: 'var(--surface)',
@@ -56,9 +63,28 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
      dan tingginya tidak melompat waktu kursor masuk-keluar. */
   const [sorot, setSorot] = useState<Konsep | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  /* Skala pratinjau dihitung dari lebar kotaknya yang SEBENARNYA, bukan
+     angka mati: dialognya menyusut di layar sempit, dan skala mati bikin
+     pratinjaunya meleber keluar atau menyisakan pias kosong. */
+  const kotakRef = useRef<HTMLDivElement>(null);
+  const [skala, setSkala] = useState(PRA_W ? 672 / PRA_W : 1);
 
   useEffect(() => {
     listDrafts().then(setDrafts).catch((e) => setError(e.message || 'Gagal memuat daftar draft.'));
+  }, []);
+
+  useEffect(() => {
+    const el = kotakRef.current;
+    if (!el) return;
+    const ukur = () => { const w = el.clientWidth; if (w > 0) setSkala(w / PRA_W); };
+    ukur();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', ukur);
+      return () => window.removeEventListener('resize', ukur);
+    }
+    const ro = new ResizeObserver(ukur);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   const adaDraft = (slug: string) => pilihan.some((p) => p.sumber === 'draft' && p.id === slug);
@@ -324,14 +350,16 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
           {/* Dirender di lebar desktop lalu diperkecil, supaya tata letak yang
               tampil memang tata letak layar lebar (Indeks butuh ≥900px buat
               memunculkan kolom pratinjaunya, Orbit ≥780px buat cincinnya). */}
-          <div style={{ height: 300, overflow: 'hidden', position: 'relative' }}>
+          <div ref={kotakRef} style={{
+            height: Math.round(PRA_H * skala), overflow: 'hidden', position: 'relative',
+          }}>
             <iframe
               title="Pratinjau tampilan dashboard"
               srcDoc={pratinjau}
               tabIndex={-1}
               style={{
-                width: 1160, height: 760, border: 0, pointerEvents: 'none',
-                transform: 'scale(0.58)', transformOrigin: 'top left',
+                width: PRA_W, height: PRA_H, border: 0, pointerEvents: 'none',
+                transform: `scale(${skala})`, transformOrigin: 'top left',
                 position: 'absolute', top: 0, left: 0,
               }}
             />
