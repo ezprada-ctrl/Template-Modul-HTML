@@ -59,11 +59,13 @@ function jsString(nilai: unknown): string {
 function isiCangkang(
   meta: Pick<PaketMeta, 'judul' | 'sambutan' | 'konsep'>,
   modul: { nama: string; desc?: string }[],
+  pratinjau = false,
 ) {
   return cangkang
     .replace(/__PAKET_JUDUL__/g, escHtml(meta.judul))
     .replace(/__PAKET_SAMBUTAN__/g, escHtml(meta.sambutan))
     .replace('__PAKET_KONSEP__', meta.konsep)
+    .replace('__PAKET_PRATINJAU__', pratinjau ? 'true' : 'false')
     .replace('__PAKET_MODUL__', jsString(modul.map((m) => ({ nama: m.nama, desc: m.desc || '' }))));
 }
 
@@ -90,7 +92,9 @@ export const MODUL_CONTOH: { nama: string; desc?: string }[] = [
  *
  * Sengaja memakai cangkang yang sama persis dengan hasil export, bukan
  * gambar atau tiruan mini - begitu tata letaknya diubah nanti, pratinjaunya
- * ikut berubah sendiri dan tidak akan pernah berbohong.
+ * ikut berubah sendiri dan tidak akan pernah berbohong. Karena cangkangnya
+ * asli, pratinjaunya juga bisa DIPAKAI: dicari, disorot, diklik. Satu-satunya
+ * yang dipalsukan adalah membuka modul - lihat penanda PRATINJAU di cangkang.
  */
 export function bangunPratinjau(
   konsep: Konsep,
@@ -106,6 +110,7 @@ export function bangunPratinjau(
       sambutan: sambutan.trim() || 'Sambutan singkat untuk peserta muncul di sini.',
     },
     daftar,
+    true,
   );
   // ISI diisi string kosong sebanyak modulnya supaya panjangnya tetap sepadan
   // dengan MODUL; pratinjau tidak bisa diklik (pointer-events dimatikan di

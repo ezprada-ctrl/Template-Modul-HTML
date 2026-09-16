@@ -67,7 +67,12 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
      angka mati: dialognya menyusut di layar sempit, dan skala mati bikin
      pratinjaunya meleber keluar atau menyisakan pias kosong. */
   const kotakRef = useRef<HTMLDivElement>(null);
-  const [skala, setSkala] = useState(PRA_W ? 672 / PRA_W : 1);
+  const [skala, setSkala] = useState(672 / PRA_W);
+  /* Diperbesar ke seluruh layar. Wadahnya yang berubah gaya, elemen
+     iframe-nya TETAP yang itu-itu juga di posisi yang sama pada pohon React —
+     kalau dipindah, dia dimuat ulang dan apa pun yang sedang dicoba
+     (kata pencarian, modul yang sedang disorot) hilang di tengah jalan. */
+  const [besar, setBesar] = useState(false);
 
   useEffect(() => {
     listDrafts().then(setDrafts).catch((e) => setError(e.message || 'Gagal memuat daftar draft.'));
@@ -76,7 +81,11 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
   useEffect(() => {
     const el = kotakRef.current;
     if (!el) return;
-    const ukur = () => { const w = el.clientWidth; if (w > 0) setSkala(w / PRA_W); };
+    const ukur = () => {
+      const w = el.clientWidth, h = el.clientHeight;
+      if (w <= 0) return;
+      setSkala(besar && h > 0 ? Math.min(w / PRA_W, h / PRA_H) : w / PRA_W);
+    };
     ukur();
     if (typeof ResizeObserver === 'undefined') {
       window.addEventListener('resize', ukur);
@@ -85,7 +94,14 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
     const ro = new ResizeObserver(ukur);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [besar]);
+
+  useEffect(() => {
+    if (!besar) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); setBesar(false); } };
+    window.addEventListener('keydown', esc, true);
+    return () => window.removeEventListener('keydown', esc, true);
+  }, [besar]);
 
   const adaDraft = (slug: string) => pilihan.some((p) => p.sumber === 'draft' && p.id === slug);
 
@@ -306,8 +322,12 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
 
         {/* ---------- konsep ---------- */}
         <label style={{ display: 'block', fontWeight: 600, fontSize: 13, margin: '18px 0 7px' }}>Tampilan dashboard</label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 8 }}
-             onMouseLeave={() => setSorot(null)}>
+        {/* Sorot baru dilepas kalau kursor keluar dari SELURUH area ini, bukan
+            dari deretan pilihannya saja. Kalau dilepas di batas deretan, tiap
+            kali penyusun turun untuk mencoba pratinjau yang barusan disorot,
+            pratinjaunya keburu balik ke konsep yang terpilih. */}
+        <div onMouseLeave={() => setSorot(null)}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 8 }}>
           {KONSEP_INFO.map((k) => (
             <label key={k.id}
                    onMouseEnter={() => setSorot(k.id)}
@@ -330,40 +350,61 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
 
         {/* Pratinjau hidup: cangkang dashboard yang SUNGGUHAN, dirender kecil.
             Bukan gambar contoh — jadi begitu tata letaknya diubah nanti,
-            kotak ini ikut berubah sendiri dan tidak akan pernah berbohong. */}
-        <div style={{
+            kotak ini ikut berubah sendiri dan tidak akan pernah berbohong.
+            Dan karena cangkangnya asli, kotak ini BISA DIPAKAI: dicari,
+            disorot, diklik. Yang dipalsukan cuma membuka modulnya (isinya
+            memang dikosongkan di pratinjau) — di situ muncul pesan, bukan
+            tab putih. Satu-satunya cara tahu rasanya memakai dashboard ini
+            sebelum paketnya dirakit adalah dengan benar-benar memakainya. */}
+        <div style={besar ? {
+          position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(8,9,12,0.94)',
+          display: 'flex', flexDirection: 'column', padding: 14,
+        } : {
           marginTop: 10, border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden',
           background: 'var(--surface-2)',
         }}>
           <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10,
-            padding: '7px 11px', borderBottom: '1px solid var(--border)', fontSize: 11.5,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10,
+            padding: besar ? '0 2px 10px' : '7px 11px',
+            borderBottom: besar ? 'none' : '1px solid var(--border)', fontSize: 11.5,
+            flex: 'none', color: besar ? '#e9edf5' : undefined,
           }}>
             <span style={{ fontWeight: 600 }}>
               Pratinjau — {KONSEP_INFO.find((k) => k.id === konsepTampil)?.nama}
               {sorot && sorot !== konsep && <span className="hint" style={{ fontWeight: 400 }}> (disorot)</span>}
             </span>
-            <span className="hint">
-              {pilihan.length ? `${pilihan.length} modul pilihanmu` : 'nama contoh — centang modul untuk lihat punyamu'}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <span className="hint" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {pilihan.length ? `${pilihan.length} modul pilihanmu` : 'nama contoh — centang modul untuk lihat punyamu'}
+              </span>
+              <button className="btn-ghost btn-sm" type="button" onClick={() => setBesar(!besar)}
+                      style={{ flex: 'none', fontSize: 11.5 }}
+                      title={besar ? 'Kembalikan ke ukuran kotak (Esc)' : 'Perbesar ke seluruh layar supaya enak dicoba'}>
+                {besar ? 'Perkecil ⤡' : 'Coba ukuran penuh ⤢'}
+              </button>
             </span>
           </div>
           {/* Dirender di lebar desktop lalu diperkecil, supaya tata letak yang
               tampil memang tata letak layar lebar (Indeks butuh ≥900px buat
               memunculkan kolom pratinjaunya, Orbit ≥780px buat cincinnya). */}
-          <div ref={kotakRef} style={{
-            height: Math.round(PRA_H * skala), overflow: 'hidden', position: 'relative',
-          }}>
-            <iframe
-              title="Pratinjau tampilan dashboard"
-              srcDoc={pratinjau}
-              tabIndex={-1}
-              style={{
-                width: PRA_W, height: PRA_H, border: 0, pointerEvents: 'none',
-                transform: `scale(${skala})`, transformOrigin: 'top left',
-                position: 'absolute', top: 0, left: 0,
-              }}
-            />
+          <div ref={kotakRef}
+               style={besar ? { flex: 1, minHeight: 0, overflow: 'hidden' } : { overflow: 'hidden' }}>
+            <div style={{
+              width: Math.round(PRA_W * skala), height: Math.round(PRA_H * skala),
+              position: 'relative', margin: '0 auto', overflow: 'hidden',
+            }}>
+              <iframe
+                title="Pratinjau tampilan dashboard"
+                srcDoc={pratinjau}
+                style={{
+                  width: PRA_W, height: PRA_H, border: 0,
+                  transform: `scale(${skala})`, transformOrigin: 'top left',
+                  position: 'absolute', top: 0, left: 0,
+                }}
+              />
+            </div>
           </div>
+        </div>
         </div>
 
         {/* ---------- aksi ---------- */}

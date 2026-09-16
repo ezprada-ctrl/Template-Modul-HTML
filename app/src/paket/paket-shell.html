@@ -355,6 +355,7 @@ body{
 <script>
 /* ===== Ditulis perakit saat export ===== */
 var KONSEP = '__PAKET_KONSEP__';
+var PRATINJAU = __PAKET_PRATINJAU__;   /* true CUMA di kotak pratinjau dialog */
 var MODUL  = __PAKET_MODUL__;          /* [{nama, desc}] - ringan */
 var ISI = [
 __PAKET_ISI__
@@ -373,6 +374,13 @@ function cocok(m,k){ return !k || m.nama.toLowerCase().indexOf(k)>=0 || (m.desc|
    (Nama/NIP yang dipakai bareng antar modul) tetap nyambung. Lewat blob:,
    origin-nya jadi buram dan dua-duanya hilang diam-diam. */
 function buka(i){
+  /* Di kotak pratinjau ISI-nya sengaja dikosongkan, jadi membuka tab baru
+     cuma menghasilkan halaman putih. Dikabari saja — sisa interaksinya
+     (cari, sorot, garis ke inti) tetap bisa dicoba seperti aslinya. */
+  if(PRATINJAU){
+    toast('Pratinjau. Di paket aslinya, "'+MODUL[i].nama+'" terbuka di tab baru.');
+    return;
+  }
   var w = window.open('', '_blank');
   if(!w){ toast('Browser memblokir tab baru. Izinkan popup untuk halaman ini, lalu coba lagi.'); return; }
   w.document.open(); w.document.write(ISI[i]); w.document.close();
