@@ -4942,14 +4942,61 @@ function applySlideAudio(item){
    server di titik-titik penting (jeda/selesai/pindah slide) - BUKAN tiap
    tick timeupdate, biar gak nyepam server. */
 window._videoProgress = {};
-function videoTrackTime(blockId, currentTime, duration){
+/* SATU tempat bikin state kosong, dipakai videoTrackTime & videoMarkStarted
+   berdua - dulu dua-duanya punya inisialisasi sendiri (pola `a || (a={...})`
+   diketik ulang di masing-masing), dan begitu field baru (maxRate/skipped)
+   cuma ditambah di salah satunya, siapa pun yang kepanggil DULUAN (biasanya
+   videoMarkStarted, dipanggil pas video mulai diputar, sebelum tick sampler
+   pertama) bikin objek versi lama yang gak punya field itu - lalu yang
+   satunya nemu objeknya udah ada dan gak pernah nginisialisasi ulang.
+   Field baru itu diam-diam selalu undefined, bukan error, jadi gak
+   ketauan tanpa dites. */
+function videoState(blockId){
+  return window._videoProgress[blockId] || (window._videoProgress[blockId] = {
+    furthest:0, duration:0, lastSent:-1, started:false, slide:null,
+    maxRate:1, skipped:false, _lastCheckAt:null, _lastCurrentTime:null,
+  });
+}
+/* `rate` cuma dipakai buat satu hal: bedain wilayah video yang MAJU (belum
+   pernah dicapai) ditonton wajar, dipercepat, atau dilompatin sama sekali -
+   `furthest` sendiri gak bisa cerita itu, dia cuma tau SEBERAPA JAUH, gak
+   tau BAGAIMANA sampai ke sana.
+
+   Dua penanda ini SENGAJA cuma nyala kalau videonya lagi MAJU ke wilayah
+   baru (currentTime > furthest saat itu) - nonton ulang bagian yang sudah
+   pernah dilihat gak boleh kebaca sebagai "dipercepat", walau peserta
+   emang lagi nge-2x review-nya.
+
+   _lastCheckAt pakai jam ASLI (Date.now), bukan asumsi "tiap panggilan
+   berjarak 1,5 detik" - fungsi ini juga dipanggil dari pause/selesai yang
+   jedanya sejak tick sampler terakhir bisa berapa aja. */
+function videoTrackTime(blockId, currentTime, duration, rate){
   if(!duration || !isFinite(duration) || duration<=0) return;
-  const st = window._videoProgress[blockId] || (window._videoProgress[blockId]={furthest:0,duration:0,lastSent:-1,started:false,slide:null});
+  const st = videoState(blockId);
   st.duration = duration;
-  if(currentTime > st.furthest) st.furthest = currentTime;
+  if(currentTime > st.furthest){
+    if(st._lastCheckAt != null && rate){
+      const jedaAsli = (Date.now() - st._lastCheckAt) / 1000;
+      const majuVideo = currentTime - st._lastCurrentTime;
+      const wajar = jedaAsli * rate;
+      // Toleransi 2 detik + 50% dari perkiraan: jeda asli gak presisi (tab
+      // di background bikin setInterval telat kena throttle browser), jadi
+      // pembanding kaku bakal salah tuduh video normal sebagai lompatan.
+      if(majuVideo > wajar * 1.5 + 2){
+        st.skipped = true;
+      } else if(rate > 1.01 && rate > st.maxRate){
+        // >1.01, bukan >1 persis - hindari rate 1.0000001 dari API
+        // kebaca "dipercepat" padahal itu kecepatan normal.
+        st.maxRate = rate;
+      }
+    }
+    st.furthest = currentTime;
+  }
+  st._lastCheckAt = Date.now();
+  st._lastCurrentTime = currentTime;
 }
 function videoMarkStarted(blockId){
-  const st = window._videoProgress[blockId] || (window._videoProgress[blockId]={furthest:0,duration:0,lastSent:-1,started:false,slide:null});
+  const st = videoState(blockId);
   st.started = true;
   // Dicatat SEKALI pas mulai (bukan diambil ulang tiap checkpoint) - blok
   // video gak pindah slide sendiri, jadi slide saat pertama diputar itu
@@ -4969,7 +5016,13 @@ function videoSendCheckpoint(blockId, ended){
   // slide ikut dikirim tiap checkpoint (bukan cuma sekali) - persen TERJAUH
   // per video baru diketahui backend-nya dari baris TERAKHIR yang menang
   // (lihat activity_store.py), jadi baris itu perlu bawa slide-nya sendiri.
-  actEvent('video_progress', {block: blockId, persen: persen, slide: st.slide});
+  // rate/skip sama alasannya: backend ambil nilai TERBURUK/TERTINGGI yang
+  // pernah dilaporkan, bukan cuma dari baris terakhir.
+  actEvent('video_progress', {
+    block: blockId, persen: persen, slide: st.slide,
+    rate: st.maxRate > 1.01 ? Math.round(st.maxRate*100)/100 : null,
+    skip: st.skipped || null,
+  });
 }
 /* Dipanggil dari goTo() SEBELUM slide yang lagi ditinggalkan diganti -
    video yang masih diputar pas peserta pindah (gak sempat dijeda/selesai
@@ -5076,13 +5129,13 @@ function videoOnYtStateChange(blockId, e){
   if(e.data===YT.PlayerState.PLAYING){
     videoMarkStarted(blockId);
     window._ytSamplers[blockId] = setInterval(function(){
-      try{ videoTrackTime(blockId, player.getCurrentTime(), player.getDuration()); }catch(err){}
+      try{ videoTrackTime(blockId, player.getCurrentTime(), player.getDuration(), player.getPlaybackRate()); }catch(err){}
     }, 1500);
   } else if(e.data===YT.PlayerState.PAUSED){
-    try{ videoTrackTime(blockId, player.getCurrentTime(), player.getDuration()); }catch(err){}
+    try{ videoTrackTime(blockId, player.getCurrentTime(), player.getDuration(), player.getPlaybackRate()); }catch(err){}
     videoSendCheckpoint(blockId, false);
   } else if(e.data===YT.PlayerState.ENDED){
-    try{ videoTrackTime(blockId, player.getDuration(), player.getDuration()); }catch(err){}
+    try{ videoTrackTime(blockId, player.getDuration(), player.getDuration(), player.getPlaybackRate()); }catch(err){}
     videoSendCheckpoint(blockId, true);
   }
 }

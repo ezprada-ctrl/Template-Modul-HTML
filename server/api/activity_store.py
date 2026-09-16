@@ -581,6 +581,17 @@ def summarize_sessions(module_slug):
             # "Slide N" di rincian per-video Command Center, bukan cuma
             # rata-rata gabungan semua video.
             '_video_slide': {},
+            # blockId -> rate TERTINGGI yang pernah dilaporkan dipercepat
+            # (shell cuma ngirim field ini kalau > 1.01x - lihat maxRate di
+            # shell-template.html). Cuma naik, alasannya sama kayak _video_max:
+            # sekali kepergok dipercepat, tetap kepergok walau putaran
+            # berikutnya ditonton normal.
+            '_video_rate': {},
+            # blockId yang PERNAH kepergok ada lompatan di wilayah yang belum
+            # pernah dicapai (bukan maju-mundur nyari bagian yang SUDAH
+            # ditonton - itu wajar, gak ditandai). Set, bukan dict: sekali
+            # kejadian sudah cukup buat menandai videonya.
+            '_video_skip': set(),
             # blockId paket Articulate yang PERNAH dilaporkan selesai. Pakai
             # set, bukan penghitung: satu paket bisa nembak completed berkali-
             # kali (peserta buka ulang, atau SCORM di dalamnya ngirim status
@@ -624,6 +635,10 @@ def summarize_sessions(module_slug):
                     s['_video_max'][block] = persen
                 if p.get('slide') is not None:
                     s['_video_slide'][block] = p.get('slide')
+                if p.get('rate') and p['rate'] > s['_video_rate'].get(block, 0):
+                    s['_video_rate'][block] = p['rate']
+                if p.get('skip'):
+                    s['_video_skip'].add(block)
         elif t == 'session_end':
             s['durasi_total_ms'] = max(s['durasi_total_ms'], p.get('total_ms') or 0)
             s['_ada_session_end'] = True
@@ -693,14 +708,20 @@ def summarize_sessions(module_slug):
         # dibuka sama sekali.
         video_max = s.pop('_video_max')
         video_slide = s.pop('_video_slide')
+        video_rate = s.pop('_video_rate')
+        video_skip = s.pop('_video_skip')
         s['video_dimulai'] = len(video_max)
         s['video_rata_persen'] = round(sum(video_max.values()) / len(video_max)) if video_max else None
         # Rincian PER VIDEO (bukan cuma rata-rata gabungan) - video_rata_persen
         # di atas gampang menyamarkan satu video yang beneran gak ditonton di
         # antara yang lain ditonton penuh. Diurutkan dari yang paling rendah
         # duluan (paling perlu ditinjau), sama seperti pola peringatan_detail.
+        # rate/skip: None/False kalau videonya ditonton wajar - frontend
+        # (VideoRincian di CommandCenter.tsx) yang nerjemahin ke kalimat.
         s['video_detail'] = sorted(
-            [{'slide': video_slide.get(b), 'persen': p} for b, p in video_max.items()],
+            [{'slide': video_slide.get(b), 'persen': p,
+              'rate': video_rate.get(b), 'skip': b in video_skip}
+             for b, p in video_max.items()],
             key=lambda d: d['persen'])
         s['catatan'] = len(s.pop('_catatan_ids'))
         s['articulate_selesai'] = len(s.pop('_articulate_selesai'))
@@ -786,6 +807,8 @@ def summarize_learners():
         catatan_sesi = []
         video_max_sesi = {}
         video_slide_sesi = {}
+        video_rate_sesi = {}
+        video_skip_sesi = set()
         total_slide_modul = None
         slide_unik_sesi = set()
         peringatan_detail_sesi = []
@@ -810,6 +833,10 @@ def summarize_learners():
                     video_max_sesi[block] = persen
                 if block and p.get('slide') is not None:
                     video_slide_sesi[block] = p.get('slide')
+                if block and p.get('rate') and p['rate'] > video_rate_sesi.get(block, 0):
+                    video_rate_sesi[block] = p['rate']
+                if block and p.get('skip'):
+                    video_skip_sesi.add(block)
             elif t == 'session_end':
                 total_ms = max(total_ms, p.get('total_ms') or 0)
                 ada_end = True
@@ -906,6 +933,10 @@ def summarize_learners():
             # (slug, block) -> nomor slide, dipasangkan sama _video_max buat
             # bangun video_detail (rincian per video, bukan cuma rata-rata).
             '_video_slide': {},
+            # (slug, block) -> rate tertinggi / apakah pernah dilompatin -
+            # sama kuncinya (dan alasan yang sama) dengan _video_max di atas.
+            '_video_rate': {},
+            '_video_skip': set(),
             # (slug, block) - block id yang kebetulan sama di modul BEDA gak
             # boleh ketuker jadi satu paket, sama alasannya kayak _video_max.
             '_articulate_selesai': set(),
@@ -973,6 +1004,10 @@ def summarize_learners():
                 L['_video_max'][key2] = persen
             if block in video_slide_sesi:
                 L['_video_slide'][key2] = video_slide_sesi[block]
+            if video_rate_sesi.get(block, 0) > L['_video_rate'].get(key2, 0):
+                L['_video_rate'][key2] = video_rate_sesi[block]
+            if block in video_skip_sesi:
+                L['_video_skip'].add(key2)
         L['jumlah_sesi'] += 1
         L['durasi_total_ms'] += total_ms
         L['durasi_terekam_ms'] += terekam_ms
@@ -1061,13 +1096,16 @@ def summarize_learners():
         L['catatan'] = len([n for n in L.pop('_catatan').values() if not n.get('deleted')])
         video_max = L.pop('_video_max')
         video_slide = L.pop('_video_slide')
+        video_rate = L.pop('_video_rate')
+        video_skip = L.pop('_video_skip')
         L['video_dimulai'] = len(video_max)
         L['video_rata_persen'] = round(sum(video_max.values()) / len(video_max)) if video_max else None
         # Sama seperti summarize_sessions, tapi ditag nama modul karena satu
         # peserta bisa punya video di beberapa modul. Diurutkan dari yang
         # paling rendah duluan.
         L['video_detail'] = sorted(
-            [{'modul': slug, 'slide': video_slide.get((slug, b)), 'persen': p}
+            [{'modul': slug, 'slide': video_slide.get((slug, b)), 'persen': p,
+              'rate': video_rate.get((slug, b)), 'skip': (slug, b) in video_skip}
              for (slug, b), p in video_max.items()],
             key=lambda d: d['persen'])
         L['durasi_menit'] = round(L['durasi_total_ms'] / 60000, 1)

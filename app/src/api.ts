@@ -214,6 +214,12 @@ export interface VideoDetail {
   slide: number | null; // nomor slide rumah video ini. null = data lama sebelum field ini ada
   persen: number; // titik terjauh yang dicapai / durasi, 0-100
   modul?: string; // cuma ada di ActivityLearner (lintas modul) - slug modul asalnya
+  // Dua field baru: bedain "ditonton wajar sampai 100%" dari "kelihatan
+  // 100% tapi sebagian dipercepat/dilompatin". null/false = ditonton wajar
+  // (atau data lama sebelum field ini ada - dua-duanya sengaja dianggap
+  // sama, gak ada cara bedain "belum pernah dicek" dari "dicek, aman").
+  rate?: number | null; // kecepatan tertinggi yang kepakai pas nonton wilayah BARU (>1.01 baru dilaporkan)
+  skip?: boolean; // ada lompatan gede di wilayah yang belum pernah dicapai (dilewat, bukan ditonton dipercepat)
 }
 
 export interface ActivitySession {

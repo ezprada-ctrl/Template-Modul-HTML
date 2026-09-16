@@ -49,11 +49,18 @@ function slugAman(t: string): string {
 function perluTindakLanjut(x: {
   peringatan_diabaikan?: number; durasi_ditinggal_menit: number | null;
   kuis_gagal: number; video_dimulai: number; video_rata_persen: number | null;
+  video_detail?: VideoDetail[];
 }): boolean {
   if ((x.peringatan_diabaikan || 0) > 0) return true;
   if ((x.durasi_ditinggal_menit ?? 0) > 10) return true;
   if (x.kuis_gagal > 0) return true;
   if (x.video_dimulai > 0 && (x.video_rata_persen ?? 100) < 20) return true;
+  // Video kelihatan "ditonton" (persennya tinggi) tapi sebagian dipercepat
+  // atau dilompatin di putaran pertama - beda kasus dari baris di atas
+  // (yang nangkep video yang persennya RENDAH). Satu video begini di
+  // antara video lain yang wajar tetap harus bikin peserta ini kepilih
+  // buat ditinjau, walau video_rata_persen gabungannya kelihatan bagus.
+  if ((x.video_detail || []).some(v => v.skip || (v.rate ?? 0) > 1.01)) return true;
   return false;
 }
 
@@ -373,6 +380,24 @@ function VideoRincian({ detail }: { detail: VideoDetail[] }) {
             }} />
           </div>
           <span className="num" style={{ minWidth: 34, textAlign: 'right' }}>{d.persen}%</span>
+          {/* Dua penanda ini soal BAGAIMANA persen di atas dicapai, bukan
+              seberapa jauh - satu video bisa kelihatan "100% ditonton" tapi
+              sebagian dilompatin atau dipercepat di putaran pertamanya, dan
+              itu gak kelihatan dari bar/persen doang. "dilewat" menang atas
+              "dipercepat" kalau dua-duanya kejadian di video yang sama -
+              dilompatin itu tandanya lebih serius (bukan ditonton sama
+              sekali, bukan cuma ditonton buru-buru). */}
+          {d.skip ? (
+            <span title="Ada bagian yang belum pernah dilihat, langsung dilompatin - bukan ditonton"
+                  style={{ color: 'var(--danger)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+              ⏭ dilewat
+            </span>
+          ) : (d.rate ?? 0) > 1.01 ? (
+            <span title={`Ditonton sampai ${d.rate}× kecepatan normal pas pertama kali dilihat`}
+                  style={{ color: 'var(--text-faint)', whiteSpace: 'nowrap' }}>
+              ⚡ dipercepat
+            </span>
+          ) : null}
         </div>
       ))}
     </div>
