@@ -5607,9 +5607,47 @@ function resetProgress(){
      nambalnya cuma waktu halaman dimuat, jadi crash-nya kena sampai reload. */
   state = {visited:{}, quizAnswers:{}, quizSubmitted:{}, quizBest:quizBest||{}, quizAttempts:quizAttempts||{}, slideRushed:{}, quizWarnShown:{}, kcAnswers:{}, kcAttempts:{}, artDone:{}};
   if(identity) state.identity = identity;
+
+  /* Jejak blok yang TIDAK nebeng `state` harus dihapus terpisah - kalau
+     nggak, tombol ini cuma mereset sebagian dan sisanya jadi hantu.
+
+     Articulate: cmi tiap paket disimpan di localStorage sendiri
+     (artStoreKey) karena suspend_data SCORM 1.2 cuma ~4096 karakter. Tanpa
+     baris ini `artDone` dikosongkan tapi paketnya sendiri tetap ingat dia
+     sudah selesai - modulnya bilang belum, isinya bilang sudah, dan blok
+     yang dicentang "kunci" bisa langsung lolos begitu dibuka. Disapu lewat
+     PREFIX, bukan lewat daftar blok yang sekarang ada, supaya sisa paket
+     yang sudah dihapus dari modul ikut kebuang sekalian. */
+  try{
+    const prefixArt = STORAGE_KEY + ':art:';
+    Object.keys(localStorage)
+      .filter(k => k.indexOf(prefixArt) === 0)
+      .forEach(k => localStorage.removeItem(k));
+  }catch(e){}
+  /* Video: progres tontonan dipegang di memori. Tanpa dikosongkan, tontonan
+     sesudah reset dihitung menyambung yang tadi (furthest & lastSent masih
+     terisi), jadi checkpoint awalnya gak pernah terkirim lagi dan videonya
+     kebaca "sudah pernah ditonton" di rekaman aktivitas. */
+  window._videoProgress = {};
+  /* Rekap "Ringkasan Belajarmu" cuma muncul sendiri sekali per sesi. Sesudah
+     reset, sesinya memang dimulai dari nol lagi - jadi jatah munculnya ikut
+     dikembalikan. */
+  recapAutoShown = false;
+
   saveState();
   currentIdx = 0;
   render();
+
+  /* Tombol ini CUMA ada di Dev Mode (#reset-btn.dev-visible), dan Dev Mode -
+     persis seperti Mode Presentasi - mematikan SEMUA gerbang lewat
+     navGatesOff(): popup knowledge-check, kunci antar-bagian, peringatan
+     baca-cepat. Akibatnya datanya sudah benar-benar bersih tapi gerbangnya
+     tetap gak muncul, dan itu kebaca sebagai "reset-nya gagal" - padahal
+     yang mati gerbangnya, bukan reset-nya. Dikasih tau eksplisit daripada
+     dibiarkan jadi teka-teki. */
+  if(navGatesOff()){
+    showLockNotice('Progres direset. Popup knowledge-check & kunci bagian sedang MATI karena Dev Mode/Mode Presentasi nyala — matikan dulu kalau mau mengujinya.');
+  }
 }
 
 /* ---------------- Sidebar mobile ---------------- */
