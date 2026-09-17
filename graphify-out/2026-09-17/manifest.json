@@ -320,7 +320,7 @@
   ".claude/settings.json": {
     "mtime": 1787022108.759704,
     "seen": 1789642366.171663,
-    "ast_hash": "095c71e3ebb04d33915f4e0bbdb50ded",
+    "ast_hash": "",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -356,7 +356,7 @@
   ".claude/launch.json": {
     "mtime": 1789112040.931344,
     "seen": 1789642366.1716597,
-    "ast_hash": "72a3647fe4f6af76d683d4c2c5ff28d4",
+    "ast_hash": "",
     "semantic_hash": ""
   },
   "tools/build_source_printout.py": {
@@ -444,9 +444,9 @@
     "semantic_hash": ""
   },
   "app/src/paket/paket-shell.html": {
-    "mtime": 1789642178.4457738,
-    "seen": 1789642357.4069917,
-    "ast_hash": "363f5e032c0114416440113a3a93672e",
+    "mtime": 1789642767.4478729,
+    "seen": 1789642802.0058146,
+    "ast_hash": "8677f71f48c38a97f4fd4fdf3b689188",
     "semantic_hash": ""
   },
   "mockups/landing-konsol-modul.html": {

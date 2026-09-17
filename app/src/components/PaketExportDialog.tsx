@@ -65,6 +65,7 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [seret, setSeret] = useState(false);
+  const [cariDraft, setCariDraft] = useState('');
   /* Konsep yang sedang DISOROT kursor. Pratinjau menampilkan ini kalau ada,
      kalau tidak ya yang sedang terpilih - jadi kotaknya tidak pernah kosong
      dan tingginya tidak melompat waktu kursor masuk-keluar. */
@@ -217,6 +218,28 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
 
   const perkiraan = pilihan.reduce((a, p) => a + (p.byte || 0), 0);
 
+  /* Slug draft memisahkan kata pakai "-" dan "_" (cindi_materi-3-cindi-mt16an8y-3).
+     Kalau dicocokkan mentah-mentah, mengetik "cindi 3" tidak menemukan apa-apa
+     padahal justru itu yang diingat orang - nama sendiri dan nomor materinya,
+     bukan urutan persisnya apalagi kode acak di belakang. Jadi pemisahnya
+     disamakan jadi spasi dulu, lalu SETIAP kata harus ada (bukan salah satu):
+     "cindi 3" menyaring jauh lebih tajam daripada "cindi" saja. */
+  const draftTampil = useMemo(() => {
+    const kata = cariDraft.toLowerCase().replace(/[_-]+/g, ' ').trim().split(/\s+/).filter(Boolean);
+    if (!kata.length) return drafts;
+    return drafts.filter((d) => {
+      const nama = d.toLowerCase().replace(/[_-]+/g, ' ');
+      return kata.every((k) => nama.includes(k));
+    });
+  }, [drafts, cariDraft]);
+
+  /* Draft yang sudah dicentang lalu tersaring keluar tidak hilang dari paket -
+     dia tetap ada di daftar "Urutan & keterangan" di bawah. Tapi dari sini
+     kelihatannya seperti batal tercentang, jadi dihitung dan dikabari. */
+  const tercentangTersembunyi = pilihan.filter(
+    (p) => p.sumber === 'draft' && !draftTampil.includes(p.id),
+  ).length;
+
   /* Pratinjau memakai modul yang SUDAH dipilih kalau ada — jauh lebih berguna
      daripada nama contoh, karena penyusun langsung lihat judulnya sendiri
      dalam tata letak yang dipilih. Nama contoh cuma dipakai selagi belum ada
@@ -243,21 +266,48 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
         </p>
 
         {/* ---------- sumber modul ---------- */}
-        <label style={{ display: 'block', fontWeight: 600, fontSize: 13, margin: '18px 0 7px' }}>
-          Modul dari draft
-        </label>
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10,
+          fontWeight: 600, fontSize: 13, margin: '18px 0 7px',
+        }}>
+          <span>Modul dari draft</span>
+          {cariDraft.trim() && (
+            <span className="hint" style={{ fontWeight: 400, fontSize: 11.5 }}>
+              {draftTampil.length} dari {drafts.length}
+            </span>
+          )}
+        </div>
+        {/* Kotak cari baru muncul kalau daftarnya memang sudah panjang. Di
+            atas empat-lima draft, menyaring lebih lambat daripada membaca. */}
+        {drafts.length > 5 && (
+          <input
+            type="search" style={{ ...inp, marginBottom: 6 }} value={cariDraft} disabled={busy}
+            onChange={(e) => setCariDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape' && cariDraft) { e.stopPropagation(); setCariDraft(''); } }}
+            placeholder="Cari draft… (mis. cindi 3)" aria-label="Cari draft"
+          />
+        )}
         <div style={{
           maxHeight: 148, overflowY: 'auto', border: '1px solid var(--border)',
           borderRadius: 8, padding: 8, display: 'flex', flexDirection: 'column', gap: 2,
         }}>
           {!drafts.length && <span className="hint">Belum ada draft tersimpan.</span>}
-          {drafts.map((d) => (
+          {drafts.length > 0 && !draftTampil.length && (
+            <span className="hint">Tidak ada draft yang cocok. Coba kata lain, atau kosongkan pencarian.</span>
+          )}
+          {draftTampil.map((d) => (
             <label key={d} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, padding: '3px 4px', cursor: 'pointer' }}>
               <input type="checkbox" checked={adaDraft(d)} onChange={() => toggleDraft(d)} disabled={busy} />
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d}</span>
             </label>
           ))}
         </div>
+        {tercentangTersembunyi > 0 && (
+          <p className="hint" style={{ fontSize: 11.5, margin: '6px 0 0' }}>
+            {tercentangTersembunyi} draft yang sudah dicentang sedang disembunyikan pencarian —
+            semuanya tetap ikut ter-export.
+          </p>
+        )}
 
         <label style={{ display: 'block', fontWeight: 600, fontSize: 13, margin: '16px 0 7px' }}>
           Atau tambahkan berkas HTML yang sudah jadi

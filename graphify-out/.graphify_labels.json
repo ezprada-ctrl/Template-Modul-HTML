@@ -43,6 +43,7 @@
   "41": "pembungkusTag",
   "42": "api/index.py",
   "43": "uploadImageToStorage",
+  "44": "Render the current NAV item into the viewport",
   "45": "supabase_setup.sql",
   "46": "vite-env.d.ts",
   "47": "tsconfig.json",
@@ -64,5 +65,10 @@
   "63": "server/requirements.txt",
   "64": "supabase_storage_media_setup.sql",
   "65": "supabase_storage_setup.sql",
-  "68": "ccCocreation"
+  "66": "SCORM API Wrapper",
+  "67": "Knowledge Check Gate",
+  "68": "ccCocreation",
+  "69": "Record a quiz option selection",
+  "70": "Dev Mode Panel",
+  "71": "checkNetwork"
 }

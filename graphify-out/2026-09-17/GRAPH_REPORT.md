@@ -1,11 +1,11 @@
 # Graph Report - Template Modul Ikram  (2026-09-17)
 
 ## Corpus Check
-- 63 files · ~231,804 words
+- 63 files · ~232,918 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1040 nodes · 1835 edges · 72 communities (56 shown, 16 thin omitted)
+- 1041 nodes · 1837 edges · 66 communities (50 shown, 16 thin omitted)
 - Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 182 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
@@ -59,7 +59,6 @@
 - pembungkusTag
 - api/index.py
 - uploadImageToStorage
-- Render the current NAV item into the viewport
 - supabase_setup.sql
 - vite-env.d.ts
 - tsconfig.json
@@ -76,32 +75,27 @@
 - Close modal block
 - SVG donut chart renderer
 - Open the mobile sidebar drawer
-- SCORM API Wrapper
-- Knowledge Check Gate
 - ccCocreation
-- Record a quiz option selection
-- Dev Mode Panel
-- checkNetwork
 
 ## God Nodes (most connected - your core abstractions)
 1. `App()` - 34 edges
 2. `CommandCenter()` - 24 edges
 3. `ModuleData` - 23 edges
 4. `esc()` - 21 edges
-5. `generate_html()` - 20 edges
-6. `PreviewExport()` - 20 edges
+5. `PreviewExport()` - 20 edges
+6. `generate_html()` - 20 edges
 7. `Navigate to a NAV index, enforcing all gating rules` - 20 edges
 8. `Canvas()` - 18 edges
 9. `compilerOptions` - 18 edges
 10. `Render the current NAV item into the viewport` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Import PPTX (Tahap 1)` --references--> `extract()`  [INFERRED]
-  Panduan-Fitur-Template-Modul-Ikram.html → server/api/pptx_extract.py
-- `Preview & Export (Tahap 5)` --references--> `generate_html()`  [INFERRED]
-  Panduan-Fitur-Template-Modul-Ikram.html → server/api/generator.py
 - `14 Jenis Blok Konten` --references--> `render_block()`  [INFERRED]
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/generator.py
+- `Preview & Export (Tahap 5)` --references--> `generate_html()`  [INFERRED]
+  Panduan-Fitur-Template-Modul-Ikram.html → server/api/generator.py
+- `Import PPTX (Tahap 1)` --references--> `extract()`  [INFERRED]
+  Panduan-Fitur-Template-Modul-Ikram.html → server/api/pptx_extract.py
 - `Token warna blok colorClasses(name)` --semantically_similar_to--> `Token warna ditukar utuh per konsep`  [INFERRED] [semantically similar]
   docs/bedah-scorm-klc2-skp.md → app/src/paket/paket-shell.html
 - `Verifikasi frontend lewat string di bundle` --semantically_similar_to--> `Cara memverifikasi ulang temuan bedah`  [INFERRED] [semantically similar]
@@ -120,11 +114,11 @@
 - **Articulate SCORM-in-SCORM containment** — server_api_shell_template_artmakeshim, server_api_shell_template_scormfindapi, server_api_shell_template_concept_articulate_runtime [INFERRED 0.85]
 - **Research Basis for Idle/Reading-speed Thresholds** — panduan_fitur_template_modul_ikram_ambang_ditinggal_4_menit, panduan_fitur_template_modul_ikram_ambang_dibaca_238wpm, server_api_shell_template_actidlethresholdms, server_api_generator [INFERRED 0.85]
 
-## Communities (72 total, 16 thin omitted)
+## Communities (66 total, 16 thin omitted)
 
 ### Community 0 - "Navigate to a NAV index, enforcing all gating rules"
-Cohesion: 0.14
-Nodes (24): Peringatan Kecepatan Baca, Group a section's NAV items into singles/bundles/quiz, Handle 'go back and reread' from reading warning, Handle 'proceed anyway' from reading warning, Close the mobile sidebar drawer, Reading-Speed & Idle Detection, Sidebar & Slide Navigation, Navigate to the next NAV item (+16 more)
+Cohesion: 0.06
+Nodes (63): Peringatan Kecepatan Baca, Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Show/hide the progress block per HIDE_PROGRESS, Inject/play per-slide voiceover audio, Group a section's NAV items into singles/bundles/quiz, Handle 'go back and reread' from reading warning (+55 more)
 
 ### Community 1 - "index.py"
 Cohesion: 0.05
@@ -155,7 +149,7 @@ Cohesion: 0.10
 Nodes (19): EntriBlok, TUR_BLOK, VIDEO_CONTOH, bersihkanChrome(), BuilderDemo, DEMO_ABORT, DEMO_IDLE_RESUME_MS, DemoCtx (+11 more)
 
 ### Community 8 - "PreviewExport"
-Cohesion: 0.10
+Cohesion: 0.09
 Nodes (31): deleteDraft(), fetchArticulateZip(), generateHtmlForZip(), renameDraft(), blobKeDataUri(), HasilSemat, namaAset(), sematkanGambarDataUri() (+23 more)
 
 ### Community 9 - "BlockEditor.tsx"
@@ -231,8 +225,8 @@ Cohesion: 0.21
 Nodes (13): ccBatalkanTanda(), ccDitandai(), ccListLearners(), ccListModules(), ccListSessions(), ccPost(), ccTandaiUji(), batalkanTandaUji() (+5 more)
 
 ### Community 27 - "Articulate 360 Block Runtime"
-Cohesion: 0.32
-Nodes (13): Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide, Toggle fullscreen for an Articulate iframe block, Load an Articulate block's stored CMI data, Build a fake SCORM 1.2/2004 API shim for embedded Articulate content, Articulate shim LMSGetValue/GetValue implementation, Articulate shim LMSSetValue/SetValue implementation, Mark an Articulate block as completed (+5 more)
+Cohesion: 0.11
+Nodes (28): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-probe/README.md — Uji Koneksi LMS Guide, Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide (+20 more)
 
 ### Community 29 - "plugins"
 Cohesion: 0.22
@@ -290,10 +284,6 @@ Nodes (5): includeFiles, maxDuration, crons, functions, api/index.py
 Cohesion: 0.50
 Nodes (5): uploadImageToStorage(), detectPngTransparency(), ImageUploadField(), BackgroundImageField(), handleUpload()
 
-### Community 44 - "Render the current NAV item into the viewport"
-Cohesion: 0.24
-Nodes (14): Inject/play per-slide voiceover audio, Section Quiz Checkpoint, Check whether a section's quiz has been passed, Compute correct-answer count for a section's quiz, Render the current NAV item into the viewport, Render the top breadcrumb for the current item, Render the cover/hero slide HTML, Render a section quiz checkpoint slide (+6 more)
-
 ### Community 45 - "supabase_setup.sql"
 Cohesion: 0.40
 Nodes (3): public.modul_drafts_touch, modul_drafts_touch_trigger, public.modul_drafts
@@ -302,36 +292,16 @@ Nodes (3): public.modul_drafts_touch, modul_drafts_touch_trigger, public.modul_d
 Cohesion: 0.67
 Nodes (3): Cek Kesiapan Sistem Rekam, Aktifkan Rekam Aktivitas Peserta (toggle), Sampul (Tahap 3)
 
-### Community 66 - "SCORM API Wrapper"
-Cohesion: 0.24
-Nodes (11): findAPI(), lms-probe/README.md — Uji Koneksi LMS Guide, SCORM API Wrapper, Load learner progress state from SCORM or localStorage, SCORM LMSCommit/Commit wrapper, Walk window/parent chain to find SCORM API, SCORM LMSFinish/Terminate wrapper, Resolve SCORM API via window or opener (+3 more)
-
-### Community 67 - "Knowledge Check Gate"
-Cohesion: 0.45
-Nodes (11): Knowledge Check Gate, Check whether all Knowledge Check items on a slide are answered, Record a Knowledge Check answer, handle retry-until-correct, Apply the final locked result state for a KC question, Find a Knowledge Check question by block/index, Mark one KC option button as tried-and-wrong, Open the Knowledge Check popup for a slide, Restore prior wrong KC attempts on popup reopen (+3 more)
-
 ### Community 68 - "ccCocreation"
 Cohesion: 0.67
 Nodes (3): ccCocreation(), bukaCocreation(), bukaCocreationSemua()
-
-### Community 69 - "Record a quiz option selection"
-Cohesion: 0.52
-Nodes (7): Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Play the correct-answer chime, Play the quiz-failed tone, Play the quiz-passed fanfare, Play the wrong-answer chime
-
-### Community 70 - "Dev Mode Panel"
-Cohesion: 0.33
-Nodes (7): Show/hide the progress block per HIDE_PROGRESS, Hide the dev-mode password modal, Dev Mode Panel, Show the dev-mode password modal, Validate dev-mode password and enable dev mode, Toggle developer mode on/off, Dev-mode preview toggle for hidden progress
-
-### Community 71 - "checkNetwork"
-Cohesion: 0.40
-Nodes (4): checkNetwork(), checkScorm(), rows(), setVerdict()
 
 ## Ambiguous Edges - Review These
 - `Deploy (dua project Vercel)` → `Aturan graphify untuk proyek ini`  [AMBIGUOUS]
   CLAUDE.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **196 isolated node(s):** `Sumber`, `Pilihan`, `KONSEP_INFO`, `inp`, `PaketMeta` (+191 more)
+- **196 isolated node(s):** `$schema`, `typescript`, `oxc`, `react/rules-of-hooks`, `warn` (+191 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -343,12 +313,12 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `Template Modul Ikram — Source Code (Full Repo Printout)` connect `index.py` to `App.tsx`, `Generator HTML Modul`?**
   _High betweenness centrality (0.143) - this node is a cross-community bridge._
 - **Why does `react` connect `App.tsx` to `ModuleData`, `EmojiPicker.tsx`, `BlockEditor.tsx`, `PaketExportDialog.tsx`, `CommandCenter.tsx`, `Canvas.tsx`, `BlockPreview.tsx`, `PreviewExport.tsx`, `types.ts`, `GraphicStyleSelect.tsx`, `plugins`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
-- **Why does `14 Jenis Blok Konten` connect `BlockEditor.tsx` to `Generator HTML Modul`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+- **Why does `App()` connect `App.tsx` to `ModuleData`, `steps.ts`, `Canvas.tsx`, `PreviewExport.tsx`, `types.ts`?**
+  _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `App()` (e.g. with `onKey()` and `demoDariUrl()`) actually correct?**
   _`App()` has 4 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Sumber`, `Pilihan`, `KONSEP_INFO` to the rest of the system?**
+- **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
   _196 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Navigate to a NAV index, enforcing all gating rules` be split into smaller, more focused modules?**
-  _Cohesion score 0.14130434782608695 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06451612903225806 - nodes in this community are weakly interconnected._
