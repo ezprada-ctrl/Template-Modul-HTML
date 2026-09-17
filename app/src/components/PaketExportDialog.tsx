@@ -47,6 +47,17 @@ const KONSEP_INFO: { id: Konsep; nama: string; ket: string }[] = [
 const PRA_W = 1160;
 const PRA_H = 812;
 
+/* Ukuran HP. 390px itu lebar iPhone 12–16 dan patokan yang paling sering
+   dipakai; yang di bawahnya (360px Android, 320px SE) tata letaknya sama,
+   cuma lebih sempit — tidak ada aturan cangkang yang baru muncul di situ.
+   Tingginya TIDAK dipatok 844: kotak pratinjau di dialog tidak setinggi itu,
+   dan lebih baik menampilkan layar HP yang lebih pendek pada ukuran 1:1
+   daripada layar penuh yang diperkecil sampai hurufnya tidak terbaca. Waktu
+   pratinjaunya dibesarkan ke seluruh layar, tingginya naik sampai 844. */
+const PRA_HP_W = 390;
+const PRA_HP_H = 844;
+const PRA_HP_H_KOTAK = 470;
+
 const inp: CSSProperties = {
   width: '100%', padding: '8px 10px', borderRadius: 8,
   border: '1px solid var(--border)', background: 'var(--surface)',
@@ -75,7 +86,12 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
      angka mati: dialognya menyusut di layar sempit, dan skala mati bikin
      pratinjaunya meleber keluar atau menyisakan pias kosong. */
   const kotakRef = useRef<HTMLDivElement>(null);
-  const [skala, setSkala] = useState(672 / PRA_W);
+  /* Yang disimpan ukuran KOTAKNYA, bukan skalanya: skala dan tinggi viewport
+     pratinjau dua-duanya turun dari sini, dan aturannya beda antara mode HP
+     dan Desktop. Menyimpan hasil jadinya berarti dua state yang harus terus
+     dijaga sinkron. */
+  const [kotak, setKotak] = useState({ w: 672, h: 0 });
+  const [mode, setMode] = useState<'desktop' | 'hp'>('desktop');
   /* Diperbesar ke seluruh layar. Wadahnya yang berubah gaya, elemen
      iframe-nya TETAP yang itu-itu juga di posisi yang sama pada pohon React —
      kalau dipindah, dia dimuat ulang dan apa pun yang sedang dicoba
@@ -92,7 +108,7 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
     const ukur = () => {
       const w = el.clientWidth, h = el.clientHeight;
       if (w <= 0) return;
-      setSkala(besar && h > 0 ? Math.min(w / PRA_W, h / PRA_H) : w / PRA_W);
+      setKotak({ w, h });
     };
     ukur();
     if (typeof ResizeObserver === 'undefined') {
@@ -218,6 +234,22 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
 
   const perkiraan = pilihan.reduce((a, p) => a + (p.byte || 0), 0);
 
+  /* Desktop: layar 1160px selalu diperkecil supaya muat selebar kotaknya.
+     HP: justru TIDAK diperkecil selama muat — 390px yang ditampilkan 1:1 itu
+     yang bikin pratinjaunya bisa dinilai; baru kalau dialognya lebih sempit
+     dari 390px dia ikut menyusut. */
+  const praW = mode === 'hp' ? PRA_HP_W : PRA_W;
+  const skala = mode === 'hp'
+    ? Math.min(1, kotak.w / PRA_HP_W)
+    : (besar && kotak.h > 0 ? Math.min(kotak.w / PRA_W, kotak.h / PRA_H) : kotak.w / PRA_W);
+  /* Tinggi viewport HP mengikuti ruang yang ada, dibagi skala supaya yang
+     "dirasakan" halaman di dalamnya tetap tinggi layar sungguhan. Dibatasi
+     844 (HP tertinggi yang lazim) dan 420 (di bawah itu bukan HP lagi). */
+  const praH = mode === 'desktop' ? PRA_H : Math.max(420, Math.min(
+    PRA_HP_H,
+    Math.round((besar && kotak.h > 0 ? kotak.h : PRA_HP_H_KOTAK) / (skala || 1)),
+  ));
+
   /* Slug draft memisahkan kata pakai "-" dan "_" (cindi_materi-3-cindi-mt16an8y-3).
      Kalau dicocokkan mentah-mentah, mengetik "cindi 3" tidak menemukan apa-apa
      padahal justru itu yang diingat orang - nama sendiri dan nomor materinya,
@@ -246,8 +278,12 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
      yang dicentang. */
   const konsepTampil = sorot ?? konsep;
   const pratinjau = useMemo(
-    () => bangunPratinjau(konsepTampil, judul, sambutan, pilihan.map((p) => ({ nama: p.nama, desc: p.desc }))),
-    [konsepTampil, judul, sambutan, pilihan],
+    () => bangunPratinjau(
+      konsepTampil, judul, sambutan,
+      pilihan.map((p) => ({ nama: p.nama, desc: p.desc })),
+      mode === 'hp',
+    ),
+    [konsepTampil, judul, sambutan, pilihan, mode],
   );
 
   return (
@@ -432,7 +468,27 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
               <span className="hint" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {mode === 'hp' ? `${praW}×${praH} · ` : ''}
                 {pilihan.length ? `${pilihan.length} modul pilihanmu` : 'nama contoh — centang modul untuk lihat punyamu'}
+              </span>
+              <span style={{
+                display: 'inline-flex', flex: 'none', borderRadius: 7, overflow: 'hidden',
+                border: '1px solid var(--border)',
+              }}>
+                {([['desktop', 'Desktop'], ['hp', 'HP']] as const).map(([m, label]) => (
+                  <button key={m} type="button" onClick={() => setMode(m)}
+                          aria-pressed={mode === m}
+                          title={m === 'hp'
+                            ? 'Lihat seperti di HP: lebar 390px, dan berperilaku seperti layar sentuh'
+                            : 'Lihat seperti di layar lebar: 1160px'}
+                          style={{
+                            border: 0, padding: '4px 11px', cursor: 'pointer', font: 'inherit', fontSize: 11.5,
+                            background: mode === m ? 'var(--accent)' : 'transparent',
+                            color: mode === m ? '#fff' : 'var(--text-dim)',
+                          }}>
+                    {label}
+                  </button>
+                ))}
               </span>
               <button className="btn-ghost btn-sm" type="button" onClick={() => setBesar(!besar)}
                       style={{ flex: 'none', fontSize: 11.5 }}
@@ -447,14 +503,18 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
           <div ref={kotakRef}
                style={besar ? { flex: 1, minHeight: 0, overflow: 'hidden' } : { overflow: 'hidden' }}>
             <div style={{
-              width: Math.round(PRA_W * skala), height: Math.round(PRA_H * skala),
+              width: Math.round(praW * skala), height: Math.round(praH * skala),
               position: 'relative', margin: '0 auto', overflow: 'hidden',
+              /* Bingkai tipis cuma di mode HP: tanpa itu, layar HP yang sempit
+                 di tengah kotak gelap tidak kelihatan batasnya sampai mana. */
+              outline: mode === 'hp' ? '1px solid var(--border-strong)' : undefined,
+              borderRadius: mode === 'hp' ? 10 : undefined,
             }}>
               <iframe
                 title="Pratinjau tampilan dashboard"
                 srcDoc={pratinjau}
                 style={{
-                  width: PRA_W, height: PRA_H, border: 0,
+                  width: praW, height: praH, border: 0,
                   transform: `scale(${skala})`, transformOrigin: 'top left',
                   position: 'absolute', top: 0, left: 0,
                 }}

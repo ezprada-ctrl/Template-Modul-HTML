@@ -62,12 +62,14 @@ function isiCangkang(
   meta: Pick<PaketMeta, 'judul' | 'sambutan' | 'konsep'>,
   modul: { nama: string; desc?: string }[],
   pratinjau = false,
+  paksaSentuh = false,
 ) {
   return cangkang
     .replace(/__PAKET_JUDUL__/g, escHtml(meta.judul))
     .replace(/__PAKET_SAMBUTAN__/g, escHtml(meta.sambutan))
     .replace('__PAKET_KONSEP__', meta.konsep)
     .replace('__PAKET_PRATINJAU__', pratinjau ? 'true' : 'false')
+    .replace('__PAKET_SENTUH__', paksaSentuh ? 'true' : 'false')
     .replace('__PAKET_MODUL__', jsString(modul.map((m) => ({ nama: m.nama, desc: m.desc || '' }))));
 }
 
@@ -97,12 +99,17 @@ export const MODUL_CONTOH: { nama: string; desc?: string }[] = [
  * ikut berubah sendiri dan tidak akan pernah berbohong. Karena cangkangnya
  * asli, pratinjaunya juga bisa DIPAKAI: dicari, disorot, diklik. Satu-satunya
  * yang dipalsukan adalah membuka modul - lihat penanda PRATINJAU di cangkang.
+ *
+ * `sentuh` dinyalakan waktu pratinjaunya disetel ke ukuran HP: lebar 390px saja
+ * tidak cukup, karena perangkat penyusunnya tetap punya kursor dan cangkang
+ * memutuskan beberapa hal dari situ (lihat PAKSA_SENTUH di cangkang).
  */
 export function bangunPratinjau(
   konsep: Konsep,
   judul: string,
   sambutan: string,
   modul: { nama: string; desc?: string }[],
+  sentuh = false,
 ): string {
   const daftar = modul.length ? modul : MODUL_CONTOH;
   const isi = isiCangkang(
@@ -113,6 +120,7 @@ export function bangunPratinjau(
     },
     daftar,
     true,
+    sentuh,
   );
   // ISI diisi string kosong sebanyak modulnya supaya panjangnya tetap sepadan
   // dengan MODUL; pratinjau tidak bisa diklik (pointer-events dimatikan di

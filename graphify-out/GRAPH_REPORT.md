@@ -1,16 +1,16 @@
 # Graph Report - Template Modul Ikram  (2026-09-17)
 
 ## Corpus Check
-- 63 files · ~233,199 words
+- 63 files · ~233,723 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1041 nodes · 1837 edges · 72 communities (56 shown, 16 thin omitted)
+- 1041 nodes · 1837 edges · 66 communities (50 shown, 16 thin omitted)
 - Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 182 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0ab9e31e`
+- Built from commit: `5acdc669`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -59,7 +59,6 @@
 - pembungkusTag
 - api/index.py
 - uploadImageToStorage
-- Render the current NAV item into the viewport
 - supabase_setup.sql
 - vite-env.d.ts
 - tsconfig.json
@@ -76,12 +75,7 @@
 - Close modal block
 - SVG donut chart renderer
 - Open the mobile sidebar drawer
-- SCORM API Wrapper
-- Knowledge Check Gate
 - ccCocreation
-- Record a quiz option selection
-- Dev Mode Panel
-- checkNetwork
 
 ## God Nodes (most connected - your core abstractions)
 1. `App()` - 34 edges
@@ -120,11 +114,11 @@
 - **Articulate SCORM-in-SCORM containment** — server_api_shell_template_artmakeshim, server_api_shell_template_scormfindapi, server_api_shell_template_concept_articulate_runtime [INFERRED 0.85]
 - **Research Basis for Idle/Reading-speed Thresholds** — panduan_fitur_template_modul_ikram_ambang_ditinggal_4_menit, panduan_fitur_template_modul_ikram_ambang_dibaca_238wpm, server_api_shell_template_actidlethresholdms, server_api_generator [INFERRED 0.85]
 
-## Communities (72 total, 16 thin omitted)
+## Communities (66 total, 16 thin omitted)
 
 ### Community 0 - "Navigate to a NAV index, enforcing all gating rules"
-Cohesion: 0.14
-Nodes (24): Peringatan Kecepatan Baca, Group a section's NAV items into singles/bundles/quiz, Handle 'go back and reread' from reading warning, Handle 'proceed anyway' from reading warning, Close the mobile sidebar drawer, Reading-Speed & Idle Detection, Sidebar & Slide Navigation, Navigate to the next NAV item (+16 more)
+Cohesion: 0.06
+Nodes (63): Peringatan Kecepatan Baca, Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Show/hide the progress block per HIDE_PROGRESS, Inject/play per-slide voiceover audio, Group a section's NAV items into singles/bundles/quiz, Handle 'go back and reread' from reading warning (+55 more)
 
 ### Community 1 - "index.py"
 Cohesion: 0.05
@@ -231,8 +225,8 @@ Cohesion: 0.21
 Nodes (13): ccBatalkanTanda(), ccDitandai(), ccListLearners(), ccListModules(), ccListSessions(), ccPost(), ccTandaiUji(), batalkanTandaUji() (+5 more)
 
 ### Community 27 - "Articulate 360 Block Runtime"
-Cohesion: 0.32
-Nodes (13): Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide, Toggle fullscreen for an Articulate iframe block, Load an Articulate block's stored CMI data, Build a fake SCORM 1.2/2004 API shim for embedded Articulate content, Articulate shim LMSGetValue/GetValue implementation, Articulate shim LMSSetValue/SetValue implementation, Mark an Articulate block as completed (+5 more)
+Cohesion: 0.11
+Nodes (28): checkNetwork(), checkScorm(), findAPI(), rows(), setVerdict(), lms-probe/README.md — Uji Koneksi LMS Guide, Render completion status text for active Articulate blocks, Bind Articulate blocks active on the current slide (+20 more)
 
 ### Community 29 - "plugins"
 Cohesion: 0.22
@@ -290,10 +284,6 @@ Nodes (5): includeFiles, maxDuration, crons, functions, api/index.py
 Cohesion: 0.50
 Nodes (5): uploadImageToStorage(), detectPngTransparency(), ImageUploadField(), BackgroundImageField(), handleUpload()
 
-### Community 44 - "Render the current NAV item into the viewport"
-Cohesion: 0.24
-Nodes (14): Inject/play per-slide voiceover audio, Section Quiz Checkpoint, Check whether a section's quiz has been passed, Compute correct-answer count for a section's quiz, Render the current NAV item into the viewport, Render the top breadcrumb for the current item, Render the cover/hero slide HTML, Render a section quiz checkpoint slide (+6 more)
-
 ### Community 45 - "supabase_setup.sql"
 Cohesion: 0.40
 Nodes (3): public.modul_drafts_touch, modul_drafts_touch_trigger, public.modul_drafts
@@ -302,29 +292,9 @@ Nodes (3): public.modul_drafts_touch, modul_drafts_touch_trigger, public.modul_d
 Cohesion: 0.67
 Nodes (3): Cek Kesiapan Sistem Rekam, Aktifkan Rekam Aktivitas Peserta (toggle), Sampul (Tahap 3)
 
-### Community 66 - "SCORM API Wrapper"
-Cohesion: 0.24
-Nodes (11): findAPI(), lms-probe/README.md — Uji Koneksi LMS Guide, SCORM API Wrapper, Load learner progress state from SCORM or localStorage, SCORM LMSCommit/Commit wrapper, Walk window/parent chain to find SCORM API, SCORM LMSFinish/Terminate wrapper, Resolve SCORM API via window or opener (+3 more)
-
-### Community 67 - "Knowledge Check Gate"
-Cohesion: 0.45
-Nodes (11): Knowledge Check Gate, Check whether all Knowledge Check items on a slide are answered, Record a Knowledge Check answer, handle retry-until-correct, Apply the final locked result state for a KC question, Find a Knowledge Check question by block/index, Mark one KC option button as tried-and-wrong, Open the Knowledge Check popup for a slide, Restore prior wrong KC attempts on popup reopen (+3 more)
-
 ### Community 68 - "ccCocreation"
 Cohesion: 0.67
 Nodes (3): ccCocreation(), bukaCocreation(), bukaCocreationSemua()
-
-### Community 69 - "Record a quiz option selection"
-Cohesion: 0.52
-Nodes (7): Get or create the shared Web Audio context, Schedule a single oscillator tone, Record a quiz option selection, Play the correct-answer chime, Play the quiz-failed tone, Play the quiz-passed fanfare, Play the wrong-answer chime
-
-### Community 70 - "Dev Mode Panel"
-Cohesion: 0.33
-Nodes (7): Show/hide the progress block per HIDE_PROGRESS, Hide the dev-mode password modal, Dev Mode Panel, Show the dev-mode password modal, Validate dev-mode password and enable dev mode, Toggle developer mode on/off, Dev-mode preview toggle for hidden progress
-
-### Community 71 - "checkNetwork"
-Cohesion: 0.40
-Nodes (4): checkNetwork(), checkScorm(), rows(), setVerdict()
 
 ## Ambiguous Edges - Review These
 - `Deploy (dua project Vercel)` → `Aturan graphify untuk proyek ini`  [AMBIGUOUS]
@@ -351,4 +321,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `$schema`, `typescript`, `oxc` to the rest of the system?**
   _196 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Navigate to a NAV index, enforcing all gating rules` be split into smaller, more focused modules?**
-  _Cohesion score 0.14130434782608695 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06451612903225806 - nodes in this community are weakly interconnected._
