@@ -320,8 +320,8 @@
   ".claude/settings.json": {
     "mtime": 1787022108.759704,
     "seen": 1789551131.6446762,
-    "ast_hash": "095c71e3ebb04d33915f4e0bbdb50ded",
-    "semantic_hash": "095c71e3ebb04d33915f4e0bbdb50ded"
+    "ast_hash": "",
+    "semantic_hash": ""
   },
   "CLAUDE.md": {
     "mtime": 1788772563.3817375,
@@ -356,8 +356,8 @@
   ".claude/launch.json": {
     "mtime": 1789112040.931344,
     "seen": 1789551131.644668,
-    "ast_hash": "72a3647fe4f6af76d683d4c2c5ff28d4",
-    "semantic_hash": "72a3647fe4f6af76d683d4c2c5ff28d4"
+    "ast_hash": "",
+    "semantic_hash": ""
   },
   "tools/build_source_printout.py": {
     "mtime": 1788772483.978641,

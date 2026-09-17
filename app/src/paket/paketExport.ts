@@ -15,7 +15,9 @@
 
 import cangkang from './paket-shell.html?raw';
 
-export type Konsep = 'panel' | 'indeks' | 'orbit';
+export type Konsep =
+  | 'panel' | 'indeks' | 'orbit' | 'terminal' | 'kartu'
+  | 'linimasa' | 'metro' | 'majalah' | 'rak' | 'fokus';
 
 export interface ModulPaket {
   nama: string;

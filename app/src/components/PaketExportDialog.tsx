@@ -31,6 +31,13 @@ const KONSEP_INFO: { id: Konsep; nama: string; ket: string }[] = [
   { id: 'panel', nama: 'Panel', ket: 'Grid padat. Paling kuat kalau modulnya banyak.' },
   { id: 'indeks', nama: 'Indeks', ket: 'Daftar tipografis + pratinjau. Tenang, latar terang.' },
   { id: 'orbit', nama: 'Orbit', ket: 'Peta melingkar. Paling pas untuk ≤ 12 modul.' },
+  { id: 'terminal', nama: 'Terminal', ket: 'Jendela konsol. Rapat, teknis, semua modul kelihatan sekaligus.' },
+  { id: 'kartu', nama: 'Kartu', ket: 'Kartu warna-warni bernomor. Ramai dan gampang dibedakan.' },
+  { id: 'linimasa', nama: 'Linimasa', ket: 'Urutan bertahap di satu garis. Untuk materi yang berjenjang.' },
+  { id: 'metro', nama: 'Metro', ket: 'Peta jalur. Menegaskan alur dari modul awal ke akhir.' },
+  { id: 'majalah', nama: 'Majalah', ket: 'Tata letak cetak. Modul teratas jadi headline.' },
+  { id: 'rak', nama: 'Rak', ket: 'Punggung buku berjajar. Terasa seperti koleksi, bukan daftar.' },
+  { id: 'fokus', nama: 'Fokus', ket: 'Satu modul selayar, maju-mundur. Paling tenang.' },
 ];
 
 /* Ukuran "layar lebar" tempat pratinjau dirender sebelum diperkecil.
