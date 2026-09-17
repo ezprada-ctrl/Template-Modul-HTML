@@ -1,7 +1,7 @@
 # Graph Report - Template Modul Ikram  (2026-09-16)
 
 ## Corpus Check
-- 63 files · ~229,167 words
+- 63 files · ~229,552 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c4ec2c26`
+- Built from commit: `635e152d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -100,10 +100,10 @@
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/generator.py
 - `14 Jenis Blok Konten` --references--> `render_block()`  [INFERRED]
   Panduan-Fitur-Template-Modul-Ikram.html → server/api/generator.py
-- `Identitas Peserta Lintas Modul` --references--> `Resolve learner identity from state/SCORM/shared cache`  [INFERRED]
-  Panduan-Fitur-Template-Modul-Ikram.html → server/api/shell-template.html
-- `Alat "Cek Rekam Aktivitas"` --references--> `Send a live preflight event to verify activity recording works`  [INFERRED]
-  Panduan-Fitur-Template-Modul-Ikram.html → server/api/shell-template.html
+- `Token warna blok colorClasses(name)` --semantically_similar_to--> `Token warna ditukar utuh per konsep`  [INFERRED] [semantically similar]
+  docs/bedah-scorm-klc2-skp.md → app/src/paket/paket-shell.html
+- `Verifikasi frontend lewat string di bundle` --semantically_similar_to--> `Cara memverifikasi ulang temuan bedah`  [INFERRED] [semantically similar]
+  CLAUDE.md → docs/bedah-scorm-klc2-skp.md
 
 ## Import Cycles
 - None detected.
@@ -321,7 +321,7 @@ Nodes (3): Alat "Cek Rekam Aktivitas", Command Center — Rekam Aktivitas & Anal
   CLAUDE.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **194 isolated node(s):** `Sumber`, `Pilihan`, `KONSEP_INFO`, `inp`, `Tab` (+189 more)
+- **194 isolated node(s):** `Sumber`, `Pilihan`, `KONSEP_INFO`, `inp`, `PaketMeta` (+189 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -331,11 +331,11 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Deploy (dua project Vercel)` and `Aturan graphify untuk proyek ini`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `Template Modul Ikram — Source Code (Full Repo Printout)` connect `index.py` to `App.tsx`, `Generator HTML Modul`?**
-  _High betweenness centrality (0.158) - this node is a cross-community bridge._
+  _High betweenness centrality (0.163) - this node is a cross-community bridge._
 - **Why does `react` connect `Canvas.tsx` to `devDependencies`, `ModuleData`, `EmojiPicker.tsx`, `PreviewExport.tsx`, `BlockEditor.tsx`, `App.tsx`, `CommandCenter.tsx`, `BlockPreview.tsx`, `types.ts`, `GraphicStyleSelect.tsx`, `CoverForm.tsx`?**
-  _High betweenness centrality (0.093) - this node is a cross-community bridge._
+  _High betweenness centrality (0.098) - this node is a cross-community bridge._
 - **Why does `plugins` connect `devDependencies` to `Canvas.tsx`?**
-  _High betweenness centrality (0.065) - this node is a cross-community bridge._
+  _High betweenness centrality (0.067) - this node is a cross-community bridge._
 - **Are the 4 inferred relationships involving `App()` (e.g. with `onKey()` and `demoDariUrl()`) actually correct?**
   _`App()` has 4 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `Sumber`, `Pilihan`, `KONSEP_INFO` to the rest of the system?**
