@@ -52,13 +52,21 @@
   --r:999px;
 }
 *{box-sizing:border-box;}
-html,body{margin:0;}
+/* text-size-adjust: Android & iOS diam-diam memperbesar teks di kolom yang
+   dianggapnya sempit. Di halaman yang tata letaknya sudah diatur sampai px
+   terakhir, itu justru merusaknya - jadi dimatikan. */
+html,body{margin:0;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 body{
   background:var(--bg); color:var(--ink);
   font-family:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
   line-height:1.6; -webkit-font-smoothing:antialiased;
 }
-.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:30px 60px;}
+/* padding-inline pakai max(): di layar tegak nilainya tetap 20px, tapi
+   waktu HP dimiringkan, poni dan sudut melengkung memakan tepi kiri/kanan
+   dan env() itulah yang menggantikannya. */
+.wrap{max-width:1180px;margin:0 auto;
+  padding-inline:max(20px,env(safe-area-inset-left,0px)) max(20px,env(safe-area-inset-right,0px));
+  padding-block:30px 60px;}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 
 /* ---------------- KONSEP 1 : PANEL ---------------- */
@@ -254,7 +262,8 @@ body{
 .o-stage.list .o-halo,.o-stage.list .o-frame,.o-stage.list .o-spark{display:none;}
 .o-stage.list .o-core{width:100%;aspect-ratio:auto;border-radius:var(--r);padding:20px;margin-bottom:6px;}
 .o-stage.list .o-node{position:static;transform:none;width:100%;text-align:left;font-size:13px;padding:13px 15px;}
-.stars{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;}
+/* Kanvasnya sengaja lebih jangkung dari viewport - lihat stars() di bawah. */
+.stars{position:fixed;top:0;left:0;width:100%;z-index:-1;pointer-events:none;opacity:.55;}
 
 /* ---------------- KONSEP 4 : TERMINAL ---------------- */
 :root[data-konsep="terminal"]{
@@ -413,6 +422,10 @@ body{
   transition:color .2s;}
 .mt-stop .no{position:absolute;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:10px;
   letter-spacing:.14em;color:var(--ink-faint);}
+/* Keterangan modul cuma dipakai waktu peta berubah tegak di HP - di layar
+   lebar tempatnya di panel bawah, dan kalau dibiarkan tampil di sini dia
+   menggelembungkan tiap perhentian. */
+.mt-stop .mt-desc{display:none;}
 .mt-stop:nth-child(odd) .nm{bottom:28px;}
 .mt-stop:nth-child(odd) .no{bottom:76px;}
 .mt-stop:nth-child(even) .nm{top:28px;}
@@ -560,12 +573,17 @@ body{
   letter-spacing:.12em;text-transform:uppercase;transition:transform .2s,box-shadow .2s;}
 .fk-open:hover{transform:translateY(-2px);box-shadow:0 12px 26px -14px var(--accent);}
 .fk-open:focus-visible{outline:2px solid var(--accent-ink);outline-offset:3px;}
-.fk-rail{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding-top:14px;border-top:1px solid var(--line);}
-.fk-tick{flex:1 1 0;min-width:14px;max-width:80px;height:3px;padding:0;border:0;border-radius:2px;
-  background:var(--line-strong);cursor:pointer;transition:background .2s,transform .2s;}
-.fk-tick:hover{background:var(--ink-dim);transform:scaleY(2);}
-.fk-tick.aktif{background:var(--accent);transform:scaleY(2.4);}
-.fk-tick:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}
+.fk-rail{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding-top:4px;border-top:1px solid var(--line);}
+/* Yang terlihat cuma garis 3px, tapi yang bisa dikenai jari setinggi 40px:
+   tombolnya transparan, garisnya digambar oleh ::before di tengahnya. Rel
+   setipis 3px mustahil diketuk - di layar sentuh itu bukan kontrol, itu hiasan. */
+.fk-tick{flex:1 1 0;min-width:22px;max-width:86px;height:44px;padding:0;border:0;background:none;
+  cursor:pointer;display:flex;align-items:center;}
+.fk-tick::before{content:'';flex:1;height:3px;border-radius:2px;background:var(--line-strong);
+  transition:background .2s,height .2s;}
+.fk-tick:hover::before{background:var(--ink-dim);height:5px;}
+.fk-tick.aktif::before{background:var(--accent);height:6px;}
+.fk-tick:focus-visible{outline:2px solid var(--accent);outline-offset:-6px;}
 .fk-hint{margin:16px 0 0;text-align:center;font-family:'IBM Plex Mono',ui-monospace,monospace;
   font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);}
 
@@ -577,6 +595,137 @@ body{
   bottom:calc(24px + env(safe-area-inset-bottom,0px));max-width:min(92vw,440px);
   background:var(--surface);color:var(--ink);border:1px solid var(--accent);border-radius:var(--r);
   padding:12px 16px;font-size:13.5px;box-shadow:var(--shadow-lift);}
+/* ===========================================================
+   SENTUH & LAYAR KECIL
+   Satu blok untuk kesepuluh konsep sekaligus. Ditaruh paling
+   bawah supaya menang dari aturan konsep di atasnya tanpa
+   perlu selector yang dipanjang-panjangkan.
+
+   Tiga angka yang dipakai berulang, semuanya bukan selera:
+   - 44px : ambang sasaran sentuh (iOS HIG, WCAG 2.5.5). Di
+            bawah itu jari orang dewasa mulai sering meleset.
+   - 16px : di bawah ini iOS Safari MEMPERBESAR halaman waktu
+            input disentuh - dan tidak pernah mengembalikannya.
+   - 760px: batas yang sama dengan tata letak tegak Metro,
+            supaya tidak ada dua ambang yang bersaing.
+   =========================================================== */
+
+/* Nama dan keterangan modul datang dari penyusun, bukan dari sini: boleh
+   sepanjang apa pun, boleh satu kata tanpa spasi. Di layar 320px kata
+   semacam itu mendorong SELURUH halaman melebar - dan yang menggeser ke
+   samping akhirnya peserta. Dipasang di body, bukan didaftar per konsep:
+   daftar semacam itu pasti ketinggalan begitu ada konsep baru. */
+body{ overflow-wrap:anywhere; }
+
+@media (hover:none){
+  /* Tidak ada kursor di sini: apa pun yang tadinya baru muncul saat
+     disorot harus terlihat dari awal, dan tiap ketukan perlu umpan balik
+     yang tidak bergantung pada hover. */
+  *{-webkit-tap-highlight-color:transparent;}
+  .t-row .go,.i-row .go{opacity:1;}
+  .p-card .go i{transform:none;}
+  .p-card:active,.k-card:active{transform:scale(.985);}
+  .l-card:active{transform:translateX(4px) scale(.99);}
+  .t-row:active{background:var(--accent-soft);border-left-color:var(--accent);}
+  .mg-item:active{background:var(--panel);}
+  .i-row:active{padding-left:16px;}
+  .o-node:active,.rk-book:active{filter:brightness(1.15);}
+  .i-btn:active,.mt-btn:active,.rk-btn:active,.fk-open:active,.fk-nav:active{transform:scale(.96);}
+}
+
+@media (max-width:760px){
+  .wrap{padding-block:22px 44px;}
+
+  /* --- umum: kotak cari & sasaran sentuh --- */
+  .search input,.t-prompt input{min-height:44px;font-size:16px;}
+  /* Bilah cari melekat di atas layar sepanjang gulir. Blur latar di situ
+     berarti satu lapis yang digambar ulang tiap frame - mahal di HP kelas
+     bawah, dan hampir tidak kelihatan di layar sekecil ini. */
+  .p-bar{padding:9px 10px;gap:10px;background:var(--bg);
+    backdrop-filter:none;-webkit-backdrop-filter:none;}
+  .count{font-size:12px;}
+  /* Label mono huruf-besar di bawah 11,5px praktis tidak terbaca sambil
+     berjalan. Semuanya diangkat ke satu lantai yang sama. */
+  .eyebrow,.i-kicker,.o-kicker,.mg-top,.fk-top,.fk-hint,.o-note,.mt-badge,
+  .p-stat .l,.p-card .go,.i-row .go,.k-card .go,.o-core .hint,.i-prev .lbl,
+  .t-bar span,.mg-item .no,.mg-item .go,.l-card .go,.l-step{font-size:11.5px;}
+
+  /* Latar yang dipaku (background-attachment:fixed) memaksa browser HP
+     menggambar ulang seluruh latar tiap frame gulir. Dilepas di sini;
+     gradiennya tetap sama, cuma ikut menggulung. */
+  :root[data-konsep="orbit"] body,
+  :root[data-konsep="kartu"] body,
+  :root[data-konsep="rak"] body{background-attachment:scroll;}
+
+  /* --- TERMINAL --- */
+  .t-body{padding:16px 14px;}
+  .t-row{padding:12px 10px;min-height:44px;}
+  .t-row .ds{font-size:12.5px;}
+  .t-row .go{font-size:11.5px;}
+  .t-prompt{gap:7px;}
+
+  /* --- KARTU --- */
+  .k-head{padding-top:6px;}
+  .k-card{min-height:170px;padding:18px;}
+  .k-num{font-size:64px;}
+
+  /* --- LINIMASA --- */
+  .l-line{padding-left:30px;}
+  .l-item::before{left:-26px;}
+  .l-step,.l-card .go{font-size:11.5px;}
+
+  /* --- METRO: peta mendatar jadi daftar tegak --- */
+  /* Keterangan modul pindah MASUK ke barisnya. Panel keterangan di bawah
+     peta cuma terisi lewat hover - di layar sentuh dia tidak akan pernah
+     terpakai, jadi menyisakannya cuma memakan tempat dan membingungkan. */
+  .mt-info{display:none;}
+  .mt-map{margin:18px 0 0;overflow-x:visible;}
+  .mt-track{flex-direction:column;align-items:stretch;min-width:0;padding:14px 10px;gap:4px;}
+  .mt-track::before{left:16px;right:auto;top:30px;bottom:30px;width:7px;height:auto;margin:0;
+    background:linear-gradient(to bottom,var(--accent),#8b7bff);}
+  .mt-stop{width:100%;min-height:56px;justify-content:flex-start;gap:14px;padding:7px 0;text-align:left;}
+  .mt-stop .dot{order:1;}
+  .mt-stop .mt-teks{order:2;flex:1;min-width:0;}
+  .mt-stop .no{order:3;position:static;margin-left:auto;flex:none;}
+  .mt-stop .nm{position:static;width:auto;text-align:left;display:block;font-size:14px;}
+  .mt-stop .mt-desc{display:block;margin-top:3px;font-size:12.5px;line-height:1.5;color:var(--ink-dim);}
+
+  /* --- MAJALAH --- */
+  .mg-head h1{margin:16px 0 14px;}
+  .mg-item{padding:18px 16px 20px;border-right:0;}
+  .mg-item .nm{font-size:19px;}
+
+  /* --- RAK --- */
+  /* Punggung setipis 38px susah dikenai jari, jadi di HP semuanya dilebarkan.
+     Raknya tetap digeser mendatar - itu memang cara memandang rak buku -
+     tapi geseran horizontal di tepi layar gampang ketukar jadi "kembali"
+     di iOS, makanya overscroll-nya dikurung. */
+  .rk-books{gap:9px;padding:32px 14px 0;min-height:230px;}
+  .rk-book{min-width:54px;font-size:13px;}
+  .rk-shelf{scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;}
+  .rk-book{scroll-snap-align:center;}
+  .rk-cap{margin-top:20px;}
+  .rk-btn,.mt-btn,.i-btn,.fk-open{min-height:44px;font-size:12.5px;}
+
+  /* --- FOKUS --- */
+  .fk-stage{padding:26px 0;gap:6px;}
+  .fk-card p{font-size:14.5px;}
+  /* Rel indeks membungkus ke baris baru, BUKAN menyusut. Dengan flex:1 1 0
+     saja, paket 14 modul menggencet tiap tick jadi 20px - kelihatannya rapi
+     tapi tidak satu pun bisa dikenai jari. Lebih baik dua baris. */
+  .fk-tick{min-width:44px;}
+  .fk-open{min-height:48px;}
+}
+
+/* Layar sangat sempit (320px: iPhone SE, layar luar HP lipat). */
+@media (max-width:360px){
+  .wrap{padding-inline:max(14px,env(safe-area-inset-left,0px)) max(14px,env(safe-area-inset-right,0px));}
+  .fk-rail{gap:4px;}   /* di 320px, gap 6px menyisakan tick 43,7px - tepat di bawah ambang */
+  .p-head{padding:20px 16px;}
+  .fk-stage{gap:4px;}
+  .mt-stop .no{display:none;}   /* nomor kalah penting dari nama modulnya */
+}
+
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;}
 }
@@ -789,6 +938,7 @@ body{
     <div class="rk-cap" aria-live="polite">
       <h3 id="rkName">Arahkan ke salah satu punggung buku</h3>
       <p id="rkDesc" class="kosong">Keterangan modul muncul di sini begitu Anda menunjuk atau memilihnya di rak.</p>
+      <!-- Dua kalimat di atas diganti versi "ketuk" oleh skrip di layar sentuh. -->
       <button class="rk-btn" type="button" id="rkBtn" hidden>Buka modul →</button>
     </div>
   </section>
@@ -808,7 +958,7 @@ body{
       <button class="fk-nav" type="button" id="fkNext" aria-label="Modul berikutnya">→</button>
     </div>
     <div class="fk-rail" id="fkRail"></div>
-    <p class="fk-hint">← → berpindah modul · Enter membuka</p>
+    <p class="fk-hint" id="fkHint">← → berpindah modul · Enter membuka</p>
   </section>
 
 </div>
@@ -824,6 +974,10 @@ __PAKET_ISI__
 
 var JUDUL_PUSAT = document.getElementById('ocTitle').textContent;
 var SUB_PUSAT   = document.getElementById('ocSub').textContent;
+
+/* Layar sentuh tidak punya hover. Beberapa konsep menampilkan keterangan
+   modul lewat sorotan kursor; di sini jalurnya harus lain, bukan hilang. */
+var SENTUH = !!(window.matchMedia && matchMedia('(hover: none)').matches);
 
 function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -924,10 +1078,14 @@ function buildOrbit(){
     b.addEventListener('click',function(){ buka(i); });
     oStage.appendChild(b); oNodes.push(b);
   });
+  if(SENTUH) ocHint.textContent='Ketuk salah satu modul';
   layoutOrbit();
 }
 function layoutOrbit(){
-  var sempit = window.innerWidth < 780;
+  /* Cincin butuh ruang DUA arah: dia persegi. HP yang dimiringkan lebarnya
+     cukup (misal 844px) tapi tingginya cuma ~390px - cincinnya jadi jauh
+     lebih jangkung dari layarnya. Jadi tingginya ikut jadi syarat. */
+  var sempit = window.innerWidth < 780 || window.innerHeight < 560;
   oStage.classList.toggle('list', sempit);
   if(sempit){ oNodes.forEach(function(n){ n.style.left=''; n.style.top=''; }); return; }
   var n=oNodes.length, R=41;
@@ -949,9 +1107,21 @@ function resetOrbit(){
   if(document.activeElement && document.activeElement.classList.contains('o-node')) return;
   oNodes.forEach(function(n){ n.classList.remove('aktif'); });
   ocTitle.textContent=JUDUL_PUSAT; ocSub.textContent=SUB_PUSAT;
-  ocHint.textContent='Arahkan ke salah satu titik'; oLine.classList.remove('on');
+  ocHint.textContent=SENTUH ? 'Ketuk salah satu modul' : 'Arahkan ke salah satu titik';
+  oLine.classList.remove('on');
 }
-window.addEventListener('resize',layoutOrbit);
+/* Satu penangan resize untuk dua pekerjaan, dan keduanya ditunda.
+   Di HP, bilah alamat yang menggulung memicu resize beruntun yang cuma
+   mengubah tinggi - menata ulang cincin dan menggambar ratusan bintang
+   pada tiap kejadian itu bikin gulir tersendat tanpa ada yang berubah. */
+var lebarLama=window.innerWidth, jedaUkur;
+window.addEventListener('resize',function(){
+  clearTimeout(jedaUkur);
+  jedaUkur=setTimeout(function(){
+    layoutOrbit();
+    if(window.innerWidth!==lebarLama){ lebarLama=window.innerWidth; stars(); }
+  },140);
+});
 
 /* ---- dipakai bareng konsep-konsep di bawah ---- */
 function nomor(i){ return (i<9?'0':'')+(i+1); }
@@ -1047,9 +1217,14 @@ function renderMetro(){
   gMetro.innerHTML='';
   MODUL.forEach(function(m,i){
     var b=document.createElement('button'); b.type='button'; b.className='mt-stop';
-    b.innerHTML='<span class="no"></span><span class="dot" aria-hidden="true"></span><span class="nm"></span>';
+    /* .mt-teks kosong melompong di layar lebar (.nm di situ diposisikan
+       absolut, .mt-desc disembunyikan) dan baru jadi wadah sungguhan waktu
+       petanya berubah tegak di HP. */
+    b.innerHTML='<span class="no"></span><span class="dot" aria-hidden="true"></span>'+
+                '<span class="mt-teks"><span class="nm"></span><span class="mt-desc"></span></span>';
     b.querySelector('.no').textContent=nomor(i);
     b.querySelector('.nm').textContent=m.nama;
+    b.querySelector('.mt-desc').textContent=m.desc || '';
     b.addEventListener('mouseenter',function(){ pilihMetro(m,i,b); });
     b.addEventListener('focus',function(){ pilihMetro(m,i,b); });
     b.addEventListener('click',function(){ buka(i); });
@@ -1094,7 +1269,8 @@ function pilihRak(m,i,el){
   for(var x=0;x<a.length;x++) a[x].classList.remove('aktif');
   el.classList.add('aktif');
   rkName.textContent=m.nama;
-  rkDesc.textContent=m.desc || 'Modul ini belum diberi keterangan.';
+  rkDesc.textContent=(m.desc || 'Modul ini belum diberi keterangan.') +
+    (SENTUH ? ' — ketuk sekali lagi untuk membuka.' : '');
   if(m.desc) rkDesc.classList.remove('kosong'); else rkDesc.classList.add('kosong');
   rkBtn.hidden=false;
 }
@@ -1103,6 +1279,10 @@ rkBtn.addEventListener('click',function(){ if(rkAktif>=0) buka(rkAktif); });
    semua bukunya seukuran malah terbaca sebagai grafik batang, bukan rak. */
 var RONA_BUKU=[22,352,196,146,262,36,14,208];
 function renderRak(k){
+  if(SENTUH){
+    rkName.textContent='Ketuk salah satu punggung buku';
+    rkDesc.textContent='Judulnya muncul di sini; ketuk sekali lagi untuk membuka modulnya.';
+  }
   k=(k||'').trim().toLowerCase(); gRak.innerHTML='';
   var n=0;
   MODUL.forEach(function(m,i){
@@ -1116,7 +1296,14 @@ function renderRak(k){
     b.title=m.nama;
     b.addEventListener('mouseenter',function(){ pilihRak(m,i,b); });
     b.addEventListener('focus',function(){ pilihRak(m,i,b); });
-    b.addEventListener('click',function(){ buka(i); });
+    /* Di layar sentuh, punggung buku selebar 54px yang judulnya tegak sering
+       tidak terbaca utuh. Ketukan pertama membuka keterangannya di bawah rak,
+       ketukan berikutnya (atau tombol di keterangan itu) baru membuka modulnya
+       - jadi tidak ada modul yang terbuka gara-gara salah colok. */
+    b.addEventListener('click',function(){
+      if(SENTUH && rkAktif!==i){ pilihRak(m,i,b); return; }
+      buka(i);
+    });
     gRak.appendChild(b);
   });
   tulisJumlah(cRak,n,k); eRak.hidden=n>0; gRak.hidden=n===0;
@@ -1141,6 +1328,7 @@ function fokusKe(i){
 }
 function mulaiFokus(){
   cFokus.textContent=MODUL.length+' modul';
+  if(SENTUH) document.getElementById('fkHint').textContent='Geser untuk berpindah · ketuk untuk membuka';
   fkRail.innerHTML='';
   MODUL.forEach(function(m,i){
     var t=document.createElement('button'); t.type='button'; t.className='fk-tick';
@@ -1160,23 +1348,46 @@ function mulaiFokus(){
 fkPrev.addEventListener('click',function(){ fokusKe(fkIdx-1); });
 fkNext.addEventListener('click',function(){ fokusKe(fkIdx+1); });
 fkOpen.addEventListener('click',function(){ buka(fkIdx); });
+/* Tombol panah tetap ada, tapi di HP yang pertama dicoba orang selalu geser
+   jari. Ambangnya 45px mendatar DAN harus lebih mendatar daripada menegak -
+   tanpa syarat kedua, gulir halaman biasa ikut terbaca sebagai geseran. */
+(function(){
+  var x0=null,y0=null;
+  var stage=document.querySelector('.fk-stage');
+  stage.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1){ x0=null; return; }
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY;
+  },{passive:true});
+  stage.addEventListener('touchend',function(e){
+    if(x0===null || !e.changedTouches.length) return;
+    var dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0;
+    x0=null;
+    if(Math.abs(dx)>45 && Math.abs(dx)>Math.abs(dy)*1.5) fokusKe(fkIdx + (dx<0 ? 1 : -1));
+  },{passive:true});
+})();
 
 /* ---- bintang (khusus Orbit) ---- */
 function stars(){
   var cv=document.getElementById('stars');
   if(KONSEP!=='orbit'){ cv.style.display='none'; return; }
+  /* Kanvasnya dibuat setinggi LAYAR PERANGKAT, bukan setinggi viewport.
+     Di HP, bilah alamat yang muncul-hilang mengubah tinggi viewport terus
+     menerus; kalau kanvasnya dipaskan ke situ, tiap gulir menyisakan pita
+     gelap tanpa bintang di bawah - atau memaksa gambar ulang tiap frame.
+     Dibuat berlebih sekali di awal, selesai perkara. Kelebihannya terpotong
+     viewport dan tidak menambah area gulir (elemennya position:fixed). */
   var cx=cv.getContext('2d'), d=window.devicePixelRatio||1;
-  cv.width=innerWidth*d; cv.height=innerHeight*d;
-  cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px';
-  cx.setTransform(d,0,0,d,0,0); cx.clearRect(0,0,innerWidth,innerHeight);
-  var n=Math.round(innerWidth*innerHeight/14000);
+  var w=innerWidth, h=Math.max(innerHeight,(window.screen&&screen.height)||0)+120;
+  cv.width=w*d; cv.height=h*d;
+  cv.style.height=h+'px';
+  cx.setTransform(d,0,0,d,0,0); cx.clearRect(0,0,w,h);
+  var n=Math.round(w*h/14000);
   for(var i=0;i<n;i++){
     cx.globalAlpha=Math.random()*.55+.12;
     cx.fillStyle = Math.random()>.82 ? '#d8a13c' : '#f0ecdf';
-    cx.beginPath(); cx.arc(Math.random()*innerWidth,Math.random()*innerHeight,Math.random()*1.1+.2,0,7); cx.fill();
+    cx.beginPath(); cx.arc(Math.random()*w,Math.random()*h,Math.random()*1.1+.2,0,7); cx.fill();
   }
 }
-window.addEventListener('resize',stars);
 
 /* ---- mulai ---- */
 /* Satu daftar, dipakai buat tiga hal sekaligus: mana yang dirender saat
