@@ -3425,6 +3425,31 @@ function actBindActivity(){
     window.addEventListener(name, actOnActivity, { passive: true });
   });
 }
+/* Video yang LAGI DIPUTAR = peserta masih di depan layar, walau nol event
+   mouse/keyboard nyampe ke halaman induk.
+
+   BUG yang ditutup ini (dilaporkan 2026-09-19): begitu peserta ngeklik ke
+   dalam player YouTube - apalagi ke tombol layar penuh - fokusnya pindah ke
+   IFRAME. Semua mousemove/keydown/scroll sesudah itu kejadian di dokumen
+   YouTube, bukan di dokumen modul, jadi listener di actBindActivity() gak
+   pernah kebangun lagi dan actLastActivity beku di detik terakhir peserta
+   nyentuh halaman induk. Video 20 menit ditonton khusyuk sampai habis tetap
+   kena vonis idle di menit ke-4: waktu tatap slide-nya kepotong dan kolom
+   "Ditinggal" di Command Center nuduh orang yang justru lagi nonton.
+
+   (Progres videonya sendiri - video_progress, persen terjauh - TIDAK kena
+   bug ini: samplernya polling player lewat postMessage dari halaman induk,
+   yang jalan terus tanpa peduli fokus ada di mana. Yang rusak cuma jam
+   idle slide.)
+
+   Sinyalnya diambil dari sampler yang MEMANG cuma hidup selama state
+   PLAYING (lihat videoOnYtStateChange) - video yang dijeda langsung
+   berhenti ngirim sinyal ini, jadi peserta yang mause video lalu pergi
+   tetap kehitung idle seperti biasa. */
+function actNoteMediaActivity(){
+  if(!TRACK_READY) return;
+  actOnActivity();
+}
 function actOnActivity(){
   actLastActivity = Date.now();
   if(actIdlePaused){
@@ -5128,8 +5153,11 @@ function videoOnYtStateChange(blockId, e){
   if(window._ytSamplers[blockId]){ clearInterval(window._ytSamplers[blockId]); delete window._ytSamplers[blockId]; }
   if(e.data===YT.PlayerState.PLAYING){
     videoMarkStarted(blockId);
+    actNoteMediaActivity();
     window._ytSamplers[blockId] = setInterval(function(){
       try{ videoTrackTime(blockId, player.getCurrentTime(), player.getDuration(), player.getPlaybackRate()); }catch(err){}
+      // Detak "peserta masih nonton" - lihat actNoteMediaActivity().
+      actNoteMediaActivity();
     }, 1500);
   } else if(e.data===YT.PlayerState.PAUSED){
     try{ videoTrackTime(blockId, player.getCurrentTime(), player.getDuration(), player.getPlaybackRate()); }catch(err){}
