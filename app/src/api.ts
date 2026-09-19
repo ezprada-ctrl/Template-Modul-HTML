@@ -83,6 +83,37 @@ export async function listDrafts(): Promise<string[]> {
   return data.drafts;
 }
 
+/** Satu baris daftar draft: slug (identitasnya) + judul modul di dalamnya. */
+export interface DraftRingkas {
+  slug: string;
+  /** Kosong kalau modulnya memang tak berjudul, ATAU backend-nya belum bisa. */
+  judul: string;
+}
+
+// Daftar draft yang ikut membawa judul tiap modul. Dipisah dari listDrafts()
+// dengan sengaja: yang lama dipakai daftar kelola draft di Preview & Export,
+// dan di sana slug memang identitas yang dicari - bukan tempat yang butuh
+// diubah, jadi kontraknya tidak disentuh sama sekali.
+//
+// Backend yang belum mengenal `with_title` MENGABAIKAN parameternya dan tetap
+// mengirim daftar string. Itu keadaan nyata, bukan teori: frontend dan backend
+// ini dua project Vercel yang deploy sendiri-sendiri (lihat CLAUDE.md), jadi
+// pasti ada jeda saat frontend sudah baru tapi backend masih lama. Di jeda itu
+// judulnya kosong dan pemakainya jatuh balik ke slug - persis tampilan lama,
+// bukan daftar kosong atau layar merah.
+export async function listDraftsRingkas(): Promise<DraftRingkas[]> {
+  const res = await fetch(`${BASE}/api/drafts?with_title=1`);
+  const data = await res.json();
+  if (!Array.isArray(data.drafts)) return [];
+  return data.drafts.map((baris: unknown): DraftRingkas =>
+    typeof baris === 'string'
+      ? { slug: baris, judul: '' }
+      : {
+          slug: String((baris as { slug?: unknown }).slug ?? ''),
+          judul: String((baris as { title?: unknown }).title ?? ''),
+        });
+}
+
 // Muat draft berdasarkan NAMA PENYIMPANANNYA di server (slug = primary key
 // tabel modul_drafts). Slug yang dipakai aplikasi SELALU diambil dari `name`
 // ini, bukan dari field `slug` yang kebetulan ikut tersimpan di dalam JSON-nya.

@@ -198,6 +198,14 @@ def api_r2_delete_url():
 
 @app.get('/api/drafts')
 def api_list_drafts():
+    # `with_title` OPSIONAL, dan tanpa parameter itu jawabannya persis seperti
+    # dulu (daftar string). Ini bukan kehati-hatian berlebihan: frontend dan
+    # backend di sini dua project Vercel yang deploy sendiri-sendiri (lihat
+    # CLAUDE.md), jadi pasti ada jeda saat salah satunya lebih tua. Kalau
+    # bentuk lamanya ikut berubah, frontend versi lama langsung pecah begitu
+    # backend ini naik duluan — padahal yang diminta cuma tambahan.
+    if request.args.get('with_title'):
+        return jsonify({'drafts': draft_store.list_drafts_with_title()})
     return jsonify({'drafts': draft_store.list_drafts()})
 
 

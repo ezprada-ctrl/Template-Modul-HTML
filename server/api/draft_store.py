@@ -9,6 +9,7 @@ SUPABASE_ANON_KEY aren't set, so local dev without those env vars keeps
 working exactly like before.
 """
 import os
+import re
 import json
 import requests
 
@@ -71,6 +72,88 @@ def list_drafts():
 
     os.makedirs(LOCAL_DRAFTS_DIR, exist_ok=True)
     return sorted(f[:-5] for f in os.listdir(LOCAL_DRAFTS_DIR) if f.endswith('.json'))
+
+
+# Jalur cepat, dan SENGAJA dipatok di awal berkas: pola ini hanya cocok kalau
+# `title` benar-benar kunci pertama. Itu keadaan yang lazim — emptyModule()
+# menaruhnya paling depan dan urutan kunci ikut terbawa waktu disimpan — tapi
+# BUKAN jaminan: draft yang sampulnya tersemat bisa diawali coverImageDataUri
+# berisi base64 megabyte-an, dan judulnya terdorong jauh ke belakang. Karena
+# itu polanya tidak dilonggarkan jadi "cari "title" di mana saja": di berkas
+# begitu, yang pertama ketemu bisa saja `title` milik langkah timeline, dan
+# daftar yang salah nama lebih buruk daripada daftar yang lambat.
+_TITLE_DI_DEPAN = re.compile(r'\s*\{\s*"title"\s*:\s*("(?:[^"\\]|\\.)*")')
+
+# Hasil baca judul, dikunci ke (ukuran, mtime) berkasnya. Inilah yang menolong
+# berkas yang jalur cepatnya meleset: mem-parse draft 8MB makan ~35ms, dan
+# tanpa catatan ini ongkos itu ditagih ulang tiap dialog Export Paket dibuka.
+# Dengan catatan, sekali saja — sampai berkasnya benar-benar berubah.
+_judul_tersimpan = {}
+
+
+def _judul_berkas(path):
+    """Judul satu draft lokal, semurah mungkin.
+
+    Draft kecil (kebanyakan) selesai di 4KB pertama tanpa parse sama sekali;
+    yang urutan kuncinya lain terpaksa dibaca utuh, lalu diingat. Judul cuma
+    pemanis daftar, jadi berkas yang tidak terbaca mengembalikan string kosong
+    dan pemakainya jatuh balik ke slug — satu draft rusak tidak boleh
+    menjatuhkan seluruh daftarnya.
+    """
+    try:
+        st = os.stat(path)
+        kunci = (st.st_size, st.st_mtime_ns)
+        catatan = _judul_tersimpan.get(path)
+        if catatan and catatan[0] == kunci:
+            return catatan[1]
+
+        with open(path, encoding='utf-8') as f:
+            awal = f.read(4096)
+        cocok = _TITLE_DI_DEPAN.match(awal)
+        if cocok:
+            judul = json.loads(cocok.group(1))
+        else:
+            with open(path, encoding='utf-8') as f:
+                judul = json.load(f).get('title') or ''
+
+        _judul_tersimpan[path] = (kunci, judul)
+        return judul
+    except Exception:
+        return ''
+
+
+def list_drafts_with_title():
+    """Seperti list_drafts(), tapi tiap baris bawa judul modulnya.
+
+    Dipakai daftar pilih-modul di dialog Export Paket, tempat yang dirakit
+    adalah paket UNTUK PESERTA: yang muncul di dashboard mereka judulnya,
+    bukan slug. Slug tetap ikut karena judul TIDAK unik — belasan draft bisa
+    sama-sama bernama "Modul Baru", dan tanpa slug daftarnya jadi deretan
+    baris kembar yang lebih membingungkan daripada slug telanjang.
+    """
+    if USE_SUPABASE:
+        res = requests.get(
+            f'{SUPABASE_URL}/rest/v1/modul_drafts',
+            # Alias `title:` ditulis eksplisit supaya nama kuncinya tidak
+            # bergantung pada cara PostgREST menamai hasil `data->>title`.
+            # Yang diminta cuma judulnya, bukan kolom `data` seutuhnya —
+            # menarik seluruh JSON tiap draft cuma untuk satu senar teks
+            # akan jauh lebih mahal daripada daftarnya sendiri.
+            params={'select': 'slug,title:data->>title'},
+            headers=_headers(),
+            timeout=10,
+        )
+        res.raise_for_status()
+        return sorted(
+            ({'slug': row['slug'], 'title': row.get('title') or ''} for row in res.json()),
+            key=lambda row: row['slug'],
+        )
+
+    os.makedirs(LOCAL_DRAFTS_DIR, exist_ok=True)
+    return [
+        {'slug': f[:-5], 'title': _judul_berkas(os.path.join(LOCAL_DRAFTS_DIR, f))}
+        for f in sorted(os.listdir(LOCAL_DRAFTS_DIR)) if f.endswith('.json')
+    ]
 
 
 def load_draft(name):

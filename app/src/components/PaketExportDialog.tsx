@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { listDrafts, loadDraft, generateHtml } from '../api';
+import { listDraftsRingkas, loadDraft, generateHtml, type DraftRingkas } from '../api';
 import { normalizeModule } from '../types';
 import { sematkanGambarDataUri } from '../assetEmbed';
 import {
@@ -65,7 +65,7 @@ const inp: CSSProperties = {
 };
 
 export default function PaketExportDialog({ onClose }: { onClose: () => void }) {
-  const [drafts, setDrafts] = useState<string[]>([]);
+  const [drafts, setDrafts] = useState<DraftRingkas[]>([]);
   const [pilihan, setPilihan] = useState<Pilihan[]>([]);
   const [judul, setJudul] = useState('');
   const [sambutan, setSambutan] = useState('');
@@ -99,7 +99,7 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
   const [besar, setBesar] = useState(false);
 
   useEffect(() => {
-    listDrafts().then(setDrafts).catch((e) => setError(e.message || 'Gagal memuat daftar draft.'));
+    listDraftsRingkas().then(setDrafts).catch((e) => setError(e.message || 'Gagal memuat daftar draft.'));
   }, []);
 
   useEffect(() => {
@@ -127,31 +127,59 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
     return () => window.removeEventListener('keydown', esc, true);
   }, [besar]);
 
+  /* Draft yang judulnya sudah pernah ditarik, disimpan per slug. Bukan sekadar
+     penghemat permintaan — ini yang menghentikan putaran tak berujung. Penanda
+     "belum ditarik" dulu adalah `nama === id`, padahal draft yang judulnya
+     kosong memang jatuh kembali ke slug-nya sendiri (Nama Tab Browser di tab
+     Tema boleh dikosongkan). Draft begitu selamanya terlihat "belum", dan
+     karena efeknya menulis ke state yang jadi pemicunya sendiri, loadDraft
+     dipanggil berulang tanpa henti. Dicatat per SLUG, bukan per baris terpilih,
+     supaya draft yang dicentang lagi setelah dilepas langsung tampil judulnya. */
+  const judulDraft = useRef(new Map<string, { nama: string; desc: string }>());
+
   const adaDraft = (slug: string) => pilihan.some((p) => p.sumber === 'draft' && p.id === slug);
 
   function toggleDraft(slug: string) {
+    const tahu = judulDraft.current.get(slug);
+    /* Judul dari daftar dipakai sebagai isian awal, jadi baris "Urutan &
+       keterangan" langsung menyebut nama yang benar begitu dicentang — tidak
+       sempat berkedip sebagai slug dulu sambil menunggu draft-nya dibaca. */
+    const dariDaftar = drafts.find((d) => d.slug === slug)?.judul;
     setPilihan((lama) =>
       adaDraft(slug)
         ? lama.filter((p) => !(p.sumber === 'draft' && p.id === slug))
-        : [...lama, { key: 'd:' + slug, sumber: 'draft', id: slug, nama: slug, desc: '' }]);
+        : [...lama, {
+            key: 'd:' + slug, sumber: 'draft', id: slug,
+            nama: tahu?.nama || dariDaftar || slug, desc: tahu?.desc || '',
+          }]);
   }
 
-  /* Nama & deskripsi draft baru diketahui setelah JSON-nya dibaca. Ditarik
-     begitu dicentang supaya penyusun langsung lihat judul aslinya, bukan
-     slug — dan deskripsinya terisi otomatis dari heroDesc modul itu. */
+  /* Deskripsi draft baru diketahui setelah JSON-nya dibaca (dari heroDesc
+     modul itu), dan judulnya ikut disegarkan di sini kalau daftarnya sudah
+     basi. Daftar sudah memberi judul di muka, jadi tarikan ini bukan lagi
+     satu-satunya jalan nama yang benar muncul — cuma pelengkapnya. */
   useEffect(() => {
-    const belum = pilihan.filter((p) => p.sumber === 'draft' && p.nama === p.id);
+    const belum = pilihan.filter((p) => p.sumber === 'draft' && !judulDraft.current.has(p.id));
     if (!belum.length) return;
+    /* Ditandai SEKARANG, sebelum satu pun await — bukan setelah jawabannya
+       datang. Efek ini dipicu oleh `pilihan`, dan mencentang draft berikutnya
+       mengubah `pilihan` selagi tarikan yang ini masih di jalan; kalau
+       penandanya menunggu jawaban, putaran berikutnya melihat draft yang sama
+       masih "belum" dan menariknya lagi. */
+    for (const p of belum) judulDraft.current.set(p.id, { nama: p.id, desc: '' });
     let batal = false;
     (async () => {
       for (const p of belum) {
         try {
           const m = normalizeModule(await loadDraft(p.id));
+          const nama = m.title?.trim() || p.id;
+          const desc = ringkasDeskripsi(m.heroDesc);
+          judulDraft.current.set(p.id, { nama, desc });
           if (batal) return;
           setPilihan((lama) => lama.map((x) => x.key === p.key
-            ? { ...x, nama: m.title || p.id, desc: x.desc || ringkasDeskripsi(m.heroDesc) }
+            ? { ...x, nama, desc: x.desc || desc }
             : x));
-        } catch { /* biarkan slug-nya yang tampil */ }
+        } catch { /* biarkan slug-nya yang tampil; catatannya sudah terpasang */ }
       }
     })();
     return () => { batal = true; };
@@ -234,6 +262,15 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
 
   const perkiraan = pilihan.reduce((a, p) => a + (p.byte || 0), 0);
 
+  /* Syarat yang belum terpenuhi. Dulu tombolnya mati kalau belum ada modul —
+     tanpa memberi tahu apa yang kurang — sementara nama pelatihan yang kosong
+     justru baru ketahuan SETELAH diklik, lewat pesan merah. Dua syarat setara,
+     dua perlakuan berbeda, dan yang satu lagi diam-diam. Sekarang keduanya
+     disebutkan di muka, tepat di sebelah tombolnya. */
+  const kurang: string[] = [];
+  if (!pilihan.length) kurang.push('pilih minimal satu modul');
+  if (!judul.trim()) kurang.push('isi nama pelatihan');
+
   /* Desktop: layar 1160px selalu diperkecil supaya muat selebar kotaknya.
      HP: justru TIDAK diperkecil selama muat — 390px yang ditampilkan 1:1 itu
      yang bikin pratinjaunya bisa dinilai; baru kalau dialognya lebih sempit
@@ -260,7 +297,12 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
     const kata = cariDraft.toLowerCase().replace(/[_-]+/g, ' ').trim().split(/\s+/).filter(Boolean);
     if (!kata.length) return drafts;
     return drafts.filter((d) => {
-      const nama = d.toLowerCase().replace(/[_-]+/g, ' ');
+      /* Judul ikut dicocokkan, bukan slug saja: begitu judulnya yang tampil
+         besar di tiap baris, itulah yang diketik orang untuk mencarinya —
+         mencari "pengendalian" lalu tidak menemukan apa-apa padahal tulisan
+         itu terpampang di layar adalah cara tercepat bikin orang tidak
+         percaya pada kotak carinya. */
+      const nama = `${d.judul} ${d.slug}`.toLowerCase().replace(/[_-]+/g, ' ');
       return kata.every((k) => nama.includes(k));
     });
   }, [drafts, cariDraft]);
@@ -269,7 +311,7 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
      dia tetap ada di daftar "Urutan & keterangan" di bawah. Tapi dari sini
      kelihatannya seperti batal tercentang, jadi dihitung dan dikabari. */
   const tercentangTersembunyi = pilihan.filter(
-    (p) => p.sumber === 'draft' && !draftTampil.includes(p.id),
+    (p) => p.sumber === 'draft' && !draftTampil.some((d) => d.slug === p.id),
   ).length;
 
   /* Pratinjau memakai modul yang SUDAH dipilih kalau ada — jauh lebih berguna
@@ -331,10 +373,26 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
           {drafts.length > 0 && !draftTampil.length && (
             <span className="hint">Tidak ada draft yang cocok. Coba kata lain, atau kosongkan pencarian.</span>
           )}
+          {/* Judul modulnya yang dibaca duluan — itu yang nanti muncul di
+              dashboard peserta, dan slug seperti "dika_apkdintermediate-case-
+              study-2" tidak memberi tahu apa pun soal isinya. Tapi slug TIDAK
+              dibuang: judul sama sekali tidak unik (belasan draft bisa
+              sama-sama "Modul Baru"), jadi menyembunyikannya justru menukar
+              daftar yang membingungkan dengan daftar yang mustahil dibedakan.
+              Keduanya sebaris: judul di kiri, slug meredup di kanan sebagai
+              pembeda. Draft tanpa judul tampil persis seperti dulu. */}
           {draftTampil.map((d) => (
-            <label key={d} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, padding: '3px 4px', cursor: 'pointer' }}>
-              <input type="checkbox" checked={adaDraft(d)} onChange={() => toggleDraft(d)} disabled={busy} />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d}</span>
+            <label key={d.slug} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, padding: '3px 4px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={adaDraft(d.slug)} onChange={() => toggleDraft(d.slug)} disabled={busy} />
+              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {d.judul || d.slug}
+              </span>
+              {d.judul && (
+                <span className="hint" style={{
+                  flex: 'none', maxWidth: '45%', fontSize: 11,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{d.slug}</span>
+              )}
             </label>
           ))}
         </div>
@@ -404,7 +462,9 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
         )}
 
         {/* ---------- identitas paket ---------- */}
-        <label style={{ display: 'block', fontWeight: 600, fontSize: 13, margin: '18px 0 7px' }}>Nama pelatihan</label>
+        <label style={{ display: 'block', fontWeight: 600, fontSize: 13, margin: '18px 0 7px' }}>
+          Nama pelatihan <span className="hint" style={{ fontWeight: 400 }}>· wajib, jadi judul dashboard &amp; nama berkasnya</span>
+        </label>
         <input style={inp} value={judul} disabled={busy} onChange={(e) => setJudul(e.target.value)}
                placeholder="mis. Analisis Pengelolaan Keuangan Daerah" />
 
@@ -415,16 +475,38 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
 
         {/* ---------- konsep ---------- */}
         <label style={{ display: 'block', fontWeight: 600, fontSize: 13, margin: '18px 0 7px' }}>Tampilan dashboard</label>
-        {/* Sorot baru dilepas kalau kursor keluar dari SELURUH area ini, bukan
-            dari deretan pilihannya saja. Kalau dilepas di batas deretan, tiap
-            kali penyusun turun untuk mencoba pratinjau yang barusan disorot,
-            pratinjaunya keburu balik ke konsep yang terpilih. */}
-        <div onMouseLeave={() => setSorot(null)}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 8 }}>
+        {/* Sorot itu INTIP SEKILAS, bukan pilihan. Aturannya satu kalimat:
+            pratinjau menampilkan kartu yang sedang DITUNJUK kursor, dan begitu
+            kursor tidak menunjuk kartu mana pun lagi, dia balik ke konsep yang
+            benar-benar TERPILIH.
+
+            Kuncinya ada di mana pelepasannya dipasang, dan dua percobaan
+            sebelumnya salah tempat:
+
+            - Di pembungkus yang memuat kartu DAN kotak pratinjau sekaligus.
+              Maksudnya supaya konsep yang barusan diintip masih bisa dicoba,
+              tapi hasilnya kebalikannya: kartu tersusun berbaris, jadi kursor
+              yang turun menuju pratinjau pasti melintasi kartu lain dulu, dan
+              sorotan nyasar itu ikut terbawa masuk lalu mengendap di sana.
+            - Di grid-nya saja. Lebih baik, tapi grid itu lebih luas daripada
+              kartu-kartunya: ada jarak 8px antar kartu, dan baris terakhir
+              menyisakan sel kosong di samping "Fokus". Kursor yang berhenti di
+              situ sudah tidak menunjuk kartu apa pun, tapi belum keluar dari
+              grid — sorotnya nyangkut, persis keluhan yang dilaporkan.
+
+            Jadi dipasang di KARTUNYA. Meninggalkan kartu selalu melepas sorot,
+            ke mana pun kursornya pergi — sela, sel kosong, atau keluar sama
+            sekali. Pindah antar kartu tidak berkedip: lepas-lalu-pasang terjadi
+            di satu putaran event yang sama dan React menggabungkannya jadi
+            satu render. */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 8 }}
+             onMouseLeave={() => setSorot(null)}>
           {KONSEP_INFO.map((k) => (
             <label key={k.id}
                    onMouseEnter={() => setSorot(k.id)}
+                   onMouseLeave={() => setSorot(null)}
                    onFocus={() => setSorot(k.id)}
+                   onBlur={() => setSorot(null)}
                    style={{
                      border: `1px solid ${konsepTampil === k.id ? 'var(--accent)' : 'var(--border)'}`,
                      background: konsep === k.id ? 'var(--accent-soft)' : 'transparent',
@@ -449,7 +531,15 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
             memang dikosongkan di pratinjau) — di situ muncul pesan, bukan
             tab putih. Satu-satunya cara tahu rasanya memakai dashboard ini
             sebelum paketnya dirakit adalah dengan benar-benar memakainya. */}
-        <div style={besar ? {
+        {/* Sorot juga dilepas begitu kursor MASUK ke kotak ini, tidak cuma
+            mengandalkan mouseleave di deretan kartu. Dua jalan membuat
+            mouseleave itu tidak terkirim: kursor yang diam sementara halaman
+            di-scroll (kartu yang melintas di bawahnya sempat menyalakan sorot,
+            lalu penunjuknya berakhir di sini), dan penunjuk yang menyeberang ke
+            iframe — dokumen lain, dan induknya tidak selalu dikabari. Keduanya
+            bermuara ke sini, jadi di sinilah paling murah dipagari. */}
+        <div onMouseEnter={() => setSorot(null)}
+             style={besar ? {
           position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(8,9,12,0.94)',
           display: 'flex', flexDirection: 'column', padding: 14,
         } : {
@@ -522,7 +612,6 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
             </div>
           </div>
         </div>
-        </div>
 
         {/* ---------- aksi ---------- */}
         {progres && (
@@ -533,9 +622,17 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
         {error && <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 14, marginBottom: 0 }}>{error}</p>}
         {status && <p style={{ color: 'var(--success)', fontSize: 13, marginTop: 14, marginBottom: 0 }}>{status}</p>}
 
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
+        <div style={{
+          display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'center',
+          flexWrap: 'wrap', marginTop: 20,
+        }}>
+          {!busy && kurang.length > 0 && (
+            <span className="hint" style={{ fontSize: 11.5, marginRight: 'auto' }}>
+              Tinggal {kurang.join(' dan ')}.
+            </span>
+          )}
           <button className="btn-ghost" type="button" onClick={onClose} disabled={busy}>Tutup</button>
-          <button className="btn" type="button" onClick={jalankan} disabled={busy || !pilihan.length}>
+          <button className="btn" type="button" onClick={jalankan} disabled={busy || kurang.length > 0}>
             {busy ? 'Merakit…' : `Export paket (${pilihan.length} modul)`}
           </button>
         </div>
