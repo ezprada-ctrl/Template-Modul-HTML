@@ -58,6 +58,72 @@ const PRA_HP_W = 390;
 const PRA_HP_H = 844;
 const PRA_HP_H_KOTAK = 470;
 
+const LOGO_MAKS = 3;
+/* Empat kali tinggi tampilnya (36px), jadi tetap tajam di layar retina tanpa
+   membawa berkas aslinya. Logo instansi sering PNG 2000px hasil ekspor desain:
+   tiga di antaranya, tertanam sebagai base64, bisa menambah puluhan MB ke
+   sebuah paket yang justru sudah berat oleh modulnya. */
+const LOGO_TINGGI_MAKS = 144;
+
+interface LogoBaca {
+  uri: string;
+  byte: number;
+  adaTembusPandang: boolean;
+  dikecilkan: boolean;
+}
+
+/**
+ * Baca satu PNG jadi data URI siap tanam, sekalian periksa apakah latarnya
+ * memang tembus pandang.
+ *
+ * Pemeriksaannya sungguhan — piksel kanvasnya dibaca, bukan sekadar percaya
+ * ekstensi .png. PNG berlatar putih pekat terlihat baik-baik saja di dialog
+ * ini (latarnya juga terang) lalu jadi kotak putih mencolok begitu paketnya
+ * dibuka di tampilan gelap seperti Terminal atau Orbit. Lebih baik dikabari
+ * sekarang daripada ketahuan setelah dibagikan ke peserta.
+ */
+function bacaLogoPng(f: File): Promise<LogoBaca> {
+  return new Promise((selesai, gagal) => {
+    const baca = new FileReader();
+    baca.onerror = () => gagal(new Error(`"${f.name}" gagal dibaca.`));
+    baca.onload = () => {
+      const asli = String(baca.result);
+      const img = new Image();
+      img.onerror = () => gagal(new Error(`"${f.name}" tidak bisa dibuka sebagai gambar.`));
+      img.onload = () => {
+        const skala = Math.min(1, LOGO_TINGGI_MAKS / (img.naturalHeight || 1));
+        const w = Math.max(1, Math.round(img.naturalWidth * skala));
+        const h = Math.max(1, Math.round(img.naturalHeight * skala));
+        const kanvas = document.createElement('canvas');
+        kanvas.width = w; kanvas.height = h;
+        const ctx = kanvas.getContext('2d');
+        if (!ctx) { selesai({ uri: asli, byte: f.size, adaTembusPandang: true, dikecilkan: false }); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        let tembus = false;
+        try {
+          const d = ctx.getImageData(0, 0, w, h).data;
+          // Ambangnya 250, bukan 255: tepi PNG yang dihaluskan menyisakan alfa
+          // 254 di sana-sini, dan itu bukan tanda latarnya tembus pandang.
+          for (let i = 3; i < d.length; i += 4) { if (d[i] < 250) { tembus = true; break; } }
+        } catch {
+          // Kanvas ternoda — tidak bisa memeriksa, jadi jangan menuduh.
+          tembus = true;
+        }
+        const uri = skala < 1 ? kanvas.toDataURL('image/png') : asli;
+        const isi = uri.slice(uri.indexOf(',') + 1);
+        selesai({
+          uri,
+          byte: Math.round(isi.length * 0.75),
+          adaTembusPandang: tembus,
+          dikecilkan: skala < 1,
+        });
+      };
+      img.src = asli;
+    };
+    baca.readAsDataURL(f);
+  });
+}
+
 const inp: CSSProperties = {
   width: '100%', padding: '8px 10px', borderRadius: 8,
   border: '1px solid var(--border)', background: 'var(--surface)',
@@ -82,6 +148,11 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
      dan tingginya tidak melompat waktu kursor masuk-keluar. */
   const [sorot, setSorot] = useState<Konsep | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  /* Logo penyelenggara. Urutan dalam larik ini = urutan tampil di dashboard,
+     jadi menukar posisi cukup menukar isinya. */
+  const [logo, setLogo] = useState<{ key: string; nama: string; uri: string; byte: number; polos: boolean }[]>([]);
+  const [logoPesan, setLogoPesan] = useState('');
+  const logoRef = useRef<HTMLInputElement>(null);
   /* Skala pratinjau dihitung dari lebar kotaknya yang SEBENARNYA, bukan
      angka mati: dialognya menyusut di layar sempit, dan skala mati bikin
      pratinjaunya meleber keluar atau menyisakan pias kosong. */
@@ -202,6 +273,52 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
     setPilihan((lama) => [...lama, ...baru.filter((b) => !lama.some((l) => l.key === b.key))]);
   }
 
+  async function tambahLogo(files: FileList | null) {
+    if (!files?.length) return;
+    const catatan: string[] = [];
+    const diterima: typeof logo = [];
+    let sisa = LOGO_MAKS - logo.length;
+
+    for (const f of Array.from(files)) {
+      // PNG-nya diperiksa dari ISI berkas, bukan namanya. JPG yang di-rename
+      // jadi .png tetap JPG — dan JPG tidak punya kanal alfa sama sekali,
+      // jadi pasti muncul sebagai kotak di tampilan gelap.
+      const png = f.type === 'image/png' || (!f.type && /\.png$/i.test(f.name));
+      if (!png) { catatan.push(`"${f.name}" dilewati — harus PNG.`); continue; }
+      if (sisa <= 0) { catatan.push(`"${f.name}" dilewati — sudah ${LOGO_MAKS} logo.`); continue; }
+      try {
+        const hasil = await bacaLogoPng(f);
+        if (!hasil.adaTembusPandang) {
+          catatan.push(`"${f.name}" latarnya tidak tembus pandang — akan terlihat sebagai kotak di tampilan gelap.`);
+        }
+        diterima.push({
+          key: `${f.name}:${f.size}:${Date.now()}`,
+          nama: f.name, uri: hasil.uri, byte: hasil.byte,
+          polos: !hasil.adaTembusPandang,
+        });
+        sisa--;
+      } catch (e: any) {
+        catatan.push(e?.message || `"${f.name}" gagal dibaca.`);
+      }
+    }
+
+    if (diterima.length) setLogo((lama) => [...lama, ...diterima]);
+    setLogoPesan(catatan.join(' '));
+  }
+
+  const buangLogo = (key: string) => {
+    setLogo((lama) => lama.filter((l) => l.key !== key));
+    setLogoPesan('');
+  };
+  const geserLogo = (i: number, arah: -1 | 1) =>
+    setLogo((lama) => {
+      const j = i + arah;
+      if (j < 0 || j >= lama.length) return lama;
+      const baru = [...lama];
+      [baru[i], baru[j]] = [baru[j], baru[i]];
+      return baru;
+    });
+
   const ubah = (key: string, patch: Partial<Pilihan>) =>
     setPilihan((lama) => lama.map((p) => (p.key === key ? { ...p, ...patch } : p)));
   const buang = (key: string) => setPilihan((lama) => lama.filter((p) => p.key !== key));
@@ -240,7 +357,10 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
 
       const slug = (judul.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'paket');
       const hasil = await exportPaket(
-        { judul: judul.trim(), sambutan: sambutan.trim(), konsep, namaFile: `${slug}.html` },
+        {
+          judul: judul.trim(), sambutan: sambutan.trim(), konsep,
+          namaFile: `${slug}.html`, logo: logo.map((l) => l.uri),
+        },
         siap,
         (l) => { setProgres(l.pesan); setByte(l.byte); },
       );
@@ -319,13 +439,19 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
      dalam tata letak yang dipilih. Nama contoh cuma dipakai selagi belum ada
      yang dicentang. */
   const konsepTampil = sorot ?? konsep;
+  /* Larik data URI-nya dibuat stabil terhadap identitas: tanpa ini setiap
+     render menghasilkan larik baru, useMemo di bawah ikut batal, dan iframe
+     pratinjau dimuat ulang terus-menerus — mahal sekali untuk isi sebesar
+     base64 logo. */
+  const logoUri = useMemo(() => logo.map((l) => l.uri), [logo]);
   const pratinjau = useMemo(
     () => bangunPratinjau(
       konsepTampil, judul, sambutan,
       pilihan.map((p) => ({ nama: p.nama, desc: p.desc })),
       mode === 'hp',
+      logoUri,
     ),
-    [konsepTampil, judul, sambutan, pilihan, mode],
+    [konsepTampil, judul, sambutan, pilihan, mode, logoUri],
   );
 
   return (
@@ -412,8 +538,8 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
           onDrop={(e) => { e.preventDefault(); setSeret(false); tambahBerkas(e.dataTransfer.files); }}
           onClick={() => fileRef.current?.click()}
           style={{
-            border: `1px dashed ${seret ? 'var(--accent)' : 'var(--border-strong)'}`,
-            background: seret ? 'var(--accent-soft)' : 'transparent',
+            border: `1px dashed ${seret ? 'var(--ink)' : 'var(--border-strong)'}`,
+            background: seret ? 'var(--ink-soft)' : 'transparent',
             borderRadius: 8, padding: '16px 14px', textAlign: 'center', cursor: 'pointer',
             fontSize: 12.5, color: 'var(--text-dim)',
           }}
@@ -473,6 +599,73 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
                   onChange={(e) => setSambutan(e.target.value)}
                   placeholder="Kalimat pengantar yang dibaca peserta sebelum memilih modul." />
 
+        {/* ---------- logo penyelenggara ---------- */}
+        <label style={{ display: 'block', fontWeight: 600, fontSize: 13, margin: '18px 0 7px' }}>
+          Logo penyelenggara <span className="hint" style={{ fontWeight: 400 }}>
+            · opsional, maksimal {LOGO_MAKS} · PNG berlatar tembus pandang
+          </span>
+        </label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'stretch' }}>
+          {logo.map((l, i) => (
+            <div key={l.key} style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px',
+              border: `1px solid ${l.polos ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 8,
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <button className="btn-ghost btn-sm" type="button" disabled={busy || i === 0}
+                        onClick={() => geserLogo(i, -1)} title="Geser ke kiri"
+                        style={{ padding: '0 6px' }}>←</button>
+                <button className="btn-ghost btn-sm" type="button" disabled={busy || i === logo.length - 1}
+                        onClick={() => geserLogo(i, 1)} title="Geser ke kanan"
+                        style={{ padding: '0 6px' }}>→</button>
+              </div>
+              {/* Papan catur di belakang thumbnail: tanpa itu, PNG berlatar
+                  putih dan PNG tembus pandang terlihat sama persis di sini. */}
+              <span style={{
+                display: 'grid', placeItems: 'center', width: 64, height: 40, borderRadius: 6,
+                backgroundColor: '#fff',
+                backgroundImage:
+                  'linear-gradient(45deg,#d8d8de 25%,transparent 25%,transparent 75%,#d8d8de 75%),' +
+                  'linear-gradient(45deg,#d8d8de 25%,transparent 25%,transparent 75%,#d8d8de 75%)',
+                backgroundSize: '12px 12px', backgroundPosition: '0 0,6px 6px',
+              }}>
+                <img src={l.uri} alt="" style={{ maxWidth: 58, maxHeight: 34, objectFit: 'contain' }} />
+              </span>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 150 }}>
+                <span style={{ fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {l.nama}
+                </span>
+                <span className="hint" style={{ fontSize: 11 }}>
+                  {ukuranBaca(l.byte)}{l.polos ? ' · latar tidak tembus' : ''}
+                </span>
+              </span>
+              <button className="btn-ghost btn-sm" type="button" disabled={busy}
+                      onClick={() => buangLogo(l.key)} title="Keluarkan logo ini">✕</button>
+            </div>
+          ))}
+          {logo.length < LOGO_MAKS && (
+            <button type="button" disabled={busy} onClick={() => logoRef.current?.click()}
+                    style={{
+                      border: '1px dashed var(--border-strong)', background: 'transparent',
+                      color: 'var(--text-dim)', borderRadius: 8, padding: '16px 18px',
+                      cursor: 'pointer', font: 'inherit', fontSize: 12.5, minHeight: 58,
+                    }}>
+              + Tambah logo <span className="hint">({logo.length}/{LOGO_MAKS})</span>
+            </button>
+          )}
+        </div>
+        <input ref={logoRef} type="file" accept="image/png" multiple style={{ display: 'none' }}
+               onChange={(e) => { tambahLogo(e.target.files); e.target.value = ''; }} />
+        {logoPesan && (
+          <p style={{ color: 'var(--danger)', fontSize: 11.5, margin: '7px 0 0' }}>{logoPesan}</p>
+        )}
+        {logo.length > 1 && (
+          <p className="hint" style={{ fontSize: 11.5, margin: '7px 0 0' }}>
+            Urutan kiri-ke-kanan di sini = urutan tampil di dashboard. Tiap logo melayang
+            dengan gerak dan iramanya sendiri.
+          </p>
+        )}
+
         {/* ---------- konsep ---------- */}
         <label style={{ display: 'block', fontWeight: 600, fontSize: 13, margin: '18px 0 7px' }}>Tampilan dashboard</label>
         {/* Sorot itu INTIP SEKILAS, bukan pilihan. Aturannya satu kalimat:
@@ -508,8 +701,8 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
                    onFocus={() => setSorot(k.id)}
                    onBlur={() => setSorot(null)}
                    style={{
-                     border: `1px solid ${konsepTampil === k.id ? 'var(--accent)' : 'var(--border)'}`,
-                     background: konsep === k.id ? 'var(--accent-soft)' : 'transparent',
+                     border: `1px solid ${konsepTampil === k.id ? 'var(--ink)' : 'var(--border)'}`,
+                     background: konsep === k.id ? 'var(--ink-soft)' : 'transparent',
                      borderRadius: 8, padding: 10, cursor: 'pointer', display: 'flex', gap: 8,
                      alignItems: 'flex-start', transition: 'border-color .15s',
                    }}>
@@ -571,10 +764,18 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
                           title={m === 'hp'
                             ? 'Lihat seperti di HP: lebar 390px, dan berperilaku seperti layar sentuh'
                             : 'Lihat seperti di layar lebar: 1160px'}
+                          /* --ink / --on-ink, BUKAN --accent: token accent tidak
+                             pernah ada di root builder (cuma di dalam .pbp-scope
+                             dan di dalam cangkang paket), jadi var(--accent) di
+                             sini tidak menghasilkan apa-apa. Latarnya batal dan
+                             yang tersisa cuma tulisan putih mati di atas panel
+                             terang — tombol aktifnya hilang sama sekali di tema
+                             terang. Di tema gelap kebetulan masih terbaca, itu
+                             sebabnya lama tidak ketahuan. */
                           style={{
                             border: 0, padding: '4px 11px', cursor: 'pointer', font: 'inherit', fontSize: 11.5,
-                            background: mode === m ? 'var(--accent)' : 'transparent',
-                            color: mode === m ? '#fff' : 'var(--text-dim)',
+                            background: mode === m ? 'var(--ink)' : 'transparent',
+                            color: mode === m ? 'var(--on-ink)' : 'var(--text-dim)',
                           }}>
                     {label}
                   </button>

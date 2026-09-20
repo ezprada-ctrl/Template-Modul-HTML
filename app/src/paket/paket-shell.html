@@ -726,6 +726,70 @@ body{ overflow-wrap:anywhere; }
   .mt-stop .no{display:none;}   /* nomor kalah penting dari nama modulnya */
 }
 
+/* ============== LOGO PENYELENGGARA (maksimal 3) ==============
+   Duduk sebaris dengan eyebrow, rata kanan — pola yang sama di kesepuluh
+   tampilan, supaya logo tidak berpindah tempat waktu penyusun menukar
+   tampilan dashboard.
+
+   Melayangnya SENGAJA tidak seragam. Tiga logo yang naik-turun berbarengan
+   terbaca sebagai satu gambar yang bergoyang, bukan tiga lencana yang
+   berdiri sendiri. Jadi tiap posisi dapat lintasan, ketinggian, dan durasi
+   sendiri. Durasinya 5,2 / 6,7 / 7,9 detik dan sengaja bukan kelipatan satu
+   sama lain: kalau berkelipatan, ketiganya akan bertemu lagi di fase yang
+   sama secara berkala dan kebetulan itu justru paling kentara. Delay negatif
+   membuat mereka sudah berbeda fase sejak bingkai pertama, bukan berangkat
+   serempak lalu berpencar pelan-pelan. */
+.pk-eyerow{display:flex;align-items:center;gap:16px;margin-bottom:12px;}
+.pk-eyerow > .eyebrow,.pk-eyerow > .i-kicker,.pk-eyerow > .o-kicker{margin-bottom:0;}
+.i-head .pk-eyerow{margin-bottom:14px;}
+#k-orbit .pk-eyerow{margin-bottom:10px;}
+/* Kicker Orbit aslinya rata tengah; dibiarkan memanjang supaya tetap di
+   tengah sementara logonya menepi ke kanan. */
+#k-orbit .pk-eyerow > .o-kicker{flex:1;}
+/* Kolom judul Metro tidak melebar sendiri, jadi logonya tidak akan pernah
+   sampai ke kanan tanpa ini. */
+#k-metro .mt-head > div:first-child{flex:1;min-width:0;}
+/* Panel: kolom judulnya dipatok 620px sementara headernya 1120px, jadi logo
+   yang "rata kanan" berhenti di tengah-tengah dan terlihat seperti salah
+   taruh. Kolomnya dibiarkan memanjang sampai mentok penghitung modul, lalu
+   batas 620px itu dipindahkan ke judulnya saja — yang memang butuh dibatasi
+   supaya tetap enak dibaca. Paragraf sambutannya sudah punya batas sendiri. */
+#k-panel .p-title{max-width:none;flex:1;min-width:0;}
+#k-panel .p-title h1{max-width:620px;}
+
+.pk-logo{display:flex;align-items:center;gap:16px;flex:none;margin-left:auto;align-self:center;}
+.pk-logo:empty{display:none;}
+.pk-logo img{
+  height:36px;width:auto;max-width:150px;object-fit:contain;display:block;
+  /* PNG transparan bertinta gelap nyaris hilang di atas tampilan yang juga
+     gelap. Bayangan tipis memberi tepi tanpa mengubah warna logonya. */
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.28));
+  will-change:transform;
+}
+@keyframes pk-apung-a{
+  0%,100%{transform:translateY(0) rotate(0deg);}
+  50%    {transform:translateY(-5px) rotate(-.7deg);}
+}
+@keyframes pk-apung-b{
+  0%,100%{transform:translateY(-1px);}
+  35%    {transform:translateY(-6.5px);}
+  70%    {transform:translateY(1.5px);}
+}
+@keyframes pk-apung-c{
+  0%,100%{transform:translateY(0) rotate(.6deg);}
+  40%    {transform:translateY(-3px) rotate(0deg);}
+  75%    {transform:translateY(-6px) rotate(-.5deg);}
+}
+.pk-logo img:nth-child(1){animation:pk-apung-a 5.2s ease-in-out infinite;}
+.pk-logo img:nth-child(2){animation:pk-apung-b 6.7s ease-in-out infinite -1.9s;}
+.pk-logo img:nth-child(3){animation:pk-apung-c 7.9s ease-in-out infinite -3.4s;}
+
+@media (max-width:640px){
+  .pk-eyerow{gap:10px;}
+  .pk-logo{gap:11px;}
+  .pk-logo img{height:26px;max-width:104px;}
+}
+
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;}
 }
@@ -741,7 +805,7 @@ body{ overflow-wrap:anywhere; }
       <div class="mesh"></div><div class="beam"></div>
       <div class="p-head-in">
         <div class="p-title">
-          <div class="eyebrow">Paket Modul Pelatihan</div>
+          <div class="pk-eyerow"><div class="eyebrow">Paket Modul Pelatihan</div><div class="pk-logo"></div></div>
           <h1>__PAKET_JUDUL__</h1>
           <p>__PAKET_SAMBUTAN__</p>
         </div>
@@ -763,7 +827,7 @@ body{ overflow-wrap:anywhere; }
   <!-- INDEKS -->
   <section id="k-indeks" hidden>
     <header class="i-head">
-      <div class="i-kicker">Paket Modul Pelatihan</div>
+      <div class="pk-eyerow"><div class="i-kicker">Paket Modul Pelatihan</div><div class="pk-logo"></div></div>
       <h1>__PAKET_JUDUL__</h1>
       <p>__PAKET_SAMBUTAN__</p>
     </header>
@@ -791,7 +855,7 @@ body{ overflow-wrap:anywhere; }
 
   <!-- ORBIT -->
   <section id="k-orbit" hidden>
-    <div class="o-kicker">Paket Modul Pelatihan</div>
+    <div class="pk-eyerow"><div class="o-kicker">Paket Modul Pelatihan</div><div class="pk-logo"></div></div>
     <div class="o-stage" id="oStage">
       <div class="o-halo" aria-hidden="true"></div>
       <svg class="o-rings" viewBox="0 0 100 100" aria-hidden="true">
@@ -823,7 +887,7 @@ body{ overflow-wrap:anywhere; }
       <div class="t-bar" aria-hidden="true"><i></i><i></i><i></i><span>paket-modul — bash</span></div>
       <div class="t-body">
         <div class="t-head">
-          <div class="t-line"><span class="pr">$</span> cat pelatihan.md</div>
+          <div class="t-line"><span class="pr">$</span> cat pelatihan.md<div class="pk-logo"></div></div>
           <h1>__PAKET_JUDUL__</h1>
           <p>__PAKET_SAMBUTAN__</p>
         </div>
@@ -843,7 +907,7 @@ body{ overflow-wrap:anywhere; }
   <!-- KARTU -->
   <section id="k-kartu" hidden>
     <header class="k-head">
-      <div class="eyebrow">Paket Modul Pelatihan</div>
+      <div class="pk-eyerow"><div class="eyebrow">Paket Modul Pelatihan</div><div class="pk-logo"></div></div>
       <h1>__PAKET_JUDUL__</h1>
       <p>__PAKET_SAMBUTAN__</p>
     </header>
@@ -862,7 +926,7 @@ body{ overflow-wrap:anywhere; }
   <!-- LINIMASA -->
   <section id="k-linimasa" hidden>
     <header class="l-head">
-      <div class="eyebrow">Paket Modul Pelatihan</div>
+      <div class="pk-eyerow"><div class="eyebrow">Paket Modul Pelatihan</div><div class="pk-logo"></div></div>
       <h1>__PAKET_JUDUL__</h1>
       <p>__PAKET_SAMBUTAN__</p>
     </header>
@@ -882,7 +946,7 @@ body{ overflow-wrap:anywhere; }
   <section id="k-metro" hidden>
     <header class="mt-head">
       <div>
-        <div class="eyebrow">Paket Modul Pelatihan</div>
+        <div class="pk-eyerow"><div class="eyebrow">Paket Modul Pelatihan</div><div class="pk-logo"></div></div>
         <h1>__PAKET_JUDUL__</h1>
         <p>__PAKET_SAMBUTAN__</p>
       </div>
@@ -902,7 +966,7 @@ body{ overflow-wrap:anywhere; }
   <!-- MAJALAH -->
   <section id="k-majalah" hidden>
     <header class="mg-head">
-      <div class="mg-top"><span>Paket Modul Pelatihan</span><span id="cMajalah"></span></div>
+      <div class="mg-top"><span>Paket Modul Pelatihan</span><div class="pk-logo"></div><span id="cMajalah"></span></div>
       <h1>__PAKET_JUDUL__</h1>
       <p class="mg-lead">__PAKET_SAMBUTAN__</p>
     </header>
@@ -920,7 +984,7 @@ body{ overflow-wrap:anywhere; }
   <!-- RAK -->
   <section id="k-rak" hidden>
     <header class="rk-head">
-      <div class="eyebrow">Paket Modul Pelatihan</div>
+      <div class="pk-eyerow"><div class="eyebrow">Paket Modul Pelatihan</div><div class="pk-logo"></div></div>
       <h1>__PAKET_JUDUL__</h1>
       <p>__PAKET_SAMBUTAN__</p>
     </header>
@@ -945,7 +1009,7 @@ body{ overflow-wrap:anywhere; }
 
   <!-- FOKUS -->
   <section id="k-fokus" hidden>
-    <div class="fk-top"><span>__PAKET_JUDUL__</span><span id="cFokus"></span></div>
+    <div class="fk-top"><span>__PAKET_JUDUL__</span><div class="pk-logo"></div><span id="cFokus"></span></div>
     <h2 class="sr-only">Daftar modul</h2>
     <div class="fk-stage">
       <button class="fk-nav" type="button" id="fkPrev" aria-label="Modul sebelumnya">←</button>
@@ -975,6 +1039,7 @@ var PRATINJAU = __PAKET_PRATINJAU__;   /* true CUMA di kotak pratinjau dialog */
    dan penentunya kembali ke perangkat yang benar-benar dipakai. */
 var PAKSA_SENTUH = __PAKET_SENTUH__;
 var MODUL  = __PAKET_MODUL__;          /* [{nama, desc}] - ringan */
+var LOGO   = __PAKET_LOGO__;           /* [dataURI PNG] - maks 3, boleh kosong */
 var ISI = [
 __PAKET_ISI__
 ];                                      /* HTML utuh tiap modul - berat */
@@ -1416,6 +1481,27 @@ var PANDU = {
 if(!PANDU[KONSEP]) KONSEP='panel';
 document.documentElement.setAttribute('data-konsep',KONSEP);
 document.getElementById('k-'+KONSEP).hidden=false;
+
+/* Logo cuma dipasang ke tampilan yang benar-benar terlihat. Cangkang ini
+   memang hanya pernah merender SATU tampilan — KONSEP dipatok saat export —
+   jadi mengisi kesepuluh wadahnya berarti menyalin data URI yang sama
+   sepuluh kali ke DOM tanpa satu pun tambahan yang kelihatan. */
+(function(){
+  if(!LOGO || !LOGO.length) return;
+  var wadah = document.getElementById('k-'+KONSEP).querySelector('.pk-logo');
+  if(!wadah) return;
+  LOGO.slice(0,3).forEach(function(src){
+    var img = document.createElement('img');
+    img.src = src;
+    /* Dekoratif: yang membawa makna judul pelatihannya, bukan lencana
+       penyelenggaranya. Alt kosong + aria-hidden supaya pembaca layar tidak
+       mengeja "gambar, gambar, gambar" sebelum sampai ke judul. */
+    img.alt = '';
+    img.setAttribute('aria-hidden','true');
+    wadah.appendChild(img);
+  });
+})();
+
 document.getElementById('pCount').textContent=MODUL.length;
 PANDU[KONSEP].render('');
 stars();

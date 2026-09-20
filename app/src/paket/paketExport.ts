@@ -31,6 +31,8 @@ export interface PaketMeta {
   sambutan: string;
   konsep: Konsep;
   namaFile: string;
+  /** Logo penyelenggara, data URI PNG, maksimal 3. Urutannya = urutan tampil. */
+  logo?: string[];
 }
 
 export interface LaporRakit {
@@ -59,7 +61,7 @@ function jsString(nilai: unknown): string {
 
 /** Cangkang dengan semua penanda terisi KECUALI isi modulnya. */
 function isiCangkang(
-  meta: Pick<PaketMeta, 'judul' | 'sambutan' | 'konsep'>,
+  meta: Pick<PaketMeta, 'judul' | 'sambutan' | 'konsep' | 'logo'>,
   modul: { nama: string; desc?: string }[],
   pratinjau = false,
   paksaSentuh = false,
@@ -70,6 +72,10 @@ function isiCangkang(
     .replace('__PAKET_KONSEP__', meta.konsep)
     .replace('__PAKET_PRATINJAU__', pratinjau ? 'true' : 'false')
     .replace('__PAKET_SENTUH__', paksaSentuh ? 'true' : 'false')
+    // Dipotong 3 di sini juga, bukan cuma di dialog: cangkang ini satu-satunya
+    // pintu menuju berkas hasil, jadi batasnya ditegakkan di tempat yang tidak
+    // bisa dilewati — bukan di lapisan yang kebetulan memanggilnya.
+    .replace('__PAKET_LOGO__', jsString((meta.logo || []).slice(0, 3)))
     .replace('__PAKET_MODUL__', jsString(modul.map((m) => ({ nama: m.nama, desc: m.desc || '' }))));
 }
 
@@ -110,6 +116,7 @@ export function bangunPratinjau(
   sambutan: string,
   modul: { nama: string; desc?: string }[],
   sentuh = false,
+  logo: string[] = [],
 ): string {
   const daftar = modul.length ? modul : MODUL_CONTOH;
   const isi = isiCangkang(
@@ -117,6 +124,7 @@ export function bangunPratinjau(
       konsep,
       judul: judul.trim() || 'Nama Pelatihan',
       sambutan: sambutan.trim() || 'Sambutan singkat untuk peserta muncul di sini.',
+      logo,
     },
     daftar,
     true,
