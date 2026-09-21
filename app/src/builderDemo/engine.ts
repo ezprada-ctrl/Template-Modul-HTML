@@ -57,11 +57,57 @@ export interface DemoCtx {
      disorot (daftar tipe blok, daftar gaya grafis) butuh event ini dikirim
      betulan, kalau tidak yang tampil di booth cuma daftar yang diam. */
   hover: (el: Element | null) => Promise<void>;
+  /* Kebalikan hover, dan tidak opsional di tempat yang memakainya. Kursor
+     palsu tidak pernah MENINGGALKAN apa pun: dia cuma pindah gambar, jadi
+     mouseleave tidak pernah terkirim dan sorotannya nyangkut di elemen
+     terakhir yang disapu - selamanya, sampai ada manusia yang menggerakkan
+     tetikus sungguhan. Kejadian di kisi tampilan dashboard: sesudah sepuluh
+     kartunya disapu, pratinjaunya tetap menampilkan kartu terakhir yang
+     disorot dan bukan yang benar-benar dipilih, lalu langkah berikutnya
+     mencari isi tampilan yang memang tidak sedang dirender. */
+  lepas: (el: Element | null) => Promise<void>;
   /* Kursor mengelilingi tepi sebuah elemen. Dipakai buat "lihat, ini hasil
      jadinya": menunjuk diam ke tengah panel tidak terbaca sebagai menunjuk
      apa pun, sedangkan gerak melingkar menarik mata ke daerahnya. */
   kelilingi: (el: Element | null, putaran?: number) => Promise<void>;
+
+  /* ---------- panggung DI DALAM iframe ----------
+   *
+   * Pratinjau slide dan pratinjau dashboard paket dua-duanya iframe srcDoc -
+   * satu origin, jadi isinya bisa disentuh dari sini. Ini yang bikin booth
+   * bisa memamerkan blok interaktif SEBAGAI interaksi: accordion yang
+   * benar-benar terbuka, tab yang benar-benar berganti, gerbang Knowledge
+   * Check yang benar-benar menghadang - bukan cuma bentuk diamnya yang
+   * dikelilingi kursor.
+   *
+   * Kenapa perlu primitif sendiri, tidak cukup click() biasa: kursor palsu
+   * hidup di dokumen INDUK, sedangkan sasarannya di dokumen lain yang
+   * digambar dengan transform:scale(). Koordinat mentah dari dalam iframe
+   * menaruh kursor di tempat yang salah - kadang di luar kotak pratinjaunya
+   * sama sekali - dan yang ditonton jadi kursor menunjuk ruang kosong sambil
+   * sesuatu bergerak sendiri di sebelahnya. fklik() yang menerjemahkannya.
+   */
+  /** dokumen di dalam iframe pratinjau; null kalau belum ada/masih dimuat */
+  fdoc: (panggung?: Panggung) => Document | null;
+  /** menunggu selektor muncul DI DALAM iframe - tiap ketikan memuat ulang
+      iframe-nya, jadi elemennya memang sering belum ada waktu ditanya */
+  ftunggu: (sel: string, batas?: number, panggung?: Panggung) => Promise<HTMLElement | null>;
+  /** klik elemen di dalam iframe, kursor palsu diposisikan ke tempat yang benar */
+  fklik: (sel: string, panggung?: Panggung) => Promise<boolean>;
+  /** ketik ke kolom di dalam iframe, huruf demi huruf - yang dipamerkan
+      biasanya daftar yang MENYEMPIT sambil diketik, bukan hasil akhirnya */
+  fketik: (sel: string, teks: string, panggung?: Panggung) => Promise<boolean>;
+  /** teks sebuah elemen di dalam iframe. Ada supaya langkah demo bisa
+      mengambil kata pencariannya DARI isi yang sedang tampil, bukan
+      memancangkan kata mati di katalog - kata mati yang kebetulan tidak ada
+      di sana membuat langkahnya memamerkan "tidak ditemukan", persis
+      kebalikan dari yang mau ditunjukkan. */
+  fteks: (sel: string, panggung?: Panggung) => string;
 }
+
+/** Iframe mana yang jadi panggung: pratinjau slide di samping editor
+    (bawaan), atau pratinjau dashboard di dialog Export Paket. */
+export type Panggung = 'slide' | 'paket';
 
 /* ---------- pencari sasaran ----------
  * SEMUA sasaran dicari lewat kait data-demo yang sengaja ditanam di
@@ -73,6 +119,34 @@ export interface DemoCtx {
  */
 export function qDemo(nama: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-demo="${nama}"]`);
+}
+
+/* Iframe panggung. Dicari lewat kait pembungkusnya, bukan lewat iframe
+   pertama di halaman: dialog Export Paket punya iframe sendiri dan dua-duanya
+   bisa terbuka bersamaan. */
+const KAIT_PANGGUNG: Record<Panggung, string> = {
+  slide: 'pratinjau-slide',
+  paket: 'paket-pratinjau',
+};
+
+function frameEl(panggung: Panggung = 'slide'): HTMLIFrameElement | null {
+  return qDemo(KAIT_PANGGUNG[panggung])?.querySelector('iframe') || null;
+}
+
+/* Titik LAYAR (koordinat dokumen induk) dari sebuah elemen di dalam iframe.
+   Dua penyesuaian, dan dua-duanya wajib: geser sejauh posisi iframe-nya, lalu
+   kalikan skala - iframe-nya dirender pada lebar desktop penuh lalu
+   diperkecil pakai transform, jadi satu piksel di dalamnya bukan satu piksel
+   di layar. Skalanya DIHITUNG (lebar tampak / lebar layout), tidak disalin
+   dari komponennya: angkanya berubah mengikuti lebar panel. */
+function titikFrame(el: Element, panggung: Panggung = 'slide'): { x: number; y: number } | null {
+  const ifr = frameEl(panggung);
+  if (!ifr) return null;
+  const ir = ifr.getBoundingClientRect();
+  const s = ifr.offsetWidth ? ir.width / ifr.offsetWidth : 1;
+  const r = el.getBoundingClientRect();
+  if (!r.width && !r.height) return null;   // elemennya sudah lepas dari dokumen
+  return { x: ir.left + (r.left + r.width / 2) * s, y: ir.top + (r.top + r.height / 2) * s };
 }
 
 /* React memasang setter-nya sendiri di properti `value`, jadi `el.value = x`
@@ -294,13 +368,18 @@ export class BuilderDemo {
       setTimeout(() => (id === this.runId ? res() : rej(DEMO_ABORT)), ms);
     });
 
-    const cursorTo = async (el: Element | null) => {
+    const cursorKe = async (x: number, y: number) => {
       const cur = document.getElementById('bdemo-cursor');
-      if (!cur || !el) return;
+      if (!cur) return;
+      cur.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px)`;
+      await sleep(MOVE);
+    };
+
+    const cursorTo = async (el: Element | null) => {
+      if (!el) return;
       const r = el.getBoundingClientRect();
       if (!r.width && !r.height) return;
-      cur.style.transform = `translate(${Math.round(r.left + r.width / 2)}px,${Math.round(r.top + r.height / 2)}px)`;
-      await sleep(MOVE);
+      await cursorKe(r.left + r.width / 2, r.top + r.height / 2);
     };
 
     const ping = async () => {
@@ -394,6 +473,18 @@ export class BuilderDemo {
         await sleep(120);
       },
 
+      lepas: async (el) => {
+        chk();
+        if (!el) return;
+        /* mouseout ikut dikirim, bukan cuma mouseleave: React menyulap
+           onMouseLeave DARI mouseout yang menggelembung ke akarnya -
+           mouseleave saja (yang tidak menggelembung) tidak pernah sampai. */
+        for (const nama of ['pointerout', 'mouseout', 'mouseleave']) {
+          el.dispatchEvent(new MouseEvent(nama, { bubbles: nama !== 'mouseleave', cancelable: true }));
+        }
+        await sleep(160);
+      },
+
       sapu: async (els, jeda) => {
         for (const el of els) {
           chk();
@@ -403,6 +494,81 @@ export class BuilderDemo {
           }
           await sleep(jeda == null ? 260 : jeda);
         }
+      },
+
+      fdoc: (panggung) => {
+        /* try: iframe yang BARU mengganti srcDoc sempat memegang dokumen
+           yang sudah tidak boleh dibaca lagi di sebagian browser. Itu
+           keadaan sesaat, bukan kesalahan - pemanggilnya memang menanyakan
+           ulang beberapa ratus milidetik lagi. */
+        try { return frameEl(panggung)?.contentDocument || null; } catch { return null; }
+      },
+
+      ftunggu: async (sel, batas, panggung) => {
+        const habis = Date.now() + (batas == null ? 4000 : batas);
+        for (;;) {
+          chk();
+          let el: HTMLElement | null = null;
+          try { el = frameEl(panggung)?.contentDocument?.querySelector<HTMLElement>(sel) || null; } catch { /* dokumen sedang berganti */ }
+          if (el) return el;
+          if (Date.now() > habis) return null;
+          await sleep(140);
+        }
+      },
+
+      fklik: async (sel, panggung) => {
+        chk();
+        /* Dicari ULANG di sini, tidak menerima elemen jadi: tiap suntingan
+           mengganti srcDoc iframe-nya, dan elemen yang dipegang pemanggil
+           bisa saja sudah milik dokumen yang barusan dibuang - kliknya
+           "berhasil" tapi tidak ada yang bergerak di layar. */
+        let el: HTMLElement | null = null;
+        try { el = frameEl(panggung)?.contentDocument?.querySelector<HTMLElement>(sel) || null; } catch { /* dokumen sedang berganti */ }
+        if (!el) return false;
+        /* Digulirkan DI DALAM iframe dulu, lalu diukur: elemen yang berada di
+           luar jendela iframe menghasilkan koordinat di luar kotak
+           pratinjaunya, dan kursor palsunya mendarat entah di mana. */
+        try { el.scrollIntoView({ block: 'center' }); } catch { /* jsdom / browser lama */ }
+        await sleep(360);
+        const p = titikFrame(el, panggung);
+        if (p) await cursorKe(p.x, p.y);
+        await ping();
+        el.click();
+        await sleep(AFTER);
+        return true;
+      },
+
+      fteks: (sel, panggung) => {
+        try { return frameEl(panggung)?.contentDocument?.querySelector(sel)?.textContent?.trim() || ''; }
+        catch { return ''; }
+      },
+
+      fketik: async (sel, teks, panggung) => {
+        chk();
+        let el: HTMLInputElement | null = null;
+        try { el = frameEl(panggung)?.contentDocument?.querySelector<HTMLInputElement>(sel) || null; } catch { /* dokumen sedang berganti */ }
+        if (!el) return false;
+        const p = titikFrame(el, panggung);
+        if (p) await cursorKe(p.x, p.y);
+        try { el.focus(); } catch { /* iframe belum boleh menerima fokus */ }
+        /* Setter polos + event 'input' sudah cukup DI SINI, tidak perlu akal
+           setter-prototipe seperti setNilaiReact di atas: yang di dalam
+           iframe ini DOM biasa dengan addEventListener('input'), bukan React
+           yang memasang setternya sendiri di atas properti value. */
+        /* Dikosongkan DENGAN event-nya, bukan diam-diam: fketik(sel, '')
+           adalah cara langkah demo membereskan kolom carinya, dan tanpa
+           event ini daftar hasilnya tetap tersaring oleh kata yang sudah
+           tidak ada lagi di kolomnya. */
+        el.value = '';
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        for (const c of teks) {
+          chk();
+          el.value += c;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          await sleep(115);
+        }
+        await sleep(400);
+        return true;
       },
 
       /* Menunggu React selesai merender sesuatu yang baru muncul akibat klik

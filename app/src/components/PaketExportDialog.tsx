@@ -763,6 +763,14 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
                 {([['desktop', 'Desktop'], ['hp', 'HP']] as const).map(([m, label]) => (
                   <button key={m} type="button" onClick={() => setMode(m)}
                           aria-pressed={mode === m}
+                          /* Kait Demo Booth. Dua tombol, dua nama, supaya
+                             langkah demo bisa menunjuk salah satunya tanpa
+                             menghitung urutan. Ditulis UTUH lewat ternary,
+                             bukan dirakit `paket-mode-${m}`: nama yang cuma
+                             lahir waktu jalan tidak pernah muncul di sumber,
+                             dan cek-demo.mjs - yang tugasnya menangkap kait
+                             yang diam-diam tercabut - tidak bisa melihatnya. */
+                          data-demo={m === 'hp' ? 'paket-mode-hp' : 'paket-mode-desktop'}
                           title={m === 'hp'
                             ? 'Lihat seperti di HP: lebar 390px, dan berperilaku seperti layar sentuh'
                             : 'Lihat seperti di layar lebar: 1160px'}
@@ -784,6 +792,7 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
                 ))}
               </span>
               <button className="btn-ghost btn-sm" type="button" onClick={() => setBesar(!besar)}
+                      data-demo="paket-besar"
                       style={{ flex: 'none', fontSize: 11.5 }}
                       title={besar ? 'Kembalikan ke ukuran kotak (Esc)' : 'Perbesar ke seluruh layar supaya enak dicoba'}>
                 {besar ? 'Perkecil ⤡' : 'Coba ukuran penuh ⤢'}

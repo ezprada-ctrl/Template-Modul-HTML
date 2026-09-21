@@ -163,12 +163,17 @@ export default function QuizBuilder({ module, setModule }: Props) {
             sekadar gerbang checkpoint sementara section terakhir ujian
             bernilai sungguhan. */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+          {/* Kait Demo Booth: dua mode ini perbedaan besar yang paling
+              sering ditanya di booth ("kuisnya wajib lulus atau dinilai?"),
+              jadi langkah demo menekan dua-duanya. */}
           <button className={mode === 'gerbang' ? 'btn-primary btn-sm' : 'btn-sm'}
+                  data-demo="kuis-mode-gerbang"
                   onClick={() => setMode('gerbang')}
                   title="Kuis cuma palang untuk lanjut: wajib benar semua, boleh diulang tanpa batas, nilainya tidak dikirim ke rapor LMS">
             Gerbang
           </button>
           <button className={mode === 'nilai' ? 'btn-primary btn-sm' : 'btn-sm'}
+                  data-demo="kuis-mode-nilai"
                   onClick={() => setMode('nilai')}
                   title="Kuis dinilai sungguhan: nilai minimal & jatah mengerjakan berlaku, dan nilainya masuk rapor LMS">
             Kuis bernilai

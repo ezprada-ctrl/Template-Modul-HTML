@@ -64,6 +64,27 @@ const blokOpsi = (tipe: string) => document.querySelector<HTMLElement>(`[data-de
 
 const barisBlok = (tipe: string) => document.querySelector<HTMLElement>(`[data-demo="blok-baris"][data-blok="${tipe}"]`);
 
+/* Tipe blok yang disorot di langkah 'blok-pratinjau', beserta lama diamnya.
+   Bukan semuanya: delapan belas tipe kali beberapa detik bikin satu langkah
+   makan semenit lebih, padahal tur blok di bawah toh merakit semuanya satu
+   per satu. Yang dipilih di sini mewakili DUA hal yang mau ditunjukkan -
+   bahwa contohnya muncul sama sekali, dan bahwa yang interaktif contohnya
+   pun ikut bergerak.
+
+   Lama diamnya beda-beda dengan sengaja. Pratinjau accordion, tabs, diagram
+   alur, dan modal punya kursor kecil yang mengklik contohnya sendiri
+   (lihat useCycleWithClick di BlockPreview.tsx); disorot sekejap, yang
+   tertangkap mata cuma satu bingkai diam - persis kesan yang justru mau
+   dibantah. Angkanya disetel satu putaran penuh animasi masing-masing. */
+const SOROT_OPSI: { tipe: string; diam: number }[] = [
+  { tipe: 'card', diam: 1000 },
+  { tipe: 'timeline', diam: 1000 },
+  { tipe: 'accordion', diam: 3600 },
+  { tipe: 'tabs', diam: 4000 },
+  { tipe: 'flow', diam: 4200 },
+  { tipe: 'modal', diam: 3000 },
+];
+
 const T = (n: string) => qDemo('tab-' + n);
 const inp = (ph: string) => document.querySelector<HTMLElement>(`[placeholder="${ph}"]`);
 
@@ -74,12 +95,44 @@ async function bukaTab(D: DemoCtx, id: string) {
   return true;
 }
 
+/* Dialog Export Paket dipakai DUA langkah berturut-turut, jadi yang kedua
+   tidak boleh mengandalkan yang pertama meninggalkannya terbuka: demo bisa
+   dijeda tepat di antara keduanya (pengunjung menyentuh layar), dan yang
+   melanjutkan adalah langkah kedua. Sama seperti tiap langkah di katalog
+   ini, dia memposisikan dirinya sendiri. */
+async function bukaDialogPaket(D: DemoCtx) {
+  if (qDemo('paket-konsep')) return true;
+  if (!await bukaTab(D, 'preview')) return false;
+  const pemicu = qDemo('export-paket');
+  if (!pemicu) return false;
+  await D.click(pemicu);
+  return !!await D.tunggu(() => qDemo('paket-konsep'));
+}
+
+/* Dialognya WAJIB ditutup di ujung. Booth jalan berjam-jam tanpa penjaga,
+   dan dialog yang tertinggal terbuka menyandera seluruh putaran
+   berikutnya - tiap langkah sesudahnya mencari sasaran yang tertutup
+   olehnya. */
+async function tutupDialogPaket(D: DemoCtx) {
+  const tutup = qDemo('paket-tutup');
+  if (tutup) await D.click(tutup);
+  await D.sleep(400);
+}
+
 export const BUILDER_DEMO_STEPS: DemoStep[] = [
   {
     id: 'alur',
     label: 'Alur enam tab',
     caption: 'Menyusun modul jalannya berurut: ambil bahan, tata, percantik, uji, lalu ekspor.',
     run: async (D, cap) => {
+      /* Langkah PERTAMA putaran, jadi di sinilah sisa putaran sebelumnya
+         dibereskan. Yang dijaga satu hal: dialog Export Paket dibuka satu
+         langkah dan ditutup langkah berikutnya, dan di antara keduanya demo
+         bisa dijeda lalu ditinggal pengunjung. Putaran baru yang mulai di
+         belakang dialog itu gagal di hampir tiap langkahnya. Ditutup tanpa
+         animasi: ini kerapian, bukan bagian pertunjukan. */
+      qDemo('paket-tutup')?.click();
+
       await D.say(cap, 0);
       const tabs = Array.from(document.querySelectorAll<HTMLElement>('[data-demo^="tab-"]'));
       if (!tabs.length) return false;
@@ -140,6 +193,36 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
       await D.sleep(1100);
     },
   },
+  {
+    id: 'blok-pratinjau',
+    label: 'Intip contoh tiap tipe blok',
+    caption: 'Tidak perlu menebak-nebak: tiap tipe blok cukup disorot, contohnya langsung muncul di samping — dan yang interaktif, contohnya pun ikut bergerak sendiri.',
+    run: async (D, cap) => {
+      if (!await bukaPanggungBlok(D)) return false;
+      const pemicu = await D.tunggu(() => qDemo('tambah-blok'), 4000);
+      if (!pemicu) return false;
+      await D.say(cap, 0);
+      await D.click(pemicu);
+      if (!await D.tunggu(() => blokOpsi('card'), 2000)) return false;
+      for (const s of SOROT_OPSI) {
+        D.chk();
+        const opsi = blokOpsi(s.tipe);
+        if (!opsi) continue;          // tipe dihapus dari aplikasi: lewati, jangan jatuhkan langkahnya
+        /* hover(), bukan cursorTo(): kursor palsu cuma gambar, dan
+           pratinjaunya digantung di onMouseEnter. Tanpa event yang dikirim
+           betulan, yang tampil di booth cuma daftar yang diam - keluhan yang
+           persis bikin langkah ini ada. */
+        await D.hover(opsi);
+        await D.sleep(s.diam);
+      }
+      /* Ditutup lewat pemicunya sendiri - tombolnya saklar. Escape tidak
+         dipakai: penangkapnya menuntut fokus ada di dalam menu, dan kursor
+         demo tidak pernah memindahkan fokus ke sana. Menu yang tertinggal
+         terbuka menutupi kertas kerja sepanjang tur blok di bawah. */
+      await D.click(qDemo('tambah-blok'));
+      await D.sleep(500);
+    },
+  },
   ...TUR_BLOK.map(entri => ({
     id: 'blok-' + entri.tipe,
     label: 'Blok: ' + entri.tipe,
@@ -194,6 +277,30 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
       await D.kelilingi(entri.sorot === 'editor' ? baris : qDemo('pratinjau-slide'), 1);
       await D.sleep(700);
 
+      /* 3b. DICOBA, bukan cuma dilihat. Buat blok interaktif, mengelilingi
+             bentuk diamnya justru menyesatkan: yang tampil di pratinjau mirip
+             gambar, dan pengunjung pulang mengira modulnya memang gambar.
+             Di sini accordion-nya benar-benar dibuka, tab-nya benar-benar
+             diganti, gerbangnya benar-benar menghadang - lihat `coba` di
+             blokTur.ts. */
+      if (entri.coba?.length) {
+        /* Sasaran pertama DITUNGGU, dengan batas yang longgar: pratinjau
+           dirender di server (debounce 500ms + satu perjalanan jaringan),
+           jadi sesudah patchBlok bloknya memang belum tentu sudah ada di
+           dalam iframe. Kalau sampai batas tetap tidak ada - jaringan booth
+           sedang buruk - seluruh bagian ini dilewati, dan yang sudah
+           ditonton penonton (perakitan + bentuk jadinya) tetap utuh. */
+        const siap = await D.ftunggu(entri.coba[0].sel, 9000);
+        if (siap) {
+          if (entri.cobaCaption) await D.say(entri.cobaCaption, 0);
+          for (const c of entri.coba) {
+            D.chk();
+            await D.fklik(c.sel);
+            await D.sleep(c.jeda == null ? 1100 : c.jeda);
+          }
+        }
+      }
+
       /* 4. Dihapus: blok berikutnya harus dapat panggung yang bersih. */
       const hapus = baris.querySelector<HTMLElement>('[data-demo="hapus-blok"]');
       if (hapus) await D.click(hapus);
@@ -243,7 +350,7 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
   {
     id: 'tema-grafis',
     label: 'Gaya grafis',
-    caption: 'Di atas warna ada gaya grafis — dekorasi yang dipakai sampul dan tiap slide.',
+    caption: 'Di atas warna ada gaya grafis — dan tiap gaya cukup disorot untuk melihat contohnya: sampul, slide, dan penutup sekaligus, sebelum satu pun dipilih.',
     run: async (D, cap) => {
       const pemicu = qDemo('graphic-style');
       if (!pemicu) return false;
@@ -251,11 +358,16 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
       await D.click(pemicu);
       const daftar = await D.tunggu(() => document.querySelector('[data-demo="graphic-style-list"]'), 1500);
       if (daftar) {
-        const opsi = Array.from(daftar.querySelectorAll<HTMLElement>('[data-demo="graphic-style-opt"]')).slice(0, 6);
-        await D.sapu(opsi, 620);       // sapu mengirim mouseover betulan -> pratinjau tiap gaya ikut muncul
+        /* SEMUANYA disapu, tidak dipotong enam. Yang dipamerkan di sini
+           bukan "ada beberapa gaya" tapi "pilihannya sebanyak ini, dan
+           semuanya bisa diintip dulu" - daftar yang dipotong justru
+           mengecilkan angkanya. Diambil dari layar, jadi gaya baru di
+           graphicStyles.ts otomatis ikut tersapu. */
+        const opsi = Array.from(daftar.querySelectorAll<HTMLElement>('[data-demo="graphic-style-opt"]'));
+        await D.sapu(opsi, 780);       // sapu mengirim mouseover betulan -> pratinjau tiap gaya ikut muncul
         if (opsi[1]) await D.click(opsi[1]);
       }
-      await D.sleep(1100);
+      await D.sleep(1400);
     },
   },
   {
@@ -303,9 +415,34 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
       await D.click(tambah);
       const tanya = await D.tunggu(() => inp('Pertanyaan'));
       if (tanya) await D.type(tanya, 'Mana yang BUKAN pilar perbendaharaan?');
-      const opsiA = inp('Opsi A');
-      if (opsiA) await D.type(opsiA, 'Perencanaan yang terukur');
-      await D.sleep(1200);
+      /* Soalnya diisi SAMPAI UTUH, bukan berhenti di opsi A. Alasannya sama
+         dengan `lengkap` di blokTur.ts: satu opsi terisi dari empat terbaca
+         sebagai pekerjaan setengah jadi, dan pengunjung menilai produknya
+         dari apa yang dia lihat di layar. */
+      const opsi = ['Perencanaan yang terukur', 'Pelaksanaan yang tertib',
+                    'Pertanggungjawaban yang terbuka', 'Penghapusan arsip tahunan'];
+      for (let i = 0; i < opsi.length; i++) {
+        D.chk();
+        const kolom = inp('Opsi ' + String.fromCharCode(65 + i));
+        if (kolom) await D.type(kolom, opsi[i]);
+      }
+      /* Kunci jawabannya BENAR-BENAR ditandai - itu yang dijanjikan caption
+         ("ditandai di tempat"), dan tandanya kelihatan: kolomnya berubah
+         hijau. Dicari lewat title, bukan teks yang tampil: radio-nya memang
+         tidak punya label sendiri. */
+      const kunci = document.querySelectorAll<HTMLElement>('input[title="Tandai sebagai jawaban benar"]');
+      if (kunci[3]) await D.click(kunci[3]);
+      const jelas = inp('Penjelasan jawaban');
+      if (jelas) await D.type(jelas, 'Penghapusan arsip bukan pilar — justru arsipnya yang wajib disimpan.');
+      await D.sleep(900);
+
+      /* Dua mode kelulusan. Ini beda BESAR yang paling sering ditanya di
+         booth, dan sebelumnya tidak pernah dipamerkan sama sekali: tiap
+         tombol ditekan, penjelasan di bawahnya berganti mengikutinya. */
+      const nilai = qDemo('kuis-mode-nilai');
+      if (nilai) { await D.click(nilai); await D.sleep(2200); }
+      const gerbang = qDemo('kuis-mode-gerbang');
+      if (gerbang) { await D.click(gerbang); await D.sleep(2000); }
     },
   },
   {
@@ -314,8 +451,14 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     caption: 'Sebelum diserahkan, modulnya bisa dijalankan utuh persis seperti yang akan dibuka peserta.',
     run: async (D, cap) => {
       if (!await bukaTab(D, 'preview')) return false;
-      await D.say(cap);
-      await D.sleep(600);
+      await D.say(cap, 0);
+      /* Ditunjuk, tidak diklik: Live Preview membuka TAB BARU, dan tab baru
+         di mesin booth berarti demo yang kehilangan halamannya sendiri -
+         tidak ada yang mengembalikannya sampai ada orang yang menutup tab
+         itu. Yang dijanjikan caption toh sudah terbukti sepanjang tur blok:
+         pratinjau di sebelah editor itu modul yang sungguhan jalan. */
+      await D.cursorTo(qDemo('live-preview'));
+      await D.sleep(1600);
     },
   },
   {
@@ -336,36 +479,107 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
   {
     id: 'paket',
     label: 'Banyak modul jadi satu',
-    caption: 'Beberapa modul bisa dirakit jadi SATU berkas: dashboard di depan, seluruh modulnya tertanam di dalamnya. Sepuluh tampilan dashboard, dan pratinjaunya hidup — bukan gambar contoh.',
+    caption: 'Beberapa modul bisa dirakit jadi SATU berkas: dashboard di depan, seluruh modulnya tertanam di dalamnya. Sepuluh tampilan dashboard — dan semuanya bisa diintip dulu, satu per satu, sebelum satu pun dipilih.',
     run: async (D, cap) => {
-      if (!await bukaTab(D, 'preview')) return false;
-      const pemicu = qDemo('export-paket');
-      if (!pemicu) return false;
-      await D.say(cap, 0);
-      await D.click(pemicu);
-
-      /* Dialognya WAJIB ketemu sebelum lanjut, dan WAJIB ditutup di akhir.
-         Booth jalan berjam-jam tanpa penjaga: dialog yang tertinggal terbuka
-         menyandera seluruh putaran berikutnya. */
-      const kisi = await D.tunggu(() => qDemo('paket-konsep'));
+      if (!await bukaDialogPaket(D)) return false;
+      const kisi = qDemo('paket-konsep');
       if (!kisi) return false;
-      await D.sleep(700);
+      await D.say(cap, 0);
+      /* Nama pelatihannya diketik dulu. Kelihatan sepele, tapi inilah yang
+         membedakan sepuluh pratinjau yang berkepala "Nama Pelatihan" dari
+         sepuluh dashboard yang terlihat seperti barang jadi - dan kepala itu
+         yang paling besar di layar. Dua-duanya toh berubah seketika, jadi
+         sekalian memperlihatkan bahwa dashboard-nya mengikuti isian. */
+      const namaPelatihan = inp('mis. Analisis Pengelolaan Keuangan Daerah');
+      if (namaPelatihan) await D.type(namaPelatihan, 'Dasar-Dasar Perbendaharaan Negara');
 
-      /* Disorot, bukan diklik. Yang mau ditunjukkan justru pratinjau yang
-         berganti mengikuti kursor - dan hover memang harus dikirim betulan,
-         karena kursor palsu cuma gambar. */
-      const kartu = Array.from(kisi.querySelectorAll('label')).slice(0, 5);
+      /* Digulirkan dulu, dan ini BUKAN kerapian - tanpa ini langkahnya nyaris
+         tidak memperlihatkan apa pun. Dialognya panjang: kisi tampilan mulai
+         di sekitar 820px dari atas dan pratinjaunya di bawahnya lagi, jadi
+         pada jendela tinggi 950px dua-duanya di luar layar waktu dialog baru
+         dibuka. Kursor demo menyorot kartu yang tidak kelihatan, pratinjaunya
+         berganti di tempat yang tidak kelihatan juga. 'start', bukan
+         'center': kisi (±380px) dan kotak pratinjau (±460px) baru muat
+         berdua kalau kisinya ditempel ke atas. */
+      kisi.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      await D.sleep(900);
+
+      /* SEPULUH-SEPULUHNYA disorot, tidak lima. Kalimatnya menjanjikan
+         sepuluh tampilan; memperlihatkan separuhnya lalu menutup dialog
+         membuat janji itu tidak pernah dibuktikan, dan yang enam sisanya
+         justru beberapa yang paling beda (Metro, Majalah, Rak, Fokus).
+         Diambil dari layar, jadi tampilan ke-sebelas nanti ikut sendiri. */
+      const kartu = Array.from(kisi.querySelectorAll('label'));
       for (const k of kartu) {
         D.chk();
+        /* Disorot, bukan diklik: yang mau ditunjukkan justru pratinjau yang
+           berganti mengikuti kursor - dan hover memang harus dikirim
+           betulan, karena kursor palsu cuma gambar. */
         await D.hover(k);
-        await D.sleep(620);
+        await D.sleep(900);   // pratinjaunya dibangun ulang tiap kartu; di bawah ini kedipannya kebaca
       }
-      await D.kelilingi(qDemo('paket-pratinjau'), 1);
-      await D.sleep(500);
+      /* Ditutup dengan benar-benar MEMILIH satu, lalu sorotnya DILEPAS.
+         Dua-duanya perlu, dan yang kedua baru ketahuan waktu ditonton:
+         pratinjau menampilkan `sorot ?? konsep`, sedangkan kursor palsu
+         tidak pernah mengirim mouseleave - jadi tanpa lepas() sorotan
+         nyangkut di kartu terakhir (Fokus) dan yang tampil bukan yang
+         barusan dipilih. Langkah berikutnya lalu mencari isi tampilan Panel
+         di dalam dashboard yang sedang merender Fokus, dan tidak menemukan
+         apa-apa. */
+      if (kartu[0]) await D.click(kartu[0]);
+      await D.lepas(kartu[kartu.length - 1]);
+      await D.sleep(1200);
+    },
+  },
+  {
+    id: 'paket-coba',
+    label: 'Dashboard paket dicoba sungguhan',
+    caption: 'Pratinjaunya bukan gambar contoh — dashboard yang sungguhan, dan bisa dipakai di tempat: dibesarkan, dicek tampilan HP-nya, dicari modulnya, diklik.',
+    run: async (D, cap) => {
+      if (!await bukaDialogPaket(D)) return false;
+      await D.say(cap, 0);
 
-      const tutup = qDemo('paket-tutup');
-      if (tutup) await D.click(tutup);
-      await D.sleep(400);
+      /* 1. Tampilan HP. Satu tombol, dan seluruh dashboard-nya dirender
+            ulang pada lebar 390px - pertanyaan "di HP jadinya gimana?" itu
+            pertanyaan pertama hampir tiap pengunjung booth. */
+      await D.click(qDemo('paket-mode-hp'));
+      await D.sleep(2200);
+      await D.click(qDemo('paket-mode-desktop'));
+      await D.sleep(1200);
+
+      /* 2. Dibesarkan ke seluruh layar - di kotak kecil, dashboard yang
+            diperkecil 40% memang cuma terbaca sebagai gambar. */
+      await D.click(qDemo('paket-besar'));
+      await D.sleep(1400);
+
+      /* 3. DIPAKAI, bukan ditonton. Ini bagian yang menjawab "ini beneran
+            jalan atau cuma gambar": kolom carinya diketik dan daftarnya
+            menyempit, lalu satu modul diklik dan dashboard-nya menjawab.
+            Selektornya milik konsep Panel - konsep yang dipilih langkah
+            sebelumnya; kalau pengunjung terlanjur memindahkannya ke konsep
+            lain, dua baris ini tidak ketemu sasaran dan dilewati diam-diam. */
+      if (await D.ftunggu('#qPanel', 3000, 'paket')) {
+        /* Kata pencariannya DIAMBIL dari kartu yang sedang tampil, tidak
+           dipancangkan di sini. Nama modul di pratinjau ini nama contoh
+           (tidak ada draft yang dicentang di booth), jadi kata apa pun yang
+           ditulis mati - "perbendaharaan" sekalipun, senyata apa pun
+           kedengarannya - akan menghasilkan "0 dari 6 modul": layar yang
+           memamerkan pencarian yang tidak menemukan apa-apa. Diambil dari
+           layar, hasilnya selalu menyempit ke sesuatu. */
+        const kata = D.fteks('.p-card .nm', 'paket').split(/\s+/)[0];
+        if (kata) {
+          await D.fketik('#qPanel', kata.toLowerCase(), 'paket');
+          await D.sleep(1400);
+          await D.fketik('#qPanel', '', 'paket');
+          await D.sleep(800);
+        }
+      }
+      await D.fklik('.p-card', 'paket');
+      await D.sleep(2600);   // toast-nya menjelaskan kenapa tab barunya tidak benar-benar terbuka di pratinjau
+
+      await D.click(qDemo('paket-besar'));   // kembali ke ukuran kotak
+      await D.sleep(700);
+      await tutupDialogPaket(D);
     },
   },
   {

@@ -40,6 +40,22 @@ export interface EntriBlok {
   lengkap?: Record<string, unknown>;
   /** true = tidak dirakit, cuma dijelaskan */
   lewati?: boolean;
+  /** Blok yang INTERAKTIF: apa saja yang diklik DI DALAM pratinjau supaya
+      penonton melihat efeknya sungguhan - accordion terbuka, tab berganti,
+      gerbang menghadang. Tanpa ini booth cuma memamerkan bentuk diamnya, dan
+      "interaktif" tinggal jadi kata di caption: pengunjung melihat sesuatu
+      yang mirip gambar, lalu menyimpulkan modulnya juga gambar.
+
+      Selektornya dijalankan berurutan di dokumen iframe pratinjau, dan
+      dicari ULANG tiap klik - sebagian sasaran (tombol tutup popup, pilihan
+      jawaban sesudah umpan balik) memang baru lahir akibat klik sebelumnya.
+      Yang tidak ketemu dilewati diam-diam; satu sasaran meleset tidak boleh
+      menjatuhkan sisa bloknya. */
+  coba?: { sel: string; jeda?: number }[];
+  /** Kalimat yang menemani `coba`. Dipisah dari `caption` karena tugasnya
+      beda: caption menjelaskan blok APA ini, yang ini menjelaskan apa yang
+      barusan terjadi di layar. */
+  cobaCaption?: string;
   /** 'editor' = hasil bloknya TIDAK tampil di pratinjau slide, jadi yang
       dikelilingi kursor kertas kerjanya, bukan pratinjaunya. Knowledge Check
       begitu: generator sengaja tidak merendernya inline (render_knowledge
@@ -114,6 +130,12 @@ export const TUR_BLOK: EntriBlok[] = [
   {
     tipe: 'accordion',
     caption: 'Accordion — rincian disembunyikan sampai peserta memang membutuhkannya.',
+    cobaCaption: 'Dan begini rasanya dipakai: tiap kepala panel diklik, jawabannya terbuka — yang lain tetap rapi tertutup.',
+    coba: [
+      { sel: '.acc-item:nth-of-type(1) .acc-head' },
+      { sel: '.acc-item:nth-of-type(2) .acc-head' },
+      { sel: '.acc-item:nth-of-type(3) .acc-head', jeda: 1500 },
+    ],
     isi: ['a. Siapa yang bertanggung jawab?'],
     lengkap: {
       accBadge: 'nomor',
@@ -130,6 +152,12 @@ export const TUR_BLOK: EntriBlok[] = [
   {
     tipe: 'tabs',
     caption: 'Tabs — beberapa sudut pandang dipadatkan ke satu ruang layar.',
+    cobaCaption: 'Diklik, isinya berganti di tempat — tiga sudut pandang tanpa peserta berpindah slide sama sekali.',
+    coba: [
+      { sel: '.tabs .tab-btn:nth-of-type(2)' },
+      { sel: '.tabs .tab-btn:nth-of-type(3)' },
+      { sel: '.tabs .tab-btn:nth-of-type(1)', jeda: 1300 },
+    ],
     isi: ['Pusat'],
     lengkap: {
       tabItems: [
@@ -167,6 +195,12 @@ export const TUR_BLOK: EntriBlok[] = [
   {
     tipe: 'flow',
     caption: 'Diagram Alur — proses bertahap yang bernomor otomatis.',
+    cobaCaption: 'Tiap tahap bisa diklik: penjelasan rincinya muncul di bawah, tanpa bagan ini jadi penuh tulisan.',
+    coba: [
+      { sel: '.flow-step[data-idx="1"]' },
+      { sel: '.flow-step[data-idx="2"]' },
+      { sel: '.flow-step[data-idx="0"]', jeda: 1300 },
+    ],
     isi: ['Pengajuan SPP'],
     lengkap: {
       steps: [
@@ -218,6 +252,13 @@ export const TUR_BLOK: EntriBlok[] = [
   {
     tipe: 'modal',
     caption: 'Modal Popup — penjelasan tambahan dibuka sebagai popup, peserta tidak kehilangan tempatnya.',
+    cobaCaption: 'Sekali klik, popupnya terbuka di atas materi; ditutup, peserta kembali persis ke tempat tadi.',
+    coba: [
+      { sel: '.modal-trigger', jeda: 2400 },
+      /* Sasaran yang baru LAHIR akibat klik di atas - inilah kenapa tiap
+         langkah coba dicari ulang, bukan dikumpulkan sekali di depan. */
+      { sel: '.modal-overlay.open .modal-close', jeda: 900 },
+    ],
     isi: ['Rincian Dokumen Pendukung'],
     lengkap: {
       icon: '📝',
@@ -243,6 +284,22 @@ export const TUR_BLOK: EntriBlok[] = [
     tipe: 'knowledge',
     sorot: 'editor',
     caption: 'Knowledge Check — cek paham yang menghadang saat peserta pindah slide, dengan umpan balik per pilihan.',
+    /* Satu-satunya blok yang hasilnya cuma bisa dilihat dengan MENCOBA
+       pindah slide: inline-nya memang tidak dirender apa-apa (lihat `sorot`
+       di bawah). Jadi di sini "Selanjutnya" benar-benar ditekan di dalam
+       pratinjau, gerbangnya benar-benar menghadang, dan jawaban salah
+       sengaja dipilih dulu - yang mau dipamerkan justru penjelasannya.
+
+       Tombol "Lanjut" di popup SENGAJA tidak ditekan: menekannya membawa
+       pratinjau pindah slide, meninggalkan panggung tur blok. Popup yang
+       tertinggal terbuka tidak jadi masalah - menghapus bloknya di ujung
+       langkah membangun ulang iframe-nya dari nol. */
+    cobaCaption: 'Peserta menekan "Selanjutnya" — dan ditahan di sini. Jawaban salah pun dijelaskan, bukan sekadar ditandai merah.',
+    coba: [
+      { sel: '#btn-next', jeda: 1400 },
+      { sel: '#kc-popup-overlay .kc-opt[data-oi="1"]', jeda: 2600 },
+      { sel: '#kc-popup-overlay .kc-opt[data-oi="0"]', jeda: 2600 },
+    ],
     isi: ['Siapa yang menerbitkan SPM?'],
     lengkap: {
       kcItems: [{
