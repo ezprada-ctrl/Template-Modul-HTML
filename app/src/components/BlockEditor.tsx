@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 import { demoBoothJalan } from '../builderDemo/status';
 import type { CSSProperties } from 'react';
 import type { Block, BlockType, RataTeks } from '../types';
@@ -28,6 +28,73 @@ interface Props {
   // konsepnya sama supaya tidak terasa seperti fitur baru.
   nounLabel?: string;
 }
+
+/* ===========================================================================
+   PERCOBAAN "SARANG RAPI" — mati secara bawaan.
+   ---------------------------------------------------------------------------
+   Ini simulasi yang bisa dinilai DI DALAM aplikasi sungguhan, bukan mockup
+   terpisah: begitu dinyalakan, blok bersarang tidak lagi ditampilkan inline
+   sedalam-dalamnya, tapi dibuka satu tingkat pada satu waktu dengan remah
+   jejak. Dinyalakan per-peramban lewat tombol di kepala editor.
+
+   Kenapa di aplikasi asli dan bukan halaman contoh: yang mau dinilai justru
+   rasanya waktu bergaul dengan editor blok yang SUNGGUHAN - dropdown tipe,
+   field yang panjang, unggah gambar. Halaman contoh dengan field seadanya
+   tidak bisa menjawab itu.
+
+   Mematikannya mengembalikan perilaku lama PERSIS: seluruh jalur di bawah
+   ini dilewati, tidak ada satu pun cabang yang tersisa aktif.
+   =========================================================================== */
+const KUNCI_SARANG = 'pm:sarang-rapi';
+function sarangRapiNyala(): boolean {
+  try { return localStorage.getItem(KUNCI_SARANG) === '1'; } catch { return false; }
+}
+function setSarangRapi(v: boolean) {
+  try { localStorage.setItem(KUNCI_SARANG, v ? '1' : '0'); } catch { /* mode privat */ }
+}
+
+/* Tingkat sarang maksimal. Yang dibatasi WADAHnya, bukan isinya: di tingkat
+   terdalam blok biasa tetap boleh ditambah, yang hilang dari menu cuma tipe
+   yang bisa punya anak. Melarang tambah apa pun di situ terasa seperti jalan
+   buntu, dan tidak konsisten dengan isi yang sudah terlanjur ada di sana. */
+const BATAS_SARANG = 2;
+const TIPE_WADAH: BlockType[] = ['grid', 'modal'];
+
+/* Daftar putih per wadah. `modal` memakai POPUP_BLOCK_TYPES yang sudah ada -
+   sengaja tidak disalin ulang supaya tidak bisa menyimpang darinya. */
+const IZIN_SARANG: Partial<Record<BlockType, BlockType[]>> = {
+  modal: POPUP_BLOCK_TYPES,
+  grid: ['card', 'callout', 'definition', 'pullquote', 'ticklist', 'dtable',
+         'timeline', 'image', 'badgeref', 'html', 'accordion', 'tabs', 'flow',
+         'media', 'knowledge'],
+};
+
+/** Daftar blok pada sebuah jalur id, atau null kalau jalurnya sudah basi. */
+function ambilDaftar(akar: Block[], jalur: string[]): Block[] | null {
+  let kini = akar;
+  for (const id of jalur) {
+    const b = kini.find(x => x.id === id);
+    if (!b) return null;          // bloknya dihapus/diganti tipe sementara dibuka
+    kini = b.blocks || [];
+  }
+  return kini;
+}
+
+/** Salinan `akar` dengan daftar di `jalur` diganti `baru`. */
+function tulisDaftar(akar: Block[], jalur: string[], baru: Block[]): Block[] {
+  if (!jalur.length) return baru;
+  const [kepala, ...sisa] = jalur;
+  return akar.map(b => b.id === kepala
+    ? { ...b, blocks: tulisDaftar(b.blocks || [], sisa, baru) }
+    : b);
+}
+
+interface Sarang {
+  aktif: boolean;
+  tingkat: number;
+  masuk: (id: string) => void;
+}
+const SarangCtx = createContext<Sarang>({ aktif: false, tingkat: 0, masuk: () => {} });
 
 const BLOCK_CARD_STYLES = `
 /* Tampilan dasar kartu blok ditaruh di sini, BUKAN di style inline: aturan
@@ -107,7 +174,9 @@ export function langgananBlokAktif(fn: (id: string) => void) {
   return () => { pendengarBlokAktif.delete(fn); };
 }
 
-export default function BlockEditor({ blocks, onChange, columns, allow, nounLabel }: Props) {
+export default function BlockEditor({
+  blocks: blocksProp, onChange: onChangeProp, columns, allow, nounLabel,
+}: Props) {
   // `columns` is ONLY ever passed by GridFields (top-level callers in
   // Canvas.tsx/CoverForm.tsx never set it) - reused here as the "am I
   // nested inside a Grid" signal instead of adding a second prop that
@@ -118,8 +187,76 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
   // `columns`), jadi patokannya bukan lagi cuma Grid. `noun` yang dipakai
   // di semua teks UI supaya sebutannya cocok dengan levelnya.
   const nested = columns !== undefined || nounLabel !== undefined;
-  const noun = nounLabel ?? (columns !== undefined ? 'sub-blok' : 'blok');
+
+  /* ---- percobaan sarang rapi (lihat catatan di atas berkas) ----
+     Jalur yang sedang dibuka disimpan di editor TERATAS saja; yang bersarang
+     tidak pernah menyalakannya, karena di mode ini mereka memang tidak
+     dirender. Saklarnya dibaca sekali ke state supaya menekan tombolnya
+     langsung menggambar ulang. */
+  const [sarangNyala, setSarangNyala] = useState(() => !nested && sarangRapiNyala());
+  const [jalur, setJalur] = useState<string[]>([]);
+  const sarangAktif = sarangNyala && !nested;
+
+  /* Jalur bisa basi: blok yang sedang dibuka dihapus, atau tipenya diganti
+     jadi tipe yang tidak punya anak. Dipangkas sampai bagian yang masih ada,
+     bukan dibiarkan menunjuk ke ruang kosong. */
+  const jalurSah = useMemo(() => {
+    if (!sarangAktif) return [];
+    const aman: string[] = [];
+    for (let i = 0; i < jalur.length; i++) {
+      if (ambilDaftar(blocksProp, jalur.slice(0, i + 1)) === null) break;
+      aman.push(jalur[i]);
+    }
+    return aman;
+  }, [sarangAktif, jalur, blocksProp]);
+
+  /* INI yang membuat sisa komponen tidak perlu diubah sama sekali: `blocks`
+     dan `onChange` di bawah sini menunjuk ke tingkat yang sedang dibuka,
+     bukan ke akar. Semua fungsi yang sudah ada (update/remove/move/add)
+     otomatis mengenai tingkat yang benar. */
+  const blocks = sarangAktif && jalurSah.length
+    ? (ambilDaftar(blocksProp, jalurSah) || [])
+    : blocksProp;
+  const onChange = sarangAktif && jalurSah.length
+    ? (baru: Block[]) => onChangeProp(tulisDaftar(blocksProp, jalurSah, baru))
+    : onChangeProp;
+
+  /* Rantai wadah yang sedang dibuka, buat remah jejak. */
+  const rantai = useMemo(() => {
+    const keluar: Block[] = [];
+    let kini = blocksProp;
+    for (const id of jalurSah) {
+      const b = kini.find(x => x.id === id);
+      if (!b) break;
+      keluar.push(b);
+      kini = b.blocks || [];
+    }
+    return keluar;
+  }, [blocksProp, jalurSah]);
+
+  const tingkatKini = sarangAktif ? jalurSah.length : 0;
+  const diBatas = sarangAktif && tingkatKini >= BATAS_SARANG;
+  const wadahKini = rantai.length ? rantai[rantai.length - 1] : null;
+
+  /* Sebutan mengikuti tingkat: di akar tetap "blok", begitu masuk wadah
+     jadi "sub-blok" seperti Grid, supaya tidak terasa konsep baru. */
+  const noun = sarangAktif && jalurSah.length
+    ? 'sub-blok'
+    : (nounLabel ?? (columns !== undefined ? 'sub-blok' : 'blok'));
   const nounCap = noun.charAt(0).toUpperCase() + noun.slice(1);
+
+  /* Tipe yang boleh ditambahkan di tingkat ini. Di dalam wadah memakai daftar
+     putihnya; di batas kedalaman, tipe yang bisa punya anak dicoret. */
+  const izinKini = useMemo(() => {
+    if (!sarangAktif) return allow;
+    let d = wadahKini ? (IZIN_SARANG[wadahKini.type] ?? null) : null;
+    if (!d) d = allow ?? null;
+    if (diBatas) {
+      const dasar = d ?? (Object.keys(BLOCK_LABELS) as BlockType[]);
+      return dasar.filter(t => !TIPE_WADAH.includes(t));
+    }
+    return d ?? allow;
+  }, [sarangAktif, wadahKini, diBatas, allow]);
   // Blok yang terakhir disentuh — penanda "kamu lagi di sini". Sengaja gak
   // dikosongkan waktu fokus keluar: kalau dihapus tiap blur, penandanya
   // berkedip-kedip waktu pindah antar field DI DALAM blok yang sama, dan
@@ -170,9 +307,66 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
     onChange([...blocks, newBlock(type)]);
   }
 
+  const jejak = sarangAktif && jalurSah.length > 0;
+
   return (
+    <SarangCtx.Provider value={{
+      aktif: sarangAktif,
+      tingkat: tingkatKini,
+      masuk: (id: string) => setJalur([...jalurSah, id]),
+    }}>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <style>{BLOCK_CARD_STYLES}</style>
+
+      {/* Saklar percobaan — cuma di editor teratas, dan cuma selama percobaan
+          ini berjalan. Kalau polanya diterima, tombolnya dibuang dan
+          perilakunya jadi bawaan; kalau ditolak, seluruh blok ini dihapus. */}
+      {!nested && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap',
+          fontSize: 11.5, color: 'var(--text-dim)',
+          border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)',
+          padding: '7px 10px',
+        }}>
+          <b style={{ fontSize: 11, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+            Uji coba
+          </b>
+          <span>Sarang rapi — blok di dalam blok dibuka setingkat demi setingkat</span>
+          <button type="button" className="btn-ghost btn-sm" style={{ marginLeft: 'auto', fontSize: 11.5 }}
+            onClick={() => { const v = !sarangNyala; setSarangRapi(v); setSarangNyala(v); setJalur([]); }}>
+            {sarangNyala ? 'Matikan' : 'Nyalakan'}
+          </button>
+        </div>
+      )}
+
+      {/* Remah jejak: satu-satunya penunjuk posisi waktu isinya tidak lagi
+          tampil bersarang. Tanpa ini penyusun kehilangan arah begitu masuk. */}
+      {jejak && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap',
+          fontSize: 12.5, padding: '2px 0',
+        }}>
+          <button type="button" className="btn-ghost btn-sm" style={{ fontSize: 12.5 }}
+            onClick={() => setJalur([])}>Slide</button>
+          {rantai.map((b, i) => (
+            <span key={b.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ color: 'var(--text-faint)' }}>›</span>
+              {i === rantai.length - 1 ? (
+                <b style={{ fontSize: 12.5 }}>{BLOCK_LABELS[b.type].split(' (')[0]}</b>
+              ) : (
+                <button type="button" className="btn-ghost btn-sm" style={{ fontSize: 12.5 }}
+                  onClick={() => setJalur(jalurSah.slice(0, i + 1))}>
+                  {BLOCK_LABELS[b.type].split(' (')[0]}
+                </button>
+              )}
+            </span>
+          ))}
+          <button type="button" className="btn-ghost btn-sm"
+            style={{ marginLeft: 'auto', fontSize: 11.5 }}
+            onClick={() => setJalur(jalurSah.slice(0, -1))}>↑ Keluar</button>
+        </div>
+      )}
+
       {blocks.map((b, i) => {
         const isCollapsed = collapsed.has(b.id);
         const summary = isCollapsed ? blockSummary(b) : '';
@@ -253,8 +447,16 @@ export default function BlockEditor({ blocks, onChange, columns, allow, nounLabe
           </div>
         );
       })}
-      <BlockAddMenu onAdd={add} allow={allow} label={nested ? `+ Tambah ${noun}…` : undefined} />
+      <BlockAddMenu onAdd={add} allow={izinKini}
+        label={nested || jejak ? `+ Tambah ${noun}…` : undefined} />
+      {diBatas && (
+        <p className="hint" style={{ fontSize: 11, margin: '-4px 0 0' }}>
+          Ini tingkat terdalam ({BATAS_SARANG} tingkat). Blok biasa tetap boleh ditambah;
+          yang tidak lagi muncul di daftar cuma blok yang bisa memuat blok lain.
+        </p>
+      )}
     </div>
+    </SarangCtx.Provider>
   );
 }
 
@@ -843,12 +1045,14 @@ function ModalFields({ block, onChange, inp, ta }: {
           <p className="hint" style={{ fontSize: 11, margin: '0 0 8px' }}>
             Dimatikan = popup langsung menampilkan bloknya saja; judul tetap ada di tombol pemicunya.
           </p>
-          <BlockEditor
-            blocks={block.blocks || []}
-            onChange={blocks => onChange({ blocks })}
-            allow={POPUP_BLOCK_TYPES}
-            nounLabel="blok isi popup"
-          />
+          <IsiWadah blockId={block.id} jumlah={(block.blocks || []).length} sebutan="isi popup">
+            <BlockEditor
+              blocks={block.blocks || []}
+              onChange={blocks => onChange({ blocks })}
+              allow={POPUP_BLOCK_TYPES}
+              nounLabel="blok isi popup"
+            />
+          </IsiWadah>
         </>
       )}
     </>
@@ -873,8 +1077,37 @@ function GridFields({ block, onChange }: { block: Block; onChange: (p: Partial<B
         Tiap sel bisa diisi blok apa pun, boleh dicampur.
       </p>
       <GridCellPreview blocks={block.blocks || []} columns={columns} />
-      <BlockEditor blocks={block.blocks || []} onChange={blocks => onChange({ blocks })} columns={columns} />
+      <IsiWadah blockId={block.id} jumlah={(block.blocks || []).length} sebutan="sub-blok">
+        <BlockEditor blocks={block.blocks || []} onChange={blocks => onChange({ blocks })} columns={columns} />
+      </IsiWadah>
     </>
+  );
+}
+
+/* Pintu isi wadah. Di mode biasa dia tidak melakukan apa-apa — anaknya
+   dirender apa adanya, jadi perilaku lama utuh. Di mode sarang rapi dia
+   MENGGANTI editor bersarang itu dengan satu tombol masuk, dan di situlah
+   halaman berhenti memanjang: isi wadah tidak pernah digambar bersamaan
+   dengan induknya, sedalam apa pun strukturnya. */
+function IsiWadah({ blockId, jumlah, sebutan, children }: {
+  blockId: string; jumlah: number; sebutan: string; children: React.ReactNode;
+}) {
+  const sarang = useContext(SarangCtx);
+  if (!sarang.aktif) return <>{children}</>;
+  return (
+    <button type="button" onClick={() => sarang.masuk(blockId)}
+      style={{
+        width: '100%', textAlign: 'left', cursor: 'pointer',
+        border: '1px dashed var(--border-strong)', background: 'transparent',
+        borderRadius: 'var(--radius-sm)', padding: '11px 13px', font: 'inherit',
+        fontSize: 12.5, color: 'var(--text-dim)',
+        display: 'flex', alignItems: 'center', gap: 10,
+      }}>
+      <span style={{ flex: 1 }}>
+        {jumlah ? `${jumlah} ${sebutan} di dalamnya` : `Belum ada ${sebutan}`}
+      </span>
+      <span style={{ fontWeight: 700, color: 'var(--text)' }}>Buka isinya →</span>
+    </button>
   );
 }
 
