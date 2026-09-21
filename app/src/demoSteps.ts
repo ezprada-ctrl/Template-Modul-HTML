@@ -91,6 +91,15 @@ export const DEMO_STEPS: DemoStep[] = [
     applies: always,
   },
   {
+    id: 'search',
+    label: 'Cari isi modul',
+    defaultCaption: 'Tidak perlu menelusuri slide satu per satu — ketik kata kuncinya, hasilnya langsung menunjuk slide yang memuatnya, lengkap dengan potongan kalimatnya.',
+    /* Kotak carinya selalu ada, tapi yang dicari isi slide. Modul satu-dua
+       slide tidak punya apa pun untuk ditemukan, dan langkah ini justru akan
+       memamerkan "Tidak ditemukan" - kebalikan dari maksudnya. */
+    applies: (m) => (m.slides || []).length >= 3,
+  },
+  {
     id: 'static-tour',
     label: 'Ragam blok statis',
     defaultCaption: 'Materi dirakit dari blok siap pakai — kartu, catatan, timeline, tabel, diagram alur.',

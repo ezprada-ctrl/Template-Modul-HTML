@@ -334,6 +334,41 @@ export const BUILDER_DEMO_STEPS: DemoStep[] = [
     },
   },
   {
+    id: 'paket',
+    label: 'Banyak modul jadi satu',
+    caption: 'Beberapa modul bisa dirakit jadi SATU berkas: dashboard di depan, seluruh modulnya tertanam di dalamnya. Sepuluh tampilan dashboard, dan pratinjaunya hidup — bukan gambar contoh.',
+    run: async (D, cap) => {
+      if (!await bukaTab(D, 'preview')) return false;
+      const pemicu = qDemo('export-paket');
+      if (!pemicu) return false;
+      await D.say(cap, 0);
+      await D.click(pemicu);
+
+      /* Dialognya WAJIB ketemu sebelum lanjut, dan WAJIB ditutup di akhir.
+         Booth jalan berjam-jam tanpa penjaga: dialog yang tertinggal terbuka
+         menyandera seluruh putaran berikutnya. */
+      const kisi = await D.tunggu(() => qDemo('paket-konsep'));
+      if (!kisi) return false;
+      await D.sleep(700);
+
+      /* Disorot, bukan diklik. Yang mau ditunjukkan justru pratinjau yang
+         berganti mengikuti kursor - dan hover memang harus dikirim betulan,
+         karena kursor palsu cuma gambar. */
+      const kartu = Array.from(kisi.querySelectorAll('label')).slice(0, 5);
+      for (const k of kartu) {
+        D.chk();
+        await D.hover(k);
+        await D.sleep(620);
+      }
+      await D.kelilingi(qDemo('paket-pratinjau'), 1);
+      await D.sleep(500);
+
+      const tutup = qDemo('paket-tutup');
+      if (tutup) await D.click(tutup);
+      await D.sleep(400);
+    },
+  },
+  {
     id: 'command',
     label: 'Command Center',
     caption: 'Sesudah modulnya dipakai, rekaman belajar peserta masuk ke sini — per orang, per slide. Terkunci password, isinya data sungguhan.',

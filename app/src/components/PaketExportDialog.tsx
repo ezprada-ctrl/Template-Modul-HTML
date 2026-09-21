@@ -605,7 +605,7 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
             · opsional, maksimal {LOGO_MAKS} · PNG berlatar tembus pandang
           </span>
         </label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'stretch' }}>
+        <div data-demo="paket-logo" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'stretch' }}>
           {logo.map((l, i) => (
             <div key={l.key} style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px',
@@ -692,7 +692,8 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
             sekali. Pindah antar kartu tidak berkedip: lepas-lalu-pasang terjadi
             di satu putaran event yang sama dan React menggabungkannya jadi
             satu render. */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 8 }}
+        <div data-demo="paket-konsep"
+             style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 8 }}
              onMouseLeave={() => setSorot(null)}>
           {KONSEP_INFO.map((k) => (
             <label key={k.id}
@@ -731,7 +732,8 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
             lalu penunjuknya berakhir di sini), dan penunjuk yang menyeberang ke
             iframe — dokumen lain, dan induknya tidak selalu dikabari. Keduanya
             bermuara ke sini, jadi di sinilah paling murah dipagari. */}
-        <div onMouseEnter={() => setSorot(null)}
+        <div data-demo="paket-pratinjau"
+             onMouseEnter={() => setSorot(null)}
              style={besar ? {
           position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(8,9,12,0.94)',
           display: 'flex', flexDirection: 'column', padding: 14,
@@ -832,7 +834,8 @@ export default function PaketExportDialog({ onClose }: { onClose: () => void }) 
               Tinggal {kurang.join(' dan ')}.
             </span>
           )}
-          <button className="btn-ghost" type="button" onClick={onClose} disabled={busy}>Tutup</button>
+          <button className="btn-ghost" type="button" data-demo="paket-tutup"
+                  onClick={onClose} disabled={busy}>Tutup</button>
           <button className="btn" type="button" onClick={jalankan} disabled={busy || kurang.length > 0}>
             {busy ? 'Merakit…' : `Export paket (${pilihan.length} modul)`}
           </button>

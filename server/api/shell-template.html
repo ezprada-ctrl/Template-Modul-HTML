@@ -6480,6 +6480,53 @@ const DEMO_ACTIONS = {
     await D.sleep(500);
   },
 
+  /* Kata yang DIJAMIN ketemu, diambil dari isi modul itu sendiri. Kata mati
+     yang ditulis tetap di sini (mis. "pajak" di modul yang bukan pajak) bikin
+     langkah ini memamerkan "Tidak ditemukan" - persis kebalikan dari yang mau
+     ditunjukkan. Dipilih kata agak panjang supaya hasilnya menyempit, bukan
+     cocok di semua slide. */
+  'search': async (D, cap) => {
+    const input = document.getElementById('search-input');
+    if(!input) return false;
+    let kata = '';
+    for(const it of NAV){
+      if(it.kind !== 'slide') continue;
+      const kandidat = (SLIDE_SEARCH[it.num] || '').split(/[^A-Za-zÀ-ÿ]+/)
+        .filter(w => w.length >= 7);
+      if(kandidat.length){ kata = kandidat[0].toLowerCase(); break; }
+    }
+    if(!kata) return false;
+
+    await D.say(cap, 0);
+    openSidebar();
+    await D.sleep(800);
+    await D.cursorTo(input);
+    /* Diketik huruf per huruf: yang mau ditunjukkan daftar hasilnya MENYEMPIT
+       sambil mengetik, bukan muncul jadi sekaligus. */
+    input.value = '';
+    for(const c of kata){
+      D.chk();
+      input.value += c;
+      onSearchInput(input.value);
+      await D.sleep(105);
+    }
+    await D.sleep(950);
+
+    const hasil = document.querySelectorAll('#search-results .search-result-item');
+    if(hasil.length){
+      await D.cursorTo(hasil[0]);
+      await D.sleep(550);
+      await D.click(hasil[0]);      /* melompat ke slide yang memuat kata itu */
+      await D.sleep(950);
+    }
+    /* Dibersihkan sendiri. Kotak hasil yang tertinggal terbuka menutupi menu
+       samping di langkah-langkah berikutnya, dan booth jalan tanpa penjaga. */
+    input.value = '';
+    onSearchInput('');
+    closeSidebar();
+    await D.sleep(450);
+  },
+
   'static-tour': async (D, cap) => {
     const idx = demoSlideIdx('class="card"') >= 0 ? demoSlideIdx('class="card"') : demoFirstIdx('slide');
     if(idx < 0) return false;
