@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="id">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Purwarupa — Penyarangan Blok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+
+<style>
+/* ===========================================================================
+   PURWARUPA, bukan aplikasi. Tujuannya satu: supaya empat saran penyarangan
+   blok bisa DINILAI dengan tangan, bukan dibayangkan dari paragraf.
+
+   Karena itu tiap saran dipasangi SAKLAR. Nilainya bukan pada "kelihatan
+   bagus" waktu semua menyala - tapi pada bedanya waktu dimatikan. Matikan
+   satu, rasakan editornya memburuk, lalu putuskan saran itu layak digarap
+   atau tidak.
+
+   Token warnanya disalin apa adanya dari app/src/index.css supaya rasanya
+   sama dengan builder sungguhan, bukan tiruan yang kira-kira.
+   =========================================================================== */
+:root{
+  --bg:#ffffff; --bg-2:#f6f6f7; --surface:#ffffff; --surface-2:#f3f3f5; --surface-3:#e9e9ec;
+  --border:#e4e4e7; --border-strong:#d1d1d6;
+  --text:#18181b; --text-dim:#565660; --text-faint:#9a9aa4;
+  --ink:#18181b; --ink-hover:#000000; --on-ink:#ffffff;
+  --ring:rgba(24,24,27,.14); --ink-soft:rgba(24,24,27,.06);
+  --danger:#c0392c; --danger-soft:rgba(192,57,44,.09);
+  --success:#2f8f57; --success-soft:rgba(47,143,87,.12);
+  --edit:#6f76d6; --edit-soft:rgba(111,118,214,.16);
+  --radius-sm:7px; --radius:10px; --radius-lg:14px;
+  --shadow-sm:0 1px 2px rgba(24,24,27,.05);
+  --shadow:0 4px 16px -6px rgba(24,24,27,.14);
+  --shadow-lg:0 12px 34px -12px rgba(24,24,27,.24);
+  --ease:.16s cubic-bezier(.4,0,.2,1);
+}
+:root[data-theme="dark"]{
+  --bg:#0d0d0f; --bg-2:#0d0d0f; --surface:#161619; --surface-2:#1d1d21; --surface-3:#27272c;
+  --border:#2a2a30; --border-strong:#3a3a42;
+  --text:#f3f3f5; --text-dim:#a6a6b0; --text-faint:#6c6c78;
+  --ink:#f4f4f5; --ink-hover:#ffffff; --on-ink:#161619;
+  --ring:rgba(244,244,245,.16); --ink-soft:rgba(244,244,245,.08);
+  --danger:#ec6a5e; --danger-soft:rgba(236,106,94,.14);
+  --success:#4cbd7d; --success-soft:rgba(76,189,125,.16);
+  --edit:#9aa2f2; --edit-soft:rgba(154,162,242,.2);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;background:var(--bg-2);color:var(--text);
+  font:15px/1.55 'Inter',system-ui,'Segoe UI',Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;cursor:pointer;}
+h1,h2,h3{margin:0;}
+
+.bungkus{max-width:1220px;margin:0 auto;padding:22px 20px 80px;}
+
+/* ---------------- kepala ---------------- */
+.kepala{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:flex-start;justify-content:space-between;margin-bottom:6px;}
+.kepala h1{font-size:20px;font-weight:800;letter-spacing:-.01em;}
+.kepala .sub{color:var(--text-dim);font-size:13px;margin-top:4px;max-width:66ch;}
+.tema{
+  background:var(--surface);border:1px solid var(--border);color:var(--text-dim);
+  border-radius:var(--radius-sm);padding:7px 12px;font-size:12.5px;white-space:nowrap;
+}
+.tema:hover{border-color:var(--border-strong);color:var(--text);}
+
+/* ---------------- panel saklar ---------------- */
+.saklar-panel{
+  margin:18px 0 22px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;
+}
+.saklar-kepala{
+  padding:11px 16px;border-bottom:1px solid var(--border);background:var(--surface-2);
+  font-size:11px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text-faint);
+  display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.saklar-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(252px,1fr));}
+.saklar{
+  display:flex;gap:11px;align-items:flex-start;padding:13px 16px;
+  border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;
+  transition:background var(--ease);
+}
+.saklar:hover{background:var(--surface-2);}
+.saklar input{margin:2px 0 0;width:15px;height:15px;accent-color:var(--ink);cursor:pointer;flex:none;}
+.saklar .n{font-size:13px;font-weight:600;display:block;margin-bottom:2px;}
+.saklar .k{font-size:11.5px;color:var(--text-dim);line-height:1.45;}
+.saklar .mati{color:var(--danger);}
+
+/* ---------------- tata letak utama ---------------- */
+.kolom{display:grid;grid-template-columns:1fr;gap:20px;}
+@media(min-width:1000px){ .kolom{grid-template-columns:1fr 310px;align-items:start;} }
+
+.kanvas{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);overflow:hidden;
+}
+.kanvas-kepala{
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+}
+.kanvas-kepala .judul{font-size:13.5px;font-weight:700;}
+.kanvas-isi{padding:16px;min-height:330px;}
+
+/* remah (breadcrumb) — cuma muncul di mode drill-in */
+.remah{display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-size:12.5px;}
+.remah button{
+  background:none;border:0;color:var(--text-dim);padding:4px 7px;border-radius:6px;
+  font-size:12.5px;transition:background var(--ease),color var(--ease);
+}
+.remah button:hover{background:var(--surface-3);color:var(--text);}
+.remah .kini{color:var(--text);font-weight:700;padding:4px 7px;}
+.remah .pemisah{color:var(--text-faint);}
+.naik{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:6px 11px;font-size:12px;color:var(--text-dim);
+}
+.naik:hover{border-color:var(--border-strong);color:var(--text);}
+
+/* ---------------- kartu blok ---------------- */
+.blok{
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);
+  margin-bottom:8px;transition:border-color var(--ease),box-shadow var(--ease);
+}
+.blok:hover{border-color:var(--border-strong);}
+.blok.wadah{border-left:3px solid var(--edit);}
+.blok-baris{display:flex;align-items:center;gap:9px;padding:10px 12px;}
+.blok-baris .pegang{color:var(--text-faint);font-size:13px;cursor:grab;flex:none;}
+.lipat{
+  background:none;border:0;color:var(--text-faint);width:20px;height:20px;flex:none;
+  display:grid;place-items:center;border-radius:5px;font-size:10px;transition:var(--ease);
+}
+.lipat:hover{background:var(--surface-3);color:var(--text);}
+.lipat.buka{transform:rotate(90deg);}
+.blok-nama{font-size:13px;font-weight:650;flex:none;}
+.blok-ringkas{
+  font-size:12px;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;flex:1;min-width:0;
+}
+.lencana{
+  font-size:10px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:20px;
+  background:var(--edit-soft);color:var(--edit);flex:none;text-transform:uppercase;
+}
+.blok-aksi{display:flex;gap:4px;flex:none;}
+.mini{
+  background:none;border:1px solid transparent;color:var(--text-faint);
+  border-radius:6px;padding:3px 8px;font-size:11.5px;transition:var(--ease);
+}
+.mini:hover{border-color:var(--border-strong);color:var(--text);background:var(--surface-2);}
+.mini.masuk{color:var(--edit);font-weight:650;}
+.mini.buang:hover{color:var(--danger);border-color:var(--danger);background:var(--danger-soft);}
+
+.blok-isi{padding:0 12px 12px 34px;}
+.sarang{
+  border-left:2px dashed var(--border-strong);padding-left:12px;margin-top:2px;
+}
+.sarang-kosong{
+  font-size:12px;color:var(--text-faint);font-style:italic;padding:8px 2px 10px;
+}
+.medan{
+  width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+  border-radius:var(--radius-sm);padding:8px 10px;font:inherit;font-size:12.5px;margin-bottom:7px;
+}
+.medan:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px var(--ink-soft);}
+
+/* ---------------- tombol tambah + menu ---------------- */
+.tambah{
+  width:100%;border:1px dashed var(--border-strong);background:transparent;color:var(--text-dim);
+  border-radius:var(--radius-sm);padding:10px;font-size:12.5px;transition:var(--ease);
+}
+.tambah:hover{border-color:var(--ink);color:var(--text);background:var(--ink-soft);}
+.tambah:disabled{opacity:.5;cursor:not-allowed;border-style:solid;}
+.tambah:disabled:hover{border-color:var(--border-strong);color:var(--text-dim);background:transparent;}
+
+.menu{
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);
+  box-shadow:var(--shadow);margin-top:6px;overflow:hidden;
+}
+.menu-kepala{
+  padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface-2);
+  font-size:11px;color:var(--text-faint);display:flex;justify-content:space-between;gap:10px;
+}
+.menu-kepala b{color:var(--text-dim);font-weight:700;}
+.menu-daftar{max-height:236px;overflow-y:auto;padding:4px;}
+.menu-item{
+  display:block;width:100%;text-align:left;background:none;border:0;color:var(--text);
+  padding:7px 10px;border-radius:6px;font-size:12.5px;
+}
+.menu-item:hover{background:var(--surface-3);}
+.menu-item.terlarang{color:var(--text-faint);cursor:not-allowed;}
+.menu-item.terlarang:hover{background:var(--danger-soft);}
+.menu-item .alasan{display:block;font-size:11px;color:var(--text-faint);margin-top:2px;line-height:1.4;}
+.menu-lipat{
+  width:100%;background:var(--surface-2);border:0;border-top:1px solid var(--border);
+  color:var(--text-dim);padding:7px;font-size:11.5px;
+}
+.menu-lipat:hover{color:var(--text);}
+
+/* ---------------- catatan sisi ---------------- */
+.sisi{display:flex;flex-direction:column;gap:14px;}
+.kartu-sisi{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 15px;box-shadow:var(--shadow-sm);
+}
+.kartu-sisi h3{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-faint);margin-bottom:9px;}
+.kartu-sisi p{margin:0 0 9px;font-size:12.5px;color:var(--text-dim);line-height:1.55;}
+.kartu-sisi p:last-child{margin-bottom:0;}
+.ukur{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--border);}
+.ukur:last-child{border-bottom:0;}
+.ukur b{font-variant-numeric:tabular-nums;}
+.ukur .buruk{color:var(--danger);}
+.ukur .baik{color:var(--success);}
+
+/* ---------------- demo token popup (saran e) ---------------- */
+.tok{
+  display:inline-block;background:var(--edit-soft);color:var(--edit);border-radius:5px;
+  padding:1px 6px;font-size:12px;font-weight:650;
+}
+.pratinjau-kotak{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:12px 14px;font-size:13px;color:var(--text-dim);line-height:1.6;
+}
+.pemicu{
+  display:inline-flex;align-items:center;gap:5px;background:var(--ink);color:var(--on-ink);
+  border-radius:20px;padding:2px 11px;font-size:12px;font-weight:650;border:0;
+}
+.sisip{
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);
+  border-radius:6px;padding:4px 10px;font-size:11.5px;margin-bottom:7px;
+}
+.sisip:hover{border-color:var(--ink);color:var(--text);}
+.catatan-kecil{font-size:11.5px;color:var(--text-faint);line-height:1.5;margin-top:8px;}
+</style>
+
+<div class="bungkus">
+
+  <div class="kepala">
+    <div>
+      <h1>Purwarupa — penyarangan blok di builder</h1>
+      <div class="sub">
+        Empat saran, masing-masing punya saklar. Nilainya bukan waktu semuanya menyala —
+        tapi waktu lo <b>matikan satu</b> dan merasakan editornya memburuk. Warna, huruf, dan
+        daftar blok diambil dari aplikasi aslinya.
+      </div>
+    </div>
+    <button class="tema" id="btnTema">Mode gelap</button>
+  </div>
+
+  <div class="saklar-panel">
+    <div class="saklar-kepala">
+      <span>Saran yang sedang diuji</span>
+      <span id="ringkasSaklar"></span>
+    </div>
+    <div class="saklar-grid">
+      <label class="saklar">
+        <input type="checkbox" id="sA" checked>
+        <span>
+          <span class="n">a · Daftar putih per wadah</span>
+          <span class="k">Menu "+ Tambah" cuma menampilkan blok yang masuk akal di wadah itu.
+          <span class="mati">Mati = selalu 18 tipe, di mana pun.</span></span>
+        </span>
+      </label>
+      <label class="saklar">
+        <input type="checkbox" id="sB" checked>
+        <span>
+          <span class="n">b · Batas kedalaman</span>
+          <span class="k">Maksimal 2 tingkat sarang. <span class="mati">Mati = boleh sedalam apa pun,
+          seperti Grid sekarang.</span></span>
+        </span>
+      </label>
+      <label class="saklar">
+        <input type="checkbox" id="sC" checked>
+        <span>
+          <span class="n">c · Drill-in di tingkat ≥2</span>
+          <span class="k">Masuk ke wadah = layar berpindah, ada remah jejak.
+          <span class="mati">Mati = semua inline, halaman memanjang.</span></span>
+        </span>
+      </label>
+      <label class="saklar">
+        <input type="checkbox" id="sD" checked>
+        <span>
+          <span class="n">d · Terlipat + ringkasan</span>
+          <span class="k">Blok tampil terlipat dengan ringkasan satu baris.
+          <span class="mati">Mati = semua terbuka sekaligus.</span></span>
+        </span>
+      </label>
+    </div>
+  </div>
+
+  <div class="kolom">
+    <div>
+      <div class="kanvas">
+        <div class="kanvas-kepala">
+          <div id="kepalaKiri" class="judul">Slide 3 — Prosedur Pemeriksaan</div>
+          <div id="kepalaKanan"></div>
+        </div>
+        <div class="kanvas-isi" id="kanvas"></div>
+      </div>
+
+      <!-- ============ saran e: jalur murah ============ -->
+      <div class="kartu-sisi" style="margin-top:20px">
+        <h3>e · Jalur murah — popup tanpa penyarangan</h3>
+        <p>
+          Kasus yang lo sebut (popup di dalam diagram alur) tidak harus lewat sarang.
+          Field detail langkah tetap <b>teks biasa</b>; tombol di bawah menanam token,
+          dan generator menggantinya jadi pemicu popup. Nol perubahan model data,
+          nol tambahan kedalaman di editor.
+        </p>
+        <div style="font-size:11.5px;color:var(--text-faint);margin:12px 0 5px;font-weight:600;">
+          Detail langkah 2 — Verifikasi
+        </div>
+        <button class="sisip" id="btnSisip">+ Sisipkan popup</button>
+        <textarea class="medan" id="tokInput" rows="3" style="font-family:ui-monospace,monospace;font-size:12px;">Dokumen diperiksa satu per satu oleh petugas.</textarea>
+        <div style="font-size:11.5px;color:var(--text-faint);margin:10px 0 5px;font-weight:600;">
+          Hasil yang dilihat peserta
+        </div>
+        <div class="pratinjau-kotak" id="tokPratinjau"></div>
+        <div class="catatan-kecil">
+          Bandingkan ongkosnya: jalur ini ±1 hari kerja. Mengubah <code>steps[].detail</code>
+          jadi array blok berarti migrasi semua draft lama + generator + SCORM.
+        </div>
+      </div>
+    </div>
+
+    <div class="sisi">
+      <div class="kartu-sisi">
+        <h3>Ukuran yang bisa dinilai</h3>
+        <div class="ukur"><span>Tipe di menu saat ini</span><b id="mMenu">—</b></div>
+        <div class="ukur"><span>Kedalaman terdalam</span><b id="mDalam">—</b></div>
+        <div class="ukur"><span>Baris terlihat sekaligus</span><b id="mBaris">—</b></div>
+        <div class="ukur"><span>Tinggi kanvas</span><b id="mTinggi">—</b></div>
+      </div>
+
+      <div class="kartu-sisi">
+        <h3>Cara menilainya</h3>
+        <p><b>1.</b> Matikan saklar <b>c</b>, lalu buka Diagram Alur → Langkah 2 → Modal. Lihat halamannya memanjang dan indentasinya menumpuk.</p>
+        <p><b>2.</b> Nyalakan lagi <b>c</b>, ulangi. Layar tetap datar, remah jejak memberi tahu posisi lo.</p>
+        <p><b>3.</b> Matikan <b>a</b>, buka menu tambah di dalam popup. 18 tipe muncul, termasuk yang merusak.</p>
+        <p><b>4.</b> Matikan <b>b</b>, lalu sarangkan terus. Tidak ada yang menghentikan lo.</p>
+      </div>
+
+      <div class="kartu-sisi">
+        <h3>Catatan jujur</h3>
+        <p>Ini purwarupa perilaku, bukan potongan aplikasi. Editor tiap blok diwakili
+        field seadanya — yang diuji di sini <b>cara bernavigasinya</b>, bukan isinya.</p>
+        <p>Alasan penolakan tipe di menu diambil dari komentar
+        <code>POPUP_BLOCK_TYPES</code> yang sudah ada di <code>types.ts</code>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== data: daftar blok asli ===================== */
+const LABEL = {
+  card:'Kartu (Card)', callout:'Catatan (Callout)', definition:'Definisi',
+  pullquote:'Kutipan Angka (Pull-quote)', ticklist:'Daftar Bercentang',
+  accordion:'Accordion', tabs:'Tabs', timeline:'Timeline', dtable:'Tabel Data',
+  flow:'Diagram Alur', grid:'Grid (2/3 kolom)', image:'Gambar',
+  badgeref:'Badge Referensi', html:'HTML Bebas', modal:'Modal Popup (info tambahan)',
+  media:'Media (Video / YouTube / Instagram)', knowledge:'Knowledge Check (cek paham)',
+  articulate:'Articulate 360 (paket ZIP)',
+};
+const SEMUA = Object.keys(LABEL);
+
+/* Alasan penolakan — disalin dari komentar POPUP_BLOCK_TYPES di types.ts,
+   supaya purwarupa ini tidak mengarang batasan yang tidak ada di kode. */
+const ALASAN = {
+  modal:'Popup di dalam popup: .modal-overlay itu position:fixed, bersarang di .modal-box (overflow-y:auto) dia lepas dari kotaknya dan rebutan z-index. Rusak, bukan cuma jelek.',
+  knowledge:'Punya alur popup sendiri yang mengunci navigasi slide. Di dalam wadah lain mekanisme itu putus.',
+  articulate:'iframe + shim SCORM, bisa mengunci perpindahan slide. Di dalam popup penguncian itu tak bermakna.',
+  grid:'Wadah di dalam wadah. Dirancang untuk lebar slide, sempit di kotak berpadding, dan bersarang makin dalam tanpa manfaat.',
+  media:'Pemutar dibuat saat slide dirender & tracking-nya per-slide; di dalam wadah butuh siklus hidup sendiri.',
+  dtable:'Tabel butuh lebar. Di dalam langkah alur yang sempit dia pasti menggulir menyamping.',
+  timeline:'Dua urutan bertumpuk (alur di dalam alur) membingungkan, bukan memperkaya.',
+  tabs:'Lapisan navigasi di dalam lapisan navigasi.',
+  accordion:'Lapisan buka-tutup di dalam lapisan buka-tutup.',
+  flow:'Alur di dalam alur.',
+};
+
+/* Daftar putih per wadah. `modal` persis POPUP_BLOCK_TYPES yang sudah ada;
+   sisanya usulan yang sedang diuji lewat purwarupa ini. */
+const IZIN = {
+  slide: SEMUA,
+  modal: ['card','callout','definition','pullquote','ticklist','dtable','timeline','image','badgeref','html','accordion','tabs','flow'],
+  grid:  ['card','callout','definition','pullquote','ticklist','dtable','timeline','image','badgeref','html','accordion','tabs','flow','media','knowledge'],
+  flow:  ['card','callout','definition','pullquote','ticklist','image','badgeref','html','modal'],
+  accordion:['card','callout','definition','pullquote','ticklist','image','badgeref','html','modal','dtable'],
+  tabs:  ['card','callout','definition','pullquote','ticklist','image','badgeref','html','modal','dtable','flow'],
+};
+const WADAH = Object.keys(IZIN).filter(k => k !== 'slide');
+const BATAS = 2;              // tingkat sarang maksimal saat saklar b menyala
+
+/* ===================== keadaan ===================== */
+let uid = 0;
+const buat = (type, judul, anak) => ({ id:'b'+(++uid), type, judul:judul||'', anak:anak||[], buka:false });
+
+/* Isi awal sengaja sudah bersarang 2 tingkat — persis contoh yang lo sebut:
+   popup DI DALAM diagram alur. */
+let pohon = [
+  buat('callout','Perhatikan syarat formal sebelum lanjut'),
+  buat('flow','Prosedur pemeriksaan', [
+    buat('card','Langkah 1 — Terima berkas'),
+    buat('modal','Langkah 2 — Verifikasi (popup rincian)', [
+      buat('ticklist','Daftar dokumen wajib'),
+      buat('definition','Arti "lengkap secara formal"'),
+    ]),
+    buat('card','Langkah 3 — Terbit'),
+  ]),
+  buat('grid','Perbandingan dua skema', [
+    buat('card','Skema lama'),
+    buat('card','Skema baru'),
+  ]),
+  buat('dtable','Tarif per golongan'),
+];
+
+let jalur = [];          // jalur drill-in, berisi id wadah
+let menuUntuk = null;    // id wadah yang menunya sedang terbuka ('AKAR' = tingkat atas)
+let bukaTerlarang = false;
+
+const S = { a:true, b:true, c:true, d:true };
+
+/* ===================== bantu ===================== */
+function cari(id, daftar) {
+  daftar = daftar || pohon;
+  for (const b of daftar) {
+    if (b.id === id) return b;
+    const k = cari(id, b.anak);
+    if (k) return k;
+  }
+  return null;
+}
+function induk(id, daftar, atas) {
+  daftar = daftar || pohon;
+  for (const b of daftar) {
+    if (b.id === id) return atas || null;
+    const k = induk(id, b.anak, b);
+    if (k !== undefined && k !== null) return k;
+    if (b.anak.some(x => x.id === id)) return b;
+  }
+  return null;
+}
+const bisaPunyaAnak = (t) => WADAH.includes(t);
+const daftarKini = () => jalur.length ? cari(jalur[jalur.length-1]).anak : pohon;
+const wadahKini  = () => jalur.length ? cari(jalur[jalur.length-1]) : null;
+
+function izinUntuk(tipeWadah) {
+  if (!S.a) return SEMUA;                      // saklar a mati: semuanya muncul
+  return IZIN[tipeWadah] || SEMUA;
+}
+function dalamnya(b, d) {
+  d = d || 0;
+  if (!b.anak.length) return d;
+  return Math.max(...b.anak.map(x => dalamnya(x, d+1)));
+}
+function ringkasan(b) {
+  if (b.anak.length) return b.anak.length + ' sub-blok · ' + b.anak.map(x => LABEL[x.type].split(' ')[0]).join(', ');
+  return b.judul || 'belum diisi';
+}
+
+/* ===================== render ===================== */
+function render() {
+  const kanvas = document.getElementById('kanvas');
+  kanvas.innerHTML = '';
+
+  // --- remah jejak (hanya bermakna kalau drill-in menyala) ---
+  const kanan = document.getElementById('kepalaKanan');
+  const kiri  = document.getElementById('kepalaKiri');
+  if (S.c && jalur.length) {
+    const remah = document.createElement('div');
+    remah.className = 'remah';
+    const akar = document.createElement('button');
+    akar.textContent = 'Slide 3';
+    akar.onclick = () => { jalur = []; menuUntuk = null; render(); };
+    remah.appendChild(akar);
+    jalur.forEach((id, i) => {
+      const sp = document.createElement('span'); sp.className = 'pemisah'; sp.textContent = '›';
+      remah.appendChild(sp);
+      const b = cari(id);
+      if (i === jalur.length - 1) {
+        const k = document.createElement('span'); k.className = 'kini'; k.textContent = LABEL[b.type].split(' (')[0];
+        remah.appendChild(k);
+      } else {
+        const t = document.createElement('button');
+        t.textContent = LABEL[b.type].split(' (')[0];
+        t.onclick = () => { jalur = jalur.slice(0, i+1); menuUntuk = null; render(); };
+        remah.appendChild(t);
+      }
+    });
+    kiri.innerHTML = '';
+    kiri.appendChild(remah);
+    const naik = document.createElement('button');
+    naik.className = 'naik'; naik.textContent = '↑ Keluar satu tingkat';
+    naik.onclick = () => { jalur.pop(); menuUntuk = null; render(); };
+    kanan.innerHTML = ''; kanan.appendChild(naik);
+  } else {
+    kiri.textContent = 'Slide 3 — Prosedur Pemeriksaan';
+    kanan.innerHTML = '<span style="font-size:12px;color:var(--text-faint)">' +
+      (S.c ? 'tingkat atas' : 'mode inline — semua tingkat ditampilkan sekaligus') + '</span>';
+  }
+
+  const daftar = S.c ? daftarKini() : pohon;
+  const mulai  = S.c ? jalur.length : 0;
+  daftar.forEach(b => kanvas.appendChild(kartu(b, mulai)));
+
+  // tombol tambah di tingkat yang sedang dibuka
+  const w = S.c ? wadahKini() : null;
+  kanvas.appendChild(blokTambah(w ? w.id : 'AKAR', w ? w.type : 'slide', mulai));
+
+  ukur();
+}
+
+function kartu(b, tingkat) {
+  const el = document.createElement('div');
+  el.className = 'blok' + (bisaPunyaAnak(b.type) ? ' wadah' : '');
+
+  const baris = document.createElement('div');
+  baris.className = 'blok-baris';
+
+  const pegang = document.createElement('span');
+  pegang.className = 'pegang'; pegang.textContent = '⠿';
+  baris.appendChild(pegang);
+
+  // panah lipat — cuma relevan kalau saran d menyala
+  if (S.d) {
+    const lip = document.createElement('button');
+    lip.className = 'lipat' + (b.buka ? ' buka' : '');
+    lip.textContent = '▶';
+    lip.onclick = () => { b.buka = !b.buka; render(); };
+    baris.appendChild(lip);
+  }
+
+  const nama = document.createElement('span');
+  nama.className = 'blok-nama';
+  nama.textContent = LABEL[b.type].split(' (')[0];
+  baris.appendChild(nama);
+
+  if (bisaPunyaAnak(b.type)) {
+    const l = document.createElement('span');
+    l.className = 'lencana'; l.textContent = 'wadah';
+    baris.appendChild(l);
+  }
+
+  const r = document.createElement('span');
+  r.className = 'blok-ringkas';
+  r.textContent = S.d ? ringkasan(b) : (b.judul || '');
+  baris.appendChild(r);
+
+  const aksi = document.createElement('span');
+  aksi.className = 'blok-aksi';
+  // "Buka" hanya ada di mode drill-in dan hanya untuk wadah
+  if (S.c && bisaPunyaAnak(b.type)) {
+    const msk = document.createElement('button');
+    msk.className = 'mini masuk';
+    msk.textContent = 'Buka ' + (b.anak.length ? '(' + b.anak.length + ') ' : '') + '→';
+    msk.onclick = () => { jalur.push(b.id); menuUntuk = null; render(); };
+    aksi.appendChild(msk);
+  }
+  const hapus = document.createElement('button');
+  hapus.className = 'mini buang'; hapus.textContent = '✕';
+  hapus.onclick = () => { buang(b.id); render(); };
+  aksi.appendChild(hapus);
+  baris.appendChild(aksi);
+
+  el.appendChild(baris);
+
+  // isi: terbuka kalau saran d mati, atau kalau memang dibuka
+  const tampil = !S.d || b.buka;
+  if (tampil) {
+    const isi = document.createElement('div');
+    isi.className = 'blok-isi';
+    const f = document.createElement('input');
+    f.className = 'medan'; f.value = b.judul;
+    f.placeholder = 'Judul / isi ' + LABEL[b.type].split(' (')[0];
+    f.oninput = e => { b.judul = e.target.value; const rr = el.querySelector('.blok-ringkas'); if (rr) rr.textContent = S.d ? ringkasan(b) : e.target.value; };
+    isi.appendChild(f);
+
+    // Sarang inline: dipakai kalau drill-in MATI, atau kalau ini tingkat pertama
+    // (saran c: tingkat 1 tetap inline, baru ≥2 yang berpindah layar).
+    const inline = bisaPunyaAnak(b.type) && (!S.c);
+    if (inline) {
+      const s = document.createElement('div');
+      s.className = 'sarang';
+      if (!b.anak.length) {
+        const k = document.createElement('div');
+        k.className = 'sarang-kosong'; k.textContent = 'Belum ada sub-blok.';
+        s.appendChild(k);
+      }
+      b.anak.forEach(a => s.appendChild(kartu(a, tingkat + 1)));
+      s.appendChild(blokTambah(b.id, b.type, tingkat + 1));
+      isi.appendChild(s);
+    }
+    el.appendChild(isi);
+  }
+  return el;
+}
+
+function blokTambah(idWadah, tipeWadah, tingkat) {
+  const kotak = document.createElement('div');
+
+  /* Yang dibatasi WADAHnya, bukan isinya. Melarang tambah apa pun di tingkat
+     terdalam terasa seperti jalan buntu — dan tidak konsisten, karena isi yang
+     sudah ada di situ jelas boleh berada di situ. Yang benar-benar perlu
+     dicegah cuma membuka tingkat BARU. Jadi di batas, blok biasa tetap boleh
+     masuk; yang hilang dari menu cuma tipe yang bisa punya anak. */
+  const mentok = S.b && tingkat >= BATAS;
+  const t = document.createElement('button');
+  t.className = 'tambah';
+  t.textContent = '+ Tambah ' + (tipeWadah === 'slide' ? 'blok' : 'sub-blok') + '…' +
+                  (mentok ? '  (tingkat terdalam)' : '');
+  t.onclick = () => { menuUntuk = (menuUntuk === idWadah ? null : idWadah); bukaTerlarang = false; render(); };
+  kotak.appendChild(t);
+
+  if (menuUntuk === idWadah) {
+    let izin = izinUntuk(tipeWadah);
+    if (mentok) izin = izin.filter(x => !bisaPunyaAnak(x));
+    const tolak = SEMUA.filter(x => !izin.includes(x));
+
+    const m = document.createElement('div');
+    m.className = 'menu';
+
+    const kep = document.createElement('div');
+    kep.className = 'menu-kepala';
+    kep.innerHTML = '<span>Boleh di dalam <b>' + (tipeWadah === 'slide' ? 'slide' : LABEL[tipeWadah].split(' (')[0]) + '</b>' +
+                    (mentok ? ' · tingkat terdalam, wadah baru tidak boleh' : '') + '</span>' +
+                    '<span><b>' + izin.length + '</b> dari ' + SEMUA.length + ' tipe</span>';
+    m.appendChild(kep);
+
+    const d = document.createElement('div');
+    d.className = 'menu-daftar';
+    izin.forEach(tp => {
+      const it = document.createElement('button');
+      it.className = 'menu-item'; it.textContent = LABEL[tp];
+      it.onclick = () => {
+        const target = idWadah === 'AKAR' ? (S.c ? daftarKini() : pohon) : cari(idWadah).anak;
+        target.push(buat(tp, ''));
+        menuUntuk = null; render();
+      };
+      d.appendChild(it);
+    });
+
+    if (S.a && tolak.length && bukaTerlarang) {
+      tolak.forEach(tp => {
+        const it = document.createElement('button');
+        it.className = 'menu-item terlarang';
+        it.innerHTML = '🚫 ' + LABEL[tp] + '<span class="alasan">' +
+          (ALASAN[tp] || 'Tidak masuk akal di wadah ini.') + '</span>';
+        it.onclick = () => {};
+        d.appendChild(it);
+      });
+    }
+    m.appendChild(d);
+
+    if (S.a && tolak.length) {
+      const lip = document.createElement('button');
+      lip.className = 'menu-lipat';
+      lip.textContent = bukaTerlarang
+        ? 'Sembunyikan ' + tolak.length + ' tipe yang tidak boleh'
+        : 'Kenapa cuma ' + izin.length + '? Lihat ' + tolak.length + ' yang disembunyikan →';
+      lip.onclick = () => { bukaTerlarang = !bukaTerlarang; render(); };
+      m.appendChild(lip);
+    }
+    kotak.appendChild(m);
+  }
+  return kotak;
+}
+
+function buang(id, daftar) {
+  daftar = daftar || pohon;
+  const i = daftar.findIndex(b => b.id === id);
+  if (i >= 0) { daftar.splice(i, 1); return true; }
+  return daftar.some(b => buang(id, b.anak));
+}
+
+/* ===================== ukuran yang bisa dinilai ===================== */
+function ukur() {
+  const w = S.c ? wadahKini() : null;
+  const izin = izinUntuk(w ? w.type : 'slide');
+  document.getElementById('mMenu').textContent = izin.length + ' tipe';
+  document.getElementById('mMenu').className = izin.length > 14 ? 'buruk' : 'baik';
+
+  const dalam = pohon.length ? Math.max(...pohon.map(b => dalamnya(b))) : 0;
+  const el = document.getElementById('mDalam');
+  el.textContent = dalam + ' tingkat' + (S.b ? ' (batas ' + BATAS + ')' : ' (tanpa batas)');
+  el.className = (!S.b && dalam > BATAS) ? 'buruk' : 'baik';
+
+  const baris = document.querySelectorAll('#kanvas .blok').length;
+  const b2 = document.getElementById('mBaris');
+  b2.textContent = baris + ' blok';
+  b2.className = baris > 9 ? 'buruk' : 'baik';
+
+  const t = Math.round(document.getElementById('kanvas').getBoundingClientRect().height);
+  const t2 = document.getElementById('mTinggi');
+  t2.textContent = t + ' px';
+  t2.className = t > 620 ? 'buruk' : 'baik';
+
+  const nyala = ['a','b','c','d'].filter(k => S[k]);
+  document.getElementById('ringkasSaklar').textContent =
+    nyala.length === 4 ? 'semua menyala' : (nyala.length ? nyala.join(', ') + ' menyala' : 'semua mati — keadaan tanpa saran');
+}
+
+/* ===================== saklar & tema ===================== */
+['a','b','c','d'].forEach(k => {
+  document.getElementById('s' + k.toUpperCase()).addEventListener('change', e => {
+    S[k] = e.target.checked;
+    if (k === 'c' && !S.c) jalur = [];   // kembali ke akar waktu drill-in dimatikan
+    menuUntuk = null;
+    render();
+  });
+});
+document.getElementById('btnTema').addEventListener('click', e => {
+  const gelap = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', gelap ? 'light' : 'dark');
+  e.target.textContent = gelap ? 'Mode gelap' : 'Mode terang';
+  ukur();
+});
+
+/* ===================== demo token popup (saran e) ===================== */
+const tokInput = document.getElementById('tokInput');
+function gambarToken() {
+  const teks = tokInput.value;
+  const html = teks
+    .replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))
+    .replace(/\[popup:([^\]]+)\]/g,
+      (_, n) => '<button class="pemicu">' + n.replace(/[<>&]/g,'') + ' ⓘ</button>');
+  document.getElementById('tokPratinjau').innerHTML = html;
+}
+document.getElementById('btnSisip').addEventListener('click', () => {
+  const p = tokInput.selectionStart ?? tokInput.value.length;
+  const nama = prompt('Nama popup yang mau disisipkan:', 'Syarat formal');
+  if (!nama) return;
+  tokInput.value = tokInput.value.slice(0, p) + '[popup:' + nama + ']' + tokInput.value.slice(p);
+  gambarToken();
+});
+tokInput.addEventListener('input', gambarToken);
+tokInput.value += ' Rinciannya di [popup:Syarat formal].';
+gambarToken();
+
+render();
+</script>
+</html>
