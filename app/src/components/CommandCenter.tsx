@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { Fragment, useState } from 'react';
-import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule, CocreationNote, PeringatanDetail, VideoDetail, SesiDitandai } from '../api';
-import { ccCocreation, ccListModules, ccListSessions, ccListLearners, ccRawRows, ccTandaiUji, ccBatalkanTanda, ccDitandai } from '../api';
+import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule, CocreationNote, PeringatanDetail, VideoDetail, SesiDitandai, RincianSlide, RincianVideo } from '../api';
+import { ccCocreation, ccListModules, ccListSessions, ccListLearners, ccRawRows, ccRincian, ccTandaiUji, ccBatalkanTanda, ccDitandai } from '../api';
 import { DEMO_MODULES, DEMO_SESSIONS, DEMO_LEARNERS, DEMO_COCREATION } from '../demoActivityData';
 
 // Ringkasan di atas tabel. Alasannya: tabelnya 13 kolom dengan bobot visual
@@ -703,9 +703,18 @@ export default function CommandCenter() {
   // lebih penting: tiap sel dibungkus kutip & kutip di dalamnya digandakan,
   // supaya nama/teks yang mengandung koma atau kutip gak bikin kolomnya
   // geser diam-diam waktu dibuka.
-  function toCsv(rows: Record<string, unknown>[]): string {
+  /* `urutKolom` dipakai kalau urutan kolomnya penting. Tanpa itu kolomnya
+     ikut urutan kunci objeknya - dan buat baris yang datang dari backend
+     Flask, urutan itu ALFABETIS (jsonify menyortir kunci), bukan urutan yang
+     ditulis di Python. Hasilnya berkas yang dibuka dengan "ditandai_cepat" di
+     kolom A dan "nip" di kolom J: benar isinya, tapi tidak ada yang mau
+     membacanya. Kolom yang tidak disebut di daftar tetap ikut, di belakang -
+     jadi field baru di backend tidak pernah hilang diam-diam dari ekspor. */
+  function toCsv(rows: Record<string, unknown>[], urutKolom?: string[]): string {
     if (!rows.length) return '';
-    const cols = Object.keys(rows[0]);
+    const cols = urutKolom
+      ? [...urutKolom.filter(c => c in rows[0]), ...Object.keys(rows[0]).filter(c => !urutKolom.includes(c))]
+      : Object.keys(rows[0]);
     const esc = (v: unknown) => {
       const s = v === null || v === undefined ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
       return '"' + s.replace(/"/g, '""') + '"';
@@ -786,6 +795,56 @@ export default function CommandCenter() {
       return r;
     });
     download('aktivitas-per-peserta.csv', toCsv(rows));
+  }
+
+  /* Dua unduhan butiran halus. Keduanya dilayani SATU permintaan - backend
+     merakitnya dari tarikan tabel yang sama, dan tarikan itu bagian yang
+     paling mahal. Hasilnya ditahan di `rincian` supaya tombol kedua tidak
+     menembak server lagi untuk data yang persis sama. */
+  const [rincian, setRincian] = useState<{ slide: RincianSlide[]; video: RincianVideo[] } | null>(null);
+
+  async function ambilRincian() {
+    if (rincian) return rincian;
+    setBusy(true);
+    setError('');
+    try {
+      const d = await ccRincian(password);
+      /* terpotong = data kena batas MAX_ROWS. Wajib disurface DI SINI juga,
+         bukan cuma di layar: CSV yang diam-diam cuma separuh isinya jauh
+         lebih berbahaya daripada tabel yang cuma separuh - berkasnya
+         diteruskan ke orang lain, dan peringatan di layar tidak ikut. */
+      if (d.terpotong) setTerpotong(true);
+      setRincian({ slide: d.slide, video: d.video });
+      return d;
+    } catch (e: any) {
+      setError(e.message);
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function unduhPerSlide() {
+    if (demoMode) { setError('Mode Contoh: rincian per slide cuma ada di data sungguhan.'); return; }
+    const d = await ambilRincian();
+    if (!d) return;
+    if (!d.slide.length) { setError('Belum ada rekaman slide yang bisa dirinci.'); return; }
+    download('aktivitas-per-slide.csv', toCsv(d.slide as unknown as Record<string, unknown>[], [
+      'nip', 'nama', 'modul', 'judul_modul', 'section', 'jenis', 'slide', 'judul_slide',
+      'jumlah_sesi', 'kunjungan', 'total_menit', 'rata_menit', 'kunjungan_terlama_menit',
+      'ditandai_cepat',
+    ]));
+  }
+
+  async function unduhPerVideo() {
+    if (demoMode) { setError('Mode Contoh: rincian per video cuma ada di data sungguhan.'); return; }
+    const d = await ambilRincian();
+    if (!d) return;
+    if (!d.video.length) { setError('Belum ada video yang pernah diputar peserta.'); return; }
+    download('aktivitas-per-video.csv', toCsv(d.video as unknown as Record<string, unknown>[], [
+      'nip', 'nama', 'modul', 'judul_modul', 'slide', 'blok',
+      'persen_terjauh', 'dilewat', 'kecepatan_maks', 'total_video_di_modul',
+    ]));
   }
 
   async function unduhMentah() {
@@ -1119,6 +1178,18 @@ export default function CommandCenter() {
           <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
             <button className="btn-sm" onClick={unduhPeserta} disabled={!learners.length}>
               ⬇ CSV rekap per peserta
+            </button>
+            {/* Ditaruh berdampingan dengan rekap per peserta, bukan di tab
+                per-modul: dua-duanya LINTAS MODUL, dan justru itu gunanya -
+                "peserta A di modul X tiap slidenya berapa lama" baru kejawab
+                kalau modulnya bisa dibandingkan dalam satu berkas. */}
+            <button className="btn-sm" onClick={unduhPerSlide} disabled={busy || demoMode}
+                    title="Satu baris per peserta × modul × slide: berapa kali dibuka, total & rata-rata menit">
+              ⬇ CSV rincian per slide
+            </button>
+            <button className="btn-sm" onClick={unduhPerVideo} disabled={busy || demoMode}
+                    title="Satu baris per peserta × video: persen terjauh ditonton, dilewat, dipercepat">
+              ⬇ CSV rincian per video
             </button>
           </div>
 

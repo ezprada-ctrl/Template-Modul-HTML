@@ -78,10 +78,10 @@
     "semantic_hash": "439d6eeeaf35009eaf286b4cc92e6fb8"
   },
   "app/src/components/QuizBuilder.tsx": {
-    "mtime": 1789110637.2737584,
-    "seen": 1789551131.6447155,
-    "ast_hash": "d9522c3df80435c40dae49850b0ea1d4",
-    "semantic_hash": "d9522c3df80435c40dae49850b0ea1d4"
+    "mtime": 1789973789.4824462,
+    "seen": 1789975353.386285,
+    "ast_hash": "a30f032d9b19b298647f5da1ef5cc3df",
+    "semantic_hash": ""
   },
   "app/src/components/SlideBank.tsx": {
     "mtime": 1788257703.1305437,
@@ -319,7 +319,7 @@
   },
   ".claude/settings.json": {
     "mtime": 1787022108.759704,
-    "seen": 1789965898.4106557,
+    "seen": 1789975363.0409994,
     "ast_hash": "095c71e3ebb04d33915f4e0bbdb50ded",
     "semantic_hash": ""
   },
@@ -355,7 +355,7 @@
   },
   ".claude/launch.json": {
     "mtime": 1789112040.931344,
-    "seen": 1789965898.4106517,
+    "seen": 1789975363.0409956,
     "ast_hash": "72a3647fe4f6af76d683d4c2c5ff28d4",
     "semantic_hash": ""
   },
@@ -384,10 +384,10 @@
     "semantic_hash": ""
   },
   "app/src/builderDemo/engine.ts": {
-    "mtime": 1789364656.98214,
-    "seen": 1789551131.6446946,
-    "ast_hash": "b61d952e26f8a90c144c73539bf080de",
-    "semantic_hash": "b61d952e26f8a90c144c73539bf080de"
+    "mtime": 1789974501.3266096,
+    "seen": 1789975353.385285,
+    "ast_hash": "1c22602cadfdb328042d86a672e94b2b",
+    "semantic_hash": ""
   },
   "app/src/builderDemo/sampleProject.ts": {
     "mtime": 1789118612.120406,
@@ -396,9 +396,9 @@
     "semantic_hash": "f920ad75cb657cdeeca5ffbecbe76c81"
   },
   "app/src/builderDemo/steps.ts": {
-    "mtime": 1789965768.1933918,
-    "seen": 1789965887.3496497,
-    "ast_hash": "23801dee824ae0ed5c1b7867da87d090",
+    "mtime": 1789975336.0915468,
+    "seen": 1789975353.3855133,
+    "ast_hash": "dfba651598078cf2e49e2b6a2ad22908",
     "semantic_hash": ""
   },
   "app/src/builderDemo/sampleAssets.ts": {
@@ -414,10 +414,10 @@
     "semantic_hash": "0915c79105588b7823e83b50f61eb82f"
   },
   "app/src/builderDemo/blokTur.ts": {
-    "mtime": 1789365894.1553369,
-    "seen": 1789551131.644693,
-    "ast_hash": "3aeb3c7b6b7c7a73e53b333e63c5ae02",
-    "semantic_hash": "3aeb3c7b6b7c7a73e53b333e63c5ae02"
+    "mtime": 1789973675.7443092,
+    "seen": 1789975353.385283,
+    "ast_hash": "09ecc1c1ae4f0cd1be85f6e09fd55ad2",
+    "semantic_hash": ""
   },
   "app/src/builderDemo/status.ts": {
     "mtime": 1789364428.7921758,
@@ -432,9 +432,9 @@
     "semantic_hash": "8ab90f73d93f560889a21929096262ab"
   },
   "app/src/components/PaketExportDialog.tsx": {
-    "mtime": 1789965792.5141315,
-    "seen": 1789965887.3503232,
-    "ast_hash": "06fc14f408300fa09c245c9e7ace292e",
+    "mtime": 1789973816.2615173,
+    "seen": 1789975353.3861706,
+    "ast_hash": "8316d59b1ddca3d3a3c7f72012e60ea2",
     "semantic_hash": ""
   },
   "app/src/paket/paketExport.ts": {

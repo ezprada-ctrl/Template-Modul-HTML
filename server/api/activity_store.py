@@ -1388,3 +1388,191 @@ def _rata_kelas_tatap_menit(module_slug, exclude_learner_id=None):
     if len(per_learner) < 1:
         return None
     return round(sum(per_learner.values()) / len(per_learner) / 60000, 1)
+
+
+# ---------------------------------------------------------------------------
+# RINCIAN BUTIRAN HALUS: satu baris = satu slide, atau satu video.
+#
+# Kenapa terpisah dari summarize_* di atas: yang di atas semuanya AGREGAT -
+# satu baris per sesi atau per peserta - dan itu memang yang dibutuhkan layar
+# Command Center. Yang TIDAK bisa dijawab dari sana: "peserta A di modul X,
+# tiap slidenya berapa lama". Datanya sebenarnya sudah lengkap sejak awal
+# (tiap event slide_view bawa num/label/section/ms sendiri), cuma tidak pernah
+# ada yang meratakannya jadi tabel. Sebelum ini jalan satu-satunya adalah
+# mengunduh CSV mentah lalu mengurai sendiri kolom payload JSON-nya di Excel.
+#
+# Dua tabel dihasilkan dalam SATU kali baca tabel. Keduanya butuh tarikan yang
+# sama persis, dan di fungsi serverless satu tarikan seluruh tabel itu bagian
+# yang paling mahal - dua endpoint terpisah berarti membayarnya dua kali untuk
+# data yang identik.
+# ---------------------------------------------------------------------------
+
+def _menit(ms):
+    return round((ms or 0) / 60000, 2)
+
+
+def rincian_per_slide_dan_video(module_slug=None):
+    """Dua tabel rapi buat diekspor: per slide, dan per video.
+
+    Kuncinya (NIP, modul, slide) - jadi kunjungan berulang ke slide yang sama
+    MENJUMLAH, bukan jadi baris sendiri-sendiri. Itu yang bikin tabelnya
+    terbaca sebagai "berapa lama orang ini di slide ini", bukan sebagai catatan
+    kejadian yang masih harus dijumlah lagi oleh pembacanya.
+
+    Yang sengaja TIDAK dihitung di sini: apakah sebuah slide "diklik-lewat
+    terlalu cepat". Ambangnya (SLIDE_MIN_MS, dihitung dari jumlah kata tiap
+    slide) cuma hidup di dalam berkas modulnya dan tidak pernah ikut terkirim
+    ke sini - jadi angka apa pun yang dikarang server bakal beda dari yang
+    dilihat peserta sendiri di rekapnya. Yang dilaporkan cuma fakta yang memang
+    ada di data: slide yang pernah MASUK daftar peringatan baca-cepat (payload
+    reading_warning), ditandai di kolom `ditandai_cepat`.
+    """
+    _, judul_sesi = _judul_per_slug()
+
+    by_session = {}
+    for r in _tanpa_uji_iter(iter_rows(
+            module_slug=module_slug,
+            columns='module_slug,session_id,learner_id,learner_name,event_type,payload')):
+        if r['event_type'] not in ('slide_view', 'video_progress', 'reading_warning', 'session_start'):
+            continue
+        by_session.setdefault(r['session_id'], []).append(r)
+
+    slide_acc = {}   # (nip, slug, judul, key)   -> agregat slide
+    video_acc = {}   # (nip, slug, judul, block) -> agregat video
+    # Slide yang pernah kena peringatan baca-cepat, per (nip, slug, judul).
+    # Dikumpulkan terpisah karena peringatannya datang sebagai SATU baris
+    # berisi daftar nomor slide, bukan satu baris per slide.
+    ditandai = {}
+
+    for sid, rows in by_session.items():
+        nip = None
+        nama = None
+        for r in rows:
+            if r.get('learner_id'):
+                nip = r['learner_id']
+            if r.get('learner_name'):
+                nama = r['learner_name']
+        nip = nip or '(tanpa identitas)'
+        slug = rows[0]['module_slug']
+        judul = judul_sesi.get(sid) or ''
+        dasar = (nip, slug, judul)
+        total_video_modul = None
+
+        for r in rows:
+            p = r.get('payload') or {}
+            t = r['event_type']
+            if t == 'session_start':
+                if p.get('total_video') is not None:
+                    total_video_modul = p['total_video']
+            elif t == 'slide_view':
+                key = p.get('key') or ('%s-%s' % (p.get('kind'), p.get('num')))
+                a = slide_acc.setdefault(dasar + (key,), {
+                    'nama': nama or '',
+                    'jenis': p.get('kind'), 'section': p.get('section'),
+                    'slide': p.get('num'), 'judul_slide': p.get('label') or '',
+                    'kunjungan': 0, 'ms': 0, 'terlama': 0, 'sesi': set(),
+                })
+                ms = p.get('ms') or 0
+                a['kunjungan'] += 1
+                a['ms'] += ms
+                a['terlama'] = max(a['terlama'], ms)
+                a['sesi'].add(sid)
+                # Nama & judul slide bisa baru terisi di sesi berikutnya
+                # (peserta mengetik identitasnya belakangan, atau modulnya
+                # di-export ulang dengan judul slide yang akhirnya diisi);
+                # yang sudah ada tidak ditimpa jadi kosong.
+                if nama and not a['nama']:
+                    a['nama'] = nama
+                if p.get('label') and not a['judul_slide']:
+                    a['judul_slide'] = p['label']
+            elif t == 'video_progress':
+                block = p.get('block')
+                if not block:
+                    continue
+                v = video_acc.setdefault(dasar + (block,), {
+                    'nama': nama or '', 'slide': p.get('slide'),
+                    'persen_terjauh': 0, 'kecepatan_maks': None, 'dilewat': False,
+                    'total_video_modul': None,
+                })
+                persen = p.get('persen')
+                if persen is not None and persen > v['persen_terjauh']:
+                    v['persen_terjauh'] = persen
+                if p.get('slide') is not None:
+                    v['slide'] = p['slide']
+                if p.get('rate') and p['rate'] > (v['kecepatan_maks'] or 0):
+                    v['kecepatan_maks'] = p['rate']
+                if p.get('skip'):
+                    v['dilewat'] = True
+                if nama and not v['nama']:
+                    v['nama'] = nama
+            elif t == 'reading_warning':
+                for num in (p.get('slides') or []):
+                    ditandai.setdefault(dasar, set()).add(num)
+
+        # Dipasang SESUDAH seluruh sesi dibaca: session_start-nya baris
+        # pertama, tapi video_progress-nya baru menyusul di belakang, jadi
+        # kalau dipasang di tempat kejadiannya, video yang datang belakangan
+        # tidak kebagian angka totalnya.
+        if total_video_modul is not None:
+            for k, v in video_acc.items():
+                if k[:3] == dasar:
+                    v['total_video_modul'] = total_video_modul
+
+    slide_rows = []
+    for (nip, slug, judul, _key), a in slide_acc.items():
+        tandai = ditandai.get((nip, slug, judul), set())
+        slide_rows.append({
+            'nip': nip, 'nama': a['nama'],
+            'modul': slug, 'judul_modul': judul,
+            'section': a['section'] or '', 'jenis': a['jenis'] or '',
+            'slide': a['slide'] if a['slide'] is not None else '',
+            'judul_slide': a['judul_slide'],
+            'jumlah_sesi': len(a['sesi']),
+            'kunjungan': a['kunjungan'],
+            'total_menit': _menit(a['ms']),
+            'rata_menit': _menit(a['ms'] / a['kunjungan']) if a['kunjungan'] else 0,
+            'kunjungan_terlama_menit': _menit(a['terlama']),
+            'ditandai_cepat': 'YA' if a['slide'] in tandai else '',
+        })
+    # Urutannya urutan BACA: satu peserta dulu sampai habis, modulnya berurut,
+    # slidenya berurut. Tanpa ini barisnya ikut urutan hash dan pembacanya
+    # harus menyortir sendiri tiap kali membuka berkasnya.
+    slide_rows.sort(key=_urutan_baca)
+
+    video_rows = []
+    for (nip, slug, judul, block), v in video_acc.items():
+        video_rows.append({
+            'nip': nip, 'nama': v['nama'],
+            'modul': slug, 'judul_modul': judul,
+            'slide': v['slide'] if v['slide'] is not None else '',
+            'blok': block,
+            'persen_terjauh': v['persen_terjauh'],
+            'dilewat': 'YA' if v['dilewat'] else '',
+            'kecepatan_maks': v['kecepatan_maks'] or '',
+            'total_video_di_modul': (v['total_video_modul']
+                                     if v['total_video_modul'] is not None else ''),
+        })
+    video_rows.sort(key=_urutan_baca)
+
+    return {'slide': slide_rows, 'video': video_rows, 'terpotong': was_truncated()}
+
+
+# Sampul selalu di depan, Ringkasan selalu di belakang - dua-duanya tidak
+# punya nomor slide maupun section, jadi kalau cuma diurut section+nomor
+# keduanya numpuk di tempat yang sama dan Ringkasan mendarat di ATAS materi.
+_URUT_JENIS = {'hero': 0, 'summary': 2}
+
+
+def _urutan_baca(r):
+    """Kunci urut bersama dua tabel di atas: urutan orang MEMBACA modulnya.
+
+    Peserta tanpa nama didorong ke bawah ('zzz') supaya daftar yang bernama -
+    yang hampir selalu jadi yang dicari orang - tidak terselang baris
+    '(tanpa identitas)' di tengahnya.
+    """
+    return (
+        (r['nama'] or 'zzz').lower(), str(r['nip']), r['modul'], r['judul_modul'],
+        _URUT_JENIS.get(r.get('jenis'), 1),
+        str(r.get('section') or ''),
+        r['slide'] if isinstance(r['slide'], int) else 9999,
+    )

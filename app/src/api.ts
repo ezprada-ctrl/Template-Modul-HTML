@@ -450,6 +450,32 @@ export async function ccRawRows(password: string, moduleSlug: string): Promise<a
   return (await ccPost('rows', { password, module_slug: moduleSlug })).rows;
 }
 
+/* Rincian butiran halus: satu baris per slide, dan satu baris per video.
+   Dua-duanya datang dari SATU permintaan - backend membacanya dari tarikan
+   tabel yang sama, dan tarikan itu bagian yang paling mahal (lihat
+   rincian_per_slide_dan_video di activity_store.py). Memisahnya jadi dua
+   tombol yang masing-masing menembak server berarti membayar dua kali untuk
+   data yang identik. */
+export interface RincianSlide {
+  nip: string; nama: string; modul: string; judul_modul: string;
+  section: string; jenis: string; slide: number | ''; judul_slide: string;
+  jumlah_sesi: number; kunjungan: number;
+  total_menit: number; rata_menit: number; kunjungan_terlama_menit: number;
+  ditandai_cepat: string;
+}
+export interface RincianVideo {
+  nip: string; nama: string; modul: string; judul_modul: string;
+  slide: number | ''; blok: string;
+  persen_terjauh: number; dilewat: string; kecepatan_maks: number | '';
+  total_video_di_modul: number | '';
+}
+export async function ccRincian(password: string, moduleSlug?: string): Promise<{
+  slide: RincianSlide[]; video: RincianVideo[]; terpotong: boolean;
+}> {
+  const d = await ccPost('rincian', { password, module_slug: moduleSlug || '' });
+  return { slide: d.slide || [], video: d.video || [], terpotong: !!d.terpotong };
+}
+
 // Sesi yang ditandai "bukan peserta" (data uji penyusun).
 export interface SesiDitandai {
   session_id: string;

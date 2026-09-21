@@ -18,9 +18,9 @@
     "semantic_hash": "7f00af5ea585cff39d67048a92079917"
   },
   "app/src/api.ts": {
-    "mtime": 1789713248.0621214,
-    "seen": 1789713646.2311325,
-    "ast_hash": "1853c21b4ac7251a4cb5fc42105e9a80",
+    "mtime": 1789981388.1677566,
+    "seen": 1789981593.7573364,
+    "ast_hash": "4e99020c6d2ad0c36b67b6fd8bd90a3f",
     "semantic_hash": ""
   },
   "app/src/components/BlockAddMenu.tsx": {
@@ -48,10 +48,10 @@
     "semantic_hash": "81276da5d2e5e695f1179e2282d1fe01"
   },
   "app/src/components/CommandCenter.tsx": {
-    "mtime": 1789540458.3550577,
-    "seen": 1789551131.6447067,
-    "ast_hash": "3bdf95fec04c8b28427ca3b80b3f1293",
-    "semantic_hash": "3bdf95fec04c8b28427ca3b80b3f1293"
+    "mtime": 1789981552.2542596,
+    "seen": 1789981593.7583675,
+    "ast_hash": "4bda1c19b82cad394cf5937bfdb62bf6",
+    "semantic_hash": ""
   },
   "app/src/components/CoverForm.tsx": {
     "mtime": 1789369537.0164156,
@@ -168,10 +168,10 @@
     "semantic_hash": "6ba274d800e7f354da38fdf4e21466e7"
   },
   "server/api/activity_store.py": {
-    "mtime": 1789540390.0949197,
-    "seen": 1789551131.6447394,
-    "ast_hash": "4a18535c91c3dd9b94b815ebd9b1e7e8",
-    "semantic_hash": "4a18535c91c3dd9b94b815ebd9b1e7e8"
+    "mtime": 1789981438.8468695,
+    "seen": 1789981593.7603533,
+    "ast_hash": "8d1f2b09bbbbd993538dbb2b3fff5bbb",
+    "semantic_hash": ""
   },
   "server/api/draft_store.py": {
     "mtime": 1789713424.5245943,
@@ -186,9 +186,9 @@
     "semantic_hash": ""
   },
   "server/api/index.py": {
-    "mtime": 1789713235.9151251,
-    "seen": 1789713646.2340007,
-    "ast_hash": "e1995a60c537d47a1205ea12f23358ce",
+    "mtime": 1789981379.824172,
+    "seen": 1789981593.7605066,
+    "ast_hash": "15f6f50154772e044cad3f4e630f2433",
     "semantic_hash": ""
   },
   "server/api/pptx_extract.py": {
@@ -319,7 +319,7 @@
   },
   ".claude/settings.json": {
     "mtime": 1787022108.759704,
-    "seen": 1789965898.4106557,
+    "seen": 1789975363.0409994,
     "ast_hash": "",
     "semantic_hash": ""
   },
@@ -355,7 +355,7 @@
   },
   ".claude/launch.json": {
     "mtime": 1789112040.931344,
-    "seen": 1789965898.4106517,
+    "seen": 1789975363.0409956,
     "ast_hash": "",
     "semantic_hash": ""
   },

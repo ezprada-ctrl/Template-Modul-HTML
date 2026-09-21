@@ -394,6 +394,27 @@ def api_activity_rows():
         return jsonify({'error': str(e)}), 503
 
 
+@app.post('/api/activity/rincian')
+def api_activity_rincian():
+    """Dua tabel butiran halus buat CSV: per slide, dan per video.
+
+    `module_slug` opsional. Dikosongkan = seluruh modul, dan itu memang cara
+    pakainya yang utama: pertanyaan yang bikin endpoint ini ada ("peserta A di
+    modul X tiap slidenya berapa lama") baru kejawab kalau modulnya bisa
+    dibandingkan satu sama lain dalam satu berkas.
+    """
+    data = request.get_json(silent=True) or {}
+    denied = _check_cc_password(data)
+    if denied:
+        return denied
+    try:
+        activity_store.reset_truncation()
+        slug = (data.get('module_slug') or '').strip() or None
+        return jsonify(activity_store.rincian_per_slide_dan_video(module_slug=slug))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
 @app.post('/api/activity/my-recap')
 def api_activity_my_recap():
     """Rekap belajar SATU peserta, dipanggil dari dalam modul yang lagi dia buka.
