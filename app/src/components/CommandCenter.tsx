@@ -1616,17 +1616,6 @@ export default function CommandCenter() {
                           day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
                         })}
                       </td>
-                      {/* Kolomnya sengaja tanpa judul & tombolnya samar: yang
-                          dilihat mata di tabel ini peserta, bukan tombol. */}
-                      {!demoMode && (
-                        <td style={{ padding: '8px 11px', textAlign: 'right' }}>
-                          <button className="btn-sm" disabled={busy}
-                                  onClick={() => tandaiSesiUji(s)}
-                                  title="Tandai sesi ini sebagai data uji penyusun. Hilang dari semua rekap, tapi barisnya TIDAK dihapus dan bisa dibatalkan.">
-                            tandai uji
-                          </button>
-                        </td>
-                      )}
                       {/* Tatap layar (durasi_tatap_layar_menit) dipakai sebagai
                           durasi utama, BUKAN durasi_menit total: peserta yang
                           tab-nya dibiarkan kebuka sambil ditinggal lama akan
@@ -1747,6 +1736,29 @@ export default function CommandCenter() {
                           </span>
                         )}
                       </td>
+                      {/* Kolomnya sengaja tanpa judul & tombolnya samar: yang
+                          dilihat mata di tabel ini peserta, bukan tombol.
+
+                          HARUS tetap jadi <td> TERAKHIR, karena judul kosongnya
+                          dipasang terakhir juga (kolom.push('') di atas). Dulu
+                          tombol ini dirender tepat sesudah "Mulai" sementara
+                          judulnya tetap di ujung kanan: seluruh kolom sesudahnya
+                          bergeser SATU ke kiri, dan tabelnya tetap terlihat rapi
+                          - tiap angka mendarat di bawah judul milik tetangganya.
+                          Yang paling menyesatkan: "3/3 · 6 kunjungan" (slide unik
+                          dari total) terbaca di bawah judul "Interaksi", jadi
+                          modul yang sama sekali tidak punya blok interaktif pun
+                          tampak punya 3 interaksi. Kalau nanti ada kolom baru,
+                          tambahkan SEBELUM blok ini. */}
+                      {!demoMode && (
+                        <td style={{ padding: '8px 11px', textAlign: 'right' }}>
+                          <button className="btn-sm" disabled={busy}
+                                  onClick={() => tandaiSesiUji(s)}
+                                  title="Tandai sesi ini sebagai data uji penyusun. Hilang dari semua rekap, tapi barisnya TIDAK dihapus dan bisa dibatalkan.">
+                            tandai uji
+                          </button>
+                        </td>
+                      )}
                     </tr>
                     {vOpen && s.video_detail.length > 0 && (
                       <tr style={{ borderTop: '1px dashed var(--border)', background: 'var(--surface-2)' }}>

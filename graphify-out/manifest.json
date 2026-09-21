@@ -48,9 +48,9 @@
     "semantic_hash": "81276da5d2e5e695f1179e2282d1fe01"
   },
   "app/src/components/CommandCenter.tsx": {
-    "mtime": 1789981552.2542596,
-    "seen": 1789981593.7583675,
-    "ast_hash": "4bda1c19b82cad394cf5937bfdb62bf6",
+    "mtime": 1789982273.5376956,
+    "seen": 1789982327.1132221,
+    "ast_hash": "5bd1f4abaecb820e3471bb3ae1c4a00c",
     "semantic_hash": ""
   },
   "app/src/components/CoverForm.tsx": {
@@ -319,7 +319,7 @@
   },
   ".claude/settings.json": {
     "mtime": 1787022108.759704,
-    "seen": 1789975363.0409994,
+    "seen": 1789981595.6012948,
     "ast_hash": "",
     "semantic_hash": ""
   },
@@ -355,7 +355,7 @@
   },
   ".claude/launch.json": {
     "mtime": 1789112040.931344,
-    "seen": 1789975363.0409956,
+    "seen": 1789981595.6012905,
     "ast_hash": "",
     "semantic_hash": ""
   },
