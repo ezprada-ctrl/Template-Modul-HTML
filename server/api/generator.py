@@ -461,20 +461,51 @@ def render_flow(b):
     # into FLOW_DATA below, which the client JS later injects via
     # `.innerHTML = steps[idx].detail` (see toggleFlow in shell-template.html)
     # - it needs to already be <br>-ified by the time it lands there.
-    steps = [{**s, 'detail': nl2br(s.get('detail', ''))} for s in b.get('steps', [])]
+    # Detail langkah itu OPSIONAL - alur boleh dipakai sebagai bagan urutan
+    # saja. Yang menentukan bukan sekadar "panelnya disembunyikan": langkah
+    # yang tidak punya detail juga TIDAK BOLEH bisa diklik, karena kursor
+    # tangan yang menjanjikan sesuatu lalu memunculkan panel kosong lebih
+    # membingungkan daripada kartu yang memang diam. Alur di dalam popup pun
+    # lewat sini, karena render_block() memanggil dirinya sendiri untuk isi
+    # modal mode 'blok'. (Ada kembaran JS-nya, flowDiagram() di
+    # shell-template.html, tapi sampai sekarang tidak pernah dipanggil
+    # siapa pun - aturannya ikut disamakan supaya tidak menyimpang kalau
+    # suatu saat dihidupkan, bukan karena dia sedang dipakai.)
+    #
+    # Isinya diperiksa SEBELUM nl2br, dan urutan itu bukan selera: field yang
+    # cuma berisi spasi dan enter berubah jadi "<br>" setelah dikonversi, dan
+    # "<br>".strip() jelas tidak kosong. Diperiksa sesudahnya, langkah kosong
+    # begitu lolos jadi bisa diklik lalu membuka panel yang tidak berisi apa-apa.
+    mentah = b.get('steps', [])
+    punya = [bool((s.get('detail') or '').strip()) for s in mentah]
+    ada_detail = any(punya)
+
+    # Detail langkah yang dianggap kosong dinolkan sekalian, supaya sisa "<br>"
+    # tidak ikut mendarat di FLOW_DATA dan disuntikkan toggleFlow.
+    steps = [{**s, 'detail': nl2br(s.get('detail', '')) if p else ''}
+             for s, p in zip(mentah, punya)]
     FLOW_DATA[container_id] = steps
-    out = f'<div class="card"><div id="{container_id}-wrap"><div class="flow">'
+
+    kelas_flow = 'flow' if ada_detail else 'flow flow-statis'
+    out = f'<div class="card"><div id="{container_id}-wrap"><div class="{kelas_flow}">'
     for i, s in enumerate(steps):
         badge_cls = ' new' if s.get('badge') else ''
+        mati_cls = '' if punya[i] else ' tanpa-detail'
+        klik = f' onclick="toggleFlow(\'{container_id}\',{i})"' if punya[i] else ''
         badge_html = f'<div class="fs-badge">{esc(s["badge"])}</div>' if s.get('badge') else ''
-        out += (f'<div class="flow-step{badge_cls}" data-idx="{i}" onclick="toggleFlow(\'{container_id}\',{i})">'
+        out += (f'<div class="flow-step{badge_cls}{mati_cls}" data-idx="{i}"{klik}>'
                 f'{badge_html}<div class="fs-num">{esc(str(s.get("n","")))}</div>'
                 f'<div class="fs-title">{esc(s.get("title",""))}</div></div>')
         if i < len(steps) - 1:
             out += '<div class="flow-arrow">›</div>'
     out += '</div>'
-    first_detail = steps[0]['detail'] if steps else ''
-    out += f'<div class="flow-detail" id="{container_id}-detail">{first_detail}</div></div></div>'
+    if ada_detail:
+        # Yang ditampilkan duluan langkah pertama YANG PUNYA detail, bukan
+        # langkah nomor satu - kalau nomor satu dikosongkan, panelnya akan
+        # lahir kosong padahal isinya ada di langkah lain.
+        pertama = next(d for d, p in zip((s['detail'] for s in steps), punya) if p)
+        out += f'<div class="flow-detail" id="{container_id}-detail">{pertama}</div>'
+    out += '</div></div>'
     return out
 
 
@@ -920,7 +951,13 @@ def count_interaktif(blocks):
         elif t == 'tabs':
             total += max(0, len(b.get('tabItems', [])) - 1)
         elif t == 'flow':
-            total += max(0, len(b.get('steps', [])) - 1)
+            # Cuma langkah yang PUNYA detail yang bisa diklik (lihat
+            # render_flow). Alur tanpa detail sama sekali tidak menyumbang apa
+            # pun: kalau tetap dihitung, penyebutnya naik untuk sesuatu yang
+            # memang mustahil diklik dan rasio interaktif peserta tidak akan
+            # pernah bisa penuh.
+            berdetail = sum(1 for s in b.get('steps', []) if (s.get('detail') or '').strip())
+            total += max(0, berdetail - 1)
         elif t == 'grid':
             # Grid cuma wadah - blok interaktif di dalamnya tetap harus diklik.
             total += count_interaktif(b.get('blocks', []))

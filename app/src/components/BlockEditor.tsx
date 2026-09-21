@@ -601,7 +601,12 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
             <input style={inp} placeholder="Judul langkah" value={s.title} onChange={e => {
               const steps = [...(block.steps || [])]; steps[i] = { ...s, title: e.target.value }; onChange({ steps });
             }} />
-            <RichTextarea style={ta} placeholder="Detail langkah" value={s.detail} onChange={v => {
+            {/* Dikosongkan = langkah ini tampil sebagai kartu biasa yang tidak
+                bisa diklik. Kalau SEMUA langkah dikosongkan, panel penjelasan
+                di bawah diagram tidak ikut dibuat sama sekali — alurnya jadi
+                bagan urutan murni. Lihat render_flow() di generator.py. */}
+            <RichTextarea style={ta} placeholder="Detail langkah (opsional — kosongkan kalau tak perlu penjelasan)"
+                          value={s.detail} onChange={v => {
               const steps = [...(block.steps || [])]; steps[i] = { ...s, detail: v }; onChange({ steps });
             }} />
             <button onClick={() => onChange({ steps: (block.steps || []).filter((_, x) => x !== i) })}>Hapus langkah</button>

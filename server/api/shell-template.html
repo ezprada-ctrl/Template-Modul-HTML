@@ -596,6 +596,16 @@ ul.tick li b, ol.tick li b{color:var(--text);}
   padding:18px 20px;font-size:13.5px;line-height:1.6;color:var(--text-dim);margin-top:4px;
 }
 .flow-detail b{color:var(--accent-ink);}
+/* Langkah tanpa detail: tidak ada panel yang akan terbuka, jadi jangan
+   menjanjikan apa-apa. Kursornya kembali biasa dan efek angkat saat disentuh
+   dimatikan — kartunya tetap terbaca, cuma tidak lagi berlagak tombol. */
+.flow-step.tanpa-detail{cursor:default;}
+.flow-step.tanpa-detail:hover{
+  border-color:var(--border);box-shadow:var(--shadow-md);transform:none;
+}
+/* Padding bawah .flow itu jarak menuju panel detail. Tanpa panel, jarak itu
+   menggantung sebagai ruang kosong di dasar kartu. */
+.flow.flow-statis{padding-bottom:6px;}
 
 /* org chart */
 .org{display:flex;flex-direction:column;align-items:center;gap:6px;}
@@ -1572,6 +1582,12 @@ html.pv-restoring *,html.pv-restoring *::before,html.pv-restoring *::after{
 .tabs:not(.seen) .tab-btn:nth-child(2n)::before{ animation-delay:1.3s; }
 .acc-group:not(.seen) .acc-item:nth-child(3n)::before,
 .flow:not(.seen) .flow-step:nth-child(4n+5)::before{ animation-delay:2.6s; }
+/* Langkah tanpa detail tidak ikut diundang. Bukan sekadar rapi: `.seen` baru
+   dipasang setelah ada yang benar-benar diklik, jadi alur yang memang tidak
+   bisa diklik akan berkilau SELAMANYA, mengajak peserta menekan kartu yang
+   tidak akan pernah membuka apa pun. Ditulis dengan tiga kelas supaya
+   spesifisitasnya menyamai aturan di atas, bukan diadu pakai !important. */
+.flow .flow-step.tanpa-detail::before{ content:none; animation:none; }
 
 /* Undangan ini murni dekoratif — buat yang mematikan animasi di sistemnya,
    blok tetap kebuka lewat hover/fokus seperti biasa. */
@@ -2029,17 +2045,30 @@ function barChartSVG(items){
 
 function flowDiagram(steps, containerId){
   window._flowData[containerId] = steps;
-  let html = `<div id="${containerId}-wrap"><div class="flow">`;
+  /* CATATAN: fungsi ini tidak dipanggil dari mana pun saat ini - semua alur,
+     termasuk yang di dalam popup, dirakit server lewat render_flow(). Aturan
+     "detail itu opsional" tetap disamakan di sini supaya kembarannya tidak
+     menyimpang diam-diam kalau suatu saat dihidupkan lagi. Bedanya satu:
+     detail di sini SUDAH lewat nl2br di server, jadi pemeriksaan kosongnya
+     ikut menganggap "<br>" sebagai tidak berisi. */
+  const kosong = (t) => !String(t || '').replace(/<br\s*\/?>/gi, '').trim();
+  const punya = steps.map(s => !kosong(s.detail));
+  const adaDetail = punya.some(Boolean);
+  let html = `<div id="${containerId}-wrap"><div class="flow${adaDetail?'':' flow-statis'}">`;
   steps.forEach((s,i)=>{
-    html += `<div class="flow-step${s.badge?' new':''}" data-idx="${i}" onclick="toggleFlow('${containerId}',${i})">
+    const klik = punya[i] ? ` onclick="toggleFlow('${containerId}',${i})"` : '';
+    html += `<div class="flow-step${s.badge?' new':''}${punya[i]?'':' tanpa-detail'}" data-idx="${i}"${klik}>
       ${s.badge?`<div class="fs-badge">${s.badge}</div>`:''}
       <div class="fs-num">${s.n}</div>
       <div class="fs-title">${s.title}</div>
     </div>`;
     if(i<steps.length-1) html += `<div class="flow-arrow">›</div>`;
   });
-  html += '</div><div class="flow-detail" id="'+containerId+'-detail">'+steps[0].detail+'</div></div>';
-  return html;
+  html += '</div>';
+  if(adaDetail){
+    html += '<div class="flow-detail" id="'+containerId+'-detail">'+steps[punya.indexOf(true)].detail+'</div>';
+  }
+  return html + '</div>';
 }
 window._flowData = {};
 /* Matikan undangan "bisa diklik" (kilau + kedip tepi) begitu bloknya pernah
