@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { Fragment, useState } from 'react';
 import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule, CocreationNote, PeringatanDetail, VideoDetail, SesiDitandai, RincianSlide, RincianVideo } from '../api';
 import { ccCocreation, ccListModules, ccListSessions, ccListLearners, ccRawRows, ccRincian, ccTandaiUji, ccBatalkanTanda, ccDitandai } from '../api';
+import PanduanBaca from './PanduanBaca';
 import { DEMO_MODULES, DEMO_SESSIONS, DEMO_LEARNERS, DEMO_COCREATION } from '../demoActivityData';
 
 // Ringkasan di atas tabel. Alasannya: tabelnya 13 kolom dengan bobot visual
@@ -905,6 +906,7 @@ export default function CommandCenter() {
         <button className="btn-ghost btn-sm" onClick={kunciLagi}>
           Kunci lagi
         </button>
+        <PanduanBaca />
       </div>
       <p className="hint" style={{ marginTop: 0, marginBottom: 16 }}>
         Rekaman aktivitas dari modul yang “Rekam aktivitas peserta”-nya dicentang.
