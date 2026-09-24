@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { PanduanCC, PanduanKolom, PanduanKeputusan } from '../api';
 import { panduanLoad, panduanVerify, panduanSave } from '../api';
+import PanduanTabel from './PanduanTabel';
 
 /* Panduan cara baca tabel Command Center.
-   Sengaja di HALAMAN, bukan di dalam tabel: tabelnya sudah 12-14 kolom, dan
+   Tampilan bacanya = replika tabel berisi data karangan yang bisa diklik
+   (PanduanTabel.tsx); isi di bawah ini yang dipakai sebagai penjelasannya.
+   Sengaja di LACI TERPISAH, bukan di dalam tabel asli: tabelnya sudah 12-14 kolom, dan
    tooltip per sel cuma menjawab "ini angka apa" - bukan "kenapa dihitung
    begini" dan "kapan harus curiga". Dua pertanyaan terakhir itu yang bikin
    pembaca salah menyimpulkan (mis. Ditinggal dibaca sebagai "gak niat").
@@ -21,6 +24,19 @@ const KOLOM: PanduanKolom[] = [
     curiga: 'Tanda ⚠ di samping nama = satu NIP muncul dengan beberapa nama. Biasanya NIP salah ketik atau dipakai berdua.',
   },
   {
+    nama: 'Modul',
+    arti: '(Tab Per Peserta) Berapa modul yang pernah dibuka peserta ini, dan judulnya.',
+    kenapa: 'Dua judul pertama saja yang tampil; sisanya dibuka lewat "+n lagi" supaya satu peserta dengan 8 modul tidak membuat barisnya setinggi layar.',
+  },
+  {
+    nama: 'Mulai',
+    arti: '(Tab Per Modul) Kapan sesi ini dibuka. Tanpa detik - tabel ini dibaca setelah pelatihan selesai.',
+  },
+  {
+    nama: 'Sesi',
+    arti: '(Tab Per Peserta) Berapa kali peserta membuka modul, dijumlah dari semua modulnya. Tiap buka ulang = sesi baru.',
+  },
+  {
     nama: 'Tatap Layar',
     arti: 'Menit modul benar-benar ada di depan mata peserta. Ini durasi utama yang dibaca.',
     kenapa: 'Durasi total menyesatkan: tab yang dibiarkan terbuka saat makan siang membuat peserta terlihat paling rajin. Waktu berhenti dihitung saat tab disembunyikan/diminimize, dan saat tidak ada gerakan (mouse, ketik, gulir, sentuh) melewati ambang diam.',
@@ -29,13 +45,13 @@ const KOLOM: PanduanKolom[] = [
     nama: 'Ditinggal',
     arti: 'Selisih durasi total dikurangi Tatap Layar: berapa lama modul terbuka tanpa ditatap.',
     kenapa: 'Ambang diam per slide = waktu baca minimum slide itu + 4 menit. Angka 4 menit dari riset ambang idle (toleransi sebelum orang dicurigai meninggalkan perangkat); waktu baca ditambahkan supaya pembaca yang diam khusyuk di slide panjang tidak ikut dianggap pergi.',
-    curiga: '⚠ muncul kalau lebih dari 10 menit. Tanda "—" BUKAN nol: artinya tab ditutup paksa sehingga selisihnya tidak bisa dihitung.',
+    curiga: '⚠ muncul kalau lebih dari 10 menit. Tanda "—" BUKAN nol: artinya tab ditutup paksa sehingga selisihnya tidak bisa dihitung. Tanda * (tab Per Peserta) = sebagian sesinya tidak ikut terhitung, jadi angkanya kemungkinan lebih kecil dari kenyataan.',
   },
   {
     nama: 'Slide',
-    arti: 'Format "52 (50/50)": 52 kunjungan, 50 slide berbeda dari total 50 slide modul.',
-    kenapa: 'Angka kunjungan saja tidak bisa dibandingkan - penyusun jarang ingat modulnya berapa slide. Pecahan di dalam kurung langsung menjawab "ada yang kelewat atau tidak".',
-    curiga: 'Angka di dalam kurung kurang dari totalnya = ada slide yang tidak pernah dibuka. Kunjungan jauh di atas total = banyak bolak-balik.',
+    arti: 'Angka besar "31/40" = slide BERBEDA yang pernah dibuka dari total slide modul. Angka kecil di bawahnya = jumlah kunjungan, termasuk balik lagi ke slide yang sama.',
+    kenapa: 'Angka kunjungan saja tidak bisa dibandingkan - penyusun jarang ingat modulnya berapa slide. Pecahan langsung menjawab "ada yang kelewat atau tidak".',
+    curiga: 'Pecahan kurang dari penuh = ada slide yang tidak pernah dibuka. Kunjungan jauh di atas total = banyak bolak-balik (bingung, atau mencari jawaban kuis).',
   },
   {
     nama: 'Interaksi',
@@ -90,8 +106,8 @@ const KEPUTUSAN: PanduanKeputusan[] = [
     isi: 'Datanya sama, cara bacanya beda. Per Modul: satu baris = satu SESI (orang yang membuka modul dua kali muncul dua baris). Per Peserta: satu baris = satu ORANG, dijumlah lintas semua modul - karena satu pelatihan sering dipecah jadi beberapa SCORM.',
   },
   {
-    judul: 'Kenapa "—" tidak sama dengan 0',
-    isi: 'Di seluruh tabel, "—" berarti "tidak bisa dihitung" (tab ditutup paksa, modul di-export sebelum fitur itu ada, dsb). 0 berarti "dihitung, hasilnya nol". Keduanya sengaja dibedakan supaya yang tidak ketahuan tidak terbaca sebagai "tidak pernah".',
+    judul: 'Arti "—" tergantung kolomnya',
+    isi: 'Di Ditinggal, "—" berarti TIDAK BISA DIHITUNG (tab ditutup paksa, penutup sesi tidak sempat terkirim) - bukan nol, jangan dibaca "tidak pernah ditinggal". Di Video dan Articulate, "—" berarti modulnya memang tidak punya video/paket. Di Kuis, Knowledge Check, Catatan, dan Peringatan, "—" berarti nol/belum ada - sengaja dikosongkan supaya sel yang tidak bermasalah tidak ikut menarik mata.',
   },
   {
     judul: 'Batas cara ukur yang perlu diingat',
@@ -205,7 +221,7 @@ export default function PanduanBaca() {
           display: 'flex', justifyContent: 'flex-end',
         }}>
           <aside onClick={e => e.stopPropagation()} role="dialog" aria-label="Cara baca tabel" style={{
-            width: 'min(560px, 100%)', height: '100%', overflowY: 'auto', background: 'var(--surface)',
+            width: tahap === 'sunting' ? 'min(560px, 100%)' : 'min(1180px, 100%)', height: '100%', overflowY: 'auto', background: 'var(--surface)',
             borderLeft: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)', padding: '20px 22px 40px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -281,10 +297,13 @@ export default function PanduanBaca() {
               </>
             ) : (
               <>
-                <p className="hint" style={{ marginTop: 0 }}>
-                  Arti tiap kolom, kenapa dihitung dengan cara itu, dan kapan angkanya perlu dicurigai.
-                </p>
+                <PanduanTabel isi={isi} bawaan={BAWAAN} />
 
+                {/* Daftar lengkap tetap ada buat yang mau membaca urut atau
+                    mencari kata (Ctrl+F) - tapi dilipat, karena pintu masuk
+                    utamanya sekarang tabel di atas. */}
+                <details style={{ marginTop: 22 }}>
+                  <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Semua penjelasan sebagai daftar</summary>
                 <h4 style={{ margin: '18px 0 8px' }}>Keputusan cara baca</h4>
                 {isi.keputusan.map((k, i) => (
                   <details key={i} style={{ borderTop: '1px solid var(--border)', padding: '8px 0' }}>
@@ -310,6 +329,7 @@ export default function PanduanBaca() {
                     )}
                   </div>
                 ))}
+                </details>
               </>
             )}
           </aside>
