@@ -1017,7 +1017,7 @@ export default function CommandCenter() {
               title={m.kemungkinan_bentrok
                 ? `⚠ Slug ini kepakai ${m.judul_modul.length} modul berbeda (${m.judul_modul.join(' / ')}). `
                   + `Baris ini cuma bagian "${m.module_title || 'tanpa judul terekam'}"-nya.`
-                : `${m.rows} baris · ${m.sessions} sesi · ${m.learners} peserta`}
+                : `${m.sessions} sesi · ${m.learners} peserta`}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
                 padding: '8px 11px', border: 0, borderTop: '1px solid var(--border)', borderRadius: 0,

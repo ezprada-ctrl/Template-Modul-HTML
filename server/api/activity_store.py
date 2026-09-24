@@ -478,11 +478,26 @@ def list_modules():
     dibuang: kalau disembunyiin, jumlah peserta di layar jadi lebih kecil dari
     yang sebenarnya tanpa ada yang sadar.
     """
-    rows = _tanpa_uji_iter(
-        iter_rows(columns='module_slug,session_id,learner_id,created_at,event_type'))
-    judul_map, judul_sesi = _judul_per_slug()
+    # Cuma baris session_start (satu per sesi), BUKAN seluruh tabel. Dulu
+    # layar pembuka ini menarik SEMUA event - tiap slide_view, detak video,
+    # klik - cuma buat menghitung sesi & peserta, dan itulah yang bikin
+    # membuka Command Center bisa hampir semenit begitu datanya menumpuk.
+    # Sesi, peserta, dan waktu mulai sesi sudah lengkap di session_start;
+    # judul modulnya pun ikut di payload, jadi tarikan _judul_per_slug yang
+    # dulu terpisah ikut terlebur di sini. Harganya: `rows` sekarang jumlah
+    # SESI, dan last_seen = sesi terakhir DIMULAI, bukan event terakhir.
+    starts = _tanpa_uji(fetch_rows(
+        columns='module_slug,session_id,learner_id,created_at,payload',
+        event_type='session_start'))
+    judul_map, judul_sesi = {}, {}
+    for r in starts:
+        t = ((r.get('payload') or {}).get('module_title') or '').strip()
+        if t:
+            judul_map.setdefault(r['module_slug'], set()).add(t)
+            judul_sesi[r['session_id']] = t
+    judul_map = {slug: sorted(v) for slug, v in judul_map.items()}
     by_key = {}
-    for r in rows:
+    for r in starts:
         slug = r['module_slug']
         bentrok = len(judul_map.get(slug, [])) > 1
         # Cuma slug bentrok yang dipecah. Buat slug normal, judul di kunci
