@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { PanduanCC, PanduanKolom, PanduanKeputusan } from '../api';
-import { panduanLoad, panduanVerify, panduanSave } from '../api';
+import type { PanduanCC, PanduanKolom, PanduanKeputusan } from '../api';import { panduanLoad, panduanVerify, panduanSave } from '../api';
 import PanduanTabel from './PanduanTabel';
 
 /* Panduan cara baca tabel Command Center.
@@ -122,36 +121,7 @@ const KEPUTUSAN: PanduanKeputusan[] = [
 const BAWAAN: PanduanCC = { keputusan: KEPUTUSAN, kolom: KOLOM };
 const salin = (p: PanduanCC): PanduanCC => JSON.parse(JSON.stringify(p));
 
-const LABEL: CSSProperties = { display: 'block', fontSize: 11.5, fontWeight: 600, color: 'var(--text-faint)', marginTop: 8 };
-const INPUT: CSSProperties = { width: '100%', fontSize: 13, marginTop: 4, fontFamily: 'inherit' };
 const KARTU: CSSProperties = { border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '8px 10px 10px', marginBottom: 10 };
-
-function Isian({ label, value, onChange, rows }: { label: string; value: string; onChange: (v: string) => void; rows?: number }) {
-  return (
-    <label style={LABEL}>
-      {label}
-      {rows
-        ? <textarea rows={rows} value={value} onChange={e => onChange(e.target.value)} style={{ ...INPUT, resize: 'vertical' }} />
-        : <input value={value} onChange={e => onChange(e.target.value)} style={INPUT} />}
-    </label>
-  );
-}
-
-function geser<T>(arr: T[], i: number, arah: -1 | 1): T[] {
-  const j = i + arah;
-  if (j < 0 || j >= arr.length) return arr;
-  const b = [...arr]; [b[i], b[j]] = [b[j], b[i]]; return b;
-}
-
-function AksiButir({ onNaik, onTurun, onHapus }: { onNaik: () => void; onTurun: () => void; onHapus: () => void }) {
-  return (
-    <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-      <button className="btn-ghost btn-sm" onClick={onNaik} title="Naikkan">↑</button>
-      <button className="btn-ghost btn-sm" onClick={onTurun} title="Turunkan">↓</button>
-      <button className="btn-ghost btn-sm" onClick={onHapus} style={{ color: 'var(--danger)' }}>Hapus</button>
-    </div>
-  );
-}
 
 export default function PanduanBaca() {
   const [buka, setBuka] = useState(false);
@@ -204,11 +174,6 @@ export default function PanduanBaca() {
     setSibuk(false);
   }
 
-  const ubahKep = (i: number, f: keyof PanduanKeputusan, v: string) =>
-    setDraf(d => ({ ...d, keputusan: d.keputusan.map((k, j) => j === i ? { ...k, [f]: v } : k) }));
-  const ubahKol = (i: number, f: keyof PanduanKolom, v: string) =>
-    setDraf(d => ({ ...d, kolom: d.kolom.map((k, j) => j === i ? { ...k, [f]: v } : k) }));
-
   return (
     <>
       <button className="btn-ghost btn-sm" onClick={() => setBuka(true)} data-demo="cc-panduan"
@@ -221,7 +186,7 @@ export default function PanduanBaca() {
           display: 'flex', justifyContent: 'flex-end',
         }}>
           <aside onClick={e => e.stopPropagation()} role="dialog" aria-label="Cara baca tabel" style={{
-            width: tahap === 'sunting' ? 'min(560px, 100%)' : 'min(1180px, 100%)', height: '100%', overflowY: 'auto', background: 'var(--surface)',
+            width: 'min(1180px, 100%)', height: '100%', overflowY: 'auto', background: 'var(--surface)',
             borderLeft: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)', padding: '20px 22px 40px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -256,38 +221,7 @@ export default function PanduanBaca() {
 
             {tahap === 'sunting' ? (
               <>
-                <h4 style={{ margin: '16px 0 8px' }}>Keputusan cara baca</h4>
-                {draf.keputusan.map((k, i) => (
-                  <div key={i} style={KARTU}>
-                    <AksiButir
-                      onNaik={() => setDraf(d => ({ ...d, keputusan: geser(d.keputusan, i, -1) }))}
-                      onTurun={() => setDraf(d => ({ ...d, keputusan: geser(d.keputusan, i, 1) }))}
-                      onHapus={() => setDraf(d => ({ ...d, keputusan: d.keputusan.filter((_, j) => j !== i) }))} />
-                    <Isian label="Judul" value={k.judul} onChange={v => ubahKep(i, 'judul', v)} />
-                    <Isian label="Isi" value={k.isi} onChange={v => ubahKep(i, 'isi', v)} rows={4} />
-                  </div>
-                ))}
-                <button className="btn-sm" onClick={() => setDraf(d => ({ ...d, keputusan: [...d.keputusan, { judul: '', isi: '' }] }))}>
-                  + Tambah keputusan
-                </button>
-
-                <h4 style={{ margin: '22px 0 8px' }}>Kolom demi kolom</h4>
-                {draf.kolom.map((k, i) => (
-                  <div key={i} style={KARTU}>
-                    <AksiButir
-                      onNaik={() => setDraf(d => ({ ...d, kolom: geser(d.kolom, i, -1) }))}
-                      onTurun={() => setDraf(d => ({ ...d, kolom: geser(d.kolom, i, 1) }))}
-                      onHapus={() => setDraf(d => ({ ...d, kolom: d.kolom.filter((_, j) => j !== i) }))} />
-                    <Isian label="Nama kolom" value={k.nama} onChange={v => ubahKol(i, 'nama', v)} />
-                    <Isian label="Arti" value={k.arti} onChange={v => ubahKol(i, 'arti', v)} rows={2} />
-                    <Isian label="Kenapa begini (boleh kosong)" value={k.kenapa || ''} onChange={v => ubahKol(i, 'kenapa', v)} rows={3} />
-                    <Isian label="Kapan curiga (boleh kosong)" value={k.curiga || ''} onChange={v => ubahKol(i, 'curiga', v)} rows={2} />
-                  </div>
-                ))}
-                <button className="btn-sm" onClick={() => setDraf(d => ({ ...d, kolom: [...d.kolom, { nama: '', arti: '' }] }))}>
-                  + Tambah kolom
-                </button>
-
+                <PanduanTabel isi={draf} bawaan={BAWAAN} onUbah={setDraf} />
                 <div style={{ marginTop: 18, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
                   <button className="btn-ghost btn-sm" onClick={() => setDraf(salin(BAWAAN))}
                           title="Form diisi ulang dengan isi bawaan aplikasi. Belum tersimpan sampai Simpan ditekan.">

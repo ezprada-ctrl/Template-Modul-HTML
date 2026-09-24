@@ -208,7 +208,19 @@ const TITIK_PESERTA: [string, Titik][] = [
     contoh: 'Dewi pernah diperingatkan sekali, lalu kembali membaca. Tanpa "(diabaikan)" berarti peringatannya berhasil - bukan sinyal masalah.' }],
 ];
 
-export default function PanduanTabel({ isi, bawaan }: { isi: PanduanCC; bawaan: PanduanCC }) {
+function Sunting({ label, value, onChange, warna }: { label: string; value: string; onChange: (v: string) => void; warna?: string }) {
+  return (
+    <label style={{ display: 'block', marginTop: 8, fontSize: 12, fontWeight: 700, color: warna || 'var(--text)' }}>
+      {label}
+      <textarea value={value} onChange={e => onChange(e.target.value)} rows={Math.max(2, Math.ceil(value.length / 110))}
+                style={{ display: 'block', width: '100%', marginTop: 3, fontSize: 13, lineHeight: 1.5, fontFamily: 'inherit', fontWeight: 400, resize: 'vertical' }} />
+    </label>
+  );
+}
+
+// onUbah ada = mode sunting: tabelnya sama persis, cuma panel penjelasannya
+// berubah jadi kotak isian untuk bagian yang sedang dipilih.
+export default function PanduanTabel({ isi, bawaan, onUbah }: { isi: PanduanCC; bawaan: PanduanCC; onUbah?: (p: PanduanCC) => void }) {
   const [tampilan, setTampilan] = useState<Tampilan>('modul');
   const [pilih, setPilih] = useState<string | null>(null);
   const [dilihat, setDilihat] = useState<Set<string>>(new Set());
@@ -340,12 +352,28 @@ export default function PanduanTabel({ isi, bawaan }: { isi: PanduanCC; bawaan: 
   const kep = t?.keputusan
     ? (isi.keputusan.find(k => norm(k.judul).includes(norm(t.keputusan!))) || bawaan.keputusan.find(k => norm(k.judul).includes(norm(t.keputusan!))))
     : undefined;
-  const jumlahDilihat = daftar.filter(([id]) => dilihat.has(`${tampilan}:${id}`)).length;
+  // Nama kolom & judul keputusan tidak bisa disunting: keduanya kunci yang
+  // menautkan penjelasan ke bagian tabel. Butir yang cuma ada di bawaan
+  // disalin masuk ke isi saat pertama kali disunting.
+  function ubahKol(f: 'arti' | 'kenapa' | 'curiga', v: string) {
+    if (!kol || !onUbah) return;
+    const d = [...isi.kolom]; const i = d.indexOf(kol);
+    if (i < 0) d.push({ ...kol, [f]: v }); else d[i] = { ...kol, [f]: v };
+    onUbah({ ...isi, kolom: d });
+  }
+  function ubahKep(v: string) {
+    if (!kep || !onUbah) return;
+    const d = [...isi.keputusan]; const i = d.indexOf(kep);
+    if (i < 0) d.push({ ...kep, isi: v }); else d[i] = { ...kep, isi: v };
+    onUbah({ ...isi, keputusan: d });
+  }
+  const jumlahDilihat =daftar.filter(([id]) => dilihat.has(`${tampilan}:${id}`)).length;
   const P: CSSProperties = { fontSize: 13, lineHeight: 1.55, margin: '6px 0 0', whiteSpace: 'pre-line' };
 
   return (
     <>
       <p className="hint" style={{ marginTop: 0 }}>
+        {onUbah ? <><b>Mode sunting.</b> Klik bagian yang mau diubah penjelasannya — kotak isiannya muncul di bawah tabel. </> : null}
         Ini tabel Command Center dengan <b>data karangan</b>. Klik bagian yang berwarna — judul kolom, angka, tanda ⚠,
         tanda "—", kotak ringkasan — penjelasannya muncul di bawah tabel.
       </p>
@@ -486,7 +514,15 @@ export default function PanduanTabel({ isi, bawaan }: { isi: PanduanCC; bawaan: 
           <p style={{ ...P, color: 'var(--text-faint)' }}>
             Klik bagian yang berwarna di tabel, atau tekan <b>Mulai tur</b> untuk dijelaskan satu per satu dari kiri ke kanan.
           </p>
-        ) : <>
+        ) : onUbah ? <>
+          {t.contoh && <p style={{ ...P, color: 'var(--text-faint)' }}><b>Di contoh ini:</b> {t.contoh} <i>(tidak bisa disunting — menjelaskan data karangan)</i></p>}
+          {kol && <>
+            <Sunting label={`Arti kolom ${kol.nama}`} value={kol.arti} onChange={v => ubahKol('arti', v)} />
+            <Sunting label="Kenapa begini (boleh kosong)" value={kol.kenapa || ''} onChange={v => ubahKol('kenapa', v)} warna="var(--text-dim)" />
+            <Sunting label="Kapan curiga (boleh kosong)" value={kol.curiga || ''} onChange={v => ubahKol('curiga', v)} warna="var(--danger)" />
+          </>}
+          {kep && <Sunting label={kep.judul} value={kep.isi} onChange={ubahKep} warna="var(--text-dim)" />}
+        </> : <>
           {t.contoh && <p style={P}><b>Di contoh ini:</b> {t.contoh}</p>}
           {kol && <>
             <p style={P}><b>Arti kolom {kol.nama}:</b> {kol.arti}</p>
