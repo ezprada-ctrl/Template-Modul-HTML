@@ -146,9 +146,11 @@ const TITIK_MODUL: [string, Titik][] = [
   ['h-Kuis', H('Kuis')],
   ['c-kuis-rahmat', { label: 'Kuis Rahmat: 2× gagal', kolom: 'Kuis',
     contoh: 'Dua kali submit kuis dan gagal. Kolom ini tidak menunjukkan apakah akhirnya lulus - lihat Nilai per Modul di tab Per Peserta.' }],
-  ['c-kuis-siti', { label: 'Kuis Siti: "—"', keputusan: '—',
-    contoh: 'Di kolom Kuis, "—" berarti tidak pernah gagal. Beda arti dengan "—" di kolom Ditinggal.' }],
+  ['c-kuis-siti', { label: 'Kuis Siti: 0', keputusan: '—',
+    contoh: 'Siti tidak pernah gagal kuis - pasti nol, jadi ditulis 0 (abu-abu supaya tidak menarik mata). Bandingkan dengan "—" di Ditinggal Fajar yang artinya tidak tahu.' }],
   ['h-Knowledge Check', H('Knowledge Check')],
+  ['c-kc-fajar', { label: 'Knowledge Check Fajar: "—"', keputusan: '—',
+    contoh: 'Fajar belum menjawab satu pun cek paham. Ditulis "—", bukan 0, karena sistem tidak tahu apakah modulnya memang punya Knowledge Check di bagian yang ia buka.' }],
   ['h-Video', H('Video')],
   ['c-video-rahmat', { label: 'Video Rahmat: 2/2 diklik · 12% ⚠', kolom: 'Video',
     contoh: '"2/2 diklik" artinya kedua video pernah di-PLAY, BUKAN selesai ditonton. Rata-rata cuma sampai 12%. Klik angkanya di tabel asli untuk rincian per video.' }],
@@ -306,7 +308,7 @@ export default function PanduanTabel({ isi, bawaan }: { isi: PanduanCC; bawaan: 
   };
   const selPeringatan = (id: string, n: number, abai: number) => {
     const kunci = `peringatan-${id}`;
-    if (!n) return '—';
+    if (!n) return faint('0');
     const isi = <>
       <span style={{ textDecoration: 'underline dotted' }}>{n}× <span style={{ fontSize: 10 }}>{buka.has(kunci) ? '▾' : '▸'}</span></span>
       {abai > 0 && <span style={{ marginLeft: 4, color: 'var(--danger)' }}>({abai} diabaikan)</span>}
@@ -391,11 +393,11 @@ export default function PanduanTabel({ isi, bawaan }: { isi: PanduanCC; bawaan: 
                     <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 1 }}>{s.kunjungan} kunjungan</div>
                   </>)}</td>
                   <td style={TD}>{coba(`c-interaksi-${s.id}`, <>{s.interaksi}</>)}</td>
-                  <td style={TD}>{coba(`c-kuis-${s.id}`, <>{s.kuis_gagal > 0 ? `${s.kuis_gagal}× gagal` : '—'}</>)}</td>
-                  <td style={TD}>{s.kc_dijawab > 0 ? `${s.kc_benar}/${s.kc_dijawab} benar` : '—'}</td>
+                  <td style={TD}>{coba(`c-kuis-${s.id}`, <>{s.kuis_gagal > 0 ? `${s.kuis_gagal}× gagal` : faint('0')}</>)}</td>
+                  <td style={TD}>{coba(`c-kc-${s.id}`, <>{s.kc_dijawab > 0 ? `${s.kc_benar}/${s.kc_dijawab} benar` : faint()}</>)}</td>
                   <td style={TD}>{selVideo(s.id, s.video_dimulai, TOTAL_VIDEO, s.video_rata_persen)}</td>
                   <td style={TD}>{s.art}/{TOTAL_ART} selesai</td>
-                  <td style={TD}>{s.catatan ? s.catatan : faint()}</td>
+                  <td style={TD}>{s.catatan ? s.catatan : faint('0')}</td>
                   <td style={TD}>{selPeringatan(s.id, s.peringatan, s.peringatan_diabaikan)}</td>
                   <td style={{ padding: '8px 11px', textAlign: 'right' }}>
                     {s.id === 'siti'
@@ -444,11 +446,11 @@ export default function PanduanTabel({ isi, bawaan }: { isi: PanduanCC; bawaan: 
                     <div style={{ fontSize: 10.5, color: 'var(--text-faint)', marginTop: 1 }}>{p.kunjungan} kunjungan</div>
                   </td>
                   <td style={TD}>{p.interaksi}</td>
-                  <td style={TD}>{p.kuis_gagal > 0 ? `${p.kuis_gagal}× gagal` : '—'}</td>
+                  <td style={TD}>{p.kuis_gagal > 0 ? `${p.kuis_gagal}× gagal` : faint('0')}</td>
                   <td style={TD}>{p.kc_dijawab > 0 ? `${p.kc_benar}/${p.kc_dijawab} benar` : '—'}</td>
                   <td style={TD}>{selVideo(p.id, p.video_dimulai, p.total_video, p.video_rata_persen)}</td>
                   <td style={TD}>{p.art}/{p.total_art} selesai</td>
-                  <td style={TD}>{p.catatan ? p.catatan : faint()}</td>
+                  <td style={TD}>{p.catatan ? p.catatan : faint('0')}</td>
                   <td style={TD}>{selPeringatan(p.id, p.peringatan, p.peringatan_diabaikan)}</td>
                 </tr>
                 {barisRincian(p.id, 'video', kolomPeserta.length, <VideoRincian detail={p.video_detail} />)}

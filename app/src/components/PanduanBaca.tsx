@@ -106,8 +106,8 @@ const KEPUTUSAN: PanduanKeputusan[] = [
     isi: 'Datanya sama, cara bacanya beda. Per Modul: satu baris = satu SESI (orang yang membuka modul dua kali muncul dua baris). Per Peserta: satu baris = satu ORANG, dijumlah lintas semua modul - karena satu pelatihan sering dipecah jadi beberapa SCORM.',
   },
   {
-    judul: 'Arti "—" tergantung kolomnya',
-    isi: 'Di Ditinggal, "—" berarti TIDAK BISA DIHITUNG (tab ditutup paksa, penutup sesi tidak sempat terkirim) - bukan nol, jangan dibaca "tidak pernah ditinggal". Di Video dan Articulate, "—" berarti modulnya memang tidak punya video/paket. Di Kuis, Knowledge Check, Catatan, dan Peringatan, "—" berarti nol/belum ada - sengaja dikosongkan supaya sel yang tidak bermasalah tidak ikut menarik mata.',
+    judul: 'Arti "—" dan 0',
+    isi: 'Aturannya satu untuk seluruh tabel: "—" = TIDAK TAHU atau TIDAK BERLAKU, angka 0 = PASTI NOL. Contoh: Ditinggal "—" berarti tab ditutup paksa sehingga tidak bisa dihitung (bisa saja sebenarnya lama) - jangan dibaca "tidak pernah ditinggal". Video/Articulate "—" berarti modulnya tidak punya video/paket. Knowledge Check "—" berarti belum ada jawaban tercatat. Sebaliknya Kuis 0, Catatan 0, Peringatan 0 berarti dihitung dan hasilnya memang nol; angka 0 ditulis abu-abu supaya sel yang tidak bermasalah tidak menarik mata.',
   },
   {
     judul: 'Batas cara ukur yang perlu diingat',

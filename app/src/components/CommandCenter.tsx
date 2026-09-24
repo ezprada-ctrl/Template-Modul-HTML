@@ -1150,7 +1150,7 @@ export default function CommandCenter() {
                             selesai, jadi status lulus/belum sengaja gak ditampilkan. */}
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                             title="Jumlah submit kuis yang gagal, dijumlah dari semua modul yang peserta ini kerjakan">
-                            {l.kuis_gagal > 0 ? `${l.kuis_gagal}× gagal` : '—'}
+                            {l.kuis_gagal > 0 ? `${l.kuis_gagal}× gagal` : <span style={{ color: 'var(--text-faint)' }}>0</span>}
                         </td>
                         {/* Knowledge Check = blok cek-paham inline yang TIDAK mengunci apa
                             pun. Benar/dijawab, dijumlah lintas semua modul. Sengaja TERPISAH
@@ -1198,7 +1198,7 @@ export default function CommandCenter() {
                         </td>
                         <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                             title="Catatan Co-creation yang masih tersimpan (yang sudah dihapus tidak dihitung), digabung dari semua modulnya">
-                          {l.catatan ? l.catatan : <span style={{ color: 'var(--text-faint)' }}>—</span>}
+                          {l.catatan ? l.catatan : <span style={{ color: 'var(--text-faint)' }}>0</span>}
                         </td>
                         {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
                             sebelum kuis, dijumlah lintas semua modul. Angka utama = total
@@ -1215,7 +1215,7 @@ export default function CommandCenter() {
                                     title="Klik untuk lihat slide mana saja yang ketangkap">
                               {l.peringatan_baca_cepat}× <span style={{ fontSize: 10 }}>{pOpen ? '▾' : '▸'}</span>
                             </button>
-                          ) : '—'}
+                          ) : <span style={{ color: 'var(--text-faint)' }}>0</span>}
                           {l.peringatan_diabaikan > 0 && (
                             <span title={`${l.peringatan_diabaikan} dari ${l.peringatan_baca_cepat} peringatan itu tetap dipilih "lanjut ke kuis" tanpa baca ulang`}
                                   style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>
@@ -1468,7 +1468,7 @@ export default function CommandCenter() {
                           SETELAH pelatihan selesai, bukan saat masih berjalan. */}
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                           title="Jumlah submit kuis yang gagal di modul ini">
-                        {s.kuis_gagal > 0 ? `${s.kuis_gagal}× gagal` : '—'}
+                        {s.kuis_gagal > 0 ? `${s.kuis_gagal}× gagal` : <span style={{ color: 'var(--text-faint)' }}>0</span>}
                       </td>
                       {/* Knowledge check (blok cek-paham inline, TIDAK mengunci): jawaban
                           benar / total dijawab di modul ini. Terpisah dari kolom Kuis. */}
@@ -1513,7 +1513,7 @@ export default function CommandCenter() {
                       </td>
                       <td style={{ padding: '8px 11px', fontVariantNumeric: 'tabular-nums' }}
                           title="Catatan Co-creation yang ditulis atau diubah di sesi ini">
-                        {s.catatan ? s.catatan : <span style={{ color: 'var(--text-faint)' }}>—</span>}
+                        {s.catatan ? s.catatan : <span style={{ color: 'var(--text-faint)' }}>0</span>}
                       </td>
                       {/* Berapa kali peserta ketangkap ngeklik-lewat slide terlalu cepat
                           (< 50% waktu baca minimum Brysbaert) sebelum percobaan kuis
@@ -1530,7 +1530,7 @@ export default function CommandCenter() {
                                   title="Klik untuk lihat slide mana saja yang ketangkap">
                             {s.peringatan_baca_cepat}× <span style={{ fontSize: 10 }}>{pOpen ? '▾' : '▸'}</span>
                           </button>
-                        ) : '—'}
+                        ) : <span style={{ color: 'var(--text-faint)' }}>0</span>}
                         {s.peringatan_diabaikan > 0 && (
                           <span title={`${s.peringatan_diabaikan} dari ${s.peringatan_baca_cepat} peringatan itu tetap dipilih "lanjut ke kuis" tanpa baca ulang`}
                                 style={{ marginLeft: 4, color: 'var(--danger)', cursor: 'help' }}>
