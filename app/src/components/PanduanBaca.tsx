@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
+import type { PanduanCC, PanduanKolom, PanduanKeputusan } from '../api';
+import { panduanLoad, panduanVerify, panduanSave } from '../api';
 
 /* Panduan cara baca tabel Command Center.
    Sengaja di HALAMAN, bukan di dalam tabel: tabelnya sudah 12-14 kolom, dan
@@ -7,11 +10,10 @@ import { useEffect, useState } from 'react';
    pembaca salah menyimpulkan (mis. Ditinggal dibaca sebagai "gak niat").
    Isinya WAJIB ikut berubah kalau cara hitung di activity_store.py atau
    shell-template.html berubah - kalau tidak, panduan ini jadi sumber salah
-   baca yang paling meyakinkan. */
+   baca yang paling meyakinkan. Isi di bawah ini cuma BAWAAN: begitu Ikram
+   menyunting lewat tombol Edit, versi yang tersimpan di server yang dipakai. */
 
-type Kolom = { nama: string; arti: string; kenapa?: string; curiga?: string };
-
-const KOLOM: Kolom[] = [
+const KOLOM: PanduanKolom[] = [
   {
     nama: 'Peserta',
     arti: 'Nama dan NIP. Satu orang = satu NIP, bukan satu nama.',
@@ -78,7 +80,7 @@ const KOLOM: Kolom[] = [
   },
 ];
 
-const KEPUTUSAN: { judul: string; isi: string }[] = [
+const KEPUTUSAN: PanduanKeputusan[] = [
   {
     judul: 'Kenapa ada kotak "Perlu ditindaklanjuti"',
     isi: 'Tabelnya belasan kolom dengan bobot sama, jadi tidak ada yang menuntun mata. Seorang peserta masuk hitungan kalau punya MINIMAL SATU sinyal yang bisa ditindaklanjuti di kelas: mengabaikan peringatan baca-cepat, Ditinggal > 10 menit, gagal kuis, video rata-rata < 20%, atau ada video yang dilompati/dipercepat. Ambangnya sama persis dengan tanda ⚠ di baris, supaya ringkasan dan tabel tidak pernah bercerita beda.',
@@ -101,14 +103,95 @@ const KEPUTUSAN: { judul: string; isi: string }[] = [
   },
 ];
 
+const BAWAAN: PanduanCC = { keputusan: KEPUTUSAN, kolom: KOLOM };
+const salin = (p: PanduanCC): PanduanCC => JSON.parse(JSON.stringify(p));
+
+const LABEL: CSSProperties = { display: 'block', fontSize: 11.5, fontWeight: 600, color: 'var(--text-faint)', marginTop: 8 };
+const INPUT: CSSProperties = { width: '100%', fontSize: 13, marginTop: 4, fontFamily: 'inherit' };
+const KARTU: CSSProperties = { border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '8px 10px 10px', marginBottom: 10 };
+
+function Isian({ label, value, onChange, rows }: { label: string; value: string; onChange: (v: string) => void; rows?: number }) {
+  return (
+    <label style={LABEL}>
+      {label}
+      {rows
+        ? <textarea rows={rows} value={value} onChange={e => onChange(e.target.value)} style={{ ...INPUT, resize: 'vertical' }} />
+        : <input value={value} onChange={e => onChange(e.target.value)} style={INPUT} />}
+    </label>
+  );
+}
+
+function geser<T>(arr: T[], i: number, arah: -1 | 1): T[] {
+  const j = i + arah;
+  if (j < 0 || j >= arr.length) return arr;
+  const b = [...arr]; [b[i], b[j]] = [b[j], b[i]]; return b;
+}
+
+function AksiButir({ onNaik, onTurun, onHapus }: { onNaik: () => void; onTurun: () => void; onHapus: () => void }) {
+  return (
+    <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+      <button className="btn-ghost btn-sm" onClick={onNaik} title="Naikkan">↑</button>
+      <button className="btn-ghost btn-sm" onClick={onTurun} title="Turunkan">↓</button>
+      <button className="btn-ghost btn-sm" onClick={onHapus} style={{ color: 'var(--danger)' }}>Hapus</button>
+    </div>
+  );
+}
+
 export default function PanduanBaca() {
   const [buka, setBuka] = useState(false);
+  const [isi, setIsi] = useState<PanduanCC>(BAWAAN);
+  // 'baca' -> 'sandi' (minta password) -> 'sunting'. Password DICEK di
+  // backend; di sini cuma disimpan sementara buat dikirim ulang saat Simpan.
+  const [tahap, setTahap] = useState<'baca' | 'sandi' | 'sunting'>('baca');
+  const [sandi, setSandi] = useState('');
+  const [draf, setDraf] = useState<PanduanCC>(BAWAAN);
+  const [pesan, setPesan] = useState('');
+  const [sibuk, setSibuk] = useState(false);
+
   useEffect(() => {
     if (!buka) return;
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setBuka(false); };
+    // Gagal memuat = tetap tampil isi bawaan; panduan tidak boleh hilang
+    // cuma karena server lambat.
+    panduanLoad().then(p => { if (p) setIsi(p); }).catch(() => {});
+  }, [buka]);
+
+  useEffect(() => {
+    if (!buka || tahap === 'sunting') return;   // Esc tidak boleh membuang suntingan
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') tutup(); };
     window.addEventListener('keydown', esc);
     return () => window.removeEventListener('keydown', esc);
-  }, [buka]);
+  }, [buka, tahap]);
+
+  function batal() { setTahap('baca'); setSandi(''); setPesan(''); }
+  function tutup() { batal(); setBuka(false); }
+
+  async function cekSandi() {
+    setSibuk(true); setPesan('');
+    try {
+      await panduanVerify(sandi);
+      setDraf(salin(isi));
+      setTahap('sunting');
+    } catch (e) { setPesan((e as Error).message); }
+    setSibuk(false);
+  }
+
+  async function simpan() {
+    setSibuk(true); setPesan('');
+    const bersih: PanduanCC = {
+      keputusan: draf.keputusan.filter(k => k.judul.trim() || k.isi.trim()),
+      kolom: draf.kolom.filter(k => k.nama.trim() || k.arti.trim()),
+    };
+    try {
+      await panduanSave(sandi, bersih);
+      setIsi(bersih); setTahap('baca'); setSandi('');
+    } catch (e) { setPesan((e as Error).message); }
+    setSibuk(false);
+  }
+
+  const ubahKep = (i: number, f: keyof PanduanKeputusan, v: string) =>
+    setDraf(d => ({ ...d, keputusan: d.keputusan.map((k, j) => j === i ? { ...k, [f]: v } : k) }));
+  const ubahKol = (i: number, f: keyof PanduanKolom, v: string) =>
+    setDraf(d => ({ ...d, kolom: d.kolom.map((k, j) => j === i ? { ...k, [f]: v } : k) }));
 
   return (
     <>
@@ -117,7 +200,7 @@ export default function PanduanBaca() {
         📖 Cara baca tabel
       </button>
       {buka && (
-        <div onClick={() => setBuka(false)} style={{
+        <div onClick={() => { if (tahap !== 'sunting') tutup(); }} style={{
           position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,.35)',
           display: 'flex', justifyContent: 'flex-end',
         }}>
@@ -125,39 +208,110 @@ export default function PanduanBaca() {
             width: 'min(560px, 100%)', height: '100%', overflowY: 'auto', background: 'var(--surface)',
             borderLeft: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)', padding: '20px 22px 40px',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h3 style={{ margin: 0 }}>Cara baca tabel</h3>
-              <button className="btn-ghost btn-sm" onClick={() => setBuka(false)} style={{ marginLeft: 'auto' }}>Tutup ✕</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <h3 style={{ margin: 0 }}>{tahap === 'sunting' ? 'Sunting panduan' : 'Cara baca tabel'}</h3>
+              <span style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+                {tahap === 'baca' && (
+                  <button className="btn-ghost btn-sm" onClick={() => setTahap('sandi')} data-demo="cc-panduan-edit">✎ Edit</button>
+                )}
+                {tahap === 'sunting' ? <>
+                  <button className="btn-ghost btn-sm" onClick={batal} disabled={sibuk}>Batal</button>
+                  <button className="btn-primary btn-sm" onClick={simpan} disabled={sibuk}>{sibuk ? 'Menyimpan…' : 'Simpan'}</button>
+                </> : (
+                  <button className="btn-ghost btn-sm" onClick={tutup}>Tutup ✕</button>
+                )}
+              </span>
             </div>
-            <p className="hint" style={{ marginTop: 0 }}>
-              Arti tiap kolom, kenapa dihitung dengan cara itu, dan kapan angkanya perlu dicurigai.
-            </p>
 
-            <h4 style={{ margin: '18px 0 8px' }}>Keputusan cara baca</h4>
-            {KEPUTUSAN.map(k => (
-              <details key={k.judul} style={{ borderTop: '1px solid var(--border)', padding: '8px 0' }}>
-                <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: 13.5 }}>{k.judul}</summary>
-                <p style={{ fontSize: 13, lineHeight: 1.55, margin: '6px 0 2px', color: 'var(--text-muted, var(--text))' }}>{k.isi}</p>
-              </details>
-            ))}
-
-            <h4 style={{ margin: '22px 0 8px' }}>Kolom demi kolom</h4>
-            {KOLOM.map(k => (
-              <div key={k.nama} style={{ borderTop: '1px solid var(--border)', padding: '10px 0' }}>
-                <div style={{ fontWeight: 700, fontSize: 13.5 }}>{k.nama}</div>
-                <p style={{ fontSize: 13, lineHeight: 1.55, margin: '3px 0 0' }}>{k.arti}</p>
-                {k.kenapa && (
-                  <p style={{ fontSize: 12.5, lineHeight: 1.55, margin: '5px 0 0', color: 'var(--text-faint)' }}>
-                    <b>Kenapa begini:</b> {k.kenapa}
-                  </p>
-                )}
-                {k.curiga && (
-                  <p style={{ fontSize: 12.5, lineHeight: 1.55, margin: '5px 0 0', color: 'var(--danger)' }}>
-                    <b>Kapan curiga:</b> {k.curiga}
-                  </p>
-                )}
+            {tahap === 'sandi' && (
+              <div style={{ ...KARTU, marginTop: 12 }}>
+                <p className="hint" style={{ margin: '0 0 8px' }}>Masukkan password penyunting panduan.</p>
+                <input type="password" autoFocus value={sandi} placeholder="Password"
+                       onChange={e => setSandi(e.target.value)}
+                       onKeyDown={e => { if (e.key === 'Enter' && sandi) cekSandi(); }}
+                       style={{ width: '100%', marginBottom: 8 }} />
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="btn-primary btn-sm" onClick={cekSandi} disabled={sibuk || !sandi}>{sibuk ? 'Memeriksa…' : 'Masuk'}</button>
+                  <button className="btn-ghost btn-sm" onClick={batal}>Batal</button>
+                </div>
               </div>
-            ))}
+            )}
+            {pesan && <p style={{ color: 'var(--danger)', fontSize: 12.5, margin: '8px 0' }}>{pesan}</p>}
+
+            {tahap === 'sunting' ? (
+              <>
+                <h4 style={{ margin: '16px 0 8px' }}>Keputusan cara baca</h4>
+                {draf.keputusan.map((k, i) => (
+                  <div key={i} style={KARTU}>
+                    <AksiButir
+                      onNaik={() => setDraf(d => ({ ...d, keputusan: geser(d.keputusan, i, -1) }))}
+                      onTurun={() => setDraf(d => ({ ...d, keputusan: geser(d.keputusan, i, 1) }))}
+                      onHapus={() => setDraf(d => ({ ...d, keputusan: d.keputusan.filter((_, j) => j !== i) }))} />
+                    <Isian label="Judul" value={k.judul} onChange={v => ubahKep(i, 'judul', v)} />
+                    <Isian label="Isi" value={k.isi} onChange={v => ubahKep(i, 'isi', v)} rows={4} />
+                  </div>
+                ))}
+                <button className="btn-sm" onClick={() => setDraf(d => ({ ...d, keputusan: [...d.keputusan, { judul: '', isi: '' }] }))}>
+                  + Tambah keputusan
+                </button>
+
+                <h4 style={{ margin: '22px 0 8px' }}>Kolom demi kolom</h4>
+                {draf.kolom.map((k, i) => (
+                  <div key={i} style={KARTU}>
+                    <AksiButir
+                      onNaik={() => setDraf(d => ({ ...d, kolom: geser(d.kolom, i, -1) }))}
+                      onTurun={() => setDraf(d => ({ ...d, kolom: geser(d.kolom, i, 1) }))}
+                      onHapus={() => setDraf(d => ({ ...d, kolom: d.kolom.filter((_, j) => j !== i) }))} />
+                    <Isian label="Nama kolom" value={k.nama} onChange={v => ubahKol(i, 'nama', v)} />
+                    <Isian label="Arti" value={k.arti} onChange={v => ubahKol(i, 'arti', v)} rows={2} />
+                    <Isian label="Kenapa begini (boleh kosong)" value={k.kenapa || ''} onChange={v => ubahKol(i, 'kenapa', v)} rows={3} />
+                    <Isian label="Kapan curiga (boleh kosong)" value={k.curiga || ''} onChange={v => ubahKol(i, 'curiga', v)} rows={2} />
+                  </div>
+                ))}
+                <button className="btn-sm" onClick={() => setDraf(d => ({ ...d, kolom: [...d.kolom, { nama: '', arti: '' }] }))}>
+                  + Tambah kolom
+                </button>
+
+                <div style={{ marginTop: 18, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                  <button className="btn-ghost btn-sm" onClick={() => setDraf(salin(BAWAAN))}
+                          title="Form diisi ulang dengan isi bawaan aplikasi. Belum tersimpan sampai Simpan ditekan.">
+                    ↺ Kembalikan ke isi bawaan
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="hint" style={{ marginTop: 0 }}>
+                  Arti tiap kolom, kenapa dihitung dengan cara itu, dan kapan angkanya perlu dicurigai.
+                </p>
+
+                <h4 style={{ margin: '18px 0 8px' }}>Keputusan cara baca</h4>
+                {isi.keputusan.map((k, i) => (
+                  <details key={i} style={{ borderTop: '1px solid var(--border)', padding: '8px 0' }}>
+                    <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: 13.5 }}>{k.judul}</summary>
+                    <p style={{ fontSize: 13, lineHeight: 1.55, margin: '6px 0 2px', whiteSpace: 'pre-line' }}>{k.isi}</p>
+                  </details>
+                ))}
+
+                <h4 style={{ margin: '22px 0 8px' }}>Kolom demi kolom</h4>
+                {isi.kolom.map((k, i) => (
+                  <div key={i} style={{ borderTop: '1px solid var(--border)', padding: '10px 0' }}>
+                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{k.nama}</div>
+                    <p style={{ fontSize: 13, lineHeight: 1.55, margin: '3px 0 0', whiteSpace: 'pre-line' }}>{k.arti}</p>
+                    {k.kenapa && (
+                      <p style={{ fontSize: 12.5, lineHeight: 1.55, margin: '5px 0 0', color: 'var(--text-faint)', whiteSpace: 'pre-line' }}>
+                        <b>Kenapa begini:</b> {k.kenapa}
+                      </p>
+                    )}
+                    {k.curiga && (
+                      <p style={{ fontSize: 12.5, lineHeight: 1.55, margin: '5px 0 0', color: 'var(--danger)', whiteSpace: 'pre-line' }}>
+                        <b>Kapan curiga:</b> {k.curiga}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
           </aside>
         </div>
       )}

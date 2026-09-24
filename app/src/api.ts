@@ -898,3 +898,26 @@ export async function generateHtmlForZip(module: ModuleData): Promise<string> {
   if (!res.ok) throw new Error('Gagal generate HTML');
   return res.text();
 }
+
+// Panduan cara baca Command Center. Baca terbuka (bukan data pribadi); ubah
+// dikunci password penyunting yang dicek di backend.
+export interface PanduanKolom { nama: string; arti: string; kenapa?: string; curiga?: string }
+export interface PanduanKeputusan { judul: string; isi: string }
+export interface PanduanCC { keputusan: PanduanKeputusan[]; kolom: PanduanKolom[] }
+
+export async function panduanLoad(): Promise<PanduanCC | null> {
+  const res = await fetch(`${BASE}/api/panduan-cc`);
+  if (!res.ok) throw new Error('Gagal memuat panduan');
+  return (await res.json()).panduan;
+}
+
+async function panduanPost(path: string, body: unknown): Promise<void> {
+  const res = await fetch(`${BASE}/api/panduan-cc${path}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(d.error || 'Permintaan gagal');
+}
+
+export const panduanVerify = (password: string) => panduanPost('/verify', { password });
+export const panduanSave = (password: string, panduan: PanduanCC) => panduanPost('', { password, panduan });

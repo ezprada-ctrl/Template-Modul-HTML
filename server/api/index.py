@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import io
 import os
 import sys
@@ -219,6 +221,8 @@ def api_load_draft(name):
 
 @app.post('/api/drafts/<name>')
 def api_save_draft(name):
+    if draft_store.is_internal(name):
+        return jsonify({'error': 'Nama ini dipakai aplikasi.'}), 403
     data = request.get_json(force=True)
     draft_store.save_draft(name, data)
     return jsonify({'ok': True})
@@ -226,6 +230,8 @@ def api_save_draft(name):
 
 @app.post('/api/drafts/<name>/rename')
 def api_rename_draft(name):
+    if draft_store.is_internal(name):
+        return jsonify({'error': 'Nama ini dipakai aplikasi.'}), 403
     body = request.get_json(force=True) or {}
     new_name = (body.get('new_name') or '').strip()
     if not new_name:
@@ -239,8 +245,54 @@ def api_rename_draft(name):
 
 @app.delete('/api/drafts/<name>')
 def api_delete_draft(name):
+    if draft_store.is_internal(name):
+        return jsonify({'error': 'Nama ini dipakai aplikasi.'}), 403
     slug = draft_store.delete_draft(name)
     return jsonify({'ok': True, 'slug': slug})
+
+
+# ------------------------------------------------ Panduan cara baca (CC)
+# Isinya bukan data pribadi, jadi BACA terbuka. UBAH dikunci password milik
+# Ikram sendiri - terpisah dari password Command Center, karena yang boleh
+# membuka data belum tentu boleh mengganti penjelasan cara bacanya. Yang
+# ditanam di kode cuma hash-nya (repo bisa dibaca orang); env
+# PANDUAN_EDIT_PASSWORD, kalau diset, menggantikannya tanpa perlu deploy kode.
+PANDUAN_SLUG = '__panduan_cc__'
+_PANDUAN_HASH = 'b82fba08fc93a0233348a1be3f4e1eeca8f27fbc33a5aa696d8c36594bb3f227'
+
+
+def _panduan_password_ok(pw):
+    pw = pw or ''
+    env = os.environ.get('PANDUAN_EDIT_PASSWORD', '')
+    if env:
+        return hmac.compare_digest(pw, env)
+    return hmac.compare_digest(hashlib.sha256(pw.encode()).hexdigest(), _PANDUAN_HASH)
+
+
+@app.get('/api/panduan-cc')
+def api_panduan_get():
+    # null = belum pernah disunting; frontend lalu memakai isi bawaannya.
+    return jsonify({'panduan': draft_store.load_draft(PANDUAN_SLUG)})
+
+
+@app.post('/api/panduan-cc/verify')
+def api_panduan_verify():
+    body = request.get_json(force=True) or {}
+    if not _panduan_password_ok(body.get('password')):
+        return jsonify({'error': 'Password salah.'}), 401
+    return jsonify({'ok': True})
+
+
+@app.post('/api/panduan-cc')
+def api_panduan_save():
+    body = request.get_json(force=True) or {}
+    if not _panduan_password_ok(body.get('password')):
+        return jsonify({'error': 'Password salah.'}), 401
+    data = body.get('panduan')
+    if not isinstance(data, dict) or not isinstance(data.get('keputusan'), list)             or not isinstance(data.get('kolom'), list):
+        return jsonify({'error': 'Bentuk panduan tidak dikenali.'}), 400
+    draft_store.save_draft(PANDUAN_SLUG, data)
+    return jsonify({'ok': True})
 
 
 @app.get('/api/health')

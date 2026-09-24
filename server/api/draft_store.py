@@ -30,6 +30,14 @@ def _headers():
     }
 
 
+# Baris "__..." di modul_drafts BUKAN draft modul, tapi setelan milik aplikasi
+# (mis. isi panduan cara baca Command Center). Numpang tabel yang sudah ada
+# supaya tidak perlu SQL baru; disembunyikan dari daftar draft dan ditolak di
+# endpoint draft umum, jadi cuma bisa diubah lewat endpoint berpassword-nya.
+def is_internal(name):
+    return str(name).startswith('__')
+
+
 def _safe_name(name):
     return ''.join(c for c in name if c.isalnum() or c in ('-', '_')) or 'draft'
 
@@ -68,10 +76,11 @@ def list_drafts():
             timeout=10,
         )
         res.raise_for_status()
-        return sorted(row['slug'] for row in res.json())
+        return sorted(row['slug'] for row in res.json() if not is_internal(row['slug']))
 
     os.makedirs(LOCAL_DRAFTS_DIR, exist_ok=True)
-    return sorted(f[:-5] for f in os.listdir(LOCAL_DRAFTS_DIR) if f.endswith('.json'))
+    return sorted(f[:-5] for f in os.listdir(LOCAL_DRAFTS_DIR)
+                  if f.endswith('.json') and not is_internal(f[:-5]))
 
 
 # Jalur cepat, dan SENGAJA dipatok di awal berkas: pola ini hanya cocok kalau
@@ -145,14 +154,16 @@ def list_drafts_with_title():
         )
         res.raise_for_status()
         return sorted(
-            ({'slug': row['slug'], 'title': row.get('title') or ''} for row in res.json()),
+            ({'slug': row['slug'], 'title': row.get('title') or ''} for row in res.json()
+             if not is_internal(row['slug'])),
             key=lambda row: row['slug'],
         )
 
     os.makedirs(LOCAL_DRAFTS_DIR, exist_ok=True)
     return [
         {'slug': f[:-5], 'title': _judul_berkas(os.path.join(LOCAL_DRAFTS_DIR, f))}
-        for f in sorted(os.listdir(LOCAL_DRAFTS_DIR)) if f.endswith('.json')
+        for f in sorted(os.listdir(LOCAL_DRAFTS_DIR))
+        if f.endswith('.json') and not is_internal(f[:-5])
     ]
 
 
