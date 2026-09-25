@@ -430,7 +430,22 @@ function App() {
           hanyut bareng judulnya, undo/redo malah hilang persis waktu paling
           sering dipakai. */}
       <header style={{ marginBottom: 22, paddingTop: 4 }}>
-        <h1 style={{ margin: '0 0 4px' }}>Ekosistem Modul Interaktif</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12,3.6 C14.4,7.8 17.4,9.6 16.2,13.8 C15.3,16.8 12.6,18.6 10.2,17.4 C7.2,15.9 7.2,12.6 9,10.8 C9,13.2 10.8,13.8 11.4,12 C12,10.2 10.2,9 10.8,6 C11.1,4.8 11.4,3.9 12,3.6 Z"
+              stroke="#c4622d"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '0.16em', color: 'var(--text)' }}>
+            TEMPA
+          </span>
+        </div>
+        <p style={{ margin: '4px 0 3px', fontSize: 12.5, color: 'var(--text-faint)' }}>
+          Ekosistem Modul Interaktif
+        </p>
         <p className="hint" style={{ margin: 0 }}>
           Muhamad Ikram · Pengembang Teknologi Pembelajaran
         </p>
