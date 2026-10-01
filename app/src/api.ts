@@ -79,6 +79,7 @@ export async function generateHtml(module: ModuleData): Promise<string> {
 
 export async function listDrafts(): Promise<string[]> {
   const res = await fetch(`${BASE}/api/drafts`);
+  if (!res.ok) throw new Error(`server menjawab ${res.status} - database draft kemungkinan bermasalah`);
   const data = await res.json();
   return data.drafts;
 }

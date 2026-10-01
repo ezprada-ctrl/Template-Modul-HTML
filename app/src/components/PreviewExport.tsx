@@ -291,20 +291,37 @@ export default function PreviewExport({ module, setModule, onImportJson }: Props
     setTimeout(() => setZip(null), 4000);
   }
 
+  // Tanpa try/catch, kegagalan server (mis. database draft menolak permintaan)
+  // jadi promise yang ditolak diam-diam: tombol terasa "mati" tanpa pesan apa pun.
   async function refreshDrafts() {
-    setDrafts(await listDrafts());
+    setError('');
+    try {
+      setDrafts(await listDrafts());
+    } catch (e: any) {
+      setError(`Gagal memuat daftar draft: ${e.message}`);
+    }
   }
 
   async function doSave() {
-    await saveDraft(module.slug, module);
-    setStatus(`Tersimpan sebagai draft "${module.slug}"`);
-    refreshDrafts();
+    setError('');
+    try {
+      await saveDraft(module.slug, module);
+      setStatus(`Tersimpan sebagai draft "${module.slug}"`);
+      refreshDrafts();
+    } catch (e: any) {
+      setError(`Gagal menyimpan draft: ${e.message}`);
+    }
   }
 
   async function doLoad(name: string) {
-    const data = await loadDraft(name);
-    setModule(normalizeModule(data));
-    setStatus(`Draft "${name}" dimuat`);
+    setError('');
+    try {
+      const data = await loadDraft(name);
+      setModule(normalizeModule(data));
+      setStatus(`Draft "${name}" dimuat`);
+    } catch (e: any) {
+      setError(`Gagal memuat draft "${name}": ${e.message}`);
+    }
   }
 
   // Duplicates the draft under a new name the user picks. Doesn't touch
