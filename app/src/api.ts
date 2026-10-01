@@ -603,14 +603,65 @@ async function uploadFileToStorage(file: File, bucket: string, prefix = ''): Pro
   return { url: `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`, path };
 }
 
+// ---- Media publik di Cloudflare R2 (gambar, video, audio) ---------------------
+// Dulu semuanya numpuk di Supabase Storage, dan tiap peserta/penyusun yang
+// membukanya menggerus kuota "Cached Egress" 5GB/bulan - kuota itu jebol, lalu
+// Supabase mematikan SEMUA layanan di akunnya (termasuk draft). R2 tidak
+// menagih egress.
+//
+// Aman di-deploy sebelum R2-nya siap: selama backend belum melaporkan
+// `media: true`, jalurnya sama persis dengan dulu (Supabase). Dan kalau upload
+// ke R2 gagal di tengah jalan (mis. CORS bucket belum benar), jatuh ke Supabase
+// alih-alih membuat pengguna buntu. File lama TIDAK disentuh: modul yang sudah
+// ada tetap menunjuk ke URL Supabase-nya.
+let _r2MediaReady: boolean | null = null;
+async function r2MediaTersedia(): Promise<boolean> {
+  if (_r2MediaReady !== null) return _r2MediaReady;
+  try {
+    const res = await fetch(`${BASE}/api/r2/configured`);
+    _r2MediaReady = res.ok ? !!(await res.json()).media : false;
+  } catch {
+    _r2MediaReady = false;
+  }
+  return _r2MediaReady;
+}
+
+async function uploadMediaKeR2(file: File): Promise<string> {
+  const res = await fetch(`${BASE}/api/r2/media-upload-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filename: file.name }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Gagal minta izin upload (${res.status})`);
+  const put = await fetch(data.uploadUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file,
+  });
+  if (!put.ok) throw new Error(`R2 menolak upload (${put.status})`);
+  return data.publicUrl as string;
+}
+
+async function uploadMedia(file: File, bucket: string): Promise<string> {
+  if (await r2MediaTersedia()) {
+    try {
+      return await uploadMediaKeR2(file);
+    } catch (e: any) {
+      console.warn('Upload ke R2 gagal, jatuh ke Supabase:', e?.message || e);
+    }
+  }
+  return (await uploadFileToStorage(file, bucket)).url;
+}
+
 // Thin caller kept for existing image-upload call sites (cover, image block).
 export async function uploadImageToStorage(file: File): Promise<string> {
-  return (await uploadFileToStorage(file, IMAGE_BUCKET)).url;
+  return uploadMedia(file, IMAGE_BUCKET);
 }
 
 // For video/audio blocks — same flow, different bucket.
 export async function uploadMediaToStorage(file: File): Promise<string> {
-  return (await uploadFileToStorage(file, MEDIA_BUCKET)).url;
+  return uploadMedia(file, MEDIA_BUCKET);
 }
 
 // PPTX uploads go in the same bucket under a pptx/ prefix. Unlike

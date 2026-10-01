@@ -142,7 +142,39 @@ def api_r2_configured():
     """Apakah backend punya kredensial R2? Frontend menanyakan ini SEBELUM
     pengguna milih file, biar bisa jatuh ke jalur Supabase (dengan batas 50MB)
     secara sadar alih-alih gagal misterius di tengah upload."""
-    return jsonify({'configured': r2.is_configured()})
+    # `media` TAMBAHAN: frontend lama cuma membaca `configured`, jadi bentuk
+    # lamanya tidak berubah (dua project Vercel deploy sendiri-sendiri).
+    return jsonify({'configured': r2.is_configured(), 'media': r2.media_is_configured()})
+
+
+# Ekstensi yang boleh jadi bagian nama objek media. Nama file asli pengguna
+# TIDAK pernah dipakai (bisa panjang, berspasi, non-ASCII); yang dipertahankan
+# cuma ekstensinya, dan hanya kalau ada di daftar ini - sisanya jadi 'bin'.
+MEDIA_EXT = {
+    'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'svg',
+    'mp3', 'wav', 'ogg', 'm4a', 'aac', 'mp4', 'webm', 'mov', 'm4v',
+}
+
+
+@app.post('/api/r2/media-upload-url')
+def api_r2_media_upload_url():
+    """URL sementara buat browser meng-upload satu gambar/video/audio ke bucket
+    media PUBLIK, plus alamat publik yang nanti tertanam di modul. Nama objek
+    dibuat di sini, bukan diterima dari klien, supaya klien tidak bisa menimpa
+    objek milik modul lain."""
+    if not r2.media_is_configured():
+        return jsonify({'error': 'R2 media belum dikonfigurasi di backend.'}), 503
+    data = request.get_json(silent=True) or {}
+    nama = (data.get('filename') or '').strip().lower()
+    ext = nama.rsplit('.', 1)[-1] if '.' in nama else ''
+    if ext not in MEDIA_EXT:
+        ext = 'bin'
+    key = f"media/{uuid.uuid4().hex}.{ext}"
+    try:
+        url = r2.presign('PUT', key, expires=R2_UPLOAD_TTL, bucket=os.environ['R2_MEDIA_BUCKET'])
+    except Exception as e:
+        return jsonify({'error': f'Gagal membuat URL upload: {e}'}), 500
+    return jsonify({'uploadUrl': url, 'publicUrl': f'{r2.media_public_url()}/{key}'})
 
 
 @app.post('/api/r2/upload-url')

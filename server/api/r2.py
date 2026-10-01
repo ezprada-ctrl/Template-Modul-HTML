@@ -52,6 +52,31 @@ def _creds():
     )
 
 
+# Bucket KEDUA, khusus gambar/video/audio modul. Terpisah dari R2_BUCKET dengan
+# sengaja: bucket Articulate itu TERTUTUP (dibaca lewat URL bertanda tangan),
+# sedangkan media modul harus bisa dibuka siapa pun yang memegang modulnya -
+# peserta di KLC tidak punya tanda tangan apa pun. Menjadikan bucket Articulate
+# publik demi media akan membuka paket Articulate ke semua orang juga.
+#
+# Dua env var, DAN kredensial dasar yang sama dengan bucket Articulate:
+#   R2_MEDIA_BUCKET      nama bucket publik itu
+#   R2_MEDIA_PUBLIC_URL  alamat publiknya (https://pub-xxxx.r2.dev atau domain
+#                        sendiri), tanpa garis miring di akhir
+def media_public_url():
+    return os.environ.get('R2_MEDIA_PUBLIC_URL', '').strip().rstrip('/')
+
+
+def media_is_configured():
+    """True hanya kalau SEMUANYA lengkap. Frontend memakai ini buat memilih
+    jalur upload; selama False, upload media tetap ke Supabase persis seperti
+    sebelumnya - jadi kode ini aman di-deploy sebelum R2-nya disiapkan."""
+    return bool(
+        os.environ.get('R2_ACCOUNT_ID') and os.environ.get('R2_ACCESS_KEY_ID')
+        and os.environ.get('R2_SECRET_ACCESS_KEY')
+        and os.environ.get('R2_MEDIA_BUCKET') and media_public_url().startswith('https://')
+    )
+
+
 def _quote(value, safe='/'):
     """Encoding yang dipakai SigV4. Slash SENGAJA dibiarkan di canonical URI
     (safe='/') karena dia pemisah path, bukan bagian dari nama objek."""
@@ -69,15 +94,19 @@ def _signing_key(secret, datestamp):
     return _sign(k, 'aws4_request')
 
 
-def presign(method, key, expires=3600):
+def presign(method, key, expires=3600, bucket=None):
     """URL bertanda tangan buat satu objek. `method` 'PUT' (upload), 'GET'
     (unduh), atau 'DELETE' (hapus).
+
+    `bucket` kosong = bucket Articulate (R2_BUCKET), perilaku lama. Diisi hanya
+    oleh jalur media (R2_MEDIA_BUCKET).
 
     UNSIGNED-PAYLOAD dipakai karena isi file gak pernah lewat sini - kita
     menandatangani IZIN-nya, bukan isinya. Tanpa ini browser harus menghitung
     SHA256 seluruh file 100MB di memori sebelum boleh mulai upload.
     """
-    account_id, access_key, secret_key, bucket = _creds()
+    account_id, access_key, secret_key, default_bucket = _creds()
+    bucket = bucket or default_bucket
     if not all((account_id, access_key, secret_key, bucket)):
         raise RuntimeError('Kredensial R2 belum lengkap di environment backend.')
 
