@@ -375,6 +375,17 @@ export default function BlockPreviewCard({ type }: { type: BlockType }) {
           </div>
         </div>
       );
+    case 'reflection':
+      return (
+        <div className="pbp-scope">
+          <div className="kc-demo">
+            <p className="kc-q">Menurut Anda, titik mana yang paling butuh perhatian?</p>
+            <div className="kc-opt"><span className="mk">☑</span>Data</div>
+            <div className="kc-opt"><span className="mk" />Penagihan</div>
+            <p className="kc-fb">Rangkaian poin refleksi bergambar, digulir parallax. Peserta mengirim sekali lalu terkunci; jawaban per nama &amp; NIP bisa diunduh dari Command Center.</p>
+          </div>
+        </div>
+      );
     case 'articulate':
       return (
         <div className="pbp-scope">

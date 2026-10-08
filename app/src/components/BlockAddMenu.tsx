@@ -22,6 +22,7 @@ export const BLOCK_LABELS: Record<BlockType, string> = {
   media: 'Media (Video / YouTube / Instagram)',
   knowledge: 'Knowledge Check (cek paham)',
   articulate: 'Articulate 360 (paket ZIP)',
+  reflection: 'Refleksi (jawaban peserta)',
 };
 
 const BLOCK_TYPES = Object.keys(BLOCK_LABELS) as BlockType[];

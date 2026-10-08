@@ -558,6 +558,24 @@ export async function ccCocreation(password: string, moduleSlug?: string): Promi
   return { items: d.modules, terpotong: !!d.terpotong };
 }
 
+
+// Satu kiriman blok Refleksi = satu peserta x satu blok (kiriman PERTAMA -
+// lihat refleksi_rows di activity_store.py).
+export interface RefleksiJawaban {
+  id: string; no: number; q: string; tipe: 'pilihan' | 'isian';
+  pilihan: string[]; lainnya: string; teks: string;
+}
+export interface RefleksiKiriman {
+  learner_id: string; learner_name: string; block: string;
+  slide: number | null; judul_slide: string; dikirim: string;
+  jawaban: RefleksiJawaban[]; jumlah_kirim: number;
+}
+
+export async function ccRefleksi(password: string, moduleSlug: string): Promise<{ items: RefleksiKiriman[]; terpotong: boolean }> {
+  const d = await ccPost('refleksi', { password, module_slug: moduleSlug });
+  return { items: d.items || [], terpotong: !!d.terpotong };
+}
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const IMAGE_BUCKET = 'modul-images';

@@ -3,7 +3,7 @@ import { DEFAULT_THEME } from './themes';
 export type BlockType =
   | 'card' | 'callout' | 'definition' | 'pullquote' | 'ticklist'
   | 'accordion' | 'tabs' | 'timeline' | 'dtable' | 'flow' | 'grid' | 'image' | 'badgeref' | 'html' | 'modal'
-  | 'media' | 'knowledge' | 'articulate';
+  | 'media' | 'knowledge' | 'articulate' | 'reflection';
 
 // Blok yang boleh jadi ISI popup (blok Modal mode 'blok'). Daftar putih,
 // bukan daftar hitam: tipe baru harus sengaja dimasukkan setelah dicek, biar
@@ -54,6 +54,28 @@ export interface KcQuestion {
   feedbackWrong?: string;
   feedbackMode?: 'single' | 'perOption';
   optFeedback?: string[];
+}
+
+// Satu poin di blok Refleksi. Beda dari KcQuestion: gak ada jawaban benar -
+// yang dicari pendapat peserta, bukan ketepatan.
+//   'pilihan' : centang. `max` = batas pilihan (1 = cuma boleh satu, tampil
+//               sebagai bulatan; 0/kosong = bebas). `lainnya` = opsi
+//               "Lainnya" di ujung daftar yang membuka kolom isian.
+//   'isian'   : jawaban tulis bebas. `contoh` = contoh jawaban di bawah kolom.
+// `img` = gambar latar poin ini (diunggah penyusun), digulir parallax.
+// `id` dipakai sebagai kunci jawaban di data, jadi menyusun ulang/mengubah
+// teks poin gak mencampur jawaban lama dengan poin lain.
+export interface ReflItem {
+  id: string;
+  q: string;
+  kind: 'pilihan' | 'isian';
+  opts: string[];
+  max?: number;
+  lainnya?: boolean;
+  hint?: string;
+  placeholder?: string;
+  contoh?: string[];
+  img?: string;
 }
 
 // Rata teks yang bisa dipilih di blok Tabel Data. Nilainya bahasa Indonesia
@@ -218,6 +240,11 @@ export interface Block {
   // Default true (dikunci). Kalau false, peserta boleh lanjut walau kontennya
   // belum kelar — statusnya tetap direkam.
   artLock?: boolean;
+  // reflection — rangkaian poin refleksi dalam SATU blok, dikirim sekaligus
+  // lalu terkunci. Opening opsional: gambar pembuka sebelum poin pertama.
+  reflOpening?: boolean;
+  reflOpeningImg?: string;
+  reflItems?: ReflItem[];
 }
 
 export interface Section {
@@ -629,8 +656,13 @@ export function newBlock(type: BlockType): Block {
     case 'knowledge': return { id, type, kcItems: [{ q: '', opts: ['', ''], correct: 0, feedback: '' }] };
     case 'modal': return { id, type, heading: 'Info Tambahan', bodyHtml: '', icon: '📝', modalMode: 'teks', blocks: [] };
     case 'articulate': return { id, type, artRatio: '16:9', artLock: true, caption: '' };
+    case 'reflection': return { id, type, reflOpening: false, reflItems: [newReflItem()] };
     default: return { id, type: 'card', heading: '', bodyHtml: '' };
   }
+}
+
+export function newReflItem(kind: ReflItem['kind'] = 'pilihan'): ReflItem {
+  return { id: uid('refl'), q: '', kind, opts: kind === 'pilihan' ? ['', ''] : [], max: 0, lainnya: false };
 }
 
 // Pulls whatever counts as "the substance" out of a block, as plain text -
@@ -659,6 +691,11 @@ export function extractBlockText(block: Block): string {
       return block.caption || '';
     case 'knowledge':
       return (block.kcItems || [])
+        .map(it => [it.q, ...(it.opts || [])].filter(Boolean).join(' | '))
+        .filter(Boolean)
+        .join('\n');
+    case 'reflection':
+      return (block.reflItems || [])
         .map(it => [it.q, ...(it.opts || [])].filter(Boolean).join(' | '))
         .filter(Boolean)
         .join('\n');
@@ -721,6 +758,8 @@ function applyBlockText(block: Block, text: string): Block {
       // Carry migrated text into the first question's prompt, keeping the
       // default two empty options so it's a valid (answerable) question.
       return { ...block, kcItems: [{ q: text.split('\n')[0], opts: ['', ''], correct: 0, feedback: '' }] };
+    case 'reflection':
+      return { ...block, reflItems: [{ ...newReflItem(), q: text.split('\n')[0] }] };
     case 'ticklist':
       return { ...block, items: text.split('\n').filter(Boolean) };
     case 'accordion':

@@ -588,6 +588,28 @@ def api_activity_cocreation():
         return jsonify({'error': str(e)}), 503
 
 
+@app.post('/api/activity/refleksi')
+def api_activity_refleksi():
+    """Jawaban blok Refleksi satu modul, per peserta (NIP + nama).
+
+    Dikunci password seperti endpoint Command Center lain: isinya jawaban
+    tertulis SEMUA peserta.
+    """
+    data = request.get_json(silent=True) or {}
+    denied = _check_cc_password(data)
+    if denied:
+        return denied
+    slug = (data.get('module_slug') or '').strip()
+    if not slug:
+        return jsonify({'error': 'module_slug wajib diisi'}), 400
+    try:
+        activity_store.reset_truncation()
+        return jsonify({'items': activity_store.refleksi_rows(slug),
+                        'terpotong': activity_store.was_truncated()})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+
 @app.get('/api/keepalive')
 def api_keepalive():
     """Hit daily by Vercel Cron (schedule lives in server/vercel.json) so the

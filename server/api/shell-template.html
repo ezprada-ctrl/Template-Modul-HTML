@@ -1803,6 +1803,83 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
   #demo-cursor{transition:none;}
   #demo-badge .dot,#demo-feed-head .dot{animation:none;}
 }
+/* ---------------- Blok Refleksi ----------------
+   Satu panel per poin, gambar latar digulir parallax (reflParallax di JS).
+   Kartu pertanyaan cuma disembunyikan untuk animasi kalau JS-nya sudah
+   menyalakan .refl-anim - tanpa JS isinya tetap tampil. */
+.refl{margin:8px 0 26px;display:flex;flex-direction:column;gap:22px;}
+.refl-panel{position:relative;isolation:isolate;overflow:hidden;border-radius:var(--radius-lg);
+  min-height:min(78vh,660px);display:flex;align-items:center;justify-content:center;
+  padding:clamp(18px,4vw,52px);background:linear-gradient(160deg,var(--navy-soft),var(--accent-soft));}
+.refl-bg{position:absolute;inset:0;z-index:-2;overflow:hidden;}
+.refl-bg img{position:absolute;left:0;top:-15%;width:100%;height:130%;object-fit:cover;will-change:transform;}
+.refl-panel.has-bg::after{content:'';position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(180deg,rgba(10,18,40,.05),rgba(10,18,40,.32));}
+.refl-card{position:relative;width:min(100%,740px);border:1px solid var(--border);border-radius:var(--radius-lg);
+  background:color-mix(in srgb,var(--surface) 93%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:var(--shadow-lg);padding:clamp(18px,3vw,32px);transition:box-shadow .2s,border-color .2s;}
+.refl.refl-anim .refl-card{opacity:0;transform:translateY(40px);
+  transition:opacity .6s ease,transform .75s cubic-bezier(.16,1,.3,1),box-shadow .2s,border-color .2s;}
+.refl.refl-anim .refl-card.in{opacity:1;transform:none;}
+.refl-no{font-size:11.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:8px;}
+.refl-panel.answered .refl-no::after{content:' \2713';color:#2f9e6a;}
+.refl-q{font-size:clamp(17px,2.3vw,23px);font-weight:800;line-height:1.3;color:var(--navy-ink);margin:0 0 18px;}
+.refl-opts{display:flex;flex-direction:column;gap:8px;}
+.refl-opts-2{display:grid;grid-template-columns:1fr 1fr;}
+@media (max-width:640px){.refl-opts-2{grid-template-columns:1fr;}}
+.refl-opt{position:relative;display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--border);
+  border-radius:12px;background:var(--surface);cursor:pointer;font-size:14px;line-height:1.4;color:var(--text);
+  transition:border-color .15s,background .15s,transform .15s;}
+.refl-opt:hover{border-color:var(--border-strong);transform:translateX(2px);}
+.refl-opt input{position:absolute;opacity:0;pointer-events:none;}
+.refl-mk{flex:0 0 20px;height:20px;box-sizing:border-box;border:2px solid var(--border-strong);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;transition:.15s;}
+.refl-opt input[type=radio] + .refl-mk{border-radius:50%;}
+.refl-opt input:focus-visible + .refl-mk{outline:2px solid var(--accent);outline-offset:2px;}
+.refl-opt.on{border-color:var(--accent);background:var(--accent-soft);}
+.refl-opt.on .refl-mk{background:var(--accent);border-color:var(--accent);}
+.refl-opt.on .refl-mk::after{content:'\2713';color:#fff;font-size:12px;font-weight:800;line-height:1;}
+.refl-other,.refl-text{display:block;width:100%;box-sizing:border-box;border:1px solid var(--border-strong);border-radius:12px;
+  padding:11px 14px;font:inherit;font-size:14px;background:var(--surface);color:var(--text);resize:vertical;}
+.refl-other[hidden]{display:none;}
+.refl-other:focus,.refl-text:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.refl-contoh{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12.5px;color:var(--text-dim);}
+.refl-contoh b{width:100%;color:var(--navy-ink);}
+.refl-contoh span{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:8px 12px;flex:1 1 220px;}
+.refl-hint{margin-top:16px;display:inline-block;font-size:12.5px;color:var(--text-dim);background:var(--accent-soft);padding:6px 13px;border-radius:20px;}
+.refl-panel.missing .refl-card{border-color:#e0a030;box-shadow:0 0 0 3px rgba(224,160,48,.40),var(--shadow-lg);}
+.refl-flash{margin-top:12px;font-size:12.5px;font-weight:600;color:#9a5b00;background:#fff3d6;border-radius:10px;
+  padding:0 12px;max-height:0;overflow:hidden;opacity:0;transition:.25s;}
+.refl-flash.show{max-height:60px;padding:8px 12px;opacity:1;}
+.refl-opening{padding:0;min-height:0;background:var(--navy-soft);}
+.refl-open-img{width:100%;overflow:hidden;}
+.refl-open-img img{display:block;width:100%;transform:scale(1.08);will-change:transform;}
+.refl-scroll-cue{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(10,18,40,.62);color:#fff;
+  font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;animation:reflBob 1.8s ease-in-out infinite;white-space:nowrap;}
+@keyframes reflBob{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,5px);}}
+.refl-foot{display:flex;flex-direction:column;align-items:center;gap:10px;padding:6px 0 4px;}
+.refl-submit{background:var(--navy);color:#fff;border:0;border-radius:14px;padding:14px 34px;font:inherit;font-weight:800;
+  font-size:15px;cursor:pointer;box-shadow:var(--shadow-md);transition:transform .15s,filter .15s;}
+.refl-submit:hover{transform:translateY(-1px);filter:brightness(1.1);}
+.refl-status{font-size:13px;color:var(--text-dim);text-align:center;}
+.refl-status.ok{color:#2f9e6a;font-weight:700;background:rgba(47,158,106,.12);padding:10px 16px;border-radius:12px;}
+.refl.is-locked .refl-submit{display:none;}
+.refl.is-locked .refl-opt{cursor:default;transform:none;}
+.refl.is-locked .refl-opt:not(.on){opacity:.55;}
+.refl-dlg{position:fixed;inset:0;z-index:9000;background:rgba(10,18,40,.55);display:flex;align-items:center;justify-content:center;padding:16px;}
+.refl-dlg-box{background:var(--surface);color:var(--text);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);
+  width:min(100%,460px);max-height:86vh;overflow-y:auto;padding:24px 26px;animation:riseIn .3s cubic-bezier(.16,1,.3,1);}
+.refl-dlg-box h4{margin:0 0 10px;font-size:17px;color:var(--navy-ink);}
+.refl-dlg-box p{margin:0 0 8px;font-size:14px;line-height:1.5;color:var(--text-dim);}
+.refl-dlg-box ul{margin:4px 0 12px;padding-left:20px;font-size:13.5px;line-height:1.5;color:var(--text);}
+.refl-dlg-act{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px;}
+.refl-dlg-act button{border-radius:10px;padding:10px 16px;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
+  border:1px solid var(--border-strong);background:var(--surface);color:var(--text);}
+.refl-dlg-act button.utama{background:var(--navy);border-color:var(--navy);color:#fff;}
+@media (prefers-reduced-motion:reduce){
+  .refl.refl-anim .refl-card{opacity:1;transform:none;transition:none;}
+  .refl-scroll-cue{animation:none;}
+}
 </style>
 </head>
 <body>
@@ -4897,6 +4974,23 @@ function recapRender(d){
     closing = lead + recapGabung(soft) + '. Sisanya udah oke banget.';
   }
 
+  /* Refleksi: bukan sinyal belajar (gak menggeser cabang di atas), cuma
+     pengingat. Kiriman yang belum sampai server (masih di antrean) ikut
+     dihitung dari kunci lokalnya, biar gak dibilang "belum" padahal sudah. */
+  const reflTotal = Object.keys(SLIDES).reduce((n, k) => n + ((SLIDES[k] || '').split('class="refl"').length - 1), 0);
+  if(reflTotal){
+    let lokal = 0;
+    try{
+      const awal = 'refl:' + MODULE_SLUG + ':' + ((state.identity || {}).nip || 'anon') + ':';
+      for(let i = 0; i < localStorage.length; i++){ if((localStorage.key(i) || '').indexOf(awal) === 0) lokal++; }
+    }catch(e){}
+    const kirim = Math.min(reflTotal, Math.max(d.refleksi_terkirim || 0, lokal));
+    poin += kirim >= reflTotal
+      ? recapPoint('good', '📝', reflTotal > 1 ? `Semua refleksimu (${reflTotal}) sudah terkirim. Jawabanmu akan dibahas di sesi klasikal.`
+                                                : 'Refleksimu sudah terkirim. Jawabanmu akan dibahas di sesi klasikal.')
+      : recapPoint('bad', '📝', `Refleksimu belum terkirim${reflTotal > 1 ? ` (${kirim} dari ${reflTotal})` : ''}. Buka lagi slide refleksinya dan tekan <b>Kirim Refleksi</b> ya.`);
+  }
+
   const sapaan = d.nama ? `${recapEsc(String(d.nama).split(' ')[0])}, ini` : 'Ini';
   body.innerHTML = `
     <div class="recap-eyebrow">Ringkasan Belajarmu</div>
@@ -4930,6 +5024,7 @@ function render(opts){
   // slide popup, gated in goTo().
   applySlideAudio(item);
   artBindSlide(item);
+  reflBindSlide();
   if(HAS_INSTAGRAM && window.instgrm && window.instgrm.Embeds){
     try{ window.instgrm.Embeds.process(); }catch(e){}
   }
@@ -7181,6 +7276,244 @@ actBoot();
 /* Paling akhir: mesin demo butuh slide pertama sudah ada di DOM sebelum dia
    mulai mencari sasaran buat diklik. */
 presDemoInit();
+
+/* ================= REFLEKSI =================
+   Blok Refleksi (render_reflection di generator.py): rangkaian poin yang
+   dijawab lalu dikirim SEKALI dan terkunci.
+
+   - Batas pilihan per poin (data-max) ditegakkan di sini, bukan cuma
+     ditulis di keterangan.
+   - Tidak wajib per slide: peserta boleh melompat. Baru waktu menekan Kirim,
+     poin yang belum dijawab disebut satu per satu dan ditandai, lalu peserta
+     memilih kembali mengisi atau tetap mengirim.
+   - Terkirim = satu event `reflection_submit` berisi SEMUA jawaban sebagai
+     TEKS (bukan nomor opsi), jadi laporannya tetap terbaca walau penyusun
+     kemudian mengubah urutan/teks pilihan. Kunci disimpan di localStorage
+     per modul+NIP+blok: membuka ulang slide/modul menampilkan jawaban yang
+     sudah terkunci. */
+const REFL_EVENT = 'reflection_submit';
+
+function reflKey(bid){
+  const id = state.identity || {};
+  return 'refl:' + MODULE_SLUG + ':' + (id.nip || 'anon') + ':' + bid;
+}
+function reflTeks(el){ return ((el && el.textContent) || '').replace(/\s+/g, ' ').trim(); }
+function reflEsc(s){
+  return String(s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+}
+
+function reflJawaban(panel){
+  const a = { id: panel.dataset.item, q: reflTeks(panel.querySelector('.refl-q')),
+              tipe: panel.dataset.kind, pilihan: [], lainnya: '', teks: '' };
+  if(a.tipe === 'isian'){
+    const t = panel.querySelector('.refl-text');
+    a.teks = ((t && t.value) || '').trim();
+    a.terisi = !!a.teks;
+    return a;
+  }
+  let lainnyaDipilih = false;
+  panel.querySelectorAll('input:checked').forEach(function(i){
+    if(i.value === 'lainnya') lainnyaDipilih = true;
+    else a.pilihan.push(reflTeks(i.closest('.refl-opt').querySelector('.refl-ot')));
+  });
+  const o = panel.querySelector('.refl-other');
+  if(lainnyaDipilih) a.lainnya = ((o && o.value) || '').trim();
+  /* "Lainnya" dicentang tapi kolomnya kosong = belum menjawab apa-apa. */
+  a.terisi = a.pilihan.length > 0 || !!a.lainnya;
+  a.lainnyaKosong = lainnyaDipilih && !a.lainnya;
+  return a;
+}
+
+function reflFlash(panel, msg){
+  const card = panel.querySelector('.refl-card');
+  let n = card.querySelector('.refl-flash');
+  if(!n){ n = document.createElement('div'); n.className = 'refl-flash'; card.appendChild(n); }
+  n.textContent = msg;
+  n.classList.add('show');
+  clearTimeout(n._t);
+  n._t = setTimeout(function(){ n.classList.remove('show'); }, 2800);
+}
+
+function reflDirty(el){
+  const panel = el.closest('.refl-panel');
+  if(!panel) return;
+  panel.classList.toggle('answered', !!reflJawaban(panel).terisi);
+  panel.classList.remove('missing');
+}
+
+function reflPick(inp){
+  const panel = inp.closest('.refl-panel');
+  const root = inp.closest('.refl');
+  if(!panel || (root && root.classList.contains('is-locked'))) return;
+  const max = parseInt(panel.dataset.max || '0', 10);
+  const semua = Array.prototype.slice.call(panel.querySelectorAll('input'));
+  if(inp.type === 'checkbox' && inp.checked && max > 1){
+    if(semua.filter(function(i){ return i.checked; }).length > max){
+      inp.checked = false;
+      reflFlash(panel, 'Maksimal ' + max + ' pilihan. Lepas salah satu dulu kalau mau ganti.');
+    }
+  }
+  const other = panel.querySelector('.refl-other');
+  if(other){
+    const on = semua.some(function(i){ return i.value === 'lainnya' && i.checked; });
+    other.hidden = !on;
+    if(on && inp.value === 'lainnya' && inp.checked) other.focus();
+  }
+  panel.querySelectorAll('.refl-opt').forEach(function(l){
+    l.classList.toggle('on', l.querySelector('input').checked);
+  });
+  reflDirty(inp);
+}
+
+function reflDialog(judul, isiHtml, tombol){
+  const ov = document.createElement('div');
+  ov.className = 'refl-dlg';
+  ov.innerHTML = '<div class="refl-dlg-box" role="dialog" aria-modal="true"><h4>' + judul + '</h4>' + isiHtml +
+    '<div class="refl-dlg-act"></div></div>';
+  const act = ov.querySelector('.refl-dlg-act');
+  tombol.forEach(function(t){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = t.label;
+    if(t.utama) b.className = 'utama';
+    b.onclick = function(){ ov.remove(); if(t.aksi) t.aksi(); };
+    act.appendChild(b);
+  });
+  ov.addEventListener('click', function(e){ if(e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+  const utama = act.querySelector('.utama');
+  if(utama) utama.focus();
+}
+
+function reflSubmit(bid){
+  const root = document.querySelector('.refl[data-refl="' + bid + '"]');
+  if(!root || root.classList.contains('is-locked')) return;
+  const panels = Array.prototype.slice.call(root.querySelectorAll('.refl-panel[data-item]'));
+  const jawaban = panels.map(function(p, i){ const a = reflJawaban(p); a.no = i + 1; return a; });
+  const kosong = jawaban.filter(function(a){ return !a.terisi; });
+  panels.forEach(function(p, i){ p.classList.toggle('missing', !jawaban[i].terisi); });
+  const kirim = function(){ reflKirim(bid, root, jawaban); };
+
+  if(kosong.length){
+    const daftar = kosong.map(function(a){
+      const q = a.q.length > 80 ? a.q.slice(0, 80) + '…' : a.q;
+      return '<li><b>Refleksi ' + a.no + '</b> — ' + reflEsc(q) +
+             (a.lainnyaKosong ? ' <i>(“Lainnya” dicentang tapi belum diisi)</i>' : '') + '</li>';
+    }).join('');
+    reflDialog('Ada poin refleksi yang belum dikerjakan',
+      '<p>' + kosong.length + ' dari ' + jawaban.length + ' poin masih kosong:</p><ul>' + daftar + '</ul>' +
+      '<p>Setelah dikirim, jawaban <b>tidak bisa diubah lagi</b>.</p>',
+      [{ label: 'Kirim saja', aksi: kirim },
+       { label: 'Kembali mengisi', utama: true, aksi: function(){
+           const p = panels[jawaban.indexOf(kosong[0])];
+           if(p) p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+         } }]);
+    return;
+  }
+  reflDialog('Kirim refleksi?',
+    '<p>Semua poin sudah terisi. Setelah dikirim, jawaban <b>terkunci</b> dan tidak bisa diubah lagi.</p>',
+    [{ label: 'Periksa lagi' }, { label: 'Kirim sekarang', utama: true, aksi: kirim }]);
+}
+
+function reflKirim(bid, root, jawaban){
+  const item = NAV[currentIdx];
+  const rec = {
+    block: bid,
+    slide: (item && item.num) || null,
+    judul_slide: reflTeks(document.querySelector('#viewport h1.slide-title')),
+    jawaban: jawaban.map(function(a){
+      return { id: a.id, no: a.no, q: a.q, tipe: a.tipe, pilihan: a.pilihan, lainnya: a.lainnya, teks: a.teks };
+    }),
+    ts: Date.now()
+  };
+  actEvent(REFL_EVENT, rec);
+  /* Langsung dikirim, tidak menunggu batch 15 detik: peserta bisa saja menutup
+     tab sesaat sesudah melihat "terkirim". Kalau gagal, outbox actFlush yang
+     menyimpan dan mengulangnya. */
+  actFlush();
+  try{ localStorage.setItem(reflKey(bid), JSON.stringify(rec)); }catch(e){}
+  reflTerapkanKunci(root, rec, true);
+}
+
+function reflTerapkanKunci(root, rec, baru){
+  (rec.jawaban || []).forEach(function(a){
+    const panel = root.querySelector('.refl-panel[data-item="' + a.id + '"]');
+    if(!panel) return;
+    if(a.tipe === 'isian'){
+      const t = panel.querySelector('.refl-text');
+      if(t) t.value = a.teks || '';
+    } else {
+      panel.querySelectorAll('.refl-opt').forEach(function(l){
+        const inp = l.querySelector('input');
+        inp.checked = inp.value === 'lainnya'
+          ? !!a.lainnya
+          : (a.pilihan || []).indexOf(reflTeks(l.querySelector('.refl-ot'))) >= 0;
+        l.classList.toggle('on', inp.checked);
+      });
+      const o = panel.querySelector('.refl-other');
+      if(o){ o.value = a.lainnya || ''; o.hidden = !a.lainnya; }
+    }
+    panel.classList.remove('missing');
+    panel.classList.toggle('answered', !!(a.teks || a.lainnya || (a.pilihan || []).length));
+  });
+  root.querySelectorAll('input,textarea').forEach(function(el){ el.disabled = true; });
+  root.classList.add('is-locked');
+  const st = root.querySelector('.refl-status');
+  if(st){
+    const w = new Date(rec.ts || Date.now());
+    st.className = 'refl-status ok';
+    st.textContent = (baru ? '✓ Refleksi terkirim. Terima kasih! ' : '✓ Refleksi sudah dikirim ') +
+      '(' + w.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + '). Jawaban terkunci.' +
+      (TRACK_READY ? '' : ' Pratinjau: jawaban tidak dikirim ke server.');
+  }
+}
+
+/* Dipanggil tiap slide dirender (render()). */
+function reflBindSlide(){
+  const roots = document.querySelectorAll('#viewport .refl');
+  if(!roots.length) return;
+  roots.forEach(function(root){
+    let rec = null;
+    try{ rec = JSON.parse(localStorage.getItem(reflKey(root.dataset.refl)) || 'null'); }catch(e){}
+    if(rec) reflTerapkanKunci(root, rec, false);
+    root.classList.add('refl-anim');
+  });
+  reflParallaxBind();
+  reflParallax();
+}
+
+/* Parallax: gambar latar bergeser lebih lambat dari isi halaman waktu
+   #viewport digulir. Pakai transform, bukan background-attachment:fixed -
+   yang itu mati di iOS dan di dalam wadah ber-overflow seperti #viewport. */
+let reflRaf = 0, reflBound = false;
+const reflDiam = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+function reflParallaxBind(){
+  if(reflBound) return;
+  const vp = document.getElementById('viewport');
+  if(!vp) return;
+  reflBound = true;
+  const jadwal = function(){ if(!reflRaf) reflRaf = requestAnimationFrame(function(){ reflRaf = 0; reflParallax(); }); };
+  vp.addEventListener('scroll', jadwal, { passive: true });
+  window.addEventListener('resize', jadwal);
+}
+function reflParallax(){
+  const vp = document.getElementById('viewport');
+  if(!vp || !vp.querySelector('.refl')) return;
+  const vr = vp.getBoundingClientRect();
+  const tengah = vr.top + vr.height / 2;
+  vp.querySelectorAll('.refl-card').forEach(function(c){
+    if(c.getBoundingClientRect().top < vr.bottom - 60) c.classList.add('in');
+  });
+  if(reflDiam) return;
+  vp.querySelectorAll('.refl-bg img, .refl-open-img img').forEach(function(img){
+    const box = img.parentElement.getBoundingClientRect();
+    if(box.bottom < vr.top - 80 || box.top > vr.bottom + 80) return;
+    const geser = box.top + box.height / 2 - tengah;
+    img.style.transform = img.parentElement.classList.contains('refl-open-img')
+      ? 'translate3d(0,' + (geser * -0.06).toFixed(1) + 'px,0) scale(1.08)'
+      : 'translate3d(0,' + (geser * -0.15).toFixed(1) + 'px,0)';
+  });
+}
 </script>
 </body>
 </html>

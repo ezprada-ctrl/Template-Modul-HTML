@@ -3,7 +3,8 @@ import { demoBoothJalan } from '../builderDemo/status';
 import type { CSSProperties } from 'react';
 import type { Block, BlockType, RataTeks } from '../types';
 import { newBlock, changeBlockType, isBlockEmpty, extractBlockText, POPUP_BLOCK_TYPES } from '../types';
-import type { KcQuestion } from '../types';
+import type { KcQuestion, ReflItem } from '../types';
+import { newReflItem } from '../types';
 import EmojiPicker from './EmojiPicker';
 import BlockAddMenu, { BLOCK_LABELS } from './BlockAddMenu';
 import { uploadArticulate, deleteArticulate } from '../api';
@@ -828,6 +829,8 @@ function BlockFields({ block, onChange }: { block: Block; onChange: (p: Partial<
       return <MediaFields block={block} onChange={onChange} inp={inp} />;
     case 'knowledge':
       return <KnowledgeFields block={block} onChange={onChange} inp={inp} ta={ta} />;
+    case 'reflection':
+      return <ReflectionFields block={block} onChange={onChange} inp={inp} ta={ta} />;
     case 'articulate':
       return <ArticulateFields block={block} onChange={onChange} inp={inp} />;
     case 'modal':
@@ -1668,6 +1671,124 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
         );
       })}
       <button onClick={() => onChange({ kcItems: [...items, { q: '', opts: ['', ''], correct: 0, feedback: '' }] })}>+ soal</button>
+    </>
+  );
+}
+
+/* Blok Refleksi. Isi pertanyaannya sepenuhnya milik penyusun modul - form ini
+   cuma menyediakan wadah: opening opsional, lalu poin demi poin, masing-
+   masing dengan gambar latar sendiri. Jawaban peserta dikirim sekali di akhir
+   rangkaian dan terkunci (lihat bagian REFLEKSI di shell-template.html). */
+function ReflectionFields({ block, onChange, inp, ta }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle; ta: FieldStyle }) {
+  const items = block.reflItems || [];
+  const lbl: CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-dim)', margin: '8px 0 3px' };
+  const kotak: CSSProperties = { border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-sm)', padding: 8, marginBottom: 8 };
+  function setItems(next: ReflItem[]) { onChange({ reflItems: next }); }
+  function patch(i: number, p: Partial<ReflItem>) { setItems(items.map((it, x) => (x === i ? { ...it, ...p } : it))); }
+  function geser(i: number, arah: -1 | 1) {
+    const j = i + arah;
+    if (j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    setItems(next);
+  }
+  return (
+    <>
+      <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
+        Peserta menjawab semua poin lalu menekan <b>Kirim Refleksi</b> sekali di akhir. Setelah terkirim, jawabannya terkunci.
+        Jawaban per nama &amp; NIP bisa diunduh di Command Center.
+      </p>
+
+      <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, fontWeight: 600, margin: '4px 0' }}>
+        <input type="checkbox" checked={!!block.reflOpening} onChange={e => onChange({ reflOpening: e.target.checked })} />
+        Pasang slide opening
+      </label>
+      {block.reflOpening && (
+        <div style={kotak}>
+          <label style={lbl}>Gambar opening</label>
+          <ImageUploadField value={block.reflOpeningImg || ''} onUploaded={src => onChange({ reflOpeningImg: src })} />
+          {block.reflOpeningImg && <button onClick={() => onChange({ reflOpeningImg: '' })}>Hapus gambar</button>}
+        </div>
+      )}
+
+      {items.map((it, i) => (
+        <div key={it.id} style={kotak}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+            <b style={{ fontSize: 12 }}>Poin {i + 1}</b>
+            <select style={{ ...inp, width: 'auto', marginBottom: 0 }} value={it.kind}
+                    onChange={e => {
+                      const kind = e.target.value as ReflItem['kind'];
+                      patch(i, kind === 'pilihan' && !(it.opts || []).length ? { kind, opts: ['', ''] } : { kind });
+                    }}>
+              <option value="pilihan">Pilihan (centang)</option>
+              <option value="isian">Isian bebas</option>
+            </select>
+            <span style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+              <button title="Naikkan" disabled={i === 0} onClick={() => geser(i, -1)}>↑</button>
+              <button title="Turunkan" disabled={i === items.length - 1} onClick={() => geser(i, 1)}>↓</button>
+              {items.length > 1 && <button title="Hapus poin" onClick={() => setItems(items.filter((_, x) => x !== i))}>×</button>}
+            </span>
+          </div>
+
+          <RichTextarea style={ta} placeholder="Pertanyaan refleksi" value={it.q} onChange={v => patch(i, { q: v })} />
+
+          {it.kind === 'pilihan' ? (
+            <>
+              <label style={lbl}>Pilihan jawaban</label>
+              {(it.opts || []).map((o, oi) => (
+                <div key={oi} style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                  <input style={{ ...inp, marginBottom: 0 }} placeholder={`Pilihan ${oi + 1}`} value={o} onChange={e => {
+                    const opts = [...(it.opts || [])]; opts[oi] = e.target.value; patch(i, { opts });
+                  }} />
+                  {(it.opts || []).length > 1 && (
+                    <button onClick={() => patch(i, { opts: (it.opts || []).filter((_, x) => x !== oi) })}>×</button>
+                  )}
+                </div>
+              ))}
+              <button onClick={() => patch(i, { opts: [...(it.opts || []), ''] })}>+ pilihan</button>
+              <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, margin: '8px 0 0' }}>
+                <input type="checkbox" checked={!!it.lainnya} onChange={e => patch(i, { lainnya: e.target.checked })} />
+                Tambahkan opsi “Lainnya” (membuka kolom isian)
+              </label>
+              <label style={lbl}>Batas pilihan</label>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input type="number" min={0} style={{ ...inp, width: 80, marginBottom: 0 }} value={it.max || 0}
+                       onChange={e => patch(i, { max: Math.max(0, parseInt(e.target.value, 10) || 0) })} />
+                <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>
+                  {!it.max ? '0 = bebas, boleh lebih dari satu' : it.max === 1 ? 'hanya boleh pilih satu' : `maksimal ${it.max} pilihan`}
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              <label style={lbl}>Petunjuk di dalam kolom isian</label>
+              <input style={inp} placeholder="mis. Tulis jawaban Anda di sini (1–2 kalimat)." value={it.placeholder || ''}
+                     onChange={e => patch(i, { placeholder: e.target.value })} />
+              <label style={lbl}>Contoh jawaban (opsional)</label>
+              {(it.contoh || []).map((c, ci) => (
+                <div key={ci} style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                  <input style={{ ...inp, marginBottom: 0 }} value={c} onChange={e => {
+                    const contoh = [...(it.contoh || [])]; contoh[ci] = e.target.value; patch(i, { contoh });
+                  }} />
+                  <button onClick={() => patch(i, { contoh: (it.contoh || []).filter((_, x) => x !== ci) })}>×</button>
+                </div>
+              ))}
+              <button onClick={() => patch(i, { contoh: [...(it.contoh || []), ''] })}>+ contoh</button>
+            </>
+          )}
+
+          <label style={lbl}>Keterangan (opsional — kosongkan untuk keterangan otomatis dari batas pilihan)</label>
+          <input style={inp} placeholder="mis. Pilih maksimal dua." value={it.hint || ''} onChange={e => patch(i, { hint: e.target.value })} />
+
+          <label style={lbl}>Gambar latar poin ini</label>
+          <ImageUploadField value={it.img || ''} onUploaded={src => patch(i, { img: src })} />
+          {it.img && <button onClick={() => patch(i, { img: '' })}>Hapus gambar</button>}
+        </div>
+      ))}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button onClick={() => setItems([...items, newReflItem('pilihan')])}>+ poin pilihan</button>
+        <button onClick={() => setItems([...items, newReflItem('isian')])}>+ poin isian</button>
+      </div>
     </>
   );
 }

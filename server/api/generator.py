@@ -686,6 +686,84 @@ def render_knowledge(b):
     return ''
 
 
+def render_reflection(b):
+    """Rangkaian poin refleksi: opening opsional, lalu satu panel per poin
+    dengan gambar latar yang digulir parallax, lalu tombol Kirim di ujung.
+
+    Semua perilaku (batas pilihan, kolom "Lainnya", pengingat poin yang belum
+    dijawab, kirim + kunci, efek parallax) ada di bagian REFLEKSI di
+    shell-template.html. Di sini cuma kerangkanya. Handler-nya atribut inline
+    (onchange/onclick), bukan <script>, karena slide disuntik lewat innerHTML.
+
+    Teks pertanyaan diperlakukan seperti isi Kartu (penyusun boleh pakai
+    <strong>/<em>); teks pilihan di-escape karena itulah yang dibaca ulang
+    dari DOM waktu jawaban dikirim.
+    """
+    bid = esc(str(b.get('id', 'refl')))
+    items = [it for it in (b.get('reflItems') or []) if (it.get('q') or '').strip()]
+    if not items:
+        return ('<div class="card"><p style="color:var(--text-faint);font-size:12.5px;">'
+                '⚠ Blok Refleksi belum punya poin pertanyaan.</p></div>')
+
+    def bg(src, cls='refl-bg'):
+        if not src:
+            return ''
+        return f'<div class="{cls}" aria-hidden="true"><img src="{esc(src)}" alt="" loading="lazy"></div>'
+
+    parts = [f'<div class="refl" data-refl="{bid}">']
+    if b.get('reflOpening') and b.get('reflOpeningImg'):
+        parts.append('<section class="refl-panel refl-opening">'
+                     f'<div class="refl-open-img"><img src="{esc(b["reflOpeningImg"])}" alt=""></div>'
+                     '<div class="refl-scroll-cue">Gulir untuk mulai refleksi ↓</div></section>')
+
+    total = len(items)
+    for n, it in enumerate(items, 1):
+        iid = esc(str(it.get('id') or f'p{n}'))
+        kind = 'isian' if it.get('kind') == 'isian' else 'pilihan'
+        mx = int(it.get('max') or 0)
+        hint = (it.get('hint') or '').strip()
+        if not hint and kind == 'pilihan':
+            hint = ('Pilih satu.' if mx == 1 else f'Pilih maksimal {mx}.' if mx > 1
+                    else 'Boleh pilih lebih dari satu.')
+        body = []
+        if kind == 'pilihan':
+            tipe = 'radio' if mx == 1 else 'checkbox'
+            opts = [o for o in (it.get('opts') or []) if (o or '').strip()]
+            for oi, o in enumerate(opts):
+                body.append(f'<label class="refl-opt"><input type="{tipe}" name="refl-{bid}-{iid}" value="{oi}" '
+                            f'onchange="reflPick(this)"><span class="refl-mk"></span>'
+                            f'<span class="refl-ot">{esc(o)}</span></label>')
+            if it.get('lainnya'):
+                body.append(f'<label class="refl-opt"><input type="{tipe}" name="refl-{bid}-{iid}" value="lainnya" '
+                            f'onchange="reflPick(this)"><span class="refl-mk"></span>'
+                            f'<span class="refl-ot">Lainnya</span></label>'
+                            '<textarea class="refl-other" rows="2" placeholder="Sebutkan…" '
+                            'oninput="reflDirty(this)" hidden></textarea>')
+            body = [f'<div class="refl-opts{" refl-opts-2" if len(opts) > 6 else ""}">'] + body + ['</div>']
+        else:
+            ph = esc(it.get('placeholder') or 'Tulis jawaban Anda di sini.')
+            body.append(f'<textarea class="refl-text" rows="4" placeholder="{ph}" oninput="reflDirty(this)"></textarea>')
+            contoh = [c for c in (it.get('contoh') or []) if (c or '').strip()]
+            if contoh:
+                body.append('<div class="refl-contoh"><b>💡 Contoh:</b>'
+                            + ''.join(f'<span>“{esc(c)}”</span>' for c in contoh) + '</div>')
+        hint_html = f'<div class="refl-hint">ⓘ {esc(hint)}</div>' if hint else ''
+        parts.append(
+            f'<section class="refl-panel{" has-bg" if it.get("img") else ""}" data-item="{iid}" '
+            f'data-kind="{kind}" data-max="{mx}">'
+            + bg(it.get('img')) +
+            '<div class="refl-card">'
+            f'<div class="refl-no">Refleksi {n} dari {total}</div>'
+            f'<h3 class="refl-q">{nl2br(it.get("q", ""))}</h3>'
+            + ''.join(body) + hint_html +
+            '</div></section>')
+
+    parts.append('<div class="refl-foot">'
+                 f'<button type="button" class="refl-submit" onclick="reflSubmit(\'{bid}\')">Kirim Refleksi</button>'
+                 '<div class="refl-status" role="status"></div></div></div>')
+    return ''.join(parts)
+
+
 def kc_items_for_slide(slide):
     """Collect all knowledge-check blocks on a slide into the shape the shell's
     popup needs. q/opts are HTML-escaped and feedback nl2br'd here so the shell
@@ -873,6 +951,7 @@ BLOCK_RENDERERS = {
     'media': render_media,
     'knowledge': render_knowledge,
     'articulate': render_articulate,
+    'reflection': render_reflection,
 }
 
 

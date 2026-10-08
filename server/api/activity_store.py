@@ -1228,6 +1228,7 @@ def recap_for_learner(module_slug, learner_id, live_session_id=None, live_total_
     # Ini krusial: mode perOption ngasih peserta ngulang SAMPAI benar, jadi
     # kalau dipukul rata semua percobaan, hampir semua orang keliatan 100%.
     kc_pertama = {}
+    refleksi_blok = set()
 
     for r in rows:
         if r.get('learner_name'):
@@ -1275,6 +1276,8 @@ def recap_for_learner(module_slug, learner_id, live_session_id=None, live_total_
             k = _interaksi_key(p)
             if k:
                 interaksi_unik.add(k)
+        elif t == REFLEKSI_EVENT and p.get('block'):
+            refleksi_blok.add(p['block'])
 
     # Sesi yang lagi berjalan: totalnya belum pernah dikirim lewat session_end
     # (peserta masih di dalam modul), jadi diambil dari setoran modul. Kalau
@@ -1366,6 +1369,8 @@ def recap_for_learner(module_slug, learner_id, live_session_id=None, live_total_
         'kuis_terparah': kuis_section_terparah,
         'interaktif_diklik': interaktif_diklik,
         'total_interaktif': total_interaktif,
+        # Bukan sinyal belajar (gak ikut menentukan cabang) - cuma pengingat.
+        'refleksi_terkirim': len(refleksi_blok),
         'sinyal': sinyal,
         'jumlah_jelek': jumlah_jelek,
         'cabang': cabang,
@@ -1591,3 +1596,40 @@ def _urutan_baca(r):
         str(r.get('section') or ''),
         r['slide'] if isinstance(r['slide'], int) else 9999,
     )
+
+
+# ---------------------------------------------------------------- REFLEKSI
+# Satu event `reflection_submit` = satu blok Refleksi yang dikirim peserta,
+# berisi SEMUA jawabannya sebagai teks (lihat bagian REFLEKSI di
+# shell-template.html). Modul mengunci blok sesudah terkirim, tapi peserta
+# yang pindah perangkat masih bisa mengirim lagi - yang dipakai kiriman
+# PERTAMA, karena itulah jawaban yang terkunci di layarnya.
+REFLEKSI_EVENT = 'reflection_submit'
+
+
+def refleksi_rows(module_slug):
+    """Kiriman refleksi satu modul: satu entri per (peserta, blok)."""
+    rows = _tanpa_uji(fetch_rows(
+        module_slug=module_slug,
+        columns='session_id,learner_id,learner_name,event_type,payload,created_at',
+        event_type=REFLEKSI_EVENT))
+    pertama = {}
+    for r in rows:      # urut created_at.asc -> kemunculan pertama = kiriman pertama
+        p = r.get('payload') or {}
+        pemilik = r.get('learner_id') or f"?{r.get('session_id')}"
+        kunci = (pemilik, p.get('block'))
+        if kunci in pertama:
+            pertama[kunci]['jumlah_kirim'] += 1
+            continue
+        pertama[kunci] = {
+            'learner_id': r.get('learner_id') or '',
+            'learner_name': r.get('learner_name') or '',
+            'block': p.get('block') or '',
+            'slide': p.get('slide'),
+            'judul_slide': p.get('judul_slide') or '',
+            'dikirim': r.get('created_at') or '',
+            'jawaban': p.get('jawaban') or [],
+            'jumlah_kirim': 1,
+        }
+    return sorted(pertama.values(),
+                  key=lambda x: ((x['learner_name'] or '').lower(), x['learner_id'], x['slide'] or 0))

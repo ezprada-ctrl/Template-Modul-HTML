@@ -2,6 +2,7 @@ import { Fragment, useState } from 'react';
 import type { ActivityModule, ActivitySession, ActivityLearner, CocreationModule, CocreationNote, SesiDitandai, RincianSlide, RincianVideo } from '../api';
 import { ccCocreation, ccListModules, ccListSessions, ccListLearners, ccRawRows, ccRincian, ccTandaiUji, ccBatalkanTanda, ccDitandai } from '../api';
 import PanduanBaca from './PanduanBaca';
+import RefleksiPanel from './RefleksiPanel';
 import { RingkasanBar, perluTindakLanjut, WADAH_TABEL, TH_ATAS, TH_NAMA, SEL_NAMA, NamaPeserta, PeringatanRincian, VideoRincian } from './ccTabel';
 import { DEMO_MODULES, DEMO_SESSIONS, DEMO_LEARNERS, DEMO_COCREATION } from '../demoActivityData';
 
@@ -259,7 +260,7 @@ export default function CommandCenter() {
   // sesi karena bentuknya beda total: tabel sesi itu angka per orang, catatan
   // itu teks yang dikelompokkan per SLIDE - dipakai buat menyiapkan bahan
   // diskusi kelas, bukan buat menilai peserta.
-  const [modulTab, setModulTab] = useState<'sesi' | 'cocreation'>('sesi');
+  const [modulTab, setModulTab] = useState<'sesi' | 'cocreation' | 'refleksi'>('sesi');
   const [cocreation, setCocreation] = useState<CocreationModule[]>([]);
   /* Dua sudut pandang atas data yang SAMA. Per peserta menjawab "si A nulis
      apa saja"; per slide menjawab "bagian mana yang bikin banyak orang
@@ -1274,7 +1275,16 @@ export default function CommandCenter() {
                     title="Catatan Co-creation peserta, dikelompokkan per slide">
               Catatan Co-creation
             </button>
+            <button className={modulTab === 'refleksi' ? 'btn-primary btn-sm' : 'btn-sm'}
+                    onClick={() => setModulTab('refleksi')}
+                    title="Jawaban blok Refleksi per nama & NIP, bisa diunduh sebagai Excel">
+              Refleksi
+            </button>
           </div>
+
+          {modulTab === 'refleksi' && (
+            <RefleksiPanel password={password} slug={activeSlug} judul={activeTitle || activeSlug} demo={demoMode} />
+          )}
 
           {modulTab === 'sesi' && (<>
           {sessions.length > 0 && (() => {

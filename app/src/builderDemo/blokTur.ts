@@ -316,6 +316,31 @@ export const TUR_BLOK: EntriBlok[] = [
     },
   },
   {
+    tipe: 'reflection',
+    caption: 'Refleksi — rangkaian poin renungan bergambar yang digulir parallax. Jawaban tiap peserta tercatat per nama & NIP dan bisa diunduh sebagai Excel.',
+    cobaCaption: 'Batas pilihan ditegakkan sendiri — centang melebihi batas ditolak dengan pemberitahuan.',
+    coba: [
+      { sel: '.refl-panel[data-item] .refl-opt:nth-child(1)', jeda: 900 },
+      { sel: '.refl-panel[data-item] .refl-opt:nth-child(2)', jeda: 900 },
+      { sel: '.refl-panel[data-item] .refl-opt:nth-child(3)', jeda: 2400 },
+    ],
+    isi: ['Titik mana yang paling butuh perhatian di unit Anda?'],
+    lengkap: {
+      reflItems: [
+        {
+          id: 'demo-r1', kind: 'pilihan', max: 2, lainnya: true,
+          q: 'Titik mana yang paling butuh perhatian di unit Anda?',
+          opts: ['Perencanaan anggaran', 'Pelaksanaan pembayaran', 'Pertanggungjawaban'],
+        },
+        {
+          id: 'demo-r2', kind: 'isian',
+          q: 'Satu pertanyaan apa yang ingin Anda bawa ke sesi klasikal?',
+          placeholder: 'Tulis jawaban Anda di sini (1–2 kalimat).',
+        },
+      ],
+    },
+  },
+  {
     tipe: 'articulate',
     lewati: true,
     caption: 'Paket Articulate 360 juga bisa ditanam utuh — cukup unggah berkas ZIP hasil publish-nya.',
