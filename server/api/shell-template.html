@@ -5024,7 +5024,7 @@ function render(opts){
   // slide popup, gated in goTo().
   applySlideAudio(item);
   artBindSlide(item);
-  reflBindSlide();
+  try{ reflBindSlide(); }catch(e){ if(window.console) console.error('refleksi:', e); }
   if(HAS_INSTAGRAM && window.instgrm && window.instgrm.Embeds){
     try{ window.instgrm.Embeds.process(); }catch(e){}
   }
@@ -7291,7 +7291,7 @@ presDemoInit();
      kemudian mengubah urutan/teks pilihan. Kunci disimpan di localStorage
      per modul+NIP+blok: membuka ulang slide/modul menampilkan jawaban yang
      sudah terkunci. */
-const REFL_EVENT = 'reflection_submit';
+var REFL_EVENT = 'reflection_submit';
 
 function reflKey(bid){
   const id = state.identity || {};
@@ -7476,17 +7476,41 @@ function reflBindSlide(){
     let rec = null;
     try{ rec = JSON.parse(localStorage.getItem(reflKey(root.dataset.refl)) || 'null'); }catch(e){}
     if(rec) reflTerapkanKunci(root, rec, false);
-    root.classList.add('refl-anim');
+    reflAmatiKartu(root);
+    root.querySelectorAll('img').forEach(function(img){
+      if(!img.complete) img.addEventListener('load', reflParallax, { once: true });
+    });
   });
   reflParallaxBind();
   reflParallax();
 }
 
+/* Kartu muncul halus saat masuk layar. Pakai IntersectionObserver, BUKAN
+   cek posisi di event scroll: di panel Live Preview builder, modul dimuat
+   di iframe yang ukurannya belum final dan tidak pernah digulir - cek posisi
+   sekali di awal salah hitung, dan kartunya tersembunyi selamanya (opsi
+   jawaban "tidak muncul"). Observer ikut menghitung ulang tiap tata letak
+   berubah. Tanpa observer (browser lama) = tidak ada animasi, langsung tampil. */
+function reflAmatiKartu(root){
+  if(reflDiamKah() || !('IntersectionObserver' in window)) return;
+  const obs = new IntersectionObserver(function(entri){
+    entri.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.08 });
+  root.querySelectorAll('.refl-card').forEach(function(c){ obs.observe(c); });
+  root.classList.add('refl-anim');
+}
+
 /* Parallax: gambar latar bergeser lebih lambat dari isi halaman waktu
    #viewport digulir. Pakai transform, bukan background-attachment:fixed -
    yang itu mati di iOS dan di dalam wadah ber-overflow seperti #viewport. */
-let reflRaf = 0, reflBound = false;
-const reflDiam = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+/* `var`, bukan let/const: render() pertama jalan SEBELUM baris ini
+   dieksekusi (script dibaca dari atas ke bawah), dan let/const di situ
+   melempar ReferenceError yang menggugurkan seluruh render slide - di
+   Live Preview builder itu bikin kartu refleksi tak pernah muncul. */
+var reflRaf = 0, reflBound = false;
+function reflDiamKah(){ return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
 function reflParallaxBind(){
   if(reflBound) return;
   const vp = document.getElementById('viewport');
@@ -7501,10 +7525,7 @@ function reflParallax(){
   if(!vp || !vp.querySelector('.refl')) return;
   const vr = vp.getBoundingClientRect();
   const tengah = vr.top + vr.height / 2;
-  vp.querySelectorAll('.refl-card').forEach(function(c){
-    if(c.getBoundingClientRect().top < vr.bottom - 60) c.classList.add('in');
-  });
-  if(reflDiam) return;
+  if(reflDiamKah()) return;
   vp.querySelectorAll('.refl-bg img, .refl-open-img img').forEach(function(img){
     const box = img.parentElement.getBoundingClientRect();
     if(box.bottom < vr.top - 80 || box.top > vr.bottom + 80) return;
