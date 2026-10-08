@@ -37,6 +37,15 @@ function kolomPoin(items: RefleksiKiriman[]): Kolom[] {
   return [...peta.values()].sort((x, y) => (x.slide ?? 0) - (y.slide ?? 0) || x.no - y.no);
 }
 
+// Semua sel rata ATAS: satu jawaban panjang tidak boleh membuat NIP/nama
+// melayang di tengah baris yang tingginya ratusan piksel.
+const SEL = { padding: '8px 10px', borderBottom: '1px solid var(--border)', verticalAlign: 'top' } as const;
+// NIP & nama menempel di kiri waktu tabel digeser ke samping.
+const TETAP = [
+  { left: 0, minWidth: 170, maxWidth: 170 },
+  { left: 170, minWidth: 190, maxWidth: 190, boxShadow: '2px 0 0 var(--border)' },
+] as const;
+
 export default function RefleksiPanel({ password, slug, judul, demo }: { password: string; slug: string; judul: string; demo: boolean }) {
   const [items, setItems] = useState<RefleksiKiriman[]>([]);
   const [busy, setBusy] = useState(false);
@@ -80,7 +89,7 @@ export default function RefleksiPanel({ password, slug, judul, demo }: { passwor
       sheet2.push([k.slide == null ? '' : String(k.slide), `R${k.no}`, k.q, p.nip, p.nama,
                    a ? (jawabanTeks(a) || '(tidak dijawab)') : '(tidak dijawab)', waktu(p.dikirim)]);
     }
-    const sheet3: string[][] = [['Slide', 'No poin', 'Pertanyaan', 'Pilihan', 'Jumlah peserta', 'Persen']];
+    const sheet3: string[][] = [['Slide', 'No poin', 'Pertanyaan', 'Pilihan', 'Jumlah peserta yang memilih', 'Persen dari yang menjawab poin ini', 'Total yang menjawab poin ini']];
     for (const k of poin.filter(x => x.tipe === 'pilihan')) {
       const hitung = new Map<string, number>();
       let penjawab = 0;
@@ -93,13 +102,13 @@ export default function RefleksiPanel({ password, slug, judul, demo }: { passwor
       }
       [...hitung.entries()].sort((x, y) => y[1] - x[1]).forEach(([o, n]) => {
         sheet3.push([k.slide == null ? '' : String(k.slide), `R${k.no}`, k.q, o, String(n),
-                     penjawab ? `${Math.round(n / penjawab * 100)}%` : '']);
+                     penjawab ? `${Math.round(n / penjawab * 100)}%` : '', String(penjawab)]);
       });
     }
     const blob = await buatXlsx([
       { name: 'Per Peserta', rows: sheet1, widths: [5, 22, 28, 20, ...poin.map(() => 45)] },
       { name: 'Per Pertanyaan', rows: sheet2, widths: [7, 8, 50, 22, 28, 60, 20] },
-      { name: 'Rekap Pilihan', rows: sheet3, widths: [7, 8, 50, 45, 14, 10] },
+      { name: 'Rekap Pilihan', rows: sheet3, widths: [7, 8, 50, 45, 16, 20, 16] },
     ]);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -126,26 +135,32 @@ export default function RefleksiPanel({ password, slug, judul, demo }: { passwor
         </button>
       </div>
       {terpotong && <p className="hint" style={{ color: 'var(--danger)' }}>⚠ Data kena batas tarikan, yang tampil baru sebagian.</p>}
-      <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-        <table style={{ borderCollapse: 'collapse', fontSize: 12.5, minWidth: '100%' }}>
+      <div style={{ overflow: 'auto', maxHeight: '70vh', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+        <table style={{ borderCollapse: 'separate', borderSpacing: 0, fontSize: 12.5, minWidth: '100%' }}>
           <thead>
             <tr>
               {['NIP', 'Nama', 'Waktu kirim', ...poin.map(labelPoin)].map((h, i) => (
-                <th key={i} style={{ textAlign: 'left', padding: '8px 10px', borderBottom: '1px solid var(--border)',
-                                     background: 'var(--surface-2)', minWidth: i > 2 ? 220 : undefined, verticalAlign: 'bottom' }}>{h}</th>
+                <th key={i} style={{ ...SEL, ...(i < 2 ? TETAP[i] : null), top: 0, zIndex: i < 2 ? 4 : 3, position: 'sticky',
+                                     textAlign: 'left', background: 'var(--surface-2)', verticalAlign: 'bottom',
+                                     minWidth: i > 2 ? 240 : undefined, maxWidth: i > 2 ? 340 : undefined }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {peserta.map((p, i) => (
               <tr key={i}>
-                <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{p.nip || '—'}</td>
-                <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{p.nama || '—'}</td>
-                <td style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap' }}>{waktu(p.dikirim)}</td>
+                <td style={{ ...SEL, ...TETAP[0], position: 'sticky', background: 'var(--surface)', zIndex: 2, fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{p.nip || '—'}</td>
+                <td style={{ ...SEL, ...TETAP[1], position: 'sticky', background: 'var(--surface)', zIndex: 2, fontWeight: 600 }}>{p.nama || '—'}</td>
+                <td style={{ ...SEL, whiteSpace: 'nowrap' }}>{waktu(p.dikirim)}</td>
                 {poin.map(k => {
                   const t = jawabanTeks(p.jawab.get(k.kunci));
-                  return <td key={k.kunci} style={{ padding: '8px 10px', borderBottom: '1px solid var(--border)', verticalAlign: 'top',
-                                                    color: t ? undefined : 'var(--text-faint)' }}>{t || 'tidak dijawab'}</td>;
+                  return (
+                    <td key={k.kunci} style={{ ...SEL, minWidth: 240, maxWidth: 340 }}>
+                      {t
+                        ? <div style={{ maxHeight: 150, overflowY: 'auto', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{t}</div>
+                        : <span style={{ color: 'var(--text-faint)' }}>tidak dijawab</span>}
+                    </td>
+                  );
                 })}
               </tr>
             ))}

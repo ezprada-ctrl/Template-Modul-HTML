@@ -1599,11 +1599,16 @@ def _urutan_baca(r):
 
 
 # ---------------------------------------------------------------- REFLEKSI
-# Satu event `reflection_submit` = satu blok Refleksi yang dikirim peserta,
-# berisi SEMUA jawabannya sebagai teks (lihat bagian REFLEKSI di
-# shell-template.html). Modul mengunci blok sesudah terkirim, tapi peserta
-# yang pindah perangkat masih bisa mengirim lagi - yang dipakai kiriman
-# PERTAMA, karena itulah jawaban yang terkunci di layarnya.
+# Blok Refleksi menulis SATU baris `reflection_answer` per poin (jawaban
+# sebagai TEKS, bukan nomor opsi) plus satu penanda `reflection_submit`
+# per kali kirim. Dipecah per poin karena tabel menolak baris > 8 KB dan
+# penolakan membuang seluruh batch (lihat catatan di shell-template.html).
+# Semua baris satu kali kirim memakai `sub` (waktu kirim) yang sama.
+#
+# Peserta yang pindah perangkat masih bisa mengirim lagi; yang dipakai
+# kiriman PERTAMA (`sub` terkecil per peserta+blok), karena itulah yang
+# terkunci di layarnya.
+REFLEKSI_JAWAB = 'reflection_answer'
 REFLEKSI_EVENT = 'reflection_submit'
 
 
@@ -1612,24 +1617,41 @@ def refleksi_rows(module_slug):
     rows = _tanpa_uji(fetch_rows(
         module_slug=module_slug,
         columns='session_id,learner_id,learner_name,event_type,payload,created_at',
-        event_type=REFLEKSI_EVENT))
-    pertama = {}
-    for r in rows:      # urut created_at.asc -> kemunculan pertama = kiriman pertama
+        event_type=REFLEKSI_JAWAB))
+    # (pemilik, blok) -> {sub: entri}
+    kirim = {}
+    for r in rows:
         p = r.get('payload') or {}
-        pemilik = r.get('learner_id') or f"?{r.get('session_id')}"
-        kunci = (pemilik, p.get('block'))
-        if kunci in pertama:
-            pertama[kunci]['jumlah_kirim'] += 1
+        if not p.get('block') or p.get('sub') is None:
             continue
-        pertama[kunci] = {
-            'learner_id': r.get('learner_id') or '',
-            'learner_name': r.get('learner_name') or '',
-            'block': p.get('block') or '',
-            'slide': p.get('slide'),
-            'judul_slide': p.get('judul_slide') or '',
-            'dikirim': r.get('created_at') or '',
-            'jawaban': p.get('jawaban') or [],
-            'jumlah_kirim': 1,
+        pemilik = r.get('learner_id') or f"?{r.get('session_id')}"
+        per_sub = kirim.setdefault((pemilik, p['block']), {})
+        e = per_sub.get(p['sub'])
+        if e is None:
+            e = per_sub[p['sub']] = {
+                'learner_id': r.get('learner_id') or '',
+                'learner_name': r.get('learner_name') or '',
+                'block': p['block'],
+                'slide': p.get('slide'),
+                'judul_slide': p.get('judul_slide') or '',
+                'dikirim': r.get('created_at') or '',
+                'jawaban': {},
+            }
+        if r.get('learner_name') and not e['learner_name']:
+            e['learner_name'] = r['learner_name']
+        # Baris yang sama bisa tiba dua kali (kirim ulang dari antrean).
+        e['jawaban'][p.get('id')] = {
+            'id': p.get('id'), 'no': p.get('no') or 0, 'q': p.get('q') or '',
+            'tipe': 'isian' if p.get('tipe') == 'isian' else 'pilihan',
+            'pilihan': p.get('pilihan') or [], 'lainnya': p.get('lainnya') or '',
+            'teks': p.get('teks') or '',
         }
-    return sorted(pertama.values(),
-                  key=lambda x: ((x['learner_name'] or '').lower(), x['learner_id'], x['slide'] or 0))
+        if (r.get('created_at') or '') < (e['dikirim'] or '~'):
+            e['dikirim'] = r['created_at']
+    hasil = []
+    for per_sub in kirim.values():
+        pertama = per_sub[min(per_sub)]
+        pertama['jumlah_kirim'] = len(per_sub)
+        pertama['jawaban'] = sorted(pertama['jawaban'].values(), key=lambda j: j['no'])
+        hasil.append(pertama)
+    return sorted(hasil, key=lambda x: ((x['learner_name'] or '').lower(), x['learner_id'], x['slide'] or 0))

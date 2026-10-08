@@ -1283,7 +1283,7 @@ export default function CommandCenter() {
           </div>
 
           {modulTab === 'refleksi' && (
-            <RefleksiPanel password={password} slug={activeSlug} judul={activeTitle || activeSlug} demo={demoMode} />
+            <RefleksiPanel password={password} slug={activeSlug} judul={activeTitle || (modules.find(m => m.module_slug === activeSlug)?.judul_modul || []).join(' - ') || activeSlug} demo={demoMode} />
           )}
 
           {modulTab === 'sesi' && (<>

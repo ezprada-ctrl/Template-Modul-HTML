@@ -737,12 +737,12 @@ def render_reflection(b):
                 body.append(f'<label class="refl-opt"><input type="{tipe}" name="refl-{bid}-{iid}" value="lainnya" '
                             f'onchange="reflPick(this)"><span class="refl-mk"></span>'
                             f'<span class="refl-ot">Lainnya</span></label>'
-                            '<textarea class="refl-other" rows="2" placeholder="Sebutkan…" '
+                            '<textarea class="refl-other" rows="2" maxlength="300" placeholder="Sebutkan…" '
                             'oninput="reflDirty(this)" hidden></textarea>')
             body = [f'<div class="refl-opts{" refl-opts-2" if len(opts) > 6 else ""}">'] + body + ['</div>']
         else:
             ph = esc(it.get('placeholder') or 'Tulis jawaban Anda di sini.')
-            body.append(f'<textarea class="refl-text" rows="4" placeholder="{ph}" oninput="reflDirty(this)"></textarea>')
+            body.append(f'<textarea class="refl-text" rows="4" maxlength="1200" placeholder="{ph}" oninput="reflDirty(this)"></textarea>')
             contoh = [c for c in (it.get('contoh') or []) if (c or '').strip()]
             if contoh:
                 body.append('<div class="refl-contoh"><b>💡 Contoh:</b>'

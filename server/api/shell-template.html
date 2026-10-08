@@ -1860,8 +1860,10 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
 .refl-foot{display:flex;flex-direction:column;align-items:center;gap:10px;padding:6px 0 4px;}
 .refl-submit{background:var(--navy);color:#fff;border:0;border-radius:14px;padding:14px 34px;font:inherit;font-weight:800;
   font-size:15px;cursor:pointer;box-shadow:var(--shadow-md);transition:transform .15s,filter .15s;}
+.refl-submit:disabled{opacity:.6;cursor:wait;}
 .refl-submit:hover{transform:translateY(-1px);filter:brightness(1.1);}
 .refl-status{font-size:13px;color:var(--text-dim);text-align:center;}
+.refl-status.err{color:#b3261e;font-weight:700;background:rgba(179,38,30,.10);padding:10px 16px;border-radius:12px;}
 .refl-status.ok{color:#2f9e6a;font-weight:700;background:rgba(47,158,106,.12);padding:10px 16px;border-radius:12px;}
 .refl.is-locked .refl-submit{display:none;}
 .refl.is-locked .refl-opt{cursor:default;transform:none;}
@@ -7415,27 +7417,87 @@ function reflSubmit(bid){
     [{ label: 'Periksa lagi' }, { label: 'Kirim sekarang', utama: true, aksi: kirim }]);
 }
 
-function reflKirim(bid, root, jawaban){
-  const item = NAV[currentIdx];
-  const rec = {
-    block: bid,
-    slide: (item && item.num) || null,
-    judul_slide: reflTeks(document.querySelector('#viewport h1.slide-title')),
-    jawaban: jawaban.map(function(a){
-      return { id: a.id, no: a.no, q: a.q, tipe: a.tipe, pilihan: a.pilihan, lainnya: a.lainnya, teks: a.teks };
-    }),
-    ts: Date.now()
+/* Satu event per POIN (+ satu penanda), bukan satu event berisi semuanya.
+   Tabel rekaman menolak baris > 8 KB, dan penolakan 4xx membuang SELURUH
+   batch kiriman (lihat actSend) - satu isian panjang dalam satu event besar
+   bisa menghilangkan jawaban semua poin sekaligus. Per poin, tiap baris
+   dibatasi panjangnya dan satu yang bermasalah tidak menyeret yang lain.
+   `sub` = penanda satu kali kirim; kalau peserta mengirim lagi dari perangkat
+   lain, backend memakai `sub` TERKECIL (kiriman pertama = yang terkunci). */
+function reflPotong(t, n){ t = String(t || ''); return t.length > n ? t.slice(0, n) : t; }
+
+function reflBaris(tipe, payload){
+  const id = state.identity || {};
+  return {
+    module_slug: MODULE_SLUG, session_id: actSessionId,
+    learner_id: id.nip || null, learner_name: id.nama || null,
+    event_type: tipe, payload: payload, client_ts: new Date().toISOString()
   };
-  actEvent(REFL_EVENT, rec);
-  /* Langsung dikirim, tidak menunggu batch 15 detik: peserta bisa saja menutup
-     tab sesaat sesudah melihat "terkirim". Kalau gagal, outbox actFlush yang
-     menyimpan dan mengulangnya. */
-  actFlush();
-  try{ localStorage.setItem(reflKey(bid), JSON.stringify(rec)); }catch(e){}
-  reflTerapkanKunci(root, rec, true);
 }
 
-function reflTerapkanKunci(root, rec, baru){
+function reflKirim(bid, root, jawaban){
+  const item = NAV[currentIdx];
+  const sub = Date.now();
+  const slide = (item && item.num) || null;
+  const judul = reflPotong(reflTeks(document.querySelector('#viewport h1.slide-title')), 120);
+  const rec = {
+    block: bid, slide: slide, judul_slide: judul, sub: sub, ts: sub,
+    jawaban: jawaban.map(function(a){
+      return { id: a.id, no: a.no, q: reflPotong(a.q, 240), tipe: a.tipe,
+               pilihan: a.pilihan.map(function(x){ return reflPotong(x, 200); }),
+               lainnya: reflPotong(a.lainnya, 300), teks: reflPotong(a.teks, 1200) };
+    })
+  };
+  const baris = rec.jawaban.map(function(a){
+    return reflBaris('reflection_answer', {
+      block: bid, sub: sub, slide: slide, judul_slide: judul,
+      id: a.id, no: a.no, q: a.q, tipe: a.tipe, pilihan: a.pilihan, lainnya: a.lainnya, teks: a.teks });
+  });
+  baris.push(reflBaris('reflection_submit', { block: bid, sub: sub, slide: slide, total: rec.jawaban.length }));
+
+  const st = root.querySelector('.refl-status');
+  const tombol = root.querySelector('.refl-submit');
+  const rekam = TRACK_READY && actSessionId && !devTrackStop;
+  const selesai = function(pesan, kunci){
+    if(tombol) tombol.disabled = false;
+    if(kunci){
+      try{ localStorage.setItem(reflKey(bid), JSON.stringify(rec)); }catch(e){}
+      reflTerapkanKunci(root, rec, true, pesan);
+    } else if(st){
+      st.className = 'refl-status err';
+      st.textContent = pesan;
+    }
+  };
+  if(!rekam){
+    /* Pratinjau / Dev Mode / pelacakan mati: jujur bilang tidak direkam,
+       jangan pura-pura terkirim. */
+    selesai('Pratinjau: jawabanmu TIDAK direkam ke server (pelacakan nonaktif atau Dev Mode).', true);
+    return;
+  }
+  if(tombol) tombol.disabled = true;
+  if(st){ st.className = 'refl-status'; st.textContent = 'Mengirim…'; }
+  fetch(SUPA_URL + '/rest/v1/modul_activity', {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY,
+               'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify(baris)
+  }).then(function(res){
+    if(res.ok){ selesai('', true); return; }
+    if(res.status === 429 || res.status >= 500){
+      /* Gangguan sementara di server: disimpan di antrean perangkat dan
+         dikirim ulang otomatis (outbox yang sama dengan aktivitas lain). */
+      outboxPush(baris);
+      selesai('Jawabanmu tersimpan di perangkat dan akan dikirim otomatis begitu koneksi pulih.', true);
+      return;
+    }
+    selesai('Refleksi gagal dikirim (kode ' + res.status + '). Coba lagi, atau hubungi pengelola pelatihan.', false);
+  }).catch(function(){
+    outboxPush(baris);
+    selesai('Jawabanmu tersimpan di perangkat dan akan dikirim otomatis begitu koneksi pulih.', true);
+  });
+}
+
+function reflTerapkanKunci(root, rec, baru, catatan){
   (rec.jawaban || []).forEach(function(a){
     const panel = root.querySelector('.refl-panel[data-item="' + a.id + '"]');
     if(!panel) return;
@@ -7462,9 +7524,13 @@ function reflTerapkanKunci(root, rec, baru){
   if(st){
     const w = new Date(rec.ts || Date.now());
     st.className = 'refl-status ok';
-    st.textContent = (baru ? '✓ Refleksi terkirim. Terima kasih! ' : '✓ Refleksi sudah dikirim ') +
-      '(' + w.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + '). Jawaban terkunci.' +
-      (TRACK_READY ? '' : ' Pratinjau: jawaban tidak dikirim ke server.');
+    const kapan = '(' + w.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + ')';
+    /* `catatan` = keadaan khusus (antre di perangkat / tidak direkam): dia
+       MENGGANTIKAN kalimat "terkirim", supaya tidak ada pesan yang bilang
+       terkirim dan belum terkirim sekaligus. */
+    st.textContent = catatan
+      ? '✓ ' + catatan + ' Jawaban terkunci ' + kapan + '.'
+      : (baru ? '✓ Refleksi terkirim. Terima kasih! ' : '✓ Refleksi sudah dikirim ') + kapan + '. Jawaban terkunci.';
   }
 }
 
