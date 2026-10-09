@@ -1812,7 +1812,17 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
   min-height:min(78vh,660px);display:flex;align-items:center;justify-content:center;
   padding:clamp(18px,4vw,52px);background:linear-gradient(160deg,var(--navy-soft),var(--accent-soft));}
 .refl-bg{position:absolute;inset:0;z-index:-2;overflow:hidden;}
-.refl-bg img{position:absolute;left:0;top:-30%;width:100%;height:160%;object-fit:cover;will-change:transform;}
+/* Gambar sedikit lebih besar dari panel (margin 7% tiap sisi) sebagai ruang
+   gerak parallax. Skalanya seragam, jadi gambar tidak melar. */
+.refl-bg img{position:absolute;left:-7%;top:-7%;width:114%;height:114%;object-fit:cover;will-change:transform;}
+/* Tinggi panel mengikuti rasio gambar yang diunggah: reflSesuaikan menulis
+   min-height inline (lebar / rasio). Bukan aspect-ratio: panel ini overflow:
+   hidden, jadi aspect-ratio TIDAK mau tumbuh mengikuti isi dan kartu yang lebih
+   tinggi terpotong. Dengan min-height, kartu yang tinggi tetap melebarkan panel. */
+/* Rasio terlalu ekstrem (jauh lebih tinggi/lebar dari yang wajar buat panel):
+   gambar ditampilkan UTUH, sisanya diisi salinannya yang diburamkan. */
+.refl-panel.refl-contain .refl-bg img{left:0;top:0;width:100%;height:100%;object-fit:contain;}
+.refl-bg-blur{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(24px) saturate(1.15);}
 .refl-panel.has-bg::after{content:'';position:absolute;inset:0;z-index:-1;
   background:linear-gradient(180deg,rgba(10,18,40,.05),rgba(10,18,40,.32));}
 .refl-card{position:relative;width:min(100%,740px);border:1px solid var(--border);border-radius:var(--radius-lg);
@@ -7544,7 +7554,8 @@ function reflBindSlide(){
     if(rec) reflTerapkanKunci(root, rec, false);
     reflAmatiKartu(root);
     root.querySelectorAll('img').forEach(function(img){
-      if(!img.complete) img.addEventListener('load', reflParallax, { once: true });
+      reflSesuaikan(img);
+      if(!img.complete) img.addEventListener('load', function(){ reflSesuaikan(img); reflParallax(); }, { once: true });
     });
   });
   reflParallaxBind();
@@ -7602,13 +7613,60 @@ function reflParallax(){
     if(img.parentElement.classList.contains('refl-open-img')){
       img.style.transform = 'translate3d(0,' + (geser * -0.1).toFixed(1) + 'px,0) scale(1.12)';
     } else {
-      /* Dijepit ke sisa gambar di luar panel (30% tinggi), supaya tepi gambar
-         tidak pernah terbuka. */
-      const batas = box.height * 0.3;
-      const y = Math.max(-batas, Math.min(batas, geser * -0.3));
+      /* Geser maksimal = margin gambar di luar panel (7% tinggi), supaya tepi
+         gambar tidak pernah terbuka. Dipetakan mulus dari panel masuk layar
+         sampai keluar, jadi gerak parallax-nya tidak mandek di tengah jalan. */
+      const batas = box.height * 0.07;
+      const rentang = (vr.height + box.height) / 2;
+      const y = -batas * Math.max(-1, Math.min(1, geser / rentang));
       img.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0)';
     }
   });
+}
+
+function reflUkuranPanel(panel){
+  const r = parseFloat(panel.dataset.rasio);
+  if(r > 0 && panel.clientWidth) panel.style.minHeight = Math.round(panel.clientWidth / r) + 'px';
+}
+/* Lebar panel berubah (jendela diubah, sidebar dilipat) -> hitung ulang tinggi
+   semua panel di blok ini. Dipasang sekali per blok. */
+function reflPantauLebar(root){
+  if(!root || root.dataset.pantau || !window.ResizeObserver) return;
+  root.dataset.pantau = '1';
+  let lebar = root.clientWidth;
+  new ResizeObserver(function(){
+    if(root.clientWidth === lebar) return;
+    lebar = root.clientWidth;
+    root.querySelectorAll('.refl-panel[data-rasio]').forEach(reflUkuranPanel);
+    reflParallax();
+  }).observe(root);
+}
+
+/* Samakan panel dengan rasio gambar latarnya, berapa pun rasio yang diunggah.
+   Rasio wajar (1:1 sampai 2.4:1) -> panel berbentuk sama dengan gambar, gambar
+   mengisinya penuh. Di luar itu panel dijepit ke batas, gambar ditampilkan utuh
+   (contain) di atas salinannya yang diburamkan - tidak ada bagian yang terpotong. */
+function reflSesuaikan(img){
+  const panel = img.closest('.refl-panel');
+  if(!panel || panel.classList.contains('refl-opening') || !img.naturalWidth || !img.naturalHeight) return;
+  const r = img.naturalWidth / img.naturalHeight;
+  const lo = 1, hi = 2.4;
+  panel.dataset.rasio = Math.max(lo, Math.min(hi, r)).toFixed(4);
+  panel.classList.add('refl-fit');
+  reflUkuranPanel(panel);
+  reflPantauLebar(panel.closest('.refl'));
+  const luar = r < lo - 0.01 || r > hi + 0.01;
+  panel.classList.toggle('refl-contain', luar);
+  const bg = img.parentElement;
+  let blur = bg.querySelector('.refl-bg-blur');
+  if(luar && !blur){
+    blur = document.createElement('div');
+    blur.className = 'refl-bg-blur';
+    blur.style.backgroundImage = 'url("' + (img.currentSrc || img.src).replace(/"/g, '%22') + '")';
+    bg.insertBefore(blur, img);
+  } else if(!luar && blur){
+    blur.remove();
+  }
 }
 </script>
 </body>
