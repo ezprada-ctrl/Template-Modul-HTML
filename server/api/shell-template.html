@@ -1833,6 +1833,7 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
   box-shadow:var(--shadow-lg);padding:clamp(18px,3vw,32px);transition:box-shadow .2s,border-color .2s;}
 .refl.refl-anim .refl-card{opacity:0;transform:translateY(40px);
   transition:opacity .6s ease,transform .75s cubic-bezier(.16,1,.3,1),box-shadow .2s,border-color .2s;}
+.refl.refl-anim .refl-card.atas{transform:translateY(-40px);}
 .refl.refl-anim .refl-card.in{opacity:1;transform:none;}
 .refl-no{font-size:11.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:8px;}
 .refl-panel.answered .refl-no::after{content:' \2713';color:#2f9e6a;}
@@ -7577,11 +7578,22 @@ function reflBindSlide(){
    berubah. Tanpa observer (browser lama) = tidak ada animasi, langsung tampil. */
 function reflAmatiKartu(root){
   if(reflDiamKah() || !('IntersectionObserver' in window)) return;
+  /* Dua arah: kartu masuk dari bawah saat digulir turun, dan masuk dari ATAS
+     saat digulir naik. Begitu keluar layar ia disiapkan lagi (disembunyikan di
+     sisi tempat ia keluar), jadi animasinya berulang tiap lewat - bukan cuma
+     sekali waktu pertama kali dibuka. */
   const obs = new IntersectionObserver(function(entri){
     entri.forEach(function(e){
-      if(e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); }
+      const c = e.target;
+      if(e.isIntersecting && e.intersectionRatio >= 0.08){
+        c.classList.add('in');
+      } else if(!e.isIntersecting){
+        const atas = e.boundingClientRect.top < (e.rootBounds ? e.rootBounds.top : 0) + 1;
+        c.classList.toggle('atas', atas);
+        c.classList.remove('in');
+      }
     });
-  }, { threshold: 0.08 });
+  }, { threshold: [0, 0.08] });
   root.querySelectorAll('.refl-card').forEach(function(c){ obs.observe(c); });
   root.classList.add('refl-anim');
 }
