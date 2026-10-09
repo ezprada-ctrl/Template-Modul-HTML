@@ -1812,9 +1812,9 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
   min-height:min(78vh,660px);display:flex;align-items:center;justify-content:center;
   padding:clamp(18px,4vw,52px);background:linear-gradient(160deg,var(--navy-soft),var(--accent-soft));}
 .refl-bg{position:absolute;inset:0;z-index:-2;overflow:hidden;}
-/* Gambar sedikit lebih besar dari panel (margin 7% tiap sisi) sebagai ruang
+/* Gambar sedikit lebih besar dari panel (margin 10% tiap sisi) sebagai ruang
    gerak parallax. Skalanya seragam, jadi gambar tidak melar. */
-.refl-bg img{position:absolute;left:-7%;top:-7%;width:114%;height:114%;object-fit:cover;will-change:transform;}
+.refl-bg img{position:absolute;left:-10%;top:-10%;width:120%;height:120%;object-fit:cover;will-change:transform;}
 /* Tinggi panel mengikuti rasio gambar yang diunggah: reflSesuaikan menulis
    min-height inline (lebar / rasio). Bukan aspect-ratio: panel ini overflow:
    hidden, jadi aspect-ratio TIDAK mau tumbuh mengikuti isi dan kartu yang lebih
@@ -1822,7 +1822,10 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
 /* Rasio terlalu ekstrem (jauh lebih tinggi/lebar dari yang wajar buat panel):
    gambar ditampilkan UTUH, sisanya diisi salinannya yang diburamkan. */
 .refl-panel.refl-contain .refl-bg img{left:0;top:0;width:100%;height:100%;object-fit:contain;}
-.refl-bg-blur{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(24px) saturate(1.15);}
+.refl-bg-blur{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(24px) saturate(1.15);will-change:transform;}
+/* Kartu ikut digeser sedikit lebih CEPAT dari gulir (lapisan depan), lewat
+   properti `translate` terpisah supaya tidak bentrok dengan animasi muncul. */
+.refl-card{will-change:translate;}
 .refl-panel.has-bg::after{content:'';position:absolute;inset:0;z-index:-1;
   background:linear-gradient(180deg,rgba(10,18,40,.05),rgba(10,18,40,.32));}
 .refl-card{position:relative;width:min(100%,740px);border:1px solid var(--border);border-radius:var(--radius-lg);
@@ -1861,8 +1864,10 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
 .refl-flash{margin-top:12px;font-size:12.5px;font-weight:600;color:#9a5b00;background:#fff3d6;border-radius:10px;
   padding:0 12px;max-height:0;overflow:hidden;opacity:0;transition:.25s;}
 .refl-flash.show{max-height:60px;padding:8px 12px;opacity:1;}
-.refl-opening{padding:0;min-height:0;background:var(--navy-soft);}
-.refl-open-img{width:100%;overflow:hidden;}
+/* Sampul: gambar utuh (tanpa zoom/potong) berbingkai di atas salinannya yang
+   diburamkan. Ruang bingkai itulah yang jadi ruang gerak parallax-nya. */
+.refl-opening{padding:clamp(14px,3.4vw,32px);min-height:0;background:var(--navy-soft);}
+.refl-open-img{width:100%;overflow:hidden;border-radius:calc(var(--radius-lg) - 6px);box-shadow:var(--shadow-lg);will-change:transform;}
 /* Gambar sampul tampil UTUH sesuai rasionya: tanpa zoom, tanpa parallax. Zoom
    (dulu scale 1.12) memotong ~6% tiap sisi, dan teks di gambar ikut terpotong. */
 .refl-open-img img{display:block;width:100%;height:auto;}
@@ -7606,19 +7611,36 @@ function reflParallax(){
   const tengah = vr.top + vr.height / 2;
   /* Parallax SENGAJA tidak ikut pengaturan "kurangi animasi" milik OS: di
      banyak PC kantor/VDI pengaturan itu mati bawaan, dan efeknya jadi tidak
-     pernah terlihat. Geraknya pelan dan hanya di gambar latar; animasi
-     kemunculan kartu tetap menghormati pengaturan itu. */
-  vp.querySelectorAll('.refl-bg img').forEach(function(img){
-    const box = img.parentElement.getBoundingClientRect();
+     pernah terlihat. Geraknya pelan; animasi kemunculan kartu tetap
+     menghormati pengaturan itu.
+     Tiga lapisan, semuanya dipetakan dari satu angka t (-1 = panel baru masuk
+     dari bawah, 0 = tepat di tengah layar, +1 = keluar lewat atas):
+       - gambar latar : lebih LAMBAT dari gulir (+ zoom pelan, paling besar di tengah)
+       - kartu        : sedikit lebih CEPAT dari gulir
+       - salinan buram: separuh gerak gambar, jadi kedalamannya bertingkat. */
+  vp.querySelectorAll('.refl-panel').forEach(function(panel){
+    const box = panel.getBoundingClientRect();
     if(box.bottom < vr.top - 80 || box.top > vr.bottom + 80) return;
     const geser = box.top + box.height / 2 - tengah;
-    /* Geser maksimal = margin gambar di luar panel (7% tinggi), supaya tepi
-       gambar tidak pernah terbuka. Dipetakan mulus dari panel masuk layar
-       sampai keluar, jadi gerak parallax-nya tidak mandek di tengah jalan. */
-    const batas = box.height * 0.07;
-    const rentang = (vr.height + box.height) / 2;
-    const y = -batas * Math.max(-1, Math.min(1, geser / rentang));
-    img.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0)';
+    const t = Math.max(-1, Math.min(1, geser / ((vr.height + box.height) / 2)));
+    const pad = parseFloat(getComputedStyle(panel).paddingTop) || 0;
+    const blur = panel.querySelector('.refl-bg-blur');
+
+    if(panel.classList.contains('refl-opening')){
+      const w = panel.querySelector('.refl-open-img');
+      if(w) w.style.transform = 'translate3d(0,' + (-pad * 0.85 * t).toFixed(1) + 'px,0)';
+      if(blur) blur.style.transform = 'translate3d(0,' + (-pad * 0.4 * t).toFixed(1) + 'px,0) scale(1.08)';
+      return;
+    }
+    const img = panel.querySelector('.refl-bg img');
+    if(!img) return;
+    const utuh = panel.classList.contains('refl-contain');
+    const batas = box.height * (utuh ? 0.06 : 0.10);
+    const zoom = utuh ? 1 : 1 + 0.05 * (1 - Math.abs(t));
+    img.style.transform = 'translate3d(0,' + (-batas * t).toFixed(1) + 'px,0) scale(' + zoom.toFixed(4) + ')';
+    if(blur) blur.style.transform = 'translate3d(0,' + (-batas * 0.5 * t).toFixed(1) + 'px,0)';
+    const card = panel.querySelector('.refl-card');
+    if(card) card.style.translate = '0 ' + (Math.min(pad * 0.6, 24) * t).toFixed(1) + 'px';
   });
 }
 
@@ -7646,7 +7668,16 @@ function reflPantauLebar(root){
    (contain) di atas salinannya yang diburamkan - tidak ada bagian yang terpotong. */
 function reflSesuaikan(img){
   const panel = img.closest('.refl-panel');
-  if(!panel || panel.classList.contains('refl-opening') || !img.naturalWidth || !img.naturalHeight) return;
+  if(panel && panel.classList.contains('refl-opening')){
+    if(!panel.querySelector('.refl-bg-blur')){
+      const b = document.createElement('div');
+      b.className = 'refl-bg-blur';
+      b.style.cssText = 'z-index:-2;background-image:url("' + (img.currentSrc || img.src).replace(/"/g, '%22') + '")';
+      panel.insertBefore(b, panel.firstChild);
+    }
+    return;
+  }
+  if(!panel || !img.naturalWidth || !img.naturalHeight) return;
   const r = img.naturalWidth / img.naturalHeight;
   const lo = 1, hi = 2.4;
   panel.dataset.rasio = Math.max(lo, Math.min(hi, r)).toFixed(4);
