@@ -1812,9 +1812,9 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
   min-height:min(78vh,660px);display:flex;align-items:center;justify-content:center;
   padding:clamp(18px,4vw,52px);background:linear-gradient(160deg,var(--navy-soft),var(--accent-soft));}
 .refl-bg{position:absolute;inset:0;z-index:-2;overflow:hidden;}
-/* Gambar sedikit lebih besar dari panel (margin 10% tiap sisi) sebagai ruang
+/* Gambar sedikit lebih besar dari panel (margin 15% tiap sisi) sebagai ruang
    gerak parallax. Skalanya seragam, jadi gambar tidak melar. */
-.refl-bg img{position:absolute;left:-10%;top:-10%;width:120%;height:120%;object-fit:cover;will-change:transform;}
+.refl-bg img{position:absolute;left:-15%;top:-15%;width:130%;height:130%;object-fit:cover;will-change:transform;}
 /* Tinggi panel mengikuti rasio gambar yang diunggah: reflSesuaikan menulis
    min-height inline (lebar / rasio). Bukan aspect-ratio: panel ini overflow:
    hidden, jadi aspect-ratio TIDAK mau tumbuh mengikuti isi dan kartu yang lebih
@@ -7647,9 +7647,13 @@ function reflParallax(){
     const img = panel.querySelector('.refl-bg img');
     if(!img) return;
     const utuh = panel.classList.contains('refl-contain');
-    const batas = box.height * (utuh ? 0.06 : 0.10);
-    const zoom = utuh ? 1 : 1 + 0.05 * (1 - Math.abs(t));
-    img.style.transform = 'translate3d(0,' + (-batas * t).toFixed(1) + 'px,0) scale(' + zoom.toFixed(4) + ')';
+    const batas = box.height * (utuh ? 0.10 : 0.15);
+    const zoom = utuh ? 1 : 1 + 0.07 * (1 - Math.abs(t));
+    /* Hanyut sedikit ke samping juga (cuma gambar yang diperbesar, ada ruang
+       15% di kiri-kanan): gerak dua sumbu jauh lebih terbaca sebagai kedalaman
+       daripada naik-turun saja. */
+    const x = utuh ? 0 : box.width * 0.03 * t;
+    img.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + (-batas * t).toFixed(1) + 'px,0) scale(' + zoom.toFixed(4) + ')';
     if(blur) blur.style.transform = 'translate3d(0,' + (-batas * 0.5 * t).toFixed(1) + 'px,0)';
     const card = panel.querySelector('.refl-card');
     if(card) card.style.translate = '0 ' + (Math.min(pad * 0.6, 24) * t).toFixed(1) + 'px';
