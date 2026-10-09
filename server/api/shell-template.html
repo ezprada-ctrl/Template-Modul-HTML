@@ -1863,7 +1863,9 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
 .refl-flash.show{max-height:60px;padding:8px 12px;opacity:1;}
 .refl-opening{padding:0;min-height:0;background:var(--navy-soft);}
 .refl-open-img{width:100%;overflow:hidden;}
-.refl-open-img img{display:block;width:100%;transform:scale(1.12);will-change:transform;}
+/* Gambar sampul tampil UTUH sesuai rasionya: tanpa zoom, tanpa parallax. Zoom
+   (dulu scale 1.12) memotong ~6% tiap sisi, dan teks di gambar ikut terpotong. */
+.refl-open-img img{display:block;width:100%;height:auto;}
 .refl-scroll-cue{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(10,18,40,.62);color:#fff;
   font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;animation:reflBob 1.8s ease-in-out infinite;white-space:nowrap;}
 @keyframes reflBob{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,5px);}}
@@ -7606,21 +7608,17 @@ function reflParallax(){
      banyak PC kantor/VDI pengaturan itu mati bawaan, dan efeknya jadi tidak
      pernah terlihat. Geraknya pelan dan hanya di gambar latar; animasi
      kemunculan kartu tetap menghormati pengaturan itu. */
-  vp.querySelectorAll('.refl-bg img, .refl-open-img img').forEach(function(img){
+  vp.querySelectorAll('.refl-bg img').forEach(function(img){
     const box = img.parentElement.getBoundingClientRect();
     if(box.bottom < vr.top - 80 || box.top > vr.bottom + 80) return;
     const geser = box.top + box.height / 2 - tengah;
-    if(img.parentElement.classList.contains('refl-open-img')){
-      img.style.transform = 'translate3d(0,' + (geser * -0.1).toFixed(1) + 'px,0) scale(1.12)';
-    } else {
-      /* Geser maksimal = margin gambar di luar panel (7% tinggi), supaya tepi
-         gambar tidak pernah terbuka. Dipetakan mulus dari panel masuk layar
-         sampai keluar, jadi gerak parallax-nya tidak mandek di tengah jalan. */
-      const batas = box.height * 0.07;
-      const rentang = (vr.height + box.height) / 2;
-      const y = -batas * Math.max(-1, Math.min(1, geser / rentang));
-      img.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0)';
-    }
+    /* Geser maksimal = margin gambar di luar panel (7% tinggi), supaya tepi
+       gambar tidak pernah terbuka. Dipetakan mulus dari panel masuk layar
+       sampai keluar, jadi gerak parallax-nya tidak mandek di tengah jalan. */
+    const batas = box.height * 0.07;
+    const rentang = (vr.height + box.height) / 2;
+    const y = -batas * Math.max(-1, Math.min(1, geser / rentang));
+    img.style.transform = 'translate3d(0,' + y.toFixed(1) + 'px,0)';
   });
 }
 
