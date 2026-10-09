@@ -688,7 +688,7 @@ def render_knowledge(b):
 
 def render_reflection(b):
     """Rangkaian poin refleksi: opening opsional, lalu satu panel per poin
-    dengan gambar latar yang digulir parallax, lalu tombol Kirim di ujung.
+    di atas latar menyatu yang digulir parallax, lalu tombol Kirim di ujung.
 
     Semua perilaku (batas pilihan, kolom "Lainnya", pengingat poin yang belum
     dijawab, kirim + kunci, efek parallax) ada di bagian REFLEKSI di
@@ -705,29 +705,40 @@ def render_reflection(b):
         return ('<div class="card"><p style="color:var(--text-faint);font-size:12.5px;">'
                 '⚠ Blok Refleksi belum punya poin pertanyaan.</p></div>')
 
-    def bg(src, cls='refl-bg'):
-        if not src:
-            return ''
-        return f'<div class="{cls}" aria-hidden="true"><img src="{esc(src)}" alt="" loading="lazy"></div>'
+    def id_poin(it, n):
+        return esc(str(it.get('id') or f'p{n}'))
 
-    # Mode latar tunggal: SATU gambar tegak (9:16) di belakang semua poin, digulir
-    # parallax dari awal sampai akhir rangkaian. Kalau terisi, gambar per poin
-    # tidak dipakai (datanya tetap disimpan, jadi bisa kembali kalau dikosongkan).
-    bg_satu = (b.get('reflBgImg') or '').strip()
+    # Gambar latar tiap poin TIDAK jadi kotak sendiri-sendiri: semuanya disatukan
+    # jadi SATU latar panjang (.refl-stage) di belakang seluruh rangkaian kartu,
+    # digeser lebih lambat dari gulir dan disambung halus antar gambar. Tinggi,
+    # kecepatan, dan sambungannya dihitung di reflTataStage (shell-template.html);
+    # di sini cuma urutan gambarnya, ditandai poin pemiliknya (data-untuk) supaya
+    # tiap gambar dipasang sejajar dengan kartunya.
+    # `reflBgImg` = peninggalan versi sebelumnya (satu gambar untuk semua poin);
+    # masih dihormati, dan kalau ada ia satu-satunya gambar latar.
+    bg_lama = (b.get('reflBgImg') or '').strip()
+    if bg_lama:
+        gambar = [('', bg_lama)]
+    else:
+        gambar = []
+        for n, it in enumerate(items, 1):
+            src = (it.get('img') or '').strip()
+            if src:
+                gambar.append((id_poin(it, n), src))
 
-    parts = [f'<div class="refl{" refl-satu" if bg_satu else ""}" data-refl="{bid}">']
+    parts = [f'<div class="refl" data-refl="{bid}">']
     if b.get('reflOpening') and b.get('reflOpeningImg'):
         parts.append('<section class="refl-panel refl-opening">'
                      f'<div class="refl-open-img"><img src="{esc(b["reflOpeningImg"])}" alt=""></div>'
                      '<div class="refl-scroll-cue">Gulir untuk mulai refleksi ↓</div></section>')
 
-    if bg_satu:
-        parts.append('<div class="refl-stage">'
-                     f'<div class="refl-sbg" aria-hidden="true"><img src="{esc(bg_satu)}" alt="" decoding="async"></div>')
+    if gambar:
+        imgs = ''.join(f'<img src="{esc(src)}" alt="" decoding="async" data-untuk="{pid}">' for pid, src in gambar)
+        parts.append(f'<div class="refl-stage"><div class="refl-sbg" aria-hidden="true">{imgs}</div>')
 
     total = len(items)
     for n, it in enumerate(items, 1):
-        iid = esc(str(it.get('id') or f'p{n}'))
+        iid = id_poin(it, n)
         kind = 'isian' if it.get('kind') == 'isian' else 'pilihan'
         mx = int(it.get('max') or 0)
         hint = (it.get('hint') or '').strip()
@@ -758,16 +769,14 @@ def render_reflection(b):
                             + ''.join(f'<span>“{esc(c)}”</span>' for c in contoh) + '</div>')
         hint_html = f'<div class="refl-hint">ⓘ {esc(hint)}</div>' if hint else ''
         parts.append(
-            f'<section class="refl-panel{" has-bg" if it.get("img") and not bg_satu else ""}" data-item="{iid}" '
-            f'data-kind="{kind}" data-max="{mx}">'
-            + ('' if bg_satu else bg(it.get('img'))) +
+            f'<section class="refl-panel" data-item="{iid}" data-kind="{kind}" data-max="{mx}">'
             '<div class="refl-card">'
             f'<div class="refl-no">Refleksi {n} dari {total}</div>'
             f'<h3 class="refl-q">{nl2br(it.get("q", ""))}</h3>'
             + ''.join(body) + hint_html +
             '</div></section>')
 
-    if bg_satu:
+    if gambar:
         parts.append('</div>')  # penutup .refl-stage
     parts.append('<div class="refl-foot">'
                  f'<button type="button" class="refl-submit" onclick="reflSubmit(\'{bid}\')">Kirim Refleksi</button>'

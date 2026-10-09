@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 import { demoBoothJalan } from '../builderDemo/status';
 import type { CSSProperties } from 'react';
 import type { Block, BlockType, RataTeks } from '../types';
@@ -1675,40 +1675,9 @@ function KnowledgeFields({ block, onChange, inp, ta }: { block: Block; onChange:
   );
 }
 
-/* Ukuran dan rasio gambar yang sudah diunggah, dibaca dari gambarnya sendiri,
-   plus penilaian singkat cocok-tidaknya sebagai latar tunggal. Cuma informasi:
-   gambar dengan rasio apa pun tetap dipakai (diperbesar/dipotong seperlunya). */
-function RasioLatarTunggal({ src }: { src: string }) {
-  const [dim, setDim] = useState<{ w: number; h: number } | null>(null);
-  useEffect(() => {
-    setDim(null);
-    if (!src) return;
-    let batal = false;
-    const im = new Image();
-    im.onload = () => { if (!batal) setDim({ w: im.naturalWidth, h: im.naturalHeight }); };
-    im.src = src;
-    return () => { batal = true; };
-  }, [src]);
-  if (!src || !dim) return null;
-  const r = dim.w / dim.h;
-  let tone = '#2f7d4f';
-  let teks: string;
-  if (r >= 0.5 && r <= 0.65) {
-    teks = `✓ ${dim.w}×${dim.h} px — rasio tegak yang pas (9:16).`;
-    if (dim.w < 1000) { tone = '#9a5b00'; teks += ` Lebar ${dim.w} px agak kecil; di layar besar bisa tampak kurang tajam (disarankan ≥ 1080 px).`; }
-  } else if (r < 0.5) {
-    tone = '#9a5b00';
-    teks = `${dim.w}×${dim.h} px — lebih tinggi dari 9:16. Tetap dipakai; bagian atas/bawahnya dipotong tipis.`;
-  } else {
-    tone = '#9a5b00';
-    teks = `${dim.w}×${dim.h} px — gambar ${r > 1.05 ? 'mendatar' : 'hampir persegi'}, bukan tegak. Tetap dipakai, tapi akan diperbesar dan dipotong di kiri-kanan. Disarankan rasio 9:16.`;
-  }
-  return <p style={{ fontSize: 11, margin: '4px 0 6px', color: tone }}>{teks}</p>;
-}
-
 /* Blok Refleksi. Isi pertanyaannya sepenuhnya milik penyusun modul - form ini
-   cuma menyediakan wadah: opening opsional, lalu poin demi poin, dengan SATU
-   gambar latar tunggal untuk semuanya (disarankan) atau gambar per poin. Jawaban peserta dikirim sekali di akhir
+   cuma menyediakan wadah: opening opsional, lalu poin demi poin, masing-
+   masing dengan gambar latar sendiri. Jawaban peserta dikirim sekali di akhir
    rangkaian dan terkunci (lihat bagian REFLEKSI di shell-template.html). */
 function ReflectionFields({ block, onChange, inp, ta }: { block: Block; onChange: (p: Partial<Block>) => void; inp: FieldStyle; ta: FieldStyle }) {
   const items = block.reflItems || [];
@@ -1729,6 +1698,10 @@ function ReflectionFields({ block, onChange, inp, ta }: { block: Block; onChange
         Peserta menjawab semua poin lalu menekan <b>Kirim Refleksi</b> sekali di akhir. Setelah terkirim, jawabannya terkunci.
         Jawaban per nama &amp; NIP bisa diunduh di Command Center.
       </p>
+      <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
+        Gambar latar tiap poin otomatis <b>disatukan jadi satu latar panjang</b> tanpa batas antar gambar, dan
+        bergerak parallax di belakang kartu-kartunya. Urutannya mengikuti urutan poin; rasio gambar bebas.
+      </p>
 
       <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, fontWeight: 600, margin: '4px 0' }}>
         <input type="checkbox" checked={!!block.reflOpening} onChange={e => onChange({ reflOpening: e.target.checked })} />
@@ -1741,20 +1714,6 @@ function ReflectionFields({ block, onChange, inp, ta }: { block: Block; onChange
           {block.reflOpeningImg && <button onClick={() => onChange({ reflOpeningImg: '' })}>Hapus gambar</button>}
         </div>
       )}
-
-      <div style={kotak}>
-        <label style={{ ...lbl, marginTop: 0 }}>Gambar latar tunggal <span style={{ fontWeight: 400, color: 'var(--text-faint)' }}>(disarankan)</span></label>
-        <p className="hint" style={{ fontSize: 11, margin: '0 0 6px' }}>
-          Satu gambar tegak <b>rasio 9:16</b> (mis. 1080×1920 px atau lebih besar; JPG/WebP, sebaiknya di bawah 2 MB)
-          dipakai sebagai latar <b>semua poin</b>. Kartu-kartu berurutan ke bawah di atasnya, dan gambar bergerak
-          lebih lambat dari kartu saat digulir — parallax paling halus dan menyatu. Letakkan objek penting di
-          tepi kiri/kanan atau atas/bawah; bagian tengah akan tertutup kartu. Kalau diisi, gambar per poin di
-          bawah tidak dipakai.
-        </p>
-        <ImageUploadField value={block.reflBgImg || ''} onUploaded={src => onChange({ reflBgImg: src })} />
-        <RasioLatarTunggal src={block.reflBgImg || ''} />
-        {block.reflBgImg && <button onClick={() => onChange({ reflBgImg: '' })}>Hapus gambar</button>}
-      </div>
 
       {items.map((it, i) => (
         <div key={it.id} style={kotak}>
@@ -1825,17 +1784,9 @@ function ReflectionFields({ block, onChange, inp, ta }: { block: Block; onChange
           <label style={lbl}>Keterangan (opsional — kosongkan untuk keterangan otomatis dari batas pilihan)</label>
           <input style={inp} placeholder="mis. Pilih maksimal dua." value={it.hint || ''} onChange={e => patch(i, { hint: e.target.value })} />
 
-          {block.reflBgImg ? (
-            <p className="hint" style={{ fontSize: 11, margin: '8px 0 0' }}>
-              Memakai gambar latar tunggal di atas{it.img ? ' (gambar poin ini disimpan, tapi tidak dipakai)' : ''}.
-            </p>
-          ) : (
-            <>
-              <label style={lbl}>Gambar latar poin ini</label>
-              <ImageUploadField value={it.img || ''} onUploaded={src => patch(i, { img: src })} />
-              {it.img && <button onClick={() => patch(i, { img: '' })}>Hapus gambar</button>}
-            </>
-          )}
+          <label style={lbl}>Gambar latar poin ini</label>
+          <ImageUploadField value={it.img || ''} onUploaded={src => patch(i, { img: src })} />
+          {it.img && <button onClick={() => patch(i, { img: '' })}>Hapus gambar</button>}
         </div>
       ))}
       <div style={{ display: 'flex', gap: 6 }}>

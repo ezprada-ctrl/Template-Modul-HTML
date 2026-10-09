@@ -169,8 +169,9 @@ export const BLOCK_PREVIEW_STYLES = `
 .pbp-scope .kc-demo .kc-fb{margin:8px 0 0;font-size:11px;line-height:1.5;color:var(--text-dim);background:var(--surface-2);border-radius:var(--radius-sm);padding:8px 10px;}
 
 /* ---- Contoh blok Refleksi ----
-   Tiruan mode latar tunggal di modul jadinya: SATU gambar tegak di belakang
-   semua kartu. Kartunya digulir otomatis ke bawah (A -> B -> A lagi, jadi loop
+   Tiruan latar menyatu di modul jadinya: gambar tiap poin (di sini dua, biru
+   lalu hijau) disambung halus jadi SATU latar panjang di belakang semua kartu.
+   Kartunya digulir otomatis ke bawah (A -> B -> A lagi, jadi loop
    tanpa loncatan) sementara gambarnya bergerak LEBIH LAMBAT (--sg = 0.6 x
    kecepatan kartu) - itulah efek parallax-nya. Gambarnya ubin yang berulang
    tiap --per dan simetris atas-bawah, jadi putaran ulangnya tak terlihat
@@ -183,11 +184,13 @@ export const BLOCK_PREVIEW_STYLES = `
 .pbp-refl-bgone{position:absolute;left:0;right:0;top:0;z-index:-2;height:calc(var(--h) + var(--per));will-change:transform;
   background-repeat:repeat-y;background-size:100% var(--per);
   background-image:
-    radial-gradient(circle at 72% 20%,rgba(255,255,255,.92) 0 4%,rgba(255,255,255,0) 4.6%),
-    radial-gradient(ellipse 46% 9% at 26% 46%,rgba(255,255,255,.38),rgba(255,255,255,0)),
-    radial-gradient(ellipse 72% 15% at 18% 80%,#1f5174 0 98%,transparent 100%),
-    radial-gradient(ellipse 66% 13% at 84% 86%,#2a6a96 0 98%,transparent 100%),
-    linear-gradient(180deg,#a9d3ee 0%,#5d9bc4 40%,#2f6690 68%,#5d9bc4 90%,#a9d3ee 100%);
+    radial-gradient(circle at 74% 11%,rgba(255,255,255,.92) 0 3.2%,rgba(255,255,255,0) 3.8%),
+    radial-gradient(circle at 24% 62%,rgba(255,255,255,.85) 0 3%,rgba(255,255,255,0) 3.6%),
+    radial-gradient(ellipse 72% 8% at 16% 39%,#1f5174 0 98%,transparent 100%),
+    radial-gradient(ellipse 66% 7% at 86% 42%,#2a6a96 0 98%,transparent 100%),
+    radial-gradient(ellipse 70% 8% at 84% 86%,#245e54 0 98%,transparent 100%),
+    radial-gradient(ellipse 64% 7% at 14% 90%,#2f7d70 0 98%,transparent 100%),
+    linear-gradient(180deg,#a9d3ee 0%,#5d9bc4 18%,#2f6690 38%,#4f8f95 47%,#b6e0d4 54%,#6fb3a2 70%,#2f7d70 87%,#a9d3ee 100%);
   animation:pbpReflBgOne 9s infinite;}
 .pbp-refl-track{display:flex;flex-direction:column;animation:pbpReflTrack 9s infinite;will-change:transform;}
 .pbp-refl-panel{flex:0 0 var(--h);height:var(--h);display:flex;align-items:center;justify-content:center;padding:0 20px;}
@@ -635,10 +638,10 @@ function ReflectionDemo() {
       </div>
       {/* Di luar .pbp-scope: keterangan ini gak pernah muncul di modul jadinya. */}
       <p style={{ margin: '8px 2px 2px', fontSize: 11, lineHeight: 1.5, color: 'var(--text-dim)' }}>
-        Satu gambar latar tegak (9:16) di belakang semua poin; kartunya berurutan
-        ke bawah dan gambar bergerak lebih lambat saat digulir — parallax yang
-        menyatu. Boleh juga gambar per poin. Peserta mengirim sekali lalu
-        terkunci; jawaban per nama &amp; NIP bisa diunduh dari Command Center.
+        Gambar tiap poin disatukan jadi satu latar panjang tanpa batas antar
+        gambar, dan bergerak lebih lambat dari kartu saat digulir (parallax).
+        Peserta mengirim sekali lalu terkunci; jawaban per nama &amp; NIP bisa
+        diunduh dari Command Center.
       </p>
     </div>
   );

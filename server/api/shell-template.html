@@ -1804,33 +1804,22 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
   #demo-badge .dot,#demo-feed-head .dot{animation:none;}
 }
 /* ---------------- Blok Refleksi ----------------
-   Satu panel per poin, gambar latar digulir parallax (reflParallax di JS).
-   Kartu pertanyaan cuma disembunyikan untuk animasi kalau JS-nya sudah
-   menyalakan .refl-anim - tanpa JS isinya tetap tampil. */
+   Satu panel per poin. Gambar latar semua poin disatukan jadi satu latar
+   panjang (.refl-stage, lihat di bawah) yang digulir parallax di belakang
+   kartu-kartunya (reflParallax di JS). Kartu pertanyaan cuma disembunyikan
+   untuk animasi kalau JS-nya sudah menyalakan .refl-anim - tanpa JS isinya
+   tetap tampil. */
 .refl{margin:8px 0 26px;display:flex;flex-direction:column;gap:22px;}
 .refl-panel{position:relative;isolation:isolate;overflow:hidden;border-radius:var(--radius-lg);
   min-height:min(78vh,660px);display:flex;align-items:center;justify-content:center;
   padding:clamp(18px,4vw,52px);background:linear-gradient(160deg,var(--navy-soft),var(--accent-soft));}
-.refl-bg{position:absolute;inset:0;z-index:-2;overflow:hidden;}
-/* Gambar sedikit lebih besar dari panel (margin 15% tiap sisi) sebagai ruang
-   gerak parallax. Skalanya seragam, jadi gambar tidak melar. */
-.refl-bg img{position:absolute;left:-15%;top:-15%;width:130%;height:130%;object-fit:cover;will-change:transform;}
-/* Tinggi panel mengikuti rasio gambar yang diunggah: reflSesuaikan menulis
-   min-height inline (lebar / rasio). Bukan aspect-ratio: panel ini overflow:
-   hidden, jadi aspect-ratio TIDAK mau tumbuh mengikuti isi dan kartu yang lebih
-   tinggi terpotong. Dengan min-height, kartu yang tinggi tetap melebarkan panel. */
-/* Rasio terlalu ekstrem (jauh lebih tinggi/lebar dari yang wajar buat panel):
-   gambar ditampilkan UTUH, sisanya diisi salinannya yang diburamkan. */
-.refl-panel.refl-contain .refl-bg img{left:0;top:0;width:100%;height:100%;object-fit:contain;}
+/* Salinan buram gambar sampul, latar bingkainya (reflLatarSampul). */
 .refl-bg-blur{position:absolute;inset:-12%;background-size:cover;background-position:center;filter:blur(24px) saturate(1.15);will-change:transform;}
 /* Kartu ikut digeser sedikit lebih CEPAT dari gulir (lapisan depan), lewat
    properti `translate` terpisah supaya tidak bentrok dengan animasi muncul. */
-.refl-card{will-change:translate;}
-.refl-panel.has-bg::after{content:'';position:absolute;inset:0;z-index:-1;
-  background:linear-gradient(180deg,rgba(10,18,40,.05),rgba(10,18,40,.32));}
 .refl-card{position:relative;width:min(100%,740px);border:1px solid var(--border);border-radius:var(--radius-lg);
   background:color-mix(in srgb,var(--surface) 93%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  box-shadow:var(--shadow-lg);padding:clamp(18px,3vw,32px);transition:box-shadow .2s,border-color .2s;}
+  box-shadow:var(--shadow-lg);padding:clamp(18px,3vw,32px);transition:box-shadow .2s,border-color .2s;will-change:translate;}
 .refl.refl-anim .refl-card{opacity:0;transform:translateY(40px);
   transition:opacity .6s ease,transform .75s cubic-bezier(.16,1,.3,1),box-shadow .2s,border-color .2s;}
 .refl.refl-anim .refl-card.atas{transform:translateY(-40px);}
@@ -1865,21 +1854,22 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
 .refl-flash{margin-top:12px;font-size:12.5px;font-weight:600;color:#9a5b00;background:#fff3d6;border-radius:10px;
   padding:0 12px;max-height:0;overflow:hidden;opacity:0;transition:.25s;}
 .refl-flash.show{max-height:60px;padding:8px 12px;opacity:1;}
-/* Sampul: gambar utuh (tanpa zoom/potong) berbingkai di atas salinannya yang
-   diburamkan. Ruang bingkai itulah yang jadi ruang gerak parallax-nya. */
-/* ---- Mode latar tunggal (.refl-satu) ----
-   SATU gambar tegak di belakang SEMUA poin. Gambar (.refl-sbg) lebih pendek
-   dari seluruh rangkaian, jadi ia digeser LEBIH LAMBAT dari gulir (reflTataStage
-   menghitung tinggi & kecepatannya) - satu pemandangan yang mengalir pelan di
-   belakang kartu-kartu, tanpa sambungan antar panel. Tanpa JS gambarnya diam,
-   menutupi seluruh rangkaian. */
+/* ---- Latar menyatu (.refl-stage) ----
+   Gambar semua poin ditumpuk berurutan ke bawah jadi SATU latar panjang
+   (.refl-sbg). Tiap gambar (kecuali yang pertama) diberi peralihan halus di
+   tepi atasnya (mask, diatur reflTataStage) sehingga tak ada garis batas antar
+   gambar. Latar itu lebih pendek dari seluruh rangkaian kartu, jadi ia digeser
+   LEBIH LAMBAT dari gulir - itulah parallax-nya. Tanpa JS gambarnya bertumpuk
+   diam di tempat (yang terakhir menutupi), tapi isi kartu tetap terbaca. */
 .refl-stage{position:relative;isolation:isolate;overflow:hidden;border-radius:var(--radius-lg);
   background:linear-gradient(160deg,var(--navy-soft),var(--accent-soft));}
 .refl-stage::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
   background:linear-gradient(180deg,rgba(10,18,40,.10),rgba(10,18,40,.34));}
 .refl-sbg{position:absolute;left:0;right:0;top:0;height:100%;z-index:-2;will-change:transform;}
-.refl-sbg img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;}
+.refl-sbg img{position:absolute;left:0;top:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center;}
 .refl-stage .refl-panel{background:none;overflow:visible;isolation:auto;border-radius:0;min-height:min(72vh,600px);}
+/* Sampul: gambar utuh (tanpa zoom/potong) berbingkai di atas salinannya yang
+   diburamkan. Ruang bingkai itulah yang jadi ruang gerak parallax-nya. */
 .refl-opening{padding:clamp(14px,3.4vw,32px);min-height:0;background:var(--navy-soft);}
 .refl-open-img{width:100%;overflow:hidden;border-radius:calc(var(--radius-lg) - 6px);box-shadow:var(--shadow-lg);will-change:transform;}
 /* Gambar sampul tampil UTUH sesuai rasionya: tanpa zoom, tanpa parallax. Zoom
@@ -7574,9 +7564,11 @@ function reflBindSlide(){
     try{ rec = JSON.parse(localStorage.getItem(reflKey(root.dataset.refl)) || 'null'); }catch(e){}
     if(rec) reflTerapkanKunci(root, rec, false);
     reflAmatiKartu(root);
-    root.querySelectorAll('img').forEach(function(img){
-      reflSesuaikan(img);
-      if(!img.complete) img.addEventListener('load', function(){ reflSesuaikan(img); reflParallax(); }, { once: true });
+    root.querySelectorAll('.refl-opening img').forEach(reflLatarSampul);
+    /* Tata letak latar menyatu bergantung pada ukuran asli tiap gambar, jadi
+       dihitung ulang begitu gambarnya selesai dimuat. */
+    root.querySelectorAll('.refl-sbg img').forEach(function(img){
+      if(!img.complete) img.addEventListener('load', reflParallax, { once: true });
     });
     reflPantauStage(root);
   });
@@ -7639,22 +7631,21 @@ function reflParallax(){
      banyak PC kantor/VDI pengaturan itu mati bawaan, dan efeknya jadi tidak
      pernah terlihat. Geraknya pelan; animasi kemunculan kartu tetap
      menghormati pengaturan itu.
-     Tiga lapisan, semuanya dipetakan dari satu angka t (-1 = panel baru masuk
-     dari bawah, 0 = tepat di tengah layar, +1 = keluar lewat atas):
-       - gambar latar : lebih LAMBAT dari gulir (+ zoom pelan, paling besar di tengah)
-       - kartu        : sedikit lebih CEPAT dari gulir
-       - salinan buram: separuh gerak gambar, jadi kedalamannya bertingkat. */
+     Tiga lapisan:
+       - latar menyatu : bergerak sigma x kecepatan gulir (jauh lebih LAMBAT)
+       - kartu         : sedikit lebih CEPAT dari gulir
+       - sampul        : bingkai bergeser pelan di atas salinannya yang buram */
 
-  /* Mode latar tunggal: satu gambar untuk seluruh rangkaian, digeser dengan
-     kecepatan tetap (sigma x kecepatan gulir) dari ujung ke ujung. */
+  /* Latar menyatu: satu lapisan untuk seluruh rangkaian, digeser dengan
+     kecepatan tetap dari ujung ke ujung. */
   vp.querySelectorAll('.refl-stage').forEach(function(stage){
     const sbg = stage.querySelector('.refl-sbg');
     if(!sbg) return;
     const sr = stage.getBoundingClientRect();
     if(sr.bottom < vr.top - 200 || sr.top > vr.bottom + 200) return;
-    reflTataStage(sbg, sr.height, vr.height, sr.width);
+    reflTataStage(stage, sbg, sr.height, vr.height, sr.width);
     const sigma = parseFloat(sbg.dataset.sigma) || 0.5;
-    /* s = jarak tepi atas layar di bawah tepi atas rangkaian. Posisi gambar di
+    /* s = jarak tepi atas layar di bawah tepi atas rangkaian. Posisi latar di
        layar = -sigma x s, artinya ia bergerak sigma kali secepat gulir. */
     const s = vr.top - sr.top;
     sbg.style.transform = 'translate3d(0,' + ((1 - sigma) * s).toFixed(1) + 'px,0)';
@@ -7663,78 +7654,115 @@ function reflParallax(){
   vp.querySelectorAll('.refl-panel').forEach(function(panel){
     const box = panel.getBoundingClientRect();
     if(box.bottom < vr.top - 80 || box.top > vr.bottom + 80) return;
+    /* t: -1 = panel baru masuk dari bawah, 0 = tepat di tengah layar,
+       +1 = keluar lewat atas. */
     const geser = box.top + box.height / 2 - tengah;
     const t = Math.max(-1, Math.min(1, geser / ((vr.height + box.height) / 2)));
     const pad = parseFloat(getComputedStyle(panel).paddingTop) || 0;
-    const blur = panel.querySelector('.refl-bg-blur');
 
     if(panel.classList.contains('refl-opening')){
       const w = panel.querySelector('.refl-open-img');
+      const blur = panel.querySelector('.refl-bg-blur');
       if(w) w.style.transform = 'translate3d(0,' + (-pad * 0.85 * t).toFixed(1) + 'px,0)';
       if(blur) blur.style.transform = 'translate3d(0,' + (-pad * 0.4 * t).toFixed(1) + 'px,0) scale(1.08)';
       return;
     }
+    /* Latar bergerak sangat pelan, jadi kartu diberi selisih lebih besar
+       (lapisan depan) supaya kedalamannya terbaca. */
     const card = panel.querySelector('.refl-card');
-    if(panel.closest('.refl-stage')){
-      /* Latar tunggal bergerak sangat pelan, jadi kartu diberi selisih lebih
-         besar (lapisan depan) supaya kedalamannya terbaca. */
-      if(card) card.style.translate = '0 ' + (Math.min(pad * 0.9, 36) * t).toFixed(1) + 'px';
-      return;
-    }
-    const img = panel.querySelector('.refl-bg img');
-    if(!img) return;
-    const utuh = panel.classList.contains('refl-contain');
-    const batas = box.height * (utuh ? 0.10 : 0.15);
-    const zoom = utuh ? 1 : 1 + 0.07 * (1 - Math.abs(t));
-    /* Hanyut sedikit ke samping juga (cuma gambar yang diperbesar, ada ruang
-       15% di kiri-kanan): gerak dua sumbu jauh lebih terbaca sebagai kedalaman
-       daripada naik-turun saja. */
-    const x = utuh ? 0 : box.width * 0.03 * t;
-    img.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + (-batas * t).toFixed(1) + 'px,0) scale(' + zoom.toFixed(4) + ')';
-    if(blur) blur.style.transform = 'translate3d(0,' + (-batas * 0.5 * t).toFixed(1) + 'px,0)';
-    if(card) card.style.translate = '0 ' + (Math.min(pad * 0.6, 24) * t).toFixed(1) + 'px';
+    if(card && panel.closest('.refl-stage')) card.style.translate = '0 ' + (Math.min(pad * 0.9, 36) * t).toFixed(1) + 'px';
   });
 }
 
-/* Tinggi & kecepatan gambar latar tunggal.
+/* Tata letak latar menyatu: berapa tinggi latar, seberapa pelan geraknya, dan
+   di mana tiap gambar ditaruh.
    Notasi: Hc = tinggi seluruh rangkaian, V = tinggi layar, s = seberapa jauh
-   rangkaian sudah tergulir (0 = tepi atasnya sejajar tepi atas layar). Gambar
-   dengan tinggi H yang bergerak sigma x gulir (posisinya = (1-sigma) x s
+   rangkaian sudah tergulir (0 = tepi atasnya sejajar tepi atas layar).
+   Latar setinggi H yang bergerak sigma x gulir (posisinya (1-sigma) x s
    terhadap rangkaian) menutupi bagian yang terlihat sepanjang jalan kalau
-        H >= V + sigma x (Hc - V).
-   Jadi sigma ditentukan oleh gambarnya sendiri: ditampilkan sepanjang lebar
-   rangkaian (tanpa dipotong), tingginya H = lebar x rasio, dan sigma =
-   (H - V) / (Hc - V). Gambar tegak 9:16 yang menutupi lima kartu otomatis jadi
-   bergerak sangat pelan (jauh dari kartu = terasa dalam). Sigma dijepit ke
-   0.12-0.7: di bawahnya gambar nyaris diam, di atasnya gerakannya tak terasa;
-   di luar itu gambar diperbesar / dipotong tipis (cover) alih-alih menyisakan
-   tepi kosong. */
-function reflTataStage(sbg, Hc, V, W){
-  const img = sbg.querySelector('img');
-  const nw = img ? img.naturalWidth : 0, nh = img ? img.naturalHeight : 0;
-  const kunci = [Math.round(Hc), Math.round(V), Math.round(W), nw, nh].join('|');
+        H >= V + sigma x (Hc - V),
+   jadi dipakai H = V + sigma x (Hc - V) persis. Sigma = kecepatan latar
+   dibanding gulir (0.3 = latar bergerak 30% secepat kartu).
+   Sigma dipilih supaya gambar tampil kira-kira sebesar aslinya:
+     - satu gambar     : sigma = (tinggi aslinya - V) / (Hc - V)
+     - beberapa gambar : jarak antar gambar di latar = sigma x jarak antar kartu,
+                         disamakan dengan ~70% tinggi asli rata-rata gambar
+                         (sedikit dipotong demi gerak yang lebih terasa)
+   lalu dijepit 0.3-0.7 (0.12-0.7 untuk satu gambar): di bawahnya latar nyaris
+   diam, di atasnya selisih geraknya tak terasa.
+   Penempatan: saat kartu poin ke-j tepat di tengah layar, titik di latar yang
+   ada di tengah layar adalah  V/2 x (1-sigma) + sigma x (pusat kartu j) -
+   di situlah gambar poin itu dipusatkan, jadi gambarnya persis di belakang
+   kartunya saat dibaca. Batas antar gambar = titik tengah antar pusatnya, dan
+   tiap gambar melebar `bulu` ke gambar tetangganya dengan mask di tepi atas,
+   sehingga yang terlihat peralihan halus (bukan garis batas). Gambar di atas
+   menimpa gambar di bawahnya, jadi sambungannya cukup satu mask per gambar. */
+function reflTataStage(stage, sbg, Hc, V, W){
+  const gambar = Array.prototype.slice.call(sbg.querySelectorAll('img'));
+  const m = gambar.length;
+  if(!m) return;
+  const kunci = [Math.round(Hc), Math.round(V), Math.round(W)]
+    .concat(gambar.map(function(g){ return g.naturalWidth + 'x' + g.naturalHeight; })).join('|');
   if(sbg.dataset.kunci === kunci) return;
   sbg.dataset.kunci = kunci;
+
+  const panel = Array.prototype.slice.call(stage.querySelectorAll('.refl-panel'));
+  const pusat = gambar.map(function(g){
+    const p = panel.filter(function(x){ return x.dataset.item === g.dataset.untuk; })[0];
+    return p ? p.offsetTop + p.offsetHeight / 2 : Hc / 2;
+  });
+  /* Tinggi asli tiap gambar kalau dibentangkan selebar rangkaian; 16:9 selama
+     ukurannya belum diketahui (gambar belum selesai dimuat). */
+  const alami = gambar.map(function(g){ return g.naturalWidth ? W * g.naturalHeight / g.naturalWidth : W * 9 / 16; });
+
   const sisa = Hc - V;
   let sigma = 0.7;
   if(sisa >= 40){
-    const alami = nw ? W * nh / nw : 0;
-    sigma = alami ? (alami - V) / sisa : 0.5;
-    sigma = Math.max(0.12, Math.min(0.7, sigma));
+    if(m === 1){
+      sigma = Math.max(0.12, Math.min(0.7, (alami[0] - V) / sisa));
+    } else {
+      const jarak = (pusat[m - 1] - pusat[0]) / (m - 1);
+      const rata = alami.reduce(function(a, b){ return a + b; }, 0) / m;
+      sigma = jarak > 0 ? Math.max(0.3, Math.min(0.7, 0.7 * rata / jarak)) : 0.5;
+    }
   }
-  sbg.dataset.sigma = sigma.toFixed(4);
   /* +4px: pengaman pembulatan, supaya tak ada garis tipis di tepi bawah. */
-  sbg.style.height = Math.ceil(V + sigma * sisa + 4) + 'px';
+  const H = Math.ceil(V + sigma * sisa + 4);
+
+  const batas = [0];
+  for(let j = 0; j < m - 1; j++){
+    const c1 = V / 2 * (1 - sigma) + sigma * pusat[j];
+    const c2 = V / 2 * (1 - sigma) + sigma * pusat[j + 1];
+    batas.push((c1 + c2) / 2);
+  }
+  batas.push(H);
+  let terpendek = H;
+  for(let j = 0; j < m; j++) terpendek = Math.min(terpendek, batas[j + 1] - batas[j]);
+  /* Setengah lebar peralihan antar dua gambar. */
+  const bulu = Math.max(14, Math.min(120, terpendek * 0.18));
+
+  gambar.forEach(function(g, j){
+    const atas = j === 0 ? 0 : batas[j] - bulu;
+    const bawah = j === m - 1 ? H : batas[j + 1] + bulu;
+    g.style.top = atas.toFixed(1) + 'px';
+    g.style.height = (bawah - atas).toFixed(1) + 'px';
+    /* Naik dari transparan ke penuh sepanjang 2 x bulu, dengan kurva
+       smoothstep (5 titik) supaya peralihannya tak berkesan bergaris lurus. */
+    let mask = '';
+    if(j > 0){
+      const u = 2 * bulu;
+      mask = 'linear-gradient(to bottom,rgba(0,0,0,0) 0,rgba(0,0,0,.16) ' + (u * .25).toFixed(1) + 'px,rgba(0,0,0,.5) ' +
+             (u * .5).toFixed(1) + 'px,rgba(0,0,0,.84) ' + (u * .75).toFixed(1) + 'px,#000 ' + u.toFixed(1) + 'px)';
+    }
+    g.style.webkitMaskImage = mask;
+    g.style.maskImage = mask;
+  });
+  sbg.dataset.sigma = sigma.toFixed(4);
+  sbg.style.height = H + 'px';
 }
 
-function reflUkuranPanel(panel){
-  const r = parseFloat(panel.dataset.rasio);
-  if(r > 0 && panel.clientWidth) panel.style.minHeight = Math.round(panel.clientWidth / r) + 'px';
-}
-/* Lebar panel berubah (jendela diubah, sidebar dilipat) -> hitung ulang tinggi
-   semua panel di blok ini. Dipasang sekali per blok. */
 /* Rangkaian berubah tinggi tanpa ada gulir (kolom "Lainnya" terbuka, gambar
-   selesai dimuat, teks membungkus) -> tata ulang gambar latar tunggal. */
+   selesai dimuat, teks membungkus) -> tata ulang latar menyatu. */
 function reflPantauStage(root){
   if(!root || root.dataset.pantauStage || !window.ResizeObserver) return;
   const stage = root.querySelector('.refl-stage');
@@ -7742,52 +7770,15 @@ function reflPantauStage(root){
   root.dataset.pantauStage = '1';
   new ResizeObserver(function(){ reflParallax(); }).observe(stage);
 }
-function reflPantauLebar(root){
-  if(!root || root.dataset.pantau || !window.ResizeObserver) return;
-  root.dataset.pantau = '1';
-  let lebar = root.clientWidth;
-  new ResizeObserver(function(){
-    if(root.clientWidth === lebar) return;
-    lebar = root.clientWidth;
-    root.querySelectorAll('.refl-panel[data-rasio]').forEach(reflUkuranPanel);
-    reflParallax();
-  }).observe(root);
-}
 
-/* Samakan panel dengan rasio gambar latarnya, berapa pun rasio yang diunggah.
-   Rasio wajar (1:1 sampai 2.4:1) -> panel berbentuk sama dengan gambar, gambar
-   mengisinya penuh. Di luar itu panel dijepit ke batas, gambar ditampilkan utuh
-   (contain) di atas salinannya yang diburamkan - tidak ada bagian yang terpotong. */
-function reflSesuaikan(img){
-  const panel = img.closest('.refl-panel');
-  if(panel && panel.classList.contains('refl-opening')){
-    if(!panel.querySelector('.refl-bg-blur')){
-      const b = document.createElement('div');
-      b.className = 'refl-bg-blur';
-      b.style.cssText = 'z-index:-2;background-image:url("' + (img.currentSrc || img.src).replace(/"/g, '%22') + '")';
-      panel.insertBefore(b, panel.firstChild);
-    }
-    return;
-  }
-  if(!panel || !img.naturalWidth || !img.naturalHeight) return;
-  const r = img.naturalWidth / img.naturalHeight;
-  const lo = 1, hi = 2.4;
-  panel.dataset.rasio = Math.max(lo, Math.min(hi, r)).toFixed(4);
-  panel.classList.add('refl-fit');
-  reflUkuranPanel(panel);
-  reflPantauLebar(panel.closest('.refl'));
-  const luar = r < lo - 0.01 || r > hi + 0.01;
-  panel.classList.toggle('refl-contain', luar);
-  const bg = img.parentElement;
-  let blur = bg.querySelector('.refl-bg-blur');
-  if(luar && !blur){
-    blur = document.createElement('div');
-    blur.className = 'refl-bg-blur';
-    blur.style.backgroundImage = 'url("' + (img.currentSrc || img.src).replace(/"/g, '%22') + '")';
-    bg.insertBefore(blur, img);
-  } else if(!luar && blur){
-    blur.remove();
-  }
+/* Sampul: salinan buram gambarnya dipasang (sekali) sebagai latar bingkai. */
+function reflLatarSampul(img){
+  const panel = img.closest('.refl-opening');
+  if(!panel || panel.querySelector('.refl-bg-blur')) return;
+  const b = document.createElement('div');
+  b.className = 'refl-bg-blur';
+  b.style.cssText = 'z-index:-2;background-image:url("' + (img.currentSrc || img.src).replace(/"/g, '%22') + '")';
+  panel.insertBefore(b, panel.firstChild);
 }
 </script>
 </body>
