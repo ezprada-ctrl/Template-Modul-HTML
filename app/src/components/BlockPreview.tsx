@@ -169,32 +169,28 @@ export const BLOCK_PREVIEW_STYLES = `
 .pbp-scope .kc-demo .kc-fb{margin:8px 0 0;font-size:11px;line-height:1.5;color:var(--text-dim);background:var(--surface-2);border-radius:var(--radius-sm);padding:8px 10px;}
 
 /* ---- Contoh blok Refleksi ----
-   Tiruan .refl-panel/.refl-card di modul jadinya: satu panel per poin dengan
-   gambar latar, kartu pertanyaan di tengah. Panelnya digulir otomatis ke
-   bawah (A -> B -> A lagi, jadi loop tanpa loncatan) dan gambar latarnya
-   bergerak LEBIH LAMBAT dari panel - itulah efek parallax-nya. Selisih
-   geraknya selalu 0.3 x jarak gulir, makanya tiap panel butuh keyframe sendiri
-   (posisi gambar dihitung relatif terhadap panelnya, bukan terhadap layar). */
-.pbp-scope.pbp-refl-demo{--h:240px;--step:252px;width:340px;max-height:none;padding:0;overflow:hidden;background:#dfe5ee;}
-.pbp-refl-view{position:relative;height:var(--h);overflow:hidden;}
-.pbp-refl-track{display:flex;flex-direction:column;gap:12px;animation:pbpReflTrack 9s infinite;will-change:transform;}
-.pbp-refl-panel{position:relative;isolation:isolate;overflow:hidden;flex:0 0 var(--h);height:var(--h);
-  display:flex;align-items:center;justify-content:center;padding:0 20px;}
-.pbp-refl-bg{position:absolute;left:0;right:0;z-index:-2;top:calc(var(--step) * -.3);height:calc(100% + var(--step) * .6);will-change:transform;}
-.pbp-refl-panel.a .pbp-refl-bg,.pbp-refl-panel.c .pbp-refl-bg{
-  background:radial-gradient(circle at 78% 24%,rgba(255,255,255,.85) 0 7%,rgba(255,255,255,0) 8%),
-    radial-gradient(ellipse 70% 38% at 18% 88%,#1f5174 0 98%,transparent 100%),
-    radial-gradient(ellipse 80% 42% at 82% 94%,#2a6a96 0 98%,transparent 100%),
-    linear-gradient(180deg,#a9d3ee,#5d9bc4 55%,#2f6690);}
-.pbp-refl-panel.b .pbp-refl-bg{
-  background:radial-gradient(circle at 20% 28%,rgba(255,255,255,.8) 0 6%,rgba(255,255,255,0) 7%),
-    radial-gradient(ellipse 75% 40% at 80% 90%,#245e54 0 98%,transparent 100%),
-    radial-gradient(ellipse 70% 36% at 16% 96%,#2f7d70 0 98%,transparent 100%),
-    linear-gradient(180deg,#b6e0d4,#6fb3a2 55%,#2f7d70);}
-.pbp-refl-panel.a .pbp-refl-bg{animation:pbpReflBgA 9s infinite;}
-.pbp-refl-panel.b .pbp-refl-bg{animation:pbpReflBgB 9s infinite;}
-.pbp-refl-panel.c .pbp-refl-bg{animation:pbpReflBgC 9s infinite;}
-.pbp-refl-panel::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(10,18,40,.05),rgba(10,18,40,.32));}
+   Tiruan mode latar tunggal di modul jadinya: SATU gambar tegak di belakang
+   semua kartu. Kartunya digulir otomatis ke bawah (A -> B -> A lagi, jadi loop
+   tanpa loncatan) sementara gambarnya bergerak LEBIH LAMBAT (--sg = 0.6 x
+   kecepatan kartu) - itulah efek parallax-nya. Gambarnya ubin yang berulang
+   tiap --per dan simetris atas-bawah, jadi putaran ulangnya tak terlihat
+   bersambung. Kartu & gambar memakai keyframe dengan persentase yang sama,
+   makanya kecepatan relatifnya selalu tetap walau ada jeda di tiap kartu. */
+.pbp-scope.pbp-refl-demo{--h:240px;--sg:.6;--per:calc(var(--h) * 2 * var(--sg));width:340px;max-height:none;padding:0;overflow:hidden;background:#dfe5ee;}
+.pbp-refl-view{position:relative;isolation:isolate;height:var(--h);overflow:hidden;}
+.pbp-refl-view::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(10,18,40,.05),rgba(10,18,40,.32));}
+.pbp-refl-bgone{position:absolute;left:0;right:0;top:0;z-index:-2;height:calc(var(--h) + var(--per));will-change:transform;
+  background-repeat:repeat-y;background-size:100% var(--per);
+  background-image:
+    radial-gradient(circle at 72% 20%,rgba(255,255,255,.92) 0 4%,rgba(255,255,255,0) 4.6%),
+    radial-gradient(ellipse 46% 9% at 26% 46%,rgba(255,255,255,.38),rgba(255,255,255,0)),
+    radial-gradient(ellipse 72% 15% at 18% 80%,#1f5174 0 98%,transparent 100%),
+    radial-gradient(ellipse 66% 13% at 84% 86%,#2a6a96 0 98%,transparent 100%),
+    linear-gradient(180deg,#a9d3ee 0%,#5d9bc4 40%,#2f6690 68%,#5d9bc4 90%,#a9d3ee 100%);
+  animation:pbpReflBgOne 9s infinite;}
+.pbp-refl-track{display:flex;flex-direction:column;animation:pbpReflTrack 9s infinite;will-change:transform;}
+.pbp-refl-panel{flex:0 0 var(--h);height:var(--h);display:flex;align-items:center;justify-content:center;padding:0 20px;}
 .pbp-refl-card{position:relative;width:100%;border:1px solid var(--border);border-radius:var(--radius-md);
   background:rgba(255,255,255,.94);box-shadow:0 14px 30px -12px rgba(10,18,40,.45);padding:13px 14px;}
 .pbp-refl-no{font-size:9px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-2);margin-bottom:5px;}
@@ -209,26 +205,16 @@ export const BLOCK_PREVIEW_STYLES = `
 .pbp-refl-hint{display:inline-block;margin-top:7px;font-size:10px;color:var(--text-dim);background:var(--accent-soft);padding:3px 10px;border-radius:20px;}
 @keyframes pbpReflTrack{
   0%,10%{transform:translateY(0);animation-timing-function:ease-in-out;}
-  40%,55%{transform:translateY(calc(var(--step) * -1));animation-timing-function:ease-in-out;}
-  85%,100%{transform:translateY(calc(var(--step) * -2));}
+  40%,55%{transform:translateY(calc(var(--h) * -1));animation-timing-function:ease-in-out;}
+  85%,100%{transform:translateY(calc(var(--h) * -2));}
 }
-@keyframes pbpReflBgA{
+@keyframes pbpReflBgOne{
   0%,10%{transform:translateY(0);animation-timing-function:ease-in-out;}
-  40%,55%{transform:translateY(calc(var(--step) * .3));animation-timing-function:ease-in-out;}
-  85%,100%{transform:translateY(calc(var(--step) * .6));}
-}
-@keyframes pbpReflBgB{
-  0%,10%{transform:translateY(calc(var(--step) * -.3));animation-timing-function:ease-in-out;}
-  40%,55%{transform:translateY(0);animation-timing-function:ease-in-out;}
-  85%,100%{transform:translateY(calc(var(--step) * .3));}
-}
-@keyframes pbpReflBgC{
-  0%,10%{transform:translateY(calc(var(--step) * -.6));animation-timing-function:ease-in-out;}
-  40%,55%{transform:translateY(calc(var(--step) * -.3));animation-timing-function:ease-in-out;}
-  85%,100%{transform:translateY(0);}
+  40%,55%{transform:translateY(calc(var(--per) * -.5));animation-timing-function:ease-in-out;}
+  85%,100%{transform:translateY(calc(var(--per) * -1));}
 }
 @media (prefers-reduced-motion:reduce){
-  .pbp-refl-track,.pbp-refl-panel .pbp-refl-bg{animation:none;}
+  .pbp-refl-track,.pbp-refl-bgone{animation:none;}
 }
 
 @keyframes pbpRiseIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -639,18 +625,20 @@ function ReflectionDemo() {
     <div style={{ width: 340 }}>
       <div className="pbp-scope pbp-refl-demo">
         <div className="pbp-refl-view">
+          <div className="pbp-refl-bgone" />
           <div className="pbp-refl-track">
-            <section className="pbp-refl-panel a"><div className="pbp-refl-bg" /><ReflectionCardA /></section>
-            <section className="pbp-refl-panel b"><div className="pbp-refl-bg" /><ReflectionCardB /></section>
-            <section className="pbp-refl-panel c"><div className="pbp-refl-bg" /><ReflectionCardA /></section>
+            <section className="pbp-refl-panel"><ReflectionCardA /></section>
+            <section className="pbp-refl-panel"><ReflectionCardB /></section>
+            <section className="pbp-refl-panel"><ReflectionCardA /></section>
           </div>
         </div>
       </div>
       {/* Di luar .pbp-scope: keterangan ini gak pernah muncul di modul jadinya. */}
       <p style={{ margin: '8px 2px 2px', fontSize: 11, lineHeight: 1.5, color: 'var(--text-dim)' }}>
-        Satu panel bergambar per poin, digulir dengan efek parallax. Peserta
-        mengirim sekali lalu terkunci; jawaban per nama &amp; NIP bisa diunduh
-        dari Command Center.
+        Satu gambar latar tegak (9:16) di belakang semua poin; kartunya berurutan
+        ke bawah dan gambar bergerak lebih lambat saat digulir — parallax yang
+        menyatu. Boleh juga gambar per poin. Peserta mengirim sekali lalu
+        terkunci; jawaban per nama &amp; NIP bisa diunduh dari Command Center.
       </p>
     </div>
   );

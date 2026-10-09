@@ -244,6 +244,10 @@ export interface Block {
   // lalu terkunci. Opening opsional: gambar pembuka sebelum poin pertama.
   reflOpening?: boolean;
   reflOpeningImg?: string;
+  // Latar tunggal: SATU gambar tegak (disarankan 9:16) di belakang semua poin,
+  // digulir parallax dari awal sampai akhir. Kalau terisi, gambar per poin
+  // (ReflItem.img) tidak dipakai - datanya tetap disimpan.
+  reflBgImg?: string;
   reflItems?: ReflItem[];
 }
 
