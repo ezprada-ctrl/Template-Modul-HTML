@@ -1864,10 +1864,12 @@ body.demo-paused #demo-badge:hover{background:rgba(17,17,20,.92);}
 .refl-stage{position:relative;isolation:isolate;overflow:hidden;border-radius:var(--radius-lg);
   background:linear-gradient(160deg,var(--navy-soft),var(--accent-soft));}
 .refl-stage::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background:linear-gradient(180deg,rgba(10,18,40,.10),rgba(10,18,40,.34));}
+  background:linear-gradient(180deg,rgba(10,18,40,.04),rgba(10,18,40,.26));}
 .refl-sbg{position:absolute;left:0;right:0;top:0;height:100%;z-index:-2;will-change:transform;}
 .refl-sbg img{position:absolute;left:0;top:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center;}
-.refl-stage .refl-panel{background:none;overflow:visible;isolation:auto;border-radius:0;min-height:min(72vh,600px);}
+/* Jarak antar kartu ~ satu layar: latar yang bergerak pelan butuh ruang antar kartu supaya
+   gambarnya tetap lebar (lihat reflTataStage) dan geraknya kelihatan di sela-sela kartu. */
+.refl-stage .refl-panel{background:none;overflow:visible;isolation:auto;border-radius:0;min-height:min(100vh,1000px);}
 /* Sampul: gambar utuh (tanpa zoom/potong) berbingkai di atas salinannya yang
    diburamkan. Ruang bingkai itulah yang jadi ruang gerak parallax-nya. */
 .refl-opening{padding:clamp(14px,3.4vw,32px);min-height:0;background:var(--navy-soft);}
@@ -7686,10 +7688,15 @@ function reflParallax(){
    Sigma dipilih supaya gambar tampil kira-kira sebesar aslinya:
      - satu gambar     : sigma = (tinggi aslinya - V) / (Hc - V)
      - beberapa gambar : jarak antar gambar di latar = sigma x jarak antar kartu,
-                         disamakan dengan ~70% tinggi asli rata-rata gambar
+                         disamakan dengan ~65% tinggi asli rata-rata gambar
                          (sedikit dipotong demi gerak yang lebih terasa)
-   lalu dijepit 0.3-0.7 (0.12-0.7 untuk satu gambar): di bawahnya latar nyaris
-   diam, di atasnya selisih geraknya tak terasa.
+   lalu dijepit 0.22-0.45 (0.15-0.45 untuk satu gambar). Batas atas 0.45
+   disengaja rendah: latar yang bergerak lebih dari ~45% secepat kartu nyaris
+   tak terbaca sebagai parallax (foto yang lembut dan sebagian tertutup kartu
+   cuma terlihat ikut menggulir). Karena tinggi gambar di latar = 65% asli,
+   sigma kecil hanya mungkin kalau jarak antar kartu besar - makanya panel
+   dibuat setinggi ~satu layar (CSS .refl-stage .refl-panel); di HP kartunya
+   sendiri sudah setinggi itu, jadi sigma di sana turun ke batas bawah.
    Penempatan: saat kartu poin ke-j tepat di tengah layar, titik di latar yang
    ada di tengah layar adalah  V/2 x (1-sigma) + sigma x (pusat kartu j) -
    di situlah gambar poin itu dipusatkan, jadi gambarnya persis di belakang
@@ -7716,14 +7723,14 @@ function reflTataStage(stage, sbg, Hc, V, W){
   const alami = gambar.map(function(g){ return g.naturalWidth ? W * g.naturalHeight / g.naturalWidth : W * 9 / 16; });
 
   const sisa = Hc - V;
-  let sigma = 0.7;
+  let sigma = 0.45;
   if(sisa >= 40){
     if(m === 1){
-      sigma = Math.max(0.12, Math.min(0.7, (alami[0] - V) / sisa));
+      sigma = Math.max(0.15, Math.min(0.45, (alami[0] - V) / sisa));
     } else {
       const jarak = (pusat[m - 1] - pusat[0]) / (m - 1);
       const rata = alami.reduce(function(a, b){ return a + b; }, 0) / m;
-      sigma = jarak > 0 ? Math.max(0.3, Math.min(0.7, 0.7 * rata / jarak)) : 0.5;
+      sigma = jarak > 0 ? Math.max(0.22, Math.min(0.45, 0.65 * rata / jarak)) : 0.35;
     }
   }
   /* +4px: pengaman pembulatan, supaya tak ada garis tipis di tepi bawah. */

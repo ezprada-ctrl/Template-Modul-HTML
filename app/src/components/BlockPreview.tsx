@@ -172,12 +172,12 @@ export const BLOCK_PREVIEW_STYLES = `
    Tiruan latar menyatu di modul jadinya: gambar tiap poin (di sini dua, biru
    lalu hijau) disambung halus jadi SATU latar panjang di belakang semua kartu.
    Kartunya digulir otomatis ke bawah (A -> B -> A lagi, jadi loop
-   tanpa loncatan) sementara gambarnya bergerak LEBIH LAMBAT (--sg = 0.6 x
+   tanpa loncatan) sementara gambarnya bergerak LEBIH LAMBAT (--sg = 0.5 x
    kecepatan kartu) - itulah efek parallax-nya. Gambarnya ubin yang berulang
    tiap --per dan simetris atas-bawah, jadi putaran ulangnya tak terlihat
    bersambung. Kartu & gambar memakai keyframe dengan persentase yang sama,
    makanya kecepatan relatifnya selalu tetap walau ada jeda di tiap kartu. */
-.pbp-scope.pbp-refl-demo{--h:240px;--sg:.6;--per:calc(var(--h) * 2 * var(--sg));width:340px;max-height:none;padding:0;overflow:hidden;background:#dfe5ee;}
+.pbp-scope.pbp-refl-demo{--h:240px;--sg:.5;--per:calc(var(--h) * 2 * var(--sg));width:340px;max-height:none;padding:0;overflow:hidden;background:#dfe5ee;}
 .pbp-refl-view{position:relative;isolation:isolate;height:var(--h);overflow:hidden;}
 .pbp-refl-view::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
   background:linear-gradient(180deg,rgba(10,18,40,.05),rgba(10,18,40,.32));}
