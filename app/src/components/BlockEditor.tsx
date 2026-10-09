@@ -1699,8 +1699,9 @@ function ReflectionFields({ block, onChange, inp, ta }: { block: Block; onChange
         Jawaban per nama &amp; NIP bisa diunduh di Command Center.
       </p>
       <p className="hint" style={{ fontSize: 11, margin: '-2px 0 8px' }}>
-        Gambar latar tiap poin otomatis <b>disatukan jadi satu latar panjang</b> tanpa batas antar gambar, dan
-        bergerak parallax di belakang kartu-kartunya. Urutannya mengikuti urutan poin; rasio gambar bebas.
+        <b>Satu poin satu gambar latar.</b> Gambar tiap poin dipakai di belakang kartu poin itu; di sela-sela dua
+        poin, gambar melebur halus ke gambar berikutnya (tanpa garis batas), dan latar bergerak pelan di belakang
+        kartu yang meluncur (parallax). Rasio gambar bebas; yang rasionya jauh beda dari layar akan dipotong tepinya.
       </p>
 
       <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, fontWeight: 600, margin: '4px 0' }}>
